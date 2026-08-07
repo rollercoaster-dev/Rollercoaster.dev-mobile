@@ -7,7 +7,10 @@ import { Text } from "../Text";
 import { Button } from "../Button";
 import { IconButton } from "../IconButton";
 import { CollapsibleSection } from "../CollapsibleSection";
-import { BadgeRenderer } from "../../badges/BadgeRenderer";
+import {
+  BadgeRenderer,
+  type BadgeRendererHandle,
+} from "../../badges/BadgeRenderer";
 import { ShapeSelector } from "../../badges/ShapeSelector";
 import { ColorPicker } from "../../badges/ColorPicker";
 import { CenterModeSelector } from "../../badges/CenterModeSelector";
@@ -64,6 +67,15 @@ export interface FinishDesignStageProps {
   /** Live preview size in logical pixels (matches the prototype's `badgePreviewMd`). */
   badgeSize?: number;
   /**
+   * Optional ref onto the live preview's imperative handle, so a screen can
+   * rasterize the *visible* badge with `captureBadge` when the user presses
+   * Bake — no second offscreen renderer, no first-mount RAF race, since the
+   * preview has been mounted and stable for the whole editing session. Mirrors
+   * `BadgeDesignerScreen`'s own `DesignEditor` seam (#449 D3). Stays optional:
+   * stories and non-capturing callers pass nothing.
+   */
+  previewRef?: React.RefObject<BadgeRendererHandle | null>;
+  /**
    * Seeds the internal single-open accordion state (uncontrolled default, like
    * `defaultValue`). The toggle stays internal (D10); this only sets which
    * section starts open — used by the per-section stories. `null` starts with
@@ -102,6 +114,7 @@ export function FinishDesignStage({
   bakeSubcopy = "saves & seals it into a verifiable badge",
   badgeSize = 150,
   initialExpandedSection = "shape",
+  previewRef,
 }: FinishDesignStageProps) {
   const { theme } = useUnistyles();
 
@@ -173,6 +186,7 @@ export function FinishDesignStage({
 
       <View style={styles.preview}>
         <BadgeRenderer
+          ref={previewRef}
           design={design}
           size={badgeSize}
           testID="finish-design-preview"

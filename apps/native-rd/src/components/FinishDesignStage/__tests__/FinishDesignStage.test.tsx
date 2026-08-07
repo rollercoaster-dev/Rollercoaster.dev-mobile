@@ -10,6 +10,7 @@ import {
   type FinishDesignStageProps,
 } from "../FinishDesignStage";
 import { ACCENT_COLORS } from "../../../badges/ColorPicker";
+import type { BadgeRendererHandle } from "../../../badges/BadgeRenderer";
 import {
   createDefaultBadgeDesign,
   BadgeShape,
@@ -312,5 +313,17 @@ describe("FinishDesignStage", () => {
     renderWithProviders(<FinishDesignStage {...makeProps({ onBake })} />);
     fireEvent.press(screen.getByTestId("finish-design-bake"));
     expect(onBake).toHaveBeenCalledTimes(1);
+  });
+
+  // #449 D3: the screen rasterizes the *visible* preview on Bake, so the ref
+  // must reach the mounted BadgeRenderer's imperative handle — not a detached
+  // or never-attached ref that would make captureBadge throw at bake time.
+  it("forwards previewRef to the mounted BadgeRenderer handle", () => {
+    const previewRef = React.createRef<BadgeRendererHandle>();
+    renderWithProviders(<FinishDesignStage {...makeProps({ previewRef })} />);
+
+    expect(screen.getByTestId("finish-design-preview")).toBeOnTheScreen();
+    expect(previewRef.current).not.toBeNull();
+    expect(typeof previewRef.current?.captureAsPng).toBe("function");
   });
 });
