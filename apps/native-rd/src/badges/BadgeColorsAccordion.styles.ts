@@ -39,9 +39,16 @@ export const styles = StyleSheet.create((theme) => ({
     fontSize: 12,
     fontWeight: "800",
   },
+  // See selectorStyles.rail: the swatch rail bleeds past the section's
+  // horizontal inset so it scrolls to the card border, and re-applies that
+  // inset as content padding so the first swatch stays aligned with the tab
+  // bar above it.
+  paletteRail: {
+    marginHorizontal: -theme.space[4],
+  },
   paletteRow: {
     gap: theme.space[3],
-    paddingHorizontal: theme.space[1],
+    paddingHorizontal: theme.space[4],
     alignItems: "flex-start",
   },
   cell: {

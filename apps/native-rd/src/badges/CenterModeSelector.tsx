@@ -49,7 +49,10 @@ export function CenterModeSelector({
       accessibilityRole="radiogroup"
       accessibilityLabel={t("center.a11y")}
     >
-      <View style={[selectorStyles.row, styles.row]}>
+      {/* Static (non-scrolling) rail, but it takes the same bleed + inset pair
+          as the scrolling selectors so its options line up with theirs across
+          sections instead of sitting a second `space[4]` in. */}
+      <View style={[selectorStyles.rail, selectorStyles.row, styles.row]}>
         {MODES.map((mode) => {
           const isSelected = mode === selectedMode;
           const label = t(`center.options.${mode}`);
