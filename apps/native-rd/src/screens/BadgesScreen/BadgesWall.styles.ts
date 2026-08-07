@@ -32,7 +32,9 @@ export const SPOTLIGHT_ART_COMPACT = 48;
 // the no-raw-colors rule still guards the REST of the file against accidental
 // hardcodes, while this one documented exception stays explicit.
 /* eslint-disable local/no-raw-colors -- fixed dark wall surface, see note above */
-const WALL_SURFACE = "#161616";
+/** The fixed dark wall surface. Exported so the container can extend it into
+ *  the device top-inset strip (App.tsx paints that, above the navigator). */
+export const WALL_SURFACE = "#161616";
 const WALL_INK = palette.white;
 const WALL_INK_MUTED = palette.gray400;
 const WALL_PANEL = palette.gray800;

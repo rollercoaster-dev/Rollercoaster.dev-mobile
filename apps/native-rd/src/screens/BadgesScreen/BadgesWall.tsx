@@ -55,6 +55,12 @@ export interface BadgesWallProps {
   onOpenBadge: (id: string) => void;
   /** Empty-state CTA target — container wires this to the Goals tab (D12). */
   onSeeGoals: () => void;
+  /**
+   * Extra bottom clearance for the gallery, threaded in by the container so the
+   * last row clears the floating FocusPillTabBar (`useTabScreenContentInset`).
+   * Layout only — omit it and the gallery keeps its own fixed bottom padding.
+   */
+  contentInset?: { paddingBottom: number };
 }
 
 /** Ghost-badge motif for the empty state — a dashed outline coin with the
@@ -121,6 +127,7 @@ export function BadgesWall({
   gallery,
   onOpenBadge,
   onSeeGoals,
+  contentInset,
 }: BadgesWallProps) {
   const { t, i18n } = useTranslation(["badges"]);
   const { animationPref } = useAnimationPref();
@@ -268,7 +275,7 @@ export function BadgesWall({
         keyExtractor={(item) => item.id}
         numColumns={numColumns}
         columnWrapperStyle={styles.galleryRow}
-        contentContainerStyle={styles.galleryContent}
+        contentContainerStyle={[styles.galleryContent, contentInset]}
         ListHeaderComponent={listHeader}
         renderItem={({ item }) => (
           <BadgeWallCell
