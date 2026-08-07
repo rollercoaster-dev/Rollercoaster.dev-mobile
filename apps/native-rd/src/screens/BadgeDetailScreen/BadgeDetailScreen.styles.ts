@@ -17,14 +17,13 @@ export const styles = StyleSheet.create((theme) => ({
     gap: theme.space[4],
     alignItems: "stretch",
   },
-  // Overflow menu host. Fixed top-right offset approximating the prototype's
-  // popover under the ⋯ button rather than measuring the button itself.
+  // Overflow menu host. `top` is supplied at render time by the screen, which
+  // adds the safe-area inset the Modal's own root view doesn't inherit.
   overflowBackdrop: {
     ...StyleSheet.absoluteFillObject,
   },
   overflowPopover: {
     position: "absolute",
-    top: theme.space[12],
     right: theme.space[4],
   },
   infoSection: {

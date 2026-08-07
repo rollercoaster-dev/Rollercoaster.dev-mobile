@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQuery } from "@evolu/react";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "phosphor-react-native";
@@ -39,6 +40,19 @@ import type {
 import { CelebrationHeroHeader } from "./CelebrationHeroHeader";
 import { BadgeOverflowMenu } from "./BadgeOverflowMenu";
 import { styles } from "./BadgeDetailScreen.styles";
+
+/**
+ * Distance from the top of the hero band to the bottom of the ⋯ button, so the
+ * overflow popover hangs just below its trigger: the band's `paddingTop`
+ * (`space[3]` = 12) plus the IconButton's `md` size (44).
+ *
+ * It has to be added to `insets.top` at render time rather than baked into the
+ * stylesheet: RN `Modal` mounts in its own root view measured from the physical
+ * screen top, while the hero lives inside the `marginTop: insets.top` container
+ * in `App.tsx`. A constant offset alone lands the menu over the nav row — and,
+ * on notched devices, up inside the status bar.
+ */
+const OVERFLOW_POPOVER_TOP_OFFSET = 56;
 
 const logger = new Logger("BadgeDetailScreen");
 
@@ -167,6 +181,7 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showOverflowMenu, setShowOverflowMenu] = useState(false);
   const { shouldAnimate } = useAnimationPref();
+  const insets = useSafeAreaInsets();
   const {
     exportVerifiableBadge,
     exportImage,
@@ -454,10 +469,9 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
 
       {/* Positioning is the consumer's job (BadgeOverflowMenu ships content
           only). A transparent Modal — the same overlay primitive
-          ConfirmDeleteModal uses — with a fixed top-right offset that
-          approximates the prototype's popover under the ⋯ button. Measuring
-          the real button position was considered and rejected as not worth
-          the plumbing at this size. */}
+          ConfirmDeleteModal uses — anchored under the ⋯ button by deriving the
+          offset from the hero's known geometry rather than measuring the real
+          button, which isn't worth the plumbing at this size. */}
       <Modal
         visible={showOverflowMenu}
         transparent
@@ -471,7 +485,12 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
           accessibilityLabel={t("badgeDetail:hero.overflowDismiss")}
           testID="overflow-backdrop"
         />
-        <View style={styles.overflowPopover}>
+        <View
+          style={[
+            styles.overflowPopover,
+            { top: insets.top + OVERFLOW_POPOVER_TOP_OFFSET },
+          ]}
+        >
           <BadgeOverflowMenu
             hasCredential={Boolean(badge.credential)}
             shareBadgeLabel={t("badgeDetail:share.overflow.shareBadge")}
