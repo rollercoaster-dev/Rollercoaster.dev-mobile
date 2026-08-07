@@ -15,13 +15,29 @@
     }
   },
   "actions": {
-    "backToFocus": "Back to Focus",
-    "startWorking": "Start Working",
+    "done": "Done",
     "deleteGoal": "Delete Goal"
+  },
+  "editor": {
+    "goalSectionLabel": "Goal",
+    "datesInfo": "Dates and dependencies live on each step — open a step in the full planner to set \"after\" or \"waiting on\".",
+    "overflowA11yLabel": "More options",
+    "evidencePickerTitle": "Planned evidence",
+    "breakIntoSubStepsLabel": "break into sub-steps",
+    "breakIntoSubStepsA11yLabel": "Break \"{{title}}\" into sub-steps",
+    "newSubStepTitle": "New sub-step"
   },
   "confirmDelete": {
     "title": "Delete this goal?",
     "message": "\"{{title}}\" and all progress will be permanently deleted."
+  },
+  "confirmDeleteStep": {
+    "title": "Delete this step?",
+    "message": "\"{{title}}\" will be deleted, along with its evidence and any sub-steps."
+  },
+  "confirmDeleteSubStep": {
+    "title": "Delete this sub-step?",
+    "message": "\"{{title}}\" will be deleted, along with its evidence."
   },
   "errors": {
     "titleRequired": "Title cannot be empty",
@@ -56,7 +72,16 @@
     "addSubStepButtonA11y": "Add sub-step under \"{{title}}\"",
     "subStepDeleteA11yLabel": "Delete sub-step \"{{title}}\"",
     "subStepEditA11yLabel": "Edit sub-step: {{title}}",
+    "dateDepChips": {
+      "after": "after {{title}}",
+      "waitingOn": "waiting on {{who}}",
+      "waitingOnExpected": "waiting on {{who}} · expected {{date}}",
+      "due": "due {{date}}"
+    },
     "a11y": {
+      "movedToPosition": "Moved \"{{title}}\" to position {{position}}",
+      "stepPromotedToTopLevel": "\"{{title}}\" promoted to top level",
+      "stepNestedUnder": "\"{{title}}\" nested under \"{{parent}}\"",
       "movedFromTo": "Step moved from position {{from}} to {{to}}",
       "nestedUnder": "Step nested under \"{{title}}\"",
       "promotedToTopLevel": "Step promoted to top level",
