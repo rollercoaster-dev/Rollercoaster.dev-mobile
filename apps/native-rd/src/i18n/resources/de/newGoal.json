@@ -59,6 +59,8 @@
   },
   "errors": {
     "createFailedTitle": "Ziel konnte nicht erstellt werden",
-    "createFailedMessage": "Etwas ist schiefgelaufen. Versuche es nochmal."
+    "createFailedMessage": "Etwas ist schiefgelaufen. Versuche es nochmal.",
+    "missingTitleTitle": "Dein Ziel braucht einen Namen",
+    "missingTitleMessage": "Du bist wieder bei Schritt 1. Gib dem Ziel einen Namen und mach dann weiter."
   }
 }

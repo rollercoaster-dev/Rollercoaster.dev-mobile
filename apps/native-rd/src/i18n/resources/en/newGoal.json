@@ -59,6 +59,8 @@
   },
   "errors": {
     "createFailedTitle": "Could not create goal",
-    "createFailedMessage": "Something went wrong. Please try again."
+    "createFailedMessage": "Something went wrong. Please try again.",
+    "missingTitleTitle": "Your goal needs a name",
+    "missingTitleMessage": "You're back on step 1. Name the goal, then carry on."
   }
 }

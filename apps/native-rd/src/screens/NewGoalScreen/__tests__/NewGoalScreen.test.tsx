@@ -454,6 +454,30 @@ describe("NewGoalScreen", () => {
       expect(screen.getByText(t("newGoal:ready.headline"))).toBeOnTheScreen();
     });
 
+    // Quick add doesn't gate on the title the way Next does, so the ready step
+    // is reachable with it blank. That must land the user back on step 1, not on
+    // the generic create-failed alert from createGoal's validation guard.
+    it("returns to the name step when the title is still blank", () => {
+      renderWithProviders(<NewGoalScreen />);
+      fireEvent.press(screen.getByTestId("new-goal-quick-add"));
+      fireEvent.press(screen.getByTestId("new-goal-build-ready-button"));
+
+      fireEvent.press(screen.getByTestId("new-goal-start-working-button"));
+
+      expect(mockCreateGoal).not.toHaveBeenCalled();
+      expect(mockReplace).not.toHaveBeenCalled();
+      expect(mockReportError).not.toHaveBeenCalled();
+      expect(alertSpy).toHaveBeenCalledWith(
+        t("newGoal:errors.missingTitleTitle"),
+        t("newGoal:errors.missingTitleMessage"),
+      );
+      expect(screen.getByText(t("newGoal:name.title"))).toBeOnTheScreen();
+      // History was reset with it, so name is the root again — no back arrow.
+      expect(
+        screen.queryByLabelText(t("common:screenHeader.a11y.goBack")),
+      ).toBeNull();
+    });
+
     it("stops the batch and does not navigate when a step insert fails", () => {
       const error = { type: "ValidMutationSizeError" };
       mockCreateStep.mockReturnValueOnce({ ok: false, error });

@@ -96,6 +96,24 @@ export function NewGoalScreen() {
   }
 
   /**
+   * Sends the user back to step 1 for the one field the wizard can't do without.
+   * Reachable because quick add is a *quiet* fast path — it skips the first-step
+   * screen without gating on the title the way the Next button does — so the
+   * ready step can be reached with the title still blank. Without this, Start
+   * Working would hand "" to createGoal, whose validation guard throws, and the
+   * user would get the generic create-failed alert (plus a Sentry report) for
+   * what is really an empty field on a screen they can still get to.
+   */
+  function returnToNameStep() {
+    setCurrentStep("name");
+    setHistory([]);
+    Alert.alert(
+      t("newGoal:errors.missingTitleTitle"),
+      t("newGoal:errors.missingTitleMessage"),
+    );
+  }
+
+  /**
    * Persists the whole wizard in one pass: the goal, then each build-list step
    * with its ordinal + planned evidence, then each of that step's sub-steps with
    * `parentStepId` set. Every row is created complete — never title-only then
@@ -109,6 +127,7 @@ export function NewGoalScreen() {
    * Not in Scope).
    */
   function handleStartWorking() {
+    if (!goalTitle.trim()) return returnToNameStep();
     try {
       const goalResult = createGoal(goalTitle);
       if (!goalResult.ok) return reportCreateFailure(goalResult.error);
