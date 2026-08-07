@@ -15,13 +15,29 @@
     }
   },
   "actions": {
-    "backToFocus": "Zurück zu Focus",
-    "startWorking": "Anfangen",
+    "done": "Fertig",
     "deleteGoal": "Ziel löschen"
+  },
+  "editor": {
+    "goalSectionLabel": "Ziel",
+    "datesInfo": "Termine und Abhängigkeiten gehören zu den einzelnen Schritten — öffne einen Schritt in der vollständigen Planung, um \"danach\" oder \"wartet auf\" zu setzen.",
+    "overflowA11yLabel": "Weitere Optionen",
+    "evidencePickerTitle": "Geplante Evidenz",
+    "breakIntoSubStepsLabel": "in Unterschritte aufteilen",
+    "breakIntoSubStepsA11yLabel": "\"{{title}}\" in Unterschritte aufteilen",
+    "newSubStepTitle": "Neuer Unterschritt"
   },
   "confirmDelete": {
     "title": "Ziel löschen?",
     "message": "\"{{title}}\" und alle Fortschritte werden dauerhaft gelöscht."
+  },
+  "confirmDeleteStep": {
+    "title": "Diesen Schritt löschen?",
+    "message": "\"{{title}}\" wird gelöscht, samt Evidenz und allen Unterschritten."
+  },
+  "confirmDeleteSubStep": {
+    "title": "Diesen Unterschritt löschen?",
+    "message": "\"{{title}}\" wird gelöscht, samt Evidenz."
   },
   "errors": {
     "titleRequired": "Titel darf nicht leer sein.",
@@ -56,7 +72,16 @@
     "addSubStepButtonA11y": "Unterschritt unter \"{{title}}\" hinzufügen",
     "subStepDeleteA11yLabel": "Unterschritt \"{{title}}\" löschen",
     "subStepEditA11yLabel": "Unterschritt bearbeiten: {{title}}",
+    "dateDepChips": {
+      "after": "nach {{title}}",
+      "waitingOn": "wartet auf {{who}}",
+      "waitingOnExpected": "wartet auf {{who}} · erwartet {{date}}",
+      "due": "fällig {{date}}"
+    },
     "a11y": {
+      "movedToPosition": "\"{{title}}\" auf Position {{position}} verschoben",
+      "stepPromotedToTopLevel": "\"{{title}}\" auf oberste Ebene verschoben",
+      "stepNestedUnder": "\"{{title}}\" unter \"{{parent}}\" verschachtelt",
       "movedFromTo": "Schritt von Position {{from}} zu {{to}} verschoben",
       "nestedUnder": "Schritt unter \"{{title}}\" verschachtelt",
       "promotedToTopLevel": "Schritt auf oberste Ebene verschoben",

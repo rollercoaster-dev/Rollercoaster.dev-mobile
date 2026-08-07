@@ -43,6 +43,9 @@ import {
   TextInput,
   ScrollView,
   type GestureResponderEvent,
+  type LayoutChangeEvent,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
 } from "react-native";
 import { DotsThree, Pencil } from "phosphor-react-native";
 import { useUnistyles } from "react-native-unistyles";
@@ -161,6 +164,20 @@ export interface EditGoalViewProps {
    * (short lists don't scroll); reorder still works without it.
    */
   dragScrollController?: DragScrollController;
+  /**
+   * Instrumentation for the internal ScrollView, supplied by the same screen
+   * that supplies `dragScrollController` (#446). The ScrollView lives in here
+   * (#493/D8), so the screen cannot attach these itself — and without them the
+   * controller's metrics stay at zero, which makes `getAutoScrollVelocity`
+   * return 0 for every pointer position and silently kills edge auto-scroll.
+   * Omitted in Storybook (short lists don't scroll).
+   */
+  scrollInstrumentation?: {
+    ref?: React.Ref<ScrollView>;
+    onLayout?: (event: LayoutChangeEvent) => void;
+    onScroll?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
+    onContentSizeChange?: (width: number, height: number) => void;
+  };
 
   // --- Copy (i18n-free per D9; English defaults; [Integrate] passes t()). ---
   headerLabel?: string;
@@ -245,6 +262,7 @@ export function EditGoalView({
   onBack,
   onDone,
   dragScrollController,
+  scrollInstrumentation,
   headerLabel = "Edit goal",
   goalSectionLabel = "Goal",
   descriptionPlaceholder,
@@ -294,6 +312,10 @@ export function EditGoalView({
   const [editingEvidenceId, setEditingEvidenceId] = useState<string | null>(
     null,
   );
+
+  // Scrolling is off while a row is dragged: a native ScrollView isn't in
+  // RNGH's gesture tree, so otherwise it wins the pan and the row never moves.
+  const [rowDragging, setRowDragging] = useState(false);
 
   // Native tag of the evidence chip that opened the sheet, captured from the
   // Pressable's press event (#501). Threaded straight into AnimatedSheet's
@@ -404,6 +426,12 @@ export function EditGoalView({
           sheet's absolute overlay — a sibling below — fills the viewport rather
           than the scroll content (#493/D8). */}
         <ScrollView
+          ref={scrollInstrumentation?.ref}
+          onLayout={scrollInstrumentation?.onLayout}
+          onScroll={scrollInstrumentation?.onScroll}
+          scrollEventThrottle={16}
+          onContentSizeChange={scrollInstrumentation?.onContentSizeChange}
+          scrollEnabled={!rowDragging}
           style={styles.scroll}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
@@ -460,6 +488,7 @@ export function EditGoalView({
             onDeleteSubStep={onDeleteSubStep}
             onDeleteStep={onDeleteStep}
             dragScrollController={dragScrollController}
+            onDragStateChange={setRowDragging}
             stepsSectionLabel={stepsSectionLabel}
             addStepPlaceholder={addStepPlaceholder}
             stepCountLabel={stepCountLabel}

@@ -46,7 +46,7 @@ export type GoalsStackParamList = {
   };
   EvidenceViewer: { goalId: string; initialEvidenceId: string };
   NewGoal: undefined;
-  EditMode: { goalId: string; cameFromFocus?: boolean };
+  EditMode: { goalId: string };
   BadgeDesigner:
     | {
         mode: "new-goal";

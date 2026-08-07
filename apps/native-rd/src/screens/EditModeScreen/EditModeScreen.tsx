@@ -8,31 +8,31 @@ import React, {
 } from "react";
 import {
   View,
-  TextInput,
+  Modal,
+  ScrollView,
   ActivityIndicator,
   Alert,
   type LayoutChangeEvent,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
 } from "react-native";
-import {
-  KeyboardAwareScrollView,
-  type KeyboardAwareScrollViewRef,
-} from "react-native-keyboard-controller";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import { useQuery } from "@evolu/react";
 import { useTranslation } from "react-i18next";
 import { useUnistyles } from "react-native-unistyles";
 import { Text } from "../../components/Text";
-import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { Button } from "../../components/Button";
-import { ScreenSubHeader } from "../../components/ScreenHeader";
-import {
-  StepList,
-  type DragScrollController,
-  type DragScrollMetrics,
-} from "../../components/StepList";
+import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { ConfirmDeleteModal } from "../../components/ConfirmDeleteModal";
+import {
+  EditGoalView,
+  EditGoalOverflowMenu,
+} from "../../components/EditGoalView";
+import type {
+  DragScrollController,
+  DragScrollMetrics,
+} from "../../components/StepList";
 import {
   goalsQuery,
   updateGoal,
@@ -44,62 +44,45 @@ import {
   deleteStep,
   reorderSteps,
   reorderSubSteps,
-  groupStepsByParent,
-  flattenGroupedSteps,
-  StepStatus,
 } from "../../db";
 import type { GoalId, StepId } from "../../db";
 import { reportError } from "../../services/sentry-report";
 import { runEvoluMutation } from "../../utils/evoluMutation";
-import {
-  validateEvidenceType,
-  type EvidenceTypeValue,
-} from "../../types/evidence";
-import { parsePlannedEvidenceTypes } from "../../utils/parsePlannedEvidenceTypes";
+import type { EvidenceTypeValue } from "../../types/evidence";
 import type {
   EditModeScreenProps,
   GoalsStackParamList,
 } from "../../navigation/types";
-import { useTabScreenContentInset } from "../../navigation/useTabScreenContentInset";
-import { ModeIndicator } from "../../components/ModeIndicator";
+import { buildEditGoalCopy } from "./editGoalCopy";
+import { buildEditGoalSteps } from "./editGoalSteps";
 import { styles } from "./EditModeScreen.styles";
 
 const DEBOUNCE_MS = 500;
 
-type MeasurableScrollView = KeyboardAwareScrollViewRef & {
-  measureInWindow(
-    callback: (x: number, y: number, width: number, height: number) => void,
-  ): void;
-};
-
-function EditContent({
-  goalId,
-  cameFromFocus,
-}: {
-  goalId: string;
-  cameFromFocus: boolean;
-}) {
+function EditContent({ goalId }: { goalId: string }) {
   const navigation = useNavigation<NavigationProp<GoalsStackParamList>>();
   const { theme } = useUnistyles();
-  const { t } = useTranslation(["editGoal"]);
-  const tabInset = useTabScreenContentInset();
+  const { t, i18n } = useTranslation(["editGoal", "common"]);
+  // EditGoalView is i18n-free by design (#445/D9) — its ~30 copy props are
+  // resolved in one place (editGoalCopy) and spread in below.
+  const copy = useMemo(() => buildEditGoalCopy(t), [t]);
   const rows = useQuery(goalsQuery);
   const goal = rows.find((r) => r.id === goalId);
   const stepRows = useQuery(stepsByGoalQuery(goalId as GoalId));
-  // Group into a one-level parent→children tree, then flatten to render order
-  // (each parent immediately followed by its children) for StepList (D10).
-  const flatGrouped = flattenGroupedSteps(groupStepsByParent(stepRows));
 
   const [title, setTitle] = useState(goal?.title ?? "");
   const [description, setDescription] = useState(goal?.description ?? "");
-  const [titleError, setTitleError] = useState("");
+  const [overflowOpen, setOverflowOpen] = useState(false);
   const [showDeleteGoalModal, setShowDeleteGoalModal] = useState(false);
-  const [isStepDragging, setIsStepDragging] = useState(false);
-  const isStepDraggingRef = useRef(false);
 
   const titleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const descTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const scrollRef = useRef<KeyboardAwareScrollViewRef>(null);
+
+  // Drag auto-scroll (unchanged from the StepList era) — but the ScrollView it
+  // measures now lives inside EditGoalView (#493/D8), so the metrics arrive via
+  // the view's `scrollInstrumentation` prop instead of props on our own
+  // ScrollView.
+  const scrollRef = useRef<ScrollView>(null);
   const scrollMetricsRef = useRef<DragScrollMetrics>({
     offsetY: 0,
     viewportTop: 0,
@@ -116,26 +99,30 @@ function EditContent({
     }),
     [],
   );
-
-  function handleScrollLayout(event: LayoutChangeEvent) {
-    scrollMetricsRef.current.viewportHeight = event.nativeEvent.layout.height;
-    const measurable = scrollRef.current as MeasurableScrollView | null;
-    measurable?.measureInWindow((_x, y, _width, height) => {
-      scrollMetricsRef.current.viewportTop = y;
-      scrollMetricsRef.current.viewportHeight = height;
-    });
-  }
-
-  function handleScroll(event: NativeSyntheticEvent<NativeScrollEvent>) {
-    if (!isStepDraggingRef.current) {
-      scrollMetricsRef.current.offsetY = event.nativeEvent.contentOffset.y;
-    }
-  }
-
-  function handleStepDragStateChange(isDragging: boolean) {
-    isStepDraggingRef.current = isDragging;
-    setIsStepDragging(isDragging);
-  }
+  const scrollInstrumentation = useMemo(
+    () => ({
+      ref: scrollRef,
+      onLayout: (event: LayoutChangeEvent) => {
+        scrollMetricsRef.current.viewportHeight = event.nativeEvent.layout.height; // prettier-ignore
+        // viewportTop is screen-absolute (the drag pointer's frame), so it can
+        // only come from a measure — layout coordinates are parent-relative.
+        // ScrollView itself has no measureInWindow; its native host node does.
+        scrollRef.current
+          ?.getNativeScrollRef()
+          ?.measureInWindow((_x, y, _width, height) => {
+            scrollMetricsRef.current.viewportTop = y;
+            scrollMetricsRef.current.viewportHeight = height;
+          });
+      },
+      onScroll: (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+        scrollMetricsRef.current.offsetY = event.nativeEvent.contentOffset.y;
+      },
+      onContentSizeChange: (_width: number, height: number) => {
+        scrollMetricsRef.current.contentHeight = height;
+      },
+    }),
+    [],
+  );
 
   useEffect(() => {
     return () => {
@@ -149,11 +136,16 @@ function EditContent({
       if (titleTimer.current) clearTimeout(titleTimer.current);
       titleTimer.current = setTimeout(() => {
         const trimmed = newTitle.trim();
+        // Both branches surface through Alert now: EditGoalView's title card
+        // has no error slot, and inventing one would be un-storied UI. Same
+        // channel the description path has always used.
         if (!trimmed) {
-          setTitleError(t("editGoal:errors.titleRequired"));
+          Alert.alert(
+            t("editGoal:errors.alertErrorTitle"),
+            t("editGoal:errors.titleRequired"),
+          );
           return;
         }
-        setTitleError("");
         runEvoluMutation(
           () => updateGoal(goalId as GoalId, { title: trimmed }),
           (error) => {
@@ -163,7 +155,10 @@ function EditContent({
               error,
             });
             reportError(error, { area: "goal.mutate", kind: "update" });
-            setTitleError(t("editGoal:errors.updateTitleFailed"));
+            Alert.alert(
+              t("editGoal:errors.alertErrorTitle"),
+              t("editGoal:errors.updateTitleFailed"),
+            );
           },
         );
       }, DEBOUNCE_MS);
@@ -195,6 +190,11 @@ function EditContent({
     [goalId, t],
   );
 
+  const steps = useMemo(
+    () => buildEditGoalSteps(stepRows, t, i18n.language),
+    [stepRows, t, i18n.language],
+  );
+
   if (!goal) {
     return (
       <View style={styles.centered}>
@@ -213,23 +213,18 @@ function EditContent({
     debouncedUpdateDescription(text);
   }
 
-  function handleUpdateStep(
+  // Title and evidence arrive as separate callbacks from the editor, so both
+  // route through one updateStep wrapper rather than a combined handler.
+  function updateStepFields(
     stepId: string,
-    newTitle: string,
-    plannedEvidenceTypes?: EvidenceTypeValue[],
+    fields: { title?: string; plannedEvidenceTypes?: EvidenceTypeValue[] },
   ) {
     runEvoluMutation(
-      () =>
-        updateStep(stepId as StepId, {
-          title: newTitle,
-          ...(plannedEvidenceTypes !== undefined
-            ? { plannedEvidenceTypes }
-            : {}),
-        }),
+      () => updateStep(stepId as StepId, fields),
       (error) => {
         console.error("[EditModeScreen] Failed to update step", {
           stepId,
-          newTitle,
+          fields,
           error,
         });
         reportError(error, { area: "step.mutate", kind: "update" });
@@ -241,8 +236,9 @@ function EditContent({
     );
   }
 
+  // Unconditional (D9): the storied × has no min-count gate, and a goal with
+  // zero steps is a supported state across the redesign, not an error.
   function handleDeleteStep(stepId: string) {
-    if (stepRows.length <= 1) return;
     runEvoluMutation(
       () => deleteStep(stepId as StepId),
       (error) => {
@@ -260,10 +256,10 @@ function EditContent({
     );
   }
 
-  function handleCreateStep(
-    stepTitle: string,
-    plannedEvidenceTypes: EvidenceTypeValue[],
-  ) {
+  // No plannedEvidenceTypes argument (D4): the editor's add-step flow has no
+  // evidence-types input, so the column stays unset and the read path resolves
+  // it to the default plan.
+  function handleCreateStep(stepTitle: string) {
     // Top-level ordinals are their own sibling group — exclude sub-steps so a
     // new root step doesn't inherit a child's ordinal.
     const maxOrdinal = stepRows.reduce(
@@ -272,13 +268,7 @@ function EditContent({
       -1,
     );
     runEvoluMutation(
-      () =>
-        createStep(
-          goalId as GoalId,
-          stepTitle,
-          maxOrdinal + 1,
-          plannedEvidenceTypes,
-        ),
+      () => createStep(goalId as GoalId, stepTitle, maxOrdinal + 1),
       (error) => {
         console.error("[EditModeScreen] Failed to create step", {
           goalId,
@@ -294,11 +284,7 @@ function EditContent({
     );
   }
 
-  function handleCreateSubStep(
-    parentStepId: string,
-    subStepTitle: string,
-    plannedEvidenceTypes: EvidenceTypeValue[],
-  ) {
+  function handleCreateSubStep(parentStepId: string, subStepTitle: string) {
     // Sub-step ordinals are scoped to their parent's sibling group.
     const maxChildOrdinal = stepRows.reduce(
       (max, s) =>
@@ -314,7 +300,6 @@ function EditContent({
           parentStepId as StepId,
           subStepTitle,
           maxChildOrdinal + 1,
-          plannedEvidenceTypes,
         ),
       (error) => {
         console.error("[EditModeScreen] Failed to create sub-step", {
@@ -440,114 +425,78 @@ function EditContent({
     }
   }
 
-  function handleNavigate() {
-    navigation.navigate("FocusMode", { goalId });
-  }
-
-  const canDelete = stepRows.length > 1;
-
   return (
     <>
-      <KeyboardAwareScrollView
-        ref={scrollRef}
-        contentContainerStyle={[styles.scrollContent, tabInset]}
-        bottomOffset={40}
-        keyboardShouldPersistTaps="handled"
-        scrollEnabled={!isStepDragging}
-        onLayout={handleScrollLayout}
-        onScroll={handleScroll}
-        scrollEventThrottle={16}
-        onContentSizeChange={(_width, height) => {
-          scrollMetricsRef.current.contentHeight = height;
-        }}
+      <EditGoalView
+        goalTitle={title}
+        onGoalTitleChange={handleTitleChange}
+        description={description}
+        onDescriptionChange={handleDescriptionChange}
+        steps={steps}
+        onReorderSteps={handleReorderSteps}
+        onReorderSubSteps={handleReorderSubSteps}
+        onReparentStep={handleReparentStep}
+        onAddStep={handleCreateStep}
+        onStepTitleChange={(stepId, stepTitle) =>
+          updateStepFields(stepId, { title: stepTitle })
+        }
+        onStepEvidenceChange={(stepId, types) =>
+          updateStepFields(stepId, { plannedEvidenceTypes: types })
+        }
+        onAddSubStep={handleCreateSubStep}
+        onSubStepTitleChange={(subStepId, subStepTitle) =>
+          updateStepFields(subStepId, { title: subStepTitle })
+        }
+        onSubStepEvidenceChange={(subStepId, types) =>
+          updateStepFields(subStepId, { plannedEvidenceTypes: types })
+        }
+        onDeleteStep={handleDeleteStep}
+        onDeleteSubStep={handleDeleteStep}
+        onOverflowPress={() => setOverflowOpen(true)}
+        onBack={() => navigation.goBack()}
+        onDone={() => navigation.navigate("FocusMode", { goalId })}
+        dragScrollController={dragScrollController}
+        scrollInstrumentation={scrollInstrumentation}
+        {...copy}
+      />
+
+      {/* ⋯ overflow popover (D7). No anchored-dropdown component exists in the
+          app yet, so this mirrors the nest-under picker's Modal shape from
+          EditGoalStepRow — scrim + bottom card + Cancel — rather than inventing
+          one. It holds only "Delete goal"; confirming routes through the same
+          ConfirmDeleteModal flow the old screen used. */}
+      <Modal
+        visible={overflowOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setOverflowOpen(false)}
+        accessibilityViewIsModal
       >
-        {/* Title */}
-        <View style={styles.section}>
-          <Text variant="label" style={styles.label}>
-            {t("editGoal:fields.title.label")}
-          </Text>
-          <TextInput
-            style={[
-              styles.titleInput,
-              titleError ? styles.inputError : undefined,
-            ]}
-            value={title}
-            onChangeText={handleTitleChange}
-            placeholder={t("editGoal:fields.title.placeholder")}
-            placeholderTextColor={theme.colors.textMuted}
-            accessibilityLabel={t("editGoal:fields.title.a11yLabel")}
-            accessibilityHint={t("editGoal:fields.title.a11yHint")}
-            returnKeyType="next"
-          />
-          {titleError ? (
-            <Text variant="caption" style={styles.errorText}>
-              {titleError}
-            </Text>
-          ) : null}
+        <View
+          style={[
+            styles.overflowOverlay,
+            { backgroundColor: `${theme.colors.shadow}80` },
+          ]}
+        >
+          <SafeAreaView edges={["bottom"]} style={styles.overflowContainer}>
+            <View style={styles.overflowCard}>
+              <EditGoalOverflowMenu
+                onDelete={() => {
+                  setOverflowOpen(false);
+                  setShowDeleteGoalModal(true);
+                }}
+                deleteGoalLabel={t("editGoal:actions.deleteGoal")}
+              />
+              <Button
+                label={t("common:actions.cancel")}
+                variant="secondary"
+                onPress={() => setOverflowOpen(false)}
+              />
+            </View>
+          </SafeAreaView>
         </View>
+      </Modal>
 
-        {/* Description */}
-        <View style={styles.section}>
-          <Text variant="label" style={styles.label}>
-            {t("editGoal:fields.description.label")}
-          </Text>
-          <TextInput
-            style={styles.descriptionInput}
-            value={description}
-            onChangeText={handleDescriptionChange}
-            placeholder={t("editGoal:fields.description.placeholder")}
-            placeholderTextColor={theme.colors.textMuted}
-            multiline
-            accessibilityLabel={t("editGoal:fields.description.a11yLabel")}
-            accessibilityHint={t("editGoal:fields.description.a11yHint")}
-          />
-        </View>
-
-        {/* Steps — reuses StepList with drag-and-drop support */}
-        <StepList
-          steps={flatGrouped.map((s) => ({
-            id: s.id,
-            title: s.title ?? "",
-            completed: s.status === StepStatus.completed,
-            plannedEvidenceTypes:
-              parsePlannedEvidenceTypes(s.plannedEvidenceTypes)?.map(
-                validateEvidenceType,
-              ) ?? null,
-            parentStepId: s.parentStepId,
-          }))}
-          onCreateStep={handleCreateStep}
-          onCreateSubStep={handleCreateSubStep}
-          onUpdateStep={handleUpdateStep}
-          onDeleteStep={canDelete ? handleDeleteStep : undefined}
-          onReorderSteps={handleReorderSteps}
-          onReorderSubSteps={handleReorderSubSteps}
-          onReparentStep={handleReparentStep}
-          dragScrollController={dragScrollController}
-          onDragStateChange={handleStepDragStateChange}
-        />
-
-        {/* Navigate button */}
-        <View style={styles.buttonSection}>
-          <Button
-            label={
-              cameFromFocus
-                ? t("editGoal:actions.backToFocus")
-                : t("editGoal:actions.startWorking")
-            }
-            onPress={handleNavigate}
-            testID={cameFromFocus ? "back-to-focus" : "start-working"}
-          />
-        </View>
-
-        {/* Delete goal */}
-        <View style={styles.buttonSection}>
-          <Button
-            label={t("editGoal:actions.deleteGoal")}
-            variant="destructive"
-            onPress={() => setShowDeleteGoalModal(true)}
-          />
-        </View>
-      </KeyboardAwareScrollView>
       <ConfirmDeleteModal
         visible={showDeleteGoalModal}
         onCancel={() => setShowDeleteGoalModal(false)}
@@ -560,27 +509,24 @@ function EditContent({
 }
 
 export function EditModeScreen({ route }: EditModeScreenProps) {
-  const navigation = useNavigation();
   const { theme } = useUnistyles();
-  const { t } = useTranslation(["editGoal"]);
-  const { goalId, cameFromFocus = false } = route.params;
+  const { goalId } = route.params;
 
+  // No outer ScreenSubHeader and no ModeIndicator: EditGoalView is the screen
+  // host — it renders its own header (with the ⋯ trigger) and pinned Done
+  // footer (D1) — and the redesigned Epic #384 screens dropped the mode
+  // indicator and tab inset (D2).
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      <ScreenSubHeader
-        label={t("editGoal:title")}
-        onBack={() => navigation.goBack()}
-      />
       <ErrorBoundary>
         <Suspense
           fallback={
             <ActivityIndicator style={styles.loadingIndicator} size="large" />
           }
         >
-          <EditContent goalId={goalId} cameFromFocus={cameFromFocus} />
+          <EditContent goalId={goalId} />
         </Suspense>
       </ErrorBoundary>
-      <ModeIndicator mode="edit" />
     </View>
   );
 }

@@ -86,6 +86,12 @@ export interface EditGoalStepListProps {
    * (short lists don't scroll); reorder still works without it.
    */
   dragScrollController?: DragScrollController;
+  /**
+   * Fires when a row drag starts / ends, so the host can disable its
+   * ScrollView for the duration — a native ScrollView isn't in RNGH's gesture
+   * tree, so otherwise it wins the pan and the row never moves.
+   */
+  onDragStateChange?: (isDragging: boolean) => void;
 
   // --- Copy (i18n-free per D9; English defaults; [Integrate] passes t()). ---
   stepsSectionLabel?: string;
@@ -149,6 +155,7 @@ export function EditGoalStepList({
   onDeleteSubStep,
   onDeleteStep,
   dragScrollController,
+  onDragStateChange,
   stepsSectionLabel = "Steps",
   addStepPlaceholder = "Add step...",
   stepCountLabel = defaultStepCountLabel,
@@ -203,6 +210,10 @@ export function EditGoalStepList({
     announcePromote,
     announceNestedUnder,
   });
+
+  useEffect(() => {
+    onDragStateChange?.(drag.isDragging);
+  }, [drag.isDragging, onDragStateChange]);
 
   // R14: register the list container's screen-absolute origin so drop outlines
   // render in list-local coordinates. measureInWindow is called from onLayout

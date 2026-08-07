@@ -216,8 +216,6 @@ function TimelineContent({
     navigation.navigate("CompletionFlow", { goalId });
   };
 
-  // No `cameFromFocus` — that flag only relabels EditMode's exit CTA ("Back to
-  // Focus" vs. "Start working"), and this entry point is the Timeline, not Focus.
   const handleEditPress = () => {
     navigation.navigate("EditMode", { goalId });
   };
