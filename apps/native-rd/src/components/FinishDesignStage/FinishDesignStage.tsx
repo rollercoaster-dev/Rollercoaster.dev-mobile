@@ -425,7 +425,7 @@ export function FinishDesignStage({
           title={inscriptionsSectionTitle}
           expanded={expandedSection === "inscriptions"}
           onExpandedChange={openSection("inscriptions")}
-          testID="finish-design-bottom-label"
+          testID="finish-design-inscriptions"
         >
           <View style={styles.centerStack}>
             <TextInput

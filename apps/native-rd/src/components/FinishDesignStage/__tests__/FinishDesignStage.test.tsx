@@ -93,7 +93,7 @@ describe("FinishDesignStage", () => {
     expect(screen.getByTestId("finish-design-frame")).toBeOnTheScreen();
     expect(screen.getByTestId("finish-design-center")).toBeOnTheScreen();
     expect(screen.getByTestId("finish-design-color")).toBeOnTheScreen();
-    expect(screen.getByTestId("finish-design-bottom-label")).toBeOnTheScreen();
+    expect(screen.getByTestId("finish-design-inscriptions")).toBeOnTheScreen();
     expect(screen.getByTestId("finish-design-bake")).toBeOnTheScreen();
   });
 
