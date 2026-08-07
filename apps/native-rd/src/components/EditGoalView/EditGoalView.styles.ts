@@ -169,6 +169,16 @@ export const styles = StyleSheet.create((theme) => ({
     color: theme.colors.text,
     padding: 0,
   },
+  // Clear-all-text control on an inline rename row (steps and sub-steps).
+  // Carries a Phosphor XCircle rather than the row's bare × delete glyph, so
+  // "empty the field" never reads as "delete the step". Full 44pt target per
+  // the a11y baseline; only mounted while the field has text.
+  editClear: {
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
   evidenceChip: {
     minHeight: 32,
     justifyContent: "center" as const,

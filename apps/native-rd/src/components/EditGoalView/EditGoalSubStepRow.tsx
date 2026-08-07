@@ -12,6 +12,7 @@ import {
   type GestureResponderEvent,
 } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import { XCircle } from "phosphor-react-native";
 import { useUnistyles } from "react-native-unistyles";
 import Animated, {
   type SharedValue,
@@ -73,6 +74,8 @@ export interface EditGoalSubStepRowProps {
   editEvidenceLabel?: string;
   /** a11y label for the × delete affordance. */
   deleteSubStepLabel?: (subStepTitle: string) => string;
+  /** a11y label for the clear control that empties the rename field. */
+  clearSubStepTitleLabel?: string;
   /** a11y label for the ↑ reorder-up fallback button. */
   moveSubStepUpLabel?: (subStepTitle: string) => string;
   /** a11y label for the ↓ reorder-down fallback button. */
@@ -110,6 +113,7 @@ export function EditGoalSubStepRow({
   tapToEditHint = "Tap to edit sub-step title",
   editEvidenceLabel = "Edit planned evidence",
   deleteSubStepLabel = (subStepTitle) => `Delete sub-step: ${subStepTitle}`,
+  clearSubStepTitleLabel = "Clear sub-step title",
   moveSubStepUpLabel = (subStepTitle) => `Move "${subStepTitle}" up`,
   moveSubStepDownLabel = (subStepTitle) => `Move "${subStepTitle}" down`,
   unNestA11yLabel = "Promote this step to top level",
@@ -201,6 +205,24 @@ export function EditGoalSubStepRow({
           testID={`edit-goal-substep-edit-${subStep.id}`}
           accessibilityLabel={editSubStepA11yLabel(subStep.title)}
         />
+        {/* Mirrors EditGoalStepRow's clear control — wipes the field without
+            committing or deleting the sub-step. */}
+        {editText.length > 0 && (
+          <Pressable
+            style={styles.editClear}
+            onPress={() => onEditTextChange("")}
+            accessibilityRole="button"
+            accessibilityLabel={clearSubStepTitleLabel}
+            hitSlop={8}
+            testID={`edit-goal-substep-clear-${subStep.id}`}
+          >
+            <XCircle
+              size={20}
+              weight="bold"
+              color={theme.colors.textSecondary}
+            />
+          </Pressable>
+        )}
       </View>
     );
   }

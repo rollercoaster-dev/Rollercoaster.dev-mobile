@@ -26,6 +26,7 @@ import {
   type GestureResponderEvent,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { XCircle } from "phosphor-react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useUnistyles } from "react-native-unistyles";
 import Animated, {
@@ -111,6 +112,8 @@ export interface EditGoalStepRowProps {
   moveDownLabel?: (stepTitle: string) => string;
   /** a11y label for the × delete affordance. */
   deleteStepLabel?: (stepTitle: string) => string;
+  /** a11y label for the clear control that empties the rename field. */
+  clearStepTitleLabel?: string;
   /** a11y label for the “Nest under…” trigger (R8). */
   nestUnderTriggerA11yLabel?: string;
   /** Title of the nest-under picker modal. */
@@ -158,6 +161,7 @@ export function EditGoalStepRow({
   moveUpLabel = (stepTitle) => `Move "${stepTitle}" up`,
   moveDownLabel = (stepTitle) => `Move "${stepTitle}" down`,
   deleteStepLabel = (stepTitle) => `Delete step: ${stepTitle}`,
+  clearStepTitleLabel = "Clear step title",
   nestUnderTriggerA11yLabel = "Nest this step under another step",
   nestUnderPickerTitle = "Choose a step to nest under",
   nestUnderRowLabel = (targetTitle) => `Nest under "${targetTitle}"`,
@@ -250,6 +254,22 @@ export function EditGoalStepRow({
         testID={`edit-goal-step-edit-${step.id}`}
         accessibilityLabel={editStepA11yLabel(step.title)}
       />
+      {/* Clearing wipes the field only — it never commits. `onBlur` commits
+          this row, so the host ScrollViews use keyboardShouldPersistTaps
+          ="handled": without it the first tap is swallowed to dismiss the
+          keyboard, blurring the input and closing the editor instead. */}
+      {editText.length > 0 && (
+        <Pressable
+          style={styles.editClear}
+          onPress={() => onEditTextChange("")}
+          accessibilityRole="button"
+          accessibilityLabel={clearStepTitleLabel}
+          hitSlop={8}
+          testID={`edit-goal-step-clear-${step.id}`}
+        >
+          <XCircle size={20} weight="bold" color={theme.colors.textSecondary} />
+        </Pressable>
+      )}
     </View>
   ) : (
     <>
