@@ -81,7 +81,8 @@
     },
     "picker": {
       "title": "Wähle, was sich richtig anfühlt",
-      "selected": "Ausgewählt"
+      "selected": "Ausgewählt",
+      "groupLabel": "Thema"
     },
     "preview": {
       "title": "Tägliches Lesen",

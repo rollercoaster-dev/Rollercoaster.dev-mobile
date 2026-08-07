@@ -3,6 +3,7 @@ import {
   renderWithProviders,
   screen,
   fireEvent,
+  act,
 } from "../../../__tests__/test-utils";
 import { themeOptions } from "../../../hooks/useTheme";
 import type { ThemeName } from "../../../themes/compose";
@@ -16,6 +17,7 @@ const themeLabelOf = (id: ThemeName) => themeA11yLabel(t, id);
 const captionLabelOf = (id: ThemeName) => t(`common:theme.options.${id}.label`);
 const captionDescriptionOf = (id: ThemeName) =>
   t(`common:theme.options.${id}.description`);
+const groupLabel = () => t("common:theme.picker.groupLabel");
 
 describe("ThemeSwatchRail", () => {
   it("renders one radio per theme option with descriptive labels", () => {
@@ -54,11 +56,28 @@ describe("ThemeSwatchRail", () => {
     expect(onSelect).toHaveBeenCalledWith(target.id);
   });
 
-  it('exposes the rail as accessibilityRole "radiogroup"', () => {
+  it('exposes the rail as accessibilityRole "radiogroup" with a localized label', () => {
     renderWithProviders(
       <ThemeSwatchRail selectedThemeId="light-default" onSelect={jest.fn()} />,
     );
-    expect(screen.getByRole("radiogroup")).toBeOnTheScreen();
+    // Queried via label, not getByRole: the rail deliberately omits
+    // `accessible` (so it doesn't swallow its radios) and RNTL's role query
+    // only matches elements whose `accessible` prop is truthy.
+    const rail = screen.getByLabelText(groupLabel());
+    expect(rail.props.accessibilityRole).toBe("radiogroup");
+  });
+
+  it("keeps every swatch individually reachable in production (no E2E branch)", () => {
+    expect(process.env.EXPO_PUBLIC_E2E_MODE).toBeUndefined();
+    renderWithProviders(
+      <ThemeSwatchRail selectedThemeId="light-default" onSelect={jest.fn()} />,
+    );
+    // Regression guard for #500: the wrapper used to set `accessible={true}`
+    // outside E2E mode, collapsing all 7 swatches into one VoiceOver node.
+    expect(screen.getAllByRole("radio")).toHaveLength(themeOptions.length);
+    for (const option of themeOptions) {
+      expect(screen.getByLabelText(themeLabelOf(option.id))).toBeOnTheScreen();
+    }
   });
 
   it("renders the ✓ overlay on exactly the selected swatch", () => {
@@ -93,32 +112,28 @@ describe("ThemeSwatchRail", () => {
     ).not.toBeOnTheScreen();
   });
 
-  describe("E2E mode gating", () => {
-    const originalE2E = process.env.EXPO_PUBLIC_E2E_MODE;
-    beforeAll(() => {
-      process.env.EXPO_PUBLIC_E2E_MODE = "true";
-    });
-    afterAll(() => {
-      if (originalE2E === undefined) {
-        delete process.env.EXPO_PUBLIC_E2E_MODE;
-      } else {
-        process.env.EXPO_PUBLIC_E2E_MODE = originalE2E;
+  describe("pseudo locale (proves the group label is routed through i18n)", () => {
+    afterEach(async () => {
+      if (i18n.language !== "en") {
+        await act(async () => {
+          await i18n.changeLanguage("en");
+        });
       }
     });
 
-    it("drops radiogroup wrapper so descendant swatch labels are reachable", () => {
+    it("renders the radiogroup label as bracketed pseudo copy", async () => {
+      await act(async () => {
+        await i18n.changeLanguage("pseudo");
+      });
       renderWithProviders(
         <ThemeSwatchRail
           selectedThemeId="light-default"
           onSelect={jest.fn()}
         />,
       );
-      // Under EXPO_PUBLIC_E2E_MODE=true the outer grouping is disabled so
-      // Maestro can resolve each swatch's composed accessibilityLabel without
-      // colliding with the parent radiogroup's label.
-      expect(screen.queryByRole("radiogroup")).toBeNull();
-      const radios = screen.getAllByRole("radio");
-      expect(radios.length).toBe(themeOptions.length);
+      const label = i18n.t("common:theme.picker.groupLabel");
+      expect(label.startsWith("[")).toBe(true);
+      expect(screen.getByLabelText(label)).toBeOnTheScreen();
     });
   });
 });

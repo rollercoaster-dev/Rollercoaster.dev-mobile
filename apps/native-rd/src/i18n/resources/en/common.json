@@ -63,7 +63,8 @@
     },
     "picker": {
       "title": "Pick what feels right",
-      "selected": "Selected"
+      "selected": "Selected",
+      "groupLabel": "Theme"
     },
     "preview": {
       "title": "Daily reading",
