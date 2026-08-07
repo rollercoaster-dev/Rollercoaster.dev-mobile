@@ -1,4 +1,5 @@
 # newGoal — ND adult creating a new goal.
+# Covers the whole four-step wizard: name → first step → build list → ready.
 # No FOMO, no "amazing" prompts.
 
 speaker: app prompting
@@ -16,6 +17,17 @@ banned_phrasings:
   - besonders
   - einzigartig
   - leidet an
+  - Glückwunsch!
+  - Wow!
+  - Bereit für dein Abenteuer?
+  - verdient
 notes:
   - Plain prompts. "Was willst du tun?" beats "Was ist dein wunderbares Ziel?".
   - No pressure to elaborate — short answers are valid.
+  - The ready step states a fact, it does not celebrate. "Alles bereit." over
+    "Glückwunsch, du hast es geschafft!" — nothing has been achieved yet.
+  - The badge note is informational, not a reward promise. Say when badge design
+    happens ("wenn du fertig bist"), never that the badge is earned or deserved.
+  - Build-list terms follow the ones already in de/editGoal.json — "Schritt",
+    "Unterschritt", "verschachteln", "Evidenz-Typen". The same step list is
+    edited on both screens, so the words must match.

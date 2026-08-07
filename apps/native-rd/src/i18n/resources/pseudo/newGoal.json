@@ -1,16 +1,66 @@
 {
-  "title": "[Ñêŵ Ğøàĺ···]",
-  "fields": {
-    "title": {
-      "label": "[Ţïţĺê··]",
-      "placeholder": "[Ŵĥàţ đø ýøü ŵàñţ ţø ĺêàŕñ?··········]"
-    }
+  "header": {
+    "label": "[Ñêŵ ğøàĺ···]"
+  },
+  "name": {
+    "eyebrow": "[Šţêþ 1 øƒ 4····]",
+    "title": "[Ŵĥàţ đø ýøü ŵàñţ ţø ŵøŕķ ţøŵàŕđ?·············]",
+    "placeholder": "[Ñàɱê ýøüŕ ğøàĺ······]",
+    "hint": "[Šøɱêţĥïñğ ýøü'ĺĺ šĥøŵ þŕøğŕêšš øñ.··············]",
+    "next": "[Ñêẋţ →··]"
+  },
+  "quickAdd": {
+    "prefix": "[øŕ ·]",
+    "label": "[Ǫüïçķ àđđ — šķïþ ţø ţĥê ĺïšţ ›············]",
+    "a11yLabel": "[Ǫüïçķ àđđ, šķïþ ţø ţĥê ĺïšţ···········]"
+  },
+  "step": {
+    "goalEyebrow": "[Ğøàĺ··]",
+    "headline": "[Ŵĥàţ'š ţĥê ƒïŕšţ šţêþ?·········]",
+    "placeholder": "[Øñê šɱàĺĺ ţĥïñğ ţø šţàŕţ··········]",
+    "evidenceEyebrow": "[Êṽïđêñçê···]",
+    "changeEvidence": "[çĥàñğê··]",
+    "changeEvidenceA11yLabel": "[Çĥàñğê êṽïđêñçê ţýþê, çüŕŕêñţĺý {{label}}················]",
+    "evidenceSheetTitle": "[Êṽïđêñçê ţýþê·····]"
+  },
+  "build": {
+    "yourSteps": "[Ýøüŕ šţêþš····]",
+    "addStepPlaceholder": "[Àđđ šţêþ...····]",
+    "addStepButtonLabel": "[Àđđ šţêþ···]",
+    "stepCount_one": "[{{count}} šţêþ······]",
+    "stepCount_other": "[{{count}} šţêþš······]",
+    "evidencePickerTitle": "[Þĺàññêđ êṽïđêñçê······]",
+    "evidenceTypesLabel": "[Êṽïđêñçê ţýþêš······]",
+    "addSubStepLabel": "[àđđ à šüƀ-šţêþ······]",
+    "breakIntoSubStepsLabel": "[ƀŕêàķ ïñţø šüƀ-šţêþš········]",
+    "newSubStepTitle": "[Ñêŵ šüƀ-šţêþ·····]",
+    "breakIntoSubStepsA11yLabel": "[Ɓŕêàķ \"{{title}}\" ïñţø šüƀ-šţêþš·············]",
+    "addSubStepA11yLabel": "[Àđđ à šüƀ-šţêþ ţø \"{{title}}\"············]",
+    "announceReorder": "[Ɱøṽêđ \"{{title}}\" ţø þøšïţïøñ {{position}}·················]",
+    "deleteStepConfirmTitle": "[Đêĺêţê šţêþ?·····]",
+    "deleteStepConfirmMessage": "[Đêĺêţê \"{{title}}\"? Ïţš êṽïđêñçê àñđ àñý šüƀ-šţêþš ŵïĺĺ ƀê ŕêɱøṽêđ ţøø.····························]",
+    "deleteSubStepConfirmTitle": "[Đêĺêţê šüƀ-šţêþ?······]",
+    "deleteSubStepConfirmMessage": "[Đêĺêţê \"{{title}}\"? Ïţš êṽïđêñçê ŵïĺĺ ƀê ŕêɱøṽêđ ţøø.·····················]",
+    "nestUnderTriggerA11yLabel": "[Ñêšţ ţĥïš šţêþ üñđêŕ àñøţĥêŕ šţêþ·············]",
+    "nestUnderPickerTitle": "[Çĥøøšê à šţêþ ţø ñêšţ üñđêŕ···········]",
+    "nestUnderRowLabel": "[Ñêšţ üñđêŕ \"{{title}}\"·········]",
+    "nestUnderRowA11yLabel": "[Ñêšţ ţĥïš šţêþ üñđêŕ {{title}}············]",
+    "unNestA11yLabel": "[Þŕøɱøţê ţĥïš šţêþ ţø ţøþ ĺêṽêĺ············]",
+    "announcePromote": "[Þŕøɱøţêđ \"{{title}}\" ţø ţøþ ĺêṽêĺ·············]",
+    "announceNestedUnder": "[Ñêšţêđ \"{{title}}\" üñđêŕ \"{{parentTitle}}\"·················]",
+    "readyLabel": "[Ï'ɱ ŕêàđý →····]"
+  },
+  "ready": {
+    "headline": "[Ýøü'ŕê šêţ.····]",
+    "stepCountSummary_one": "[{{count}} šţêþ · êṽïđêñçê øñ êàçĥ·············]",
+    "stepCountSummary_other": "[{{count}} šţêþš · êṽïđêñçê øñ êàçĥ··············]",
+    "badgeNote": "[Ýøü'ĺĺ đêšïğñ ýøüŕ ƀàđğê ŵĥêñ ýøü ƒïñïšĥ.················]",
+    "startWorking": "[Šţàŕţ Ŵøŕķïñğ·····]"
   },
   "errors": {
-    "titleRequired": "[Ţïţĺê ïš ŕêǫüïŕêđ·······]",
-    "createFailed": "[Ƒàïĺêđ ţø çŕêàţê ğøàĺ········]"
-  },
-  "cta": {
-    "create": "[Çŕêàţê Ğøàĺ····]"
+    "createFailedTitle": "[Çøüĺđ ñøţ çŕêàţê ğøàĺ········]",
+    "createFailedMessage": "[Šøɱêţĥïñğ ŵêñţ ŵŕøñğ. Þĺêàšê ţŕý àğàïñ.················]",
+    "missingTitleTitle": "[Ýøüŕ ğøàĺ ñêêđš à ñàɱê·········]",
+    "missingTitleMessage": "[Ýøü'ŕê ƀàçķ øñ šţêþ 1. Ñàɱê ţĥê ğøàĺ, ţĥêñ çàŕŕý øñ.·····················]"
   }
 }

@@ -1,16 +1,66 @@
 {
-  "title": "Neues Ziel",
-  "fields": {
-    "title": {
-      "label": "Titel",
-      "placeholder": "Was willst du lernen?"
-    }
+  "header": {
+    "label": "Neues Ziel"
+  },
+  "name": {
+    "eyebrow": "Schritt 1 von 4",
+    "title": "Woran willst du arbeiten?",
+    "placeholder": "Gib deinem Ziel einen Namen",
+    "hint": "Etwas, bei dem du Fortschritt zeigen kannst.",
+    "next": "Weiter →"
+  },
+  "quickAdd": {
+    "prefix": "oder ",
+    "label": "Schnell anlegen — direkt zur Liste ›",
+    "a11yLabel": "Schnell anlegen, direkt zur Liste"
+  },
+  "step": {
+    "goalEyebrow": "Ziel",
+    "headline": "Was ist der erste Schritt?",
+    "placeholder": "Eine kleine Sache zum Anfangen",
+    "evidenceEyebrow": "Evidenz",
+    "changeEvidence": "ändern",
+    "changeEvidenceA11yLabel": "Evidenz-Typ ändern, aktuell {{label}}",
+    "evidenceSheetTitle": "Evidenz-Typ"
+  },
+  "build": {
+    "yourSteps": "Deine Schritte",
+    "addStepPlaceholder": "Schritt hinzufügen...",
+    "addStepButtonLabel": "Schritt hinzufügen",
+    "stepCount_one": "{{count}} Schritt",
+    "stepCount_other": "{{count}} Schritte",
+    "evidencePickerTitle": "Geplante Evidenz",
+    "evidenceTypesLabel": "Evidenz-Typen",
+    "addSubStepLabel": "Unterschritt hinzufügen",
+    "breakIntoSubStepsLabel": "in Unterschritte aufteilen",
+    "newSubStepTitle": "Neuer Unterschritt",
+    "breakIntoSubStepsA11yLabel": "\"{{title}}\" in Unterschritte aufteilen",
+    "addSubStepA11yLabel": "Unterschritt zu \"{{title}}\" hinzufügen",
+    "announceReorder": "\"{{title}}\" zu Position {{position}} verschoben",
+    "deleteStepConfirmTitle": "Schritt löschen?",
+    "deleteStepConfirmMessage": "\"{{title}}\" löschen? Die Evidenz und alle Unterschritte werden mit entfernt.",
+    "deleteSubStepConfirmTitle": "Unterschritt löschen?",
+    "deleteSubStepConfirmMessage": "\"{{title}}\" löschen? Die Evidenz wird mit entfernt.",
+    "nestUnderTriggerA11yLabel": "Diesen Schritt unter einen anderen Schritt verschachteln",
+    "nestUnderPickerTitle": "Schritt zum Verschachteln auswählen",
+    "nestUnderRowLabel": "Unter \"{{title}}\" verschachteln",
+    "nestUnderRowA11yLabel": "Diesen Schritt unter {{title}} verschachteln",
+    "unNestA11yLabel": "Diesen Schritt auf oberste Ebene setzen",
+    "announcePromote": "\"{{title}}\" auf oberste Ebene verschoben",
+    "announceNestedUnder": "\"{{title}}\" unter \"{{parentTitle}}\" verschachtelt",
+    "readyLabel": "Ich bin bereit →"
+  },
+  "ready": {
+    "headline": "Alles bereit.",
+    "stepCountSummary_one": "{{count}} Schritt · Evidenz bei jedem",
+    "stepCountSummary_other": "{{count}} Schritte · Evidenz bei jedem",
+    "badgeNote": "Dein Badge gestaltest du, wenn du fertig bist.",
+    "startWorking": "Anfangen"
   },
   "errors": {
-    "titleRequired": "Titel ist erforderlich",
-    "createFailed": "Ziel konnte nicht erstellt werden"
-  },
-  "cta": {
-    "create": "Ziel erstellen"
+    "createFailedTitle": "Ziel konnte nicht erstellt werden",
+    "createFailedMessage": "Etwas ist schiefgelaufen. Versuche es nochmal.",
+    "missingTitleTitle": "Dein Ziel braucht einen Namen",
+    "missingTitleMessage": "Du bist wieder bei Schritt 1. Gib dem Ziel einen Namen und mach dann weiter."
   }
 }

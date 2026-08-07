@@ -3,7 +3,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { GoalsScreen } from "../screens/GoalsScreen";
 
 import { FocusModeScreen } from "../screens/FocusModeScreen";
-import { NewGoalModal } from "../screens/NewGoalModal";
+import { NewGoalScreen } from "../screens/NewGoalScreen";
 import { CapturePhoto } from "../screens/CapturePhoto";
 import { CapturePlaceholder } from "../screens/CapturePlaceholder";
 import { CaptureVideoScreen } from "../screens/CaptureVideoScreen";
@@ -31,9 +31,12 @@ export function GoalsStack() {
       <Stack.Screen name="CompletionFlow" component={CompletionFlowScreen} />
       <Stack.Screen name="TimelineJourney" component={TimelineJourneyScreen} />
       <Stack.Screen name="EvidenceViewer" component={EvidenceViewerScreen} />
+      {/* presentation: "modal" is a true full-screen native modal on both
+          platforms, so it already covers the tab bar — the wizard needs no
+          tabBarStyle plumbing of its own (D1). */}
       <Stack.Screen
         name="NewGoal"
-        component={NewGoalModal}
+        component={NewGoalScreen}
         options={{ presentation: "modal" }}
       />
       <Stack.Screen name="CapturePhoto" component={CapturePhoto} />
