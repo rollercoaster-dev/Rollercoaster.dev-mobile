@@ -24,23 +24,30 @@ export function ThemeSwatchRail({
 }: ThemeSwatchRailProps) {
   const { t } = useTranslation(["common"]);
 
-  // The radiogroup wrapper collapses descendant Pressables into a single
-  // a11y node on iOS, which hides individual swatches from Maestro element
-  // lookup. Drop the grouping in E2E mode; the Pressables retain their own
-  // `accessible+role=radio+label` so screen readers still treat each swatch
-  // as a discrete radio in production. Mirrors ThemeChipGrid / ThemeSwitcher.
-  const isE2E = process.env.EXPO_PUBLIC_E2E_MODE === "true";
-  const groupingA11y = isE2E
-    ? ({ accessible: false } as const)
-    : ({
-        accessible: true,
-        accessibilityRole: "radiogroup" as const,
-        accessibilityLabel: "Theme selection",
-      } as const);
-
   return (
     <View style={styles.rail}>
-      <View {...groupingA11y}>
+      {/*
+        `accessible` is deliberately NOT set here. Setting it collapses every
+        descendant Pressable into one a11y node on iOS, so VoiceOver/TalkBack
+        can only reach "the rail" and never the individual swatches. This used
+        to be branched on EXPO_PUBLIC_E2E_MODE, which meant production screen
+        readers got the broken tree while E2E got the good one.
+
+        Known limitation (#500, verified via `maestro hierarchy`): without
+        `accessible`, iOS never materialises this wrapper as an accessibility
+        element, so the role and label below do NOT reach VoiceOver — the group
+        name is announced by the caller's visible section heading instead
+        (SettingsThemeSection's `settings:theme.title`). They are kept because
+        (a) Android/TalkBack does read container collection semantics, and
+        (b) `accessible` is the only thing that would surface them on iOS and
+        it is exactly what re-breaks child reachability. Per-swatch labels carry
+        the full contract, same as the shipped badge selectors (ShapeSelector /
+        ColorPicker / FrameSelector).
+      */}
+      <View
+        accessibilityRole="radiogroup"
+        accessibilityLabel={t("common:theme.picker.groupLabel")}
+      >
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}

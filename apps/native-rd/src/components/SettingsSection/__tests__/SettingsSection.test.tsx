@@ -37,25 +37,50 @@ describe("SettingsSection", () => {
       renderWithProviders(
         <SettingsSection
           title="Content Density"
-          accessible
+          rowsTestID="rows"
           accessibilityRole="radiogroup"
           accessibilityLabel="Content density selection"
         >
           <Text>A</Text>
         </SettingsSection>,
       );
-      expect(
-        screen.getByRole("radiogroup", { name: "Content density selection" }),
-      ).toBeOnTheScreen();
+      // Queried via testID, not getByRole: the container deliberately omits
+      // `accessible` (so it doesn't swallow its rows) and RNTL's role query
+      // only matches elements whose `accessible` prop is truthy.
+      const group = screen.getByTestId("rows");
+      expect(group.props.accessibilityRole).toBe("radiogroup");
+      expect(group.props.accessibilityLabel).toBe("Content density selection");
     });
 
-    it("exposes no group role by default", () => {
+    it("never sets accessible on the rows container, so children stay reachable", () => {
       renderWithProviders(
-        <SettingsSection title="Section">
+        <SettingsSection
+          title="Content Density"
+          rowsTestID="rows"
+          accessibilityRole="radiogroup"
+          accessibilityLabel="Content density selection"
+        >
           <Text>A</Text>
         </SettingsSection>,
       );
-      expect(screen.queryByRole("radiogroup")).toBeNull();
+      // Regression guard for #500 — `accessible` collapses the whole section
+      // into one VoiceOver node on iOS.
+      expect(screen.getByTestId("rows").props.accessible).toBeUndefined();
+    });
+
+    it("leaves the rows container unlabelled and role-less by default", () => {
+      renderWithProviders(
+        <SettingsSection title="Section" rowsTestID="rows">
+          <Text>A</Text>
+          <Text>B</Text>
+        </SettingsSection>,
+      );
+      // Asserted on the container's own props: with `accessible` omitted,
+      // neither `queryByRole("radiogroup")` nor `queryByLabelText` can tell
+      // "no role" apart from "role present but not an a11y element" (D2).
+      const rows = screen.getByTestId("rows");
+      expect(rows.props.accessibilityRole).toBeUndefined();
+      expect(rows.props.accessibilityLabel).toBeUndefined();
     });
   });
 });
