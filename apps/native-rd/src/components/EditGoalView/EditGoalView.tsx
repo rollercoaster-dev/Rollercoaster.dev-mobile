@@ -313,6 +313,10 @@ export function EditGoalView({
     null,
   );
 
+  // Scrolling is off while a row is dragged: a native ScrollView isn't in
+  // RNGH's gesture tree, so otherwise it wins the pan and the row never moves.
+  const [rowDragging, setRowDragging] = useState(false);
+
   // Native tag of the evidence chip that opened the sheet, captured from the
   // Pressable's press event (#501). Threaded straight into AnimatedSheet's
   // restoreFocusRef so focus returns to that chip on any dismissal — avoids
@@ -427,6 +431,7 @@ export function EditGoalView({
           onScroll={scrollInstrumentation?.onScroll}
           scrollEventThrottle={16}
           onContentSizeChange={scrollInstrumentation?.onContentSizeChange}
+          scrollEnabled={!rowDragging}
           style={styles.scroll}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
@@ -483,6 +488,7 @@ export function EditGoalView({
             onDeleteSubStep={onDeleteSubStep}
             onDeleteStep={onDeleteStep}
             dragScrollController={dragScrollController}
+            onDragStateChange={setRowDragging}
             stepsSectionLabel={stepsSectionLabel}
             addStepPlaceholder={addStepPlaceholder}
             stepCountLabel={stepCountLabel}
