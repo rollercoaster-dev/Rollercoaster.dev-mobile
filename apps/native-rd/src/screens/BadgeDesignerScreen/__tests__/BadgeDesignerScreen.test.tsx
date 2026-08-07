@@ -951,32 +951,10 @@ describe("BadgeDesignerScreen — new-goal mode", () => {
     expect(starOption.props.accessibilityState?.checked).toBe(true);
   });
 
-  it("with returnVia: 'back', save navigates goBack() instead of replace('EditMode')", async () => {
-    // Redesign-First round-trip from CompletionFlow: the screen owns the
-    // back navigation, so the designer must goBack() after save rather than
-    // replacing into EditMode (which would discard the CompletionFlow
-    // entry).
-    const backRoute = {
-      params: {
-        mode: "new-goal" as const,
-        goalId: "goal-1",
-        returnVia: "back" as const,
-      },
-      key: "BadgeDesigner-back",
-      name: "BadgeDesigner" as const,
-    } as unknown as BadgeDesignerScreenProps["route"];
-    mockUseQuery.mockReturnValue([makeGoalRow()]);
-    renderWithProviders(
-      <BadgeDesignerScreen route={backRoute} navigation={{} as never} />,
-    );
-
-    fireEvent.press(
-      screen.getByText(i18n.t("badgeDesigner:actions.useThisDesign")),
-    );
-
-    await waitFor(() => expect(mockGoBack).toHaveBeenCalled());
-    expect(mockReplace).not.toHaveBeenCalled();
-  });
+  // The `returnVia: "back"` round-trip test was removed with the param itself
+  // (#449 D12): its only caller was CompletionFlowScreen's retired
+  // "Redesign First" pre-bake escape, so replace("EditMode") is now the only
+  // post-save path — covered by the new-goal save tests above.
 
   it("alerts and does not navigate when capture fails", async () => {
     const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});

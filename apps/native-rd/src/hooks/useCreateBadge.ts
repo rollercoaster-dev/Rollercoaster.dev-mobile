@@ -335,10 +335,16 @@ export function useCreateBadge(
 
         // Validate evidence gating BEFORE any mutations to prevent partial state
         // (badge created but goal not completed).
-        const goalEvidenceForGating = gev.map((e) => ({
+        //
+        // Both scopes count (#449 D13): a step-driven ride finishes without
+        // ever writing a goal-scoped row, and the redesigned finishing flow's
+        // only goal-scoped affordance — the closing note — is optional. One
+        // array feeds both the pre-mutation gate and the write-time re-check
+        // inside completeGoal, so the two can't diverge.
+        const evidenceForGating = [...gev, ...sev].map((e) => ({
           type: (e.type as string | null) ?? null,
         }));
-        if (!canCompleteGoal(goalEvidenceForGating)) {
+        if (!canCompleteGoal(evidenceForGating)) {
           throw new Error(
             "Cannot complete goal: no evidence attached. Add at least one evidence item first.",
           );
@@ -375,7 +381,7 @@ export function useCreateBadge(
         // that partial state (badge exists, goal still active) rather than roll
         // back — the goal stays active and the user can re-attempt — but we must
         // NOT report "done" when the completion write itself failed.
-        const completeResult = completeGoal(goalId, goalEvidenceForGating);
+        const completeResult = completeGoal(goalId, evidenceForGating);
         if (!completeResult.ok) {
           // Same as above: stable message for the UI, Evolu error on `cause`.
           throw new Error("Failed to complete goal", {

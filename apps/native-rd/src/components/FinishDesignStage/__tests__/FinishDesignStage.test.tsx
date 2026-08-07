@@ -10,10 +10,14 @@ import {
   type FinishDesignStageProps,
 } from "../FinishDesignStage";
 import { ACCENT_COLORS } from "../../../badges/ColorPicker";
+import { i18n } from "../../../i18n";
+import type { BadgeRendererHandle } from "../../../badges/BadgeRenderer";
+import { getPathTextMaxChars } from "../../../badges/text/pathTextLimits";
 import {
   createDefaultBadgeDesign,
   BadgeShape,
   BadgeCenterMode,
+  BadgeFrame,
   BannerPosition,
   PathTextPosition,
   BADGE_COLOR_THEME_SENTINEL,
@@ -80,15 +84,16 @@ const makeProps = (
 });
 
 describe("FinishDesignStage", () => {
-  it("renders the header, subtitle, preview, four sections, and bake CTA", () => {
+  it("renders the header, subtitle, preview, five sections, and bake CTA", () => {
     renderWithProviders(<FinishDesignStage {...makeProps()} />);
     expect(screen.getByText("Make your badge")).toBeOnTheScreen();
     expect(screen.getByText("Rewire the workshop")).toBeOnTheScreen();
     expect(screen.getByTestId("finish-design-preview")).toBeOnTheScreen();
     expect(screen.getByTestId("finish-design-shape")).toBeOnTheScreen();
-    expect(screen.getByTestId("finish-design-color")).toBeOnTheScreen();
+    expect(screen.getByTestId("finish-design-frame")).toBeOnTheScreen();
     expect(screen.getByTestId("finish-design-center")).toBeOnTheScreen();
-    expect(screen.getByTestId("finish-design-bottom-label")).toBeOnTheScreen();
+    expect(screen.getByTestId("finish-design-color")).toBeOnTheScreen();
+    expect(screen.getByTestId("finish-design-inscriptions")).toBeOnTheScreen();
     expect(screen.getByTestId("finish-design-bake")).toBeOnTheScreen();
   });
 
@@ -108,7 +113,9 @@ describe("FinishDesignStage", () => {
 
   it("opens only the seeded section (single-open, others unmounted)", () => {
     renderWithProviders(
-      <FinishDesignStage {...makeProps({ initialExpandedSection: "color" })} />,
+      <FinishDesignStage
+        {...makeProps({ initialExpandedSection: "colors" })}
+      />,
     );
     expect(screen.getByTestId("color-picker")).toBeOnTheScreen();
     expect(screen.queryByTestId("shape-selector")).toBeNull();
@@ -116,7 +123,9 @@ describe("FinishDesignStage", () => {
 
   it("closes the open section when another is opened (single-open)", () => {
     renderWithProviders(
-      <FinishDesignStage {...makeProps({ initialExpandedSection: "color" })} />,
+      <FinishDesignStage
+        {...makeProps({ initialExpandedSection: "colors" })}
+      />,
     );
     // Color is open, Shape is closed.
     expect(screen.getByTestId("color-picker")).toBeOnTheScreen();
@@ -128,9 +137,14 @@ describe("FinishDesignStage", () => {
     expect(screen.queryByTestId("color-picker")).toBeNull();
   });
 
-  it("patches shape and leaves every other field byte-identical (D8)", () => {
+  it("patches shape and leaves every non-path field byte-identical (D8)", () => {
     const onDesignChange = jest.fn();
-    const design = makeDesign();
+    // No path text — isolates the pass-through guarantee from the arc re-clamp
+    // asserted in the next test.
+    const design = makeDesign({
+      pathText: undefined,
+      pathTextPosition: undefined,
+    });
     renderWithProviders(
       <FinishDesignStage
         {...makeProps({
@@ -146,7 +160,32 @@ describe("FinishDesignStage", () => {
     expect(onDesignChange).toHaveBeenCalledWith({
       ...design,
       shape: BadgeShape.circle,
+      pathText: undefined,
+      pathTextBottom: undefined,
     });
+  });
+
+  // Arc capacity is shape-dependent, so text that fits one shape can overrun
+  // another. Mirrors BadgeDesignerScreen's own handleShapeChange — without it,
+  // switching to a tighter shape silently renders text past its arc.
+  it("re-clamps path text to the new shape's arc capacity", () => {
+    const onDesignChange = jest.fn();
+    const design = makeDesign({ pathText: "ACHIEVEMENT" });
+    renderWithProviders(
+      <FinishDesignStage
+        {...makeProps({
+          design,
+          onDesignChange,
+          initialExpandedSection: "shape",
+        })}
+      />,
+    );
+    fireEvent.press(screen.getByLabelText("Circle shape"));
+
+    const patched = onDesignChange.mock.calls[0][0] as BadgeDesign;
+    const max = getPathTextMaxChars(BadgeShape.circle, "top");
+    expect(patched.pathText).toBe("ACHIEVEMENT".slice(0, max));
+    expect(patched.pathText!.length).toBeLessThanOrEqual(max);
   });
 
   it("patches color through onDesignChange", () => {
@@ -157,7 +196,7 @@ describe("FinishDesignStage", () => {
         {...makeProps({
           design,
           onDesignChange,
-          initialExpandedSection: "color",
+          initialExpandedSection: "colors",
         })}
       />,
     );
@@ -173,7 +212,9 @@ describe("FinishDesignStage", () => {
 
   it("opens the custom-hex modal when the Custom… cell is tapped", () => {
     renderWithProviders(
-      <FinishDesignStage {...makeProps({ initialExpandedSection: "color" })} />,
+      <FinishDesignStage
+        {...makeProps({ initialExpandedSection: "colors" })}
+      />,
     );
     // Modal is closed until the trailing custom cell is pressed.
     expect(screen.queryByTestId("mock-color-picker-modal")).toBeNull();
@@ -189,7 +230,7 @@ describe("FinishDesignStage", () => {
         {...makeProps({
           design,
           onDesignChange,
-          initialExpandedSection: "color",
+          initialExpandedSection: "colors",
         })}
       />,
     );
@@ -207,7 +248,7 @@ describe("FinishDesignStage", () => {
     const onDesignChange = jest.fn();
     renderWithProviders(
       <FinishDesignStage
-        {...makeProps({ onDesignChange, initialExpandedSection: "color" })}
+        {...makeProps({ onDesignChange, initialExpandedSection: "colors" })}
       />,
     );
     fireEvent.press(screen.getByTestId("color-picker-custom"));
@@ -266,7 +307,7 @@ describe("FinishDesignStage", () => {
         {...makeProps({
           design,
           onDesignChange,
-          initialExpandedSection: "bottomLabel",
+          initialExpandedSection: "inscriptions",
         })}
       />,
     );
@@ -312,5 +353,171 @@ describe("FinishDesignStage", () => {
     renderWithProviders(<FinishDesignStage {...makeProps({ onBake })} />);
     fireEvent.press(screen.getByTestId("finish-design-bake"));
     expect(onBake).toHaveBeenCalledTimes(1);
+  });
+
+  // Parity with BadgeDesignerScreen's editor. The finishing flow is now the
+  // only way to design a badge before it is baked, so a channel missing here
+  // is a channel the user can never reach at bake time (#449).
+  describe("full-designer parity", () => {
+    it("exposes the border, frame and icon color channels, not just fill", () => {
+      renderWithProviders(
+        <FinishDesignStage
+          {...makeProps({
+            design: makeDesign({ frame: BadgeFrame.guilloche }),
+            initialExpandedSection: "colors",
+          })}
+        />,
+      );
+      expect(
+        screen.getByLabelText(i18n.t("badgeDesigner:colorChannels.fill")),
+      ).toBeOnTheScreen();
+      expect(
+        screen.getByLabelText(i18n.t("badgeDesigner:colorChannels.border")),
+      ).toBeOnTheScreen();
+      expect(
+        screen.getByLabelText(i18n.t("badgeDesigner:colorChannels.frame")),
+      ).toBeOnTheScreen();
+      expect(
+        screen.getByLabelText(i18n.t("badgeDesigner:colorChannels.icon")),
+      ).toBeOnTheScreen();
+    });
+
+    it("patches borderColor from the Border channel", () => {
+      const onDesignChange = jest.fn();
+      const design = makeDesign();
+      renderWithProviders(
+        <FinishDesignStage
+          {...makeProps({
+            design,
+            onDesignChange,
+            initialExpandedSection: "colors",
+          })}
+        />,
+      );
+      fireEvent.press(
+        screen.getByLabelText(i18n.t("badgeDesigner:colorChannels.border")),
+      );
+      const mint = ACCENT_COLORS.find((c) => c.id === "mint")!;
+      fireEvent.press(
+        screen.getByLabelText(
+          i18n.t("badgeDesigner:borderColor.optionA11y", {
+            label: i18n.t("badgeDesigner:borderColor.options.mint"),
+          }),
+        ),
+      );
+      expect(onDesignChange).toHaveBeenCalledWith({
+        ...design,
+        borderColor: mint.hex,
+      });
+    });
+
+    it("drops borderColor entirely when the match-theme sentinel is chosen", () => {
+      const onDesignChange = jest.fn();
+      const design = makeDesign({ borderColor: "#123456" });
+      renderWithProviders(
+        <FinishDesignStage
+          {...makeProps({
+            design,
+            onDesignChange,
+            initialExpandedSection: "colors",
+          })}
+        />,
+      );
+      fireEvent.press(
+        screen.getByLabelText(i18n.t("badgeDesigner:colorChannels.border")),
+      );
+      fireEvent.press(
+        screen.getByText(i18n.t("badgeDesigner:borderColor.matchTheme")),
+      );
+      const patched = onDesignChange.mock.calls[0][0] as BadgeDesign;
+      expect(patched).not.toHaveProperty("borderColor");
+    });
+
+    it("patches the frame and applies the caller's frameParams", () => {
+      const onDesignChange = jest.fn();
+      const design = makeDesign();
+      const frameParams = {
+        variant: 1,
+        stepCount: 5,
+        evidenceCount: 3,
+        daysToComplete: 21,
+        evidenceTypes: 2,
+      };
+      renderWithProviders(
+        <FinishDesignStage
+          {...makeProps({
+            design,
+            onDesignChange,
+            frameParams,
+            initialExpandedSection: "frame",
+          })}
+        />,
+      );
+      fireEvent.press(
+        screen.getByLabelText(
+          i18n.t("badgeDesigner:frame.optionA11y", {
+            label: i18n.t("badgeDesigner:frame.options.guilloche"),
+          }),
+        ),
+      );
+      expect(onDesignChange).toHaveBeenCalledWith({
+        ...design,
+        frame: BadgeFrame.guilloche,
+        frameParams,
+      });
+    });
+
+    it("clears frame and frameColor together when the frame is removed", () => {
+      const onDesignChange = jest.fn();
+      const design = makeDesign({
+        frame: BadgeFrame.guilloche,
+        frameColor: "#123456",
+      });
+      renderWithProviders(
+        <FinishDesignStage
+          {...makeProps({
+            design,
+            onDesignChange,
+            initialExpandedSection: "frame",
+          })}
+        />,
+      );
+      fireEvent.press(
+        screen.getByLabelText(
+          i18n.t("badgeDesigner:frame.optionA11y", {
+            label: i18n.t("badgeDesigner:frame.options.none"),
+          }),
+        ),
+      );
+      const patched = onDesignChange.mock.calls[0][0] as BadgeDesign;
+      expect(patched.frame).toBe(BadgeFrame.none);
+      expect(patched.frameParams).toBeUndefined();
+      expect(patched).not.toHaveProperty("frameColor");
+    });
+
+    it("exposes the path-text and banner editors alongside the bottom label", () => {
+      renderWithProviders(
+        <FinishDesignStage
+          {...makeProps({ initialExpandedSection: "inscriptions" })}
+        />,
+      );
+      expect(
+        screen.getByTestId("finish-design-bottom-label-input"),
+      ).toBeOnTheScreen();
+      expect(screen.getByTestId("path-text-editor")).toBeOnTheScreen();
+      expect(screen.getByTestId("banner-editor")).toBeOnTheScreen();
+    });
+  });
+
+  // #449 D3: the screen rasterizes the *visible* preview on Bake, so the ref
+  // must reach the mounted BadgeRenderer's imperative handle — not a detached
+  // or never-attached ref that would make captureBadge throw at bake time.
+  it("forwards previewRef to the mounted BadgeRenderer handle", () => {
+    const previewRef = React.createRef<BadgeRendererHandle>();
+    renderWithProviders(<FinishDesignStage {...makeProps({ previewRef })} />);
+
+    expect(screen.getByTestId("finish-design-preview")).toBeOnTheScreen();
+    expect(previewRef.current).not.toBeNull();
+    expect(typeof previewRef.current?.captureAsPng).toBe("function");
   });
 });

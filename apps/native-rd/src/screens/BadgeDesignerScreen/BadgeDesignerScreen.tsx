@@ -28,7 +28,7 @@ import { BOTTOM_LABEL_INPUT_MAX_CHARS } from "../../badges/text/BottomLabel";
 import { ShapeSelector } from "../../badges/ShapeSelector";
 import { ACCENT_COLORS } from "../../badges/ColorPicker";
 import { ColorPickerModal } from "../../badges/ColorPickerModal";
-import { BadgeColorsAccordion } from "./BadgeColorsAccordion";
+import { BadgeColorsAccordion } from "../../badges/BadgeColorsAccordion";
 import { IconPicker } from "../../badges/IconPicker";
 import { FrameSelector } from "../../badges/FrameSelector";
 import { useFrameParamsForGoal } from "../../badges/frames";
@@ -720,13 +720,7 @@ function BadgeDesignerContentBadge({ badgeId }: { badgeId: string }) {
 // GoalsStack: new-goal mode — no badge exists yet, design saved to store
 // ---------------------------------------------------------------------------
 
-function BadgeDesignerContentNewGoal({
-  goalId,
-  returnVia,
-}: {
-  goalId: string;
-  returnVia?: "back";
-}) {
+function BadgeDesignerContentNewGoal({ goalId }: { goalId: string }) {
   const navigation =
     useNavigation<NativeStackNavigationProp<GoalsStackParamList>>();
   const { theme } = useUnistyles();
@@ -789,11 +783,7 @@ function BadgeDesignerContentNewGoal({
           designJson,
           pngBase64: pngBuffer.toString("base64"),
         });
-        if (returnVia === "back") {
-          navigation.goBack();
-        } else {
-          navigation.replace("EditMode", { goalId });
-        }
+        navigation.replace("EditMode", { goalId });
       } catch (err) {
         logger.error("Failed to save design and navigate", {
           goalId,
@@ -806,7 +796,7 @@ function BadgeDesignerContentNewGoal({
         setIsSaving(false);
       }
     },
-    [goalId, isSaving, navigation, returnVia, t, theme],
+    [goalId, isSaving, navigation, t, theme],
   );
 
   const handleSave = useCallback(() => {
@@ -866,12 +856,7 @@ export function BadgeDesignerScreen({
 
   let content: React.ReactNode;
   if ("mode" in params && params.mode === "new-goal") {
-    content = (
-      <BadgeDesignerContentNewGoal
-        goalId={params.goalId}
-        returnVia={params.returnVia}
-      />
-    );
+    content = <BadgeDesignerContentNewGoal goalId={params.goalId} />;
   } else if ("badgeId" in params && params.badgeId) {
     content = <BadgeDesignerContentBadge badgeId={params.badgeId} />;
   } else {

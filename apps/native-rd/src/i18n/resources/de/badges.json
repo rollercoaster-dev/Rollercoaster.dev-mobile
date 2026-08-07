@@ -22,20 +22,5 @@
     "narrative_one": "Alle Schritte für: {{title}} abgeschlossen. Nachweis: {{count}}.",
     "narrative_other": "Alle Schritte für: {{title}} abgeschlossen. Nachweise: {{count}}.",
     "narrativeNoEvidence": "Alle Schritte für: {{title}} abgeschlossen."
-  },
-  "earned": {
-    "microcopy": {
-      "first": "Das erste. (notiert.)",
-      "subsequent": "Badge verliehen."
-    },
-    "a11y": {
-      "card": "Badge verliehen",
-      "image": "Badge-Bild",
-      "imagePlaceholder": "Badge-Bild-Platzhalter"
-    },
-    "actions": {
-      "view": "Badge ansehen",
-      "continue": "Weitermachen"
-    }
   }
 }

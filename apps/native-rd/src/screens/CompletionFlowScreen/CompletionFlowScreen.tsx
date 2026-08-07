@@ -1,841 +1,346 @@
-import {
-  Suspense,
-  useState,
-  useRef,
-  useEffect,
-  useCallback,
-  useMemo,
-} from "react";
-import {
-  View,
-  ScrollView,
-  ActivityIndicator,
-  TextInput,
-  KeyboardAvoidingView,
-  AccessibilityInfo,
-} from "react-native";
-import { Buffer } from "buffer";
-import {
-  useNavigation,
-  useFocusEffect,
-  type NavigationProp,
-} from "@react-navigation/native";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { ActivityIndicator, View } from "react-native";
+import type { Buffer } from "buffer";
+import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@evolu/react";
 import { useUnistyles } from "react-native-unistyles";
 import { useTranslation } from "react-i18next";
+
 import { Text } from "../../components/Text";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
-import { Button } from "../../components/Button";
-import { ScreenSubHeader } from "../../components/ScreenHeader";
-import { Confetti } from "../../components/Confetti";
-import { ModeIndicator } from "../../components/ModeIndicator";
-import { BadgeEarnedModal } from "../BadgeEarnedModal";
+import { FinishCelebrateStage } from "../../components/FinishCelebrateStage";
+import { FinishDesignStage } from "../../components/FinishDesignStage";
 import {
-  BadgeRenderer,
+  FinishBakingStage,
+  type FinishBakingStatus,
+} from "../../components/FinishBakingStage";
+import { FinishRevealStage } from "../../components/FinishRevealStage";
+import {
   getRendererLayoutOptions,
   type BadgeRendererHandle,
 } from "../../badges/BadgeRenderer";
 import { captureBadge, getCaptureDimensions } from "../../badges/captureBadge";
 import { createDefaultBadgeDesign, parseBadgeDesign } from "../../badges/types";
 import type { BadgeDesign } from "../../badges/types";
+import { useFrameParamsForGoal } from "../../badges/frames";
 import {
   goalsQuery,
   stepsByGoalQuery,
-  evidenceByGoalQuery,
   badgeByGoalQuery,
-  badgesQuery,
-  uncompleteGoal,
   createEvidence,
   EvidenceType,
   TEXT_EVIDENCE_PREFIX,
-  GoalStatus,
 } from "../../db";
 import type { GoalId } from "../../db";
-import {
-  useCreateBadge,
-  PLACEHOLDER_IMAGE_URI,
-} from "../../hooks/useCreateBadge";
+import { useCreateBadge } from "../../hooks/useCreateBadge";
+import { useAnimationPref } from "../../hooks/useAnimationPref";
 import type {
   GoalsStackParamList,
   RootTabParamList,
   CompletionFlowScreenProps,
-  CaptureScreenName,
 } from "../../navigation/types";
-import {
-  EVIDENCE_OPTIONS,
-  validateEvidenceType,
-  type EvidenceTypeValue,
-} from "../../types/evidence";
-import { evidenceLabel } from "../../i18n/labels";
-import { EVIDENCE_TYPE_ICONS } from "../../constants/evidenceIcons";
-import { pendingDesignStore } from "../../stores/pendingDesignStore";
+import { formatDate } from "../../utils/format";
 import { Logger } from "../../shims/rd-logger";
 import { reportError } from "../../services/sentry-report";
-import { KEYBOARD_AVOIDING_PROPS } from "../../utils/keyboard";
+import {
+  celebrateCopy,
+  designCopy,
+  bakingCopy,
+  revealCopy,
+  mapBakeStatus,
+} from "./finishStageCopy";
 import { styles } from "./CompletionFlowScreen.styles";
 
 const logger = new Logger("CompletionFlowScreen");
 
-const EVIDENCE_ROUTE_MAP: Partial<
-  Record<EvidenceTypeValue, CaptureScreenName>
-> = {
-  [EvidenceType.photo]: "CapturePhoto",
-  [EvidenceType.video]: "CaptureVideo",
-  [EvidenceType.voice_memo]: "CaptureVoiceMemo",
-  [EvidenceType.text]: "CaptureTextNote",
-  [EvidenceType.link]: "CaptureLink",
-  [EvidenceType.file]: "CaptureFile",
-};
+/** The four sub-stages of the canonical `finish` route, in order. */
+type FinishStage = "celebrate" | "design" | "baking" | "reveal";
 
-/** Max chars for inline text note (matches CaptureTextNote constraint) */
-const MAX_NOTE_LENGTH = 1000;
+/**
+ * Preview size for the design stage. Passed to `FinishDesignStage` *and* to
+ * `getCaptureDimensions` so the requested PNG canvas matches the mounted Svg's
+ * on-screen layout size — iOS `toDataURL` stamps the rendered content into the
+ * upper-left of the requested canvas, so a mismatch leaves transparent margins.
+ */
+const DESIGN_PREVIEW_SIZE = 150;
 
-type CompletionPhase = "evidence-prompt" | "celebration";
+/**
+ * Brief hold on the success sub-state before advancing to reveal, so the
+ * distinct "Badge created!" moment is observable rather than an instant cut.
+ * Matches `FinishFlow.stories.tsx`'s own SUCCESS_HOLD_MS.
+ */
+const SUCCESS_HOLD_MS = 700;
 
-function CompletionContent({
-  goalId,
-  pendingDesignJson,
-  pendingCapturedPng,
-}: {
-  goalId: string;
-  pendingDesignJson: string | undefined;
-  pendingCapturedPng: Buffer | undefined;
-}) {
+function FinishFlowContent({ goalId }: { goalId: string }) {
   const navigation =
     useNavigation<NativeStackNavigationProp<GoalsStackParamList>>();
   const { theme } = useUnistyles();
-  // "common" is declared alongside "completion" so the retry button can use the
-  // shared common:actions.retry label (#39). react-i18next's types bind the key
-  // union to the namespaces passed here, so the namespace must be listed even
-  // though it is loaded globally and the key stays fully prefixed at the call site.
-  const { t: tCompletion } = useTranslation(["completion", "common"]);
-  const rows = useQuery(goalsQuery);
-  const goal = rows.find((r) => r.id === goalId);
-  const stepRows = useQuery(stepsByGoalQuery(goalId as GoalId));
-  const goalEvidenceRows = useQuery(evidenceByGoalQuery(goalId as GoalId));
+  // "common" is declared alongside "completion" so the baking stage's retry
+  // button can use the shared common:actions.retry label. react-i18next binds
+  // the key union to the namespaces passed here, so it must be listed even
+  // though it is loaded globally and keys stay fully prefixed at the call site.
+  const { t, i18n } = useTranslation(["completion", "common", "badgeDesigner"]);
+  const { animationPref } = useAnimationPref();
 
+  const goals = useQuery(goalsQuery);
+  const goal = goals.find((g) => g.id === goalId) ?? null;
+  const stepRows = useQuery(stepsByGoalQuery(goalId as GoalId));
   const badgeRows = useQuery(badgeByGoalQuery(goalId as GoalId));
   const badgeRow = badgeRows[0] ?? null;
-  const allBadges = useQuery(badgesQuery);
 
-  const hasGoalEvidence = goalEvidenceRows.length > 0;
+  const [stage, setStage] = useState<FinishStage>("celebrate");
+  const [closingNote, setClosingNote] = useState("");
+  const [design, setDesign] = useState<BadgeDesign | null>(null);
+  const [capturedPng, setCapturedPng] = useState<Buffer | undefined>(undefined);
+  // Set when the on-Bake rasterization itself fails, before the hook is ever
+  // enabled. Rendered through the same error sub-state, but its Retry returns
+  // to the design stage — the only place the preview (and its ref) is mounted.
+  const [captureError, setCaptureError] = useState<string | null>(null);
 
-  const isReCompletion =
-    Boolean(badgeRow) && goal?.status !== GoalStatus.completed;
+  const goalTitle = (goal?.title as string | null) ?? "";
+  const goalColor = (goal?.color as string | null) ?? null;
+  const goalDesignJson = (goal?.design as string | null) ?? null;
 
-  // Re-completion only advances on evidence added *this session* — the
-  // persisted rows are the previous bake's snapshot, not fresh proof.
-  const initialEvidenceCount = useRef(goalEvidenceRows.length);
-  const hasFreshEvidence =
-    goalEvidenceRows.length > initialEvidenceCount.current;
+  // Same precedence BadgeDesignerScreen's new-goal path uses: the persisted
+  // goal design wins, a synthesized default is the fallback. `design` state
+  // holds the user's in-flow edits and overrides both once they touch a control.
+  const seededDesign: BadgeDesign =
+    parseBadgeDesign(goalDesignJson) ??
+    createDefaultBadgeDesign(goalTitle, goalColor);
+  const currentDesign = design ?? seededDesign;
 
-  const [phase, setPhase] = useState<CompletionPhase>(() => {
-    if (isReCompletion) return "evidence-prompt";
-    return hasGoalEvidence ? "celebration" : "evidence-prompt";
-  });
-
-  useEffect(() => {
-    if (phase !== "evidence-prompt") return;
-    const shouldAdvance = isReCompletion ? hasFreshEvidence : hasGoalEvidence;
-    if (!shouldAdvance) return;
-    setPhase("celebration");
-    AccessibilityInfo.announceForAccessibility(
-      tCompletion("completion:evidencePhase.evidenceAddedA11y"),
-    );
-  }, [phase, isReCompletion, hasFreshEvidence, hasGoalEvidence, tCompletion]);
-
-  // First-completion-only fallback: re-completion reuses the existing
-  // on-disk PNG via readBadgePNG.
-  //
-  // Hydration precedence when there's no warm pendingCapturedPng:
-  //   1. goal.design — persisted source; survives cold start and Evolu sync,
-  //      unlike the in-memory pendingDesignStore.
-  //   2. createDefaultBadgeDesign — synthesized default (true last resort).
-  const goalTitleForDefault = (goal?.title as string | null) ?? "";
-  const goalColorForDefault = (goal?.color as string | null) ?? null;
-  const goalDesignJsonForFallback = (goal?.design as string | null) ?? null;
-  // Canonical "we have a usable baked image" check. Hoisted so the fallback
-  // gate below can reuse it — a placeholder badge row counts as "no image"
-  // and must not block recovery.
-  const hasExistingBadgeImage = Boolean(
-    badgeRow?.imageUri && badgeRow.imageUri !== PLACEHOLDER_IMAGE_URI,
+  // Feeds the data-driven frames (step count, evidence count, elapsed days) so
+  // picking one in the design stage renders real numbers, not a paramless ring.
+  const frameParams = useFrameParamsForGoal(
+    goalId as GoalId,
+    (goal?.createdAt as string | null | undefined) ?? null,
+    (goal?.completedAt as string | null | undefined) ?? null,
   );
-  // Memoized so the effect below — and the pinnedHostDesignRef capture path —
-  // see a stable identity across re-renders. Parsing the JSON inline on every
-  // render produced a fresh object each time, which made the capture effect's
-  // dep array see spurious "changes" and cancel its own in-flight capture.
-  //
-  // Gate on `!hasExistingBadgeImage` rather than `!badgeRow`: a row created
-  // with PLACEHOLDER_IMAGE_URI by a previous failed bake attempt would
-  // otherwise lock the fallback capture path forever, leaving the user with
-  // a permanently disabled Bake button and no recovery path.
-  const shouldComputeFallbackDesign =
-    !pendingCapturedPng && Boolean(goal) && !hasExistingBadgeImage;
-  const fallbackDesign = useMemo<BadgeDesign | null>(() => {
-    if (!shouldComputeFallbackDesign) return null;
-    return (
-      parseBadgeDesign(goalDesignJsonForFallback) ??
-      createDefaultBadgeDesign(goalTitleForDefault, goalColorForDefault)
-    );
-  }, [
-    shouldComputeFallbackDesign,
-    goalDesignJsonForFallback,
-    goalTitleForDefault,
-    goalColorForDefault,
-  ]);
-  const fallbackRef = useRef<BadgeRendererHandle | null>(null);
-  const [fallbackPng, setFallbackPng] = useState<Buffer | null>(null);
-  const [captureInFlight, setCaptureInFlight] = useState(false);
-  // In-flight guard as a ref so the re-entry check doesn't itself trigger
-  // re-renders. The `captureInFlight` state above stays for UI (hostDesign
-  // switch) only — keeping it out of the effect's deps prevents the effect
-  // from cancelling the very capture it just kicked off, AND prevents the
-  // infinite-retry loop that would otherwise fire when .finally clears the
-  // flag and the effect re-runs with fallbackPng still null.
-  const captureInFlightRef = useRef(false);
-  // Pin the design driving an in-flight capture so reactive flips of
-  // fallbackDesign (badgeRow arriving via Evolu sync, pendingCapturedPng
-  // arriving via useFocusEffect) cannot unmount the offscreen <Svg> while
-  // the native toDataURL bridge call is still pending. Without this pin
-  // the view drops from the React tree → RCTViewRegistry returns nil →
-  // RNSVGSvgViewModule logs "Invalid svg returned from registry, expecting
-  // RNSVGSvgView, got: (null)" and never invokes the callback → JS hits
-  // the 5000ms timeout. See issue #93 / Sentry NATIVE-RD-B.
-  const pinnedHostDesignRef = useRef<BadgeDesign | null>(null);
 
-  useEffect(() => {
-    if (pendingCapturedPng || !fallbackDesign || fallbackPng) return;
-    if (!fallbackRef.current) return; // wait for BadgeRenderer to attach the handle
-    if (captureInFlightRef.current) return;
-
-    let cancelled = false;
-    let raf1: number | null = null;
-    let raf2: number | null = null;
-
-    pinnedHostDesignRef.current = fallbackDesign;
-    captureInFlightRef.current = true;
-    setCaptureInFlight(true);
-    // Capture-time BadgeRenderer is mounted with showShadow={false} (see
-    // fallbackHost below). Pass the same override here so getCaptureDimensions
-    // doesn't pad for a shadow the rendered SVG won't draw — otherwise iOS
-    // toDataURL canvas dimensions exceed the painted content by the shadow
-    // offset.
-    const dimensions = getCaptureDimensions(
-      fallbackDesign,
-      undefined,
-      getRendererLayoutOptions(theme, false),
-    );
-    // Two animation frames let iOS run a layout pass and commit the view
-    // tree before the bridge dispatches toDataURL. JS ref attachment
-    // happens before the native view is registered in RCTViewRegistry on
-    // the same tick — dispatching synchronously races the registration.
-    raf1 = requestAnimationFrame(() => {
-      raf2 = requestAnimationFrame(() => {
-        if (cancelled) return;
-        captureBadge(fallbackRef, dimensions)
-          .then((buf) => {
-            if (cancelled) return;
-            setFallbackPng(buf);
-          })
-          .catch((err) => {
-            logger.error("Default-design capture failed", {
-              goalId,
-              error: err,
-            });
-            reportError(err, { area: "badge.create", kind: "bake" });
-          })
-          .finally(() => {
-            captureInFlightRef.current = false;
-            pinnedHostDesignRef.current = null;
-            if (cancelled) return;
-            setCaptureInFlight(false);
-          });
-      });
-    });
-
-    return () => {
-      cancelled = true;
-      if (raf1 != null) cancelAnimationFrame(raf1);
-      if (raf2 != null) cancelAnimationFrame(raf2);
-    };
-  }, [pendingCapturedPng, fallbackDesign, fallbackPng, theme, goalId]);
-
-  const designJsonForBake =
-    pendingDesignJson ??
-    (fallbackDesign && fallbackPng
-      ? JSON.stringify(fallbackDesign)
-      : undefined);
-
-  // Bake never auto-fires — the user always taps Bake It explicitly, even
-  // when a fresh designer PNG is already in hand.
-  const [userConfirmedBake, setUserConfirmedBake] = useState(false);
-
-  const hasAnyBakeSource =
-    pendingCapturedPng !== undefined ||
-    fallbackPng !== null ||
-    hasExistingBadgeImage;
+  const previewRef = useRef<BadgeRendererHandle | null>(null);
+  const capturingRef = useRef(false);
 
   const {
-    status: badgeStatus,
-    error: badgeError,
+    status: hookStatus,
+    error: hookError,
     retryBake,
   } = useCreateBadge(goalId as GoalId, {
-    ...(designJsonForBake ? { design: designJsonForBake } : {}),
-    ...(pendingCapturedPng ? { freshCapturedPng: pendingCapturedPng } : {}),
-    ...(fallbackPng ? { capturedPng: fallbackPng } : {}),
-    enabled: phase === "celebration" && hasAnyBakeSource && userConfirmedBake,
+    ...(capturedPng ? { freshCapturedPng: capturedPng } : {}),
+    design: JSON.stringify(currentDesign),
+    enabled: stage === "baking" && capturedPng !== undefined,
   });
-  const isBadgeCreating =
-    badgeStatus === "building" ||
-    badgeStatus === "signing" ||
-    badgeStatus === "storing" ||
-    badgeStatus === "baking";
 
-  const [showConfetti, setShowConfetti] = useState(false);
-  const [showBadgeModal, setShowBadgeModal] = useState(false);
-  const hasShownModal = useRef(false);
-  const capturedIsFirstBadge = useRef(false);
+  const displayStatus: FinishBakingStatus = captureError
+    ? "error"
+    : mapBakeStatus(hookStatus);
 
+  // Success holds briefly, then advances. Stage-gated so a status that is
+  // already "done" on entry (re-visiting a goal that has a badge) can't yank
+  // the user off celebrate or design before they've acted.
   useEffect(() => {
-    if (phase === "celebration") {
-      setShowConfetti(true);
-    }
-  }, [phase]);
+    if (stage !== "baking" || displayStatus !== "success") return;
+    const timer = setTimeout(() => setStage("reveal"), SUCCESS_HOLD_MS);
+    return () => clearTimeout(timer);
+  }, [stage, displayStatus]);
 
-  useEffect(() => {
-    if (badgeStatus === "done" && badgeRow && !hasShownModal.current) {
-      hasShownModal.current = true;
-      capturedIsFirstBadge.current = allBadges.length === 1;
-      setShowBadgeModal(true);
-    }
-  }, [badgeStatus, badgeRow, allBadges.length]);
+  // The closing note saves on blur, which can fire repeatedly for the same
+  // text. Remembering what was written keeps a re-blur from appending a
+  // duplicate evidence row.
+  const savedNoteRef = useRef<string | null>(null);
+  const handleSaveClosingNote = useCallback(
+    (text: string) => {
+      const trimmed = text.trim();
+      if (!trimmed || savedNoteRef.current === trimmed) return;
+      try {
+        createEvidence({
+          goalId: goalId as GoalId,
+          type: EvidenceType.text,
+          uri: `${TEXT_EVIDENCE_PREFIX}${trimmed}`,
+          description: undefined,
+        });
+        savedNoteRef.current = trimmed;
+      } catch (error) {
+        logger.error("Failed to save closing note", { goalId, error });
+        reportError(error, { area: "completion.flow" });
+      }
+    },
+    [goalId],
+  );
 
-  // Inline text note state
-  const [noteText, setNoteText] = useState("");
-  const [savingNote, setSavingNote] = useState(false);
-  const textInputRef = useRef<TextInput>(null);
-
-  const trimmedNote = noteText.trim();
-  const canSaveNote =
-    trimmedNote.length > 0 && trimmedNote.length <= MAX_NOTE_LENGTH;
-
-  const badgeDesignJson = (badgeRow?.design as string | null) ?? null;
-  const goalDesignJson = (goal?.design as string | null) ?? null;
-  const previewDesign = useMemo<BadgeDesign | null>(() => {
-    if (pendingDesignJson) {
-      const parsed = parseBadgeDesign(pendingDesignJson);
-      if (parsed) return parsed;
-    }
-    // goal.design sits between warm pending and post-bake badge tiers:
-    // pre-bake the badge row doesn't exist yet, so goal.design is the only
-    // configured-design source after cold start. Post-bake, the badge row
-    // wins because it holds the bake-time snapshot.
-    if (goalDesignJson) {
-      const parsed = parseBadgeDesign(goalDesignJson);
-      if (parsed) return parsed;
-    }
-    if (badgeDesignJson) {
-      const parsed = parseBadgeDesign(badgeDesignJson);
-      if (parsed) return parsed;
-    }
-    if (!goal) return null;
-    return createDefaultBadgeDesign(goalTitleForDefault, goalColorForDefault);
-  }, [
-    pendingDesignJson,
-    goalDesignJson,
-    badgeDesignJson,
-    goal,
-    goalTitleForDefault,
-    goalColorForDefault,
-  ]);
-
-  const handleSaveInlineNote = useCallback(() => {
-    if (!canSaveNote || savingNote) return;
-
-    setSavingNote(true);
-    try {
-      createEvidence({
-        goalId: goalId as GoalId,
-        type: EvidenceType.text,
-        uri: `${TEXT_EVIDENCE_PREFIX}${trimmedNote}`,
-        description: undefined,
+  // Capture resolves *before* the stage flips: leaving the design stage
+  // unmounts the preview Svg, and an unmounted view mid-toDataURL is exactly
+  // the dropped-callback race from #93. Both outcomes land on baking — a
+  // failure just arrives there already in the error sub-state.
+  const handleBake = () => {
+    if (capturingRef.current) return;
+    capturingRef.current = true;
+    const dimensions = getCaptureDimensions(
+      currentDesign,
+      DESIGN_PREVIEW_SIZE,
+      getRendererLayoutOptions(theme),
+    );
+    captureBadge(previewRef, dimensions)
+      .then((png) => {
+        setCapturedPng(png);
+        setCaptureError(null);
+      })
+      .catch((err) => {
+        logger.error("Bake-time capture failed", { goalId, error: err });
+        reportError(err, { area: "badge.create", kind: "bake" });
+        setCaptureError(
+          err instanceof Error ? err.message : "Badge capture failed",
+        );
+      })
+      .finally(() => {
+        capturingRef.current = false;
+        setStage("baking");
       });
-      AccessibilityInfo.announceForAccessibility(
-        tCompletion("completion:evidencePhase.noteSavedA11y"),
-      );
-    } catch (error) {
-      logger.error("Failed to save inline text note", { goalId, error });
-      reportError(error, { area: "completion.flow" });
-    } finally {
-      setSavingNote(false);
+  };
+
+  const handleRetry = () => {
+    if (captureError) {
+      // Nothing to re-capture from here — the preview only exists on the
+      // design stage, so send the user back to press Bake again.
+      setCaptureError(null);
+      setStage("design");
+      return;
     }
-  }, [canSaveNote, savingNote, goalId, trimmedNote, tCompletion]);
+    retryBake();
+  };
+
+  // Both exits land on the goals list: the prototype's own backToGoals handler
+  // empties the stack rather than returning to the goal, and the no-key escape
+  // has no better destination — no badge was created either way, and there is
+  // no "reopen the goal so it can retry key generation" flow to send them to.
+  const handleBackToGoals = useCallback(() => {
+    navigation.popToTop();
+  }, [navigation]);
+
+  const handleViewBadge = useCallback(() => {
+    if (!badgeRow) {
+      // Only reachable if the badge row hasn't arrived from Evolu yet — the
+      // reveal stage is gated on a successful bake, so this is a sync lag, not
+      // a missing badge. Log rather than dead-ending in silence.
+      logger.warn("View badge pressed before the badge row was queryable", {
+        goalId,
+      });
+      return;
+    }
+    const parentNav = navigation.getParent<NavigationProp<RootTabParamList>>();
+    if (!parentNav) {
+      logger.warn(
+        "Could not navigate to badge detail — parent tab navigator not found",
+      );
+      return;
+    }
+    // Dismiss the finish modal FIRST. It is presented on GoalsStack, and an
+    // iOS native-stack modal covers the whole screen — switching the tab
+    // underneath it leaves BadgeDetail rendering invisibly behind the modal,
+    // which reads to the user as "View badge does nothing". popToTop removes
+    // CompletionFlow from the stack, dismissing the presentation.
+    navigation.popToTop();
+    parentNav.navigate("BadgesTab", {
+      screen: "BadgeDetail",
+      params: { badgeId: String(badgeRow.id) },
+      // initial: false seeds the stack's initialRouteName (Badges) beneath
+      // BadgeDetail so back / the Badges tab reach the list even on a cold,
+      // never-opened BadgesTab. Without it the stack is just [BadgeDetail]
+      // and there's nothing to pop to (#325).
+      initial: false,
+    });
+  }, [badgeRow, goalId, navigation]);
 
   if (!goal) {
     return (
       <View style={styles.centered}>
-        <Text variant="body">
-          {tCompletion("completion:errors.goalNotFound")}
-        </Text>
+        <Text variant="body">{t("completion:errors.goalNotFound")}</Text>
       </View>
     );
   }
 
-  const handleAddEvidence = () => {
-    const routeName = EVIDENCE_ROUTE_MAP[EvidenceType.photo];
-    if (!routeName) return;
-    navigation.navigate(routeName, { goalId });
-  };
-
-  const handleEvidenceTypePress = (evType: EvidenceTypeValue) => {
-    const routeName = EVIDENCE_ROUTE_MAP[evType];
-    if (!routeName) return;
-    navigation.navigate(routeName, { goalId });
-  };
-
-  const handleViewJourney = () => {
-    navigation.navigate("TimelineJourney", { goalId });
-  };
-
-  const handleBakeIt = () => setUserConfirmedBake(true);
-
-  const handleRedesignFirst = () => {
-    if (badgeRow) {
-      navigation.navigate("BadgeDesigner", {
-        mode: "redesign",
-        badgeId: String(badgeRow.id),
-      });
-      return;
-    }
-    // Re-stash the consumed design so the designer pre-loads it on return.
-    if (pendingDesignJson && pendingCapturedPng) {
-      pendingDesignStore.set(goalId, {
-        designJson: pendingDesignJson,
-        pngBase64: pendingCapturedPng.toString("base64"),
-      });
-    }
-    navigation.navigate("BadgeDesigner", {
-      mode: "new-goal",
-      goalId,
-      returnVia: "back",
-    });
-  };
-
-  const isCompleted = goal?.status === GoalStatus.completed;
-  const showBakeChoice = !userConfirmedBake && !isCompleted;
-
-  const handleReopenGoal = () => {
-    uncompleteGoal(goalId as GoalId);
-    // replace, not navigate — back to the celebration screen would re-show BadgeEarnedModal.
-    navigation.replace("FocusMode", { goalId });
-  };
-
-  const handleViewBadge = () => {
-    setShowBadgeModal(false);
-    if (!badgeRow) return;
-    const parentNav = navigation.getParent<NavigationProp<RootTabParamList>>();
-    if (parentNav) {
-      parentNav.navigate("BadgesTab", {
-        screen: "BadgeDetail",
-        params: { badgeId: String(badgeRow.id) },
-        // initial: false seeds the stack's initialRouteName (Badges) beneath
-        // BadgeDetail so back / the Badges tab reach the list even on a cold,
-        // never-opened BadgesTab. Without it the stack is just [BadgeDetail]
-        // and there's nothing to pop to (#325).
-        initial: false,
-      });
-    } else {
-      logger.warn(
-        "Could not navigate to badge detail — parent tab navigator not found",
-      );
-    }
-  };
-
-  const handleDismissBadgeModal = () => {
-    setShowBadgeModal(false);
-  };
-
-  // Mounted in both phases so the PNG is ready before the user reaches celebration.
-  // The wrapper is purely an offscreen positioning host now — capture goes through
-  // the BadgeRenderer's imperative handle (Svg.toDataURL), not the view buffer.
-  //
-  // While captureInFlight is true, we render with the pinned design even if the
-  // live fallbackDesign has gone null — see pinnedHostDesignRef.
-  const hostDesign = captureInFlight
-    ? pinnedHostDesignRef.current
-    : fallbackDesign;
-  const fallbackHost = hostDesign ? (
-    <View
-      collapsable={false}
-      style={styles.fallbackCaptureHost}
-      pointerEvents="none"
-      accessibilityElementsHidden
-      importantForAccessibility="no-hide-descendants"
-      testID="completion-fallback-capture-host"
-    >
-      <BadgeRenderer
-        ref={fallbackRef}
-        design={hostDesign}
-        size={160}
-        showShadow={false}
-      />
-    </View>
-  ) : null;
-
-  if (phase === "evidence-prompt") {
+  if (stage === "celebrate") {
     return (
-      <KeyboardAvoidingView style={{ flex: 1 }} {...KEYBOARD_AVOIDING_PROPS}>
-        {fallbackHost}
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View
-            style={styles.card}
-            accessible={false}
-            accessibilityRole="summary"
-            accessibilityLabel={tCompletion(
-              "completion:evidencePhase.summaryA11y",
-              {
-                title: goal.title,
-              },
-            )}
-          >
-            <View style={styles.iconContainer} accessibilityElementsHidden>
-              <Text style={styles.iconEmoji}>{"\u{1F3C6}"}</Text>
-            </View>
-            <Text
-              variant="headline"
-              style={styles.headline}
-              accessibilityRole="header"
-            >
-              {tCompletion("completion:evidencePhase.title")}
-            </Text>
-            <Text variant="body" style={styles.summary}>
-              {tCompletion("completion:evidencePhase.summary", {
-                title: goal.title,
-              })}
-            </Text>
+      <FinishCelebrateStage
+        {...celebrateCopy(t, { title: goalTitle, stepCount: stepRows.length })}
+        closingNoteValue={closingNote}
+        onClosingNoteChange={setClosingNote}
+        onSaveClosingNote={handleSaveClosingNote}
+        onDesignBadge={() => setStage("design")}
+      />
+    );
+  }
 
-            {/* Inline text input — one-tap accessible */}
-            <View style={styles.inlineNoteContainer} accessible={false}>
-              <Text variant="label" style={styles.inlineNoteLabel}>
-                {tCompletion("completion:evidencePhase.noteLabel")}
-              </Text>
-              <TextInput
-                ref={textInputRef}
-                style={styles.inlineNoteInput}
-                placeholder={tCompletion(
-                  "completion:evidencePhase.notePlaceholder",
-                )}
-                placeholderTextColor={theme.colors.textMuted}
-                value={noteText}
-                onChangeText={setNoteText}
-                multiline
-                textAlignVertical="top"
-                maxLength={MAX_NOTE_LENGTH}
-                testID="completion-note-input"
-                accessible
-                accessibilityLabel={tCompletion(
-                  "completion:evidencePhase.noteA11yLabel",
-                )}
-                accessibilityHint={tCompletion(
-                  "completion:evidencePhase.noteA11yHint",
-                )}
-              />
-              <Button
-                label={tCompletion("completion:evidencePhase.saveNote")}
-                onPress={handleSaveInlineNote}
-                disabled={!canSaveNote}
-                loading={savingNote}
-                variant="primary"
-                testID="completion-save-note-button"
-              />
-            </View>
+  if (stage === "design") {
+    return (
+      <FinishDesignStage
+        {...designCopy(t)}
+        design={currentDesign}
+        onDesignChange={setDesign}
+        goalColor={goalColor}
+        goalTitle={goalTitle}
+        frameParams={frameParams}
+        badgeSize={DESIGN_PREVIEW_SIZE}
+        previewRef={previewRef}
+        onBack={() => setStage("celebrate")}
+        onBake={handleBake}
+      />
+    );
+  }
 
-            {/* Evidence type chips for other capture methods */}
-            <View style={styles.evidenceChips}>
-              <Text variant="label" style={styles.evidenceChipsLabel}>
-                {tCompletion("completion:evidencePhase.otherWays")}
-              </Text>
-              <View style={styles.evidenceChipRow}>
-                {EVIDENCE_OPTIONS.filter(
-                  (opt) => opt.type !== EvidenceType.text,
-                ).map((opt) => (
-                  <Button
-                    key={opt.type}
-                    icon={opt.icon}
-                    label={evidenceLabel(tCompletion, opt.type)}
-                    onPress={() => handleEvidenceTypePress(opt.type)}
-                    variant="secondary"
-                    size="sm"
-                  />
-                ))}
-              </View>
-            </View>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+  if (stage === "baking") {
+    return (
+      <FinishBakingStage
+        {...bakingCopy(t, { errorDetail: captureError ?? hookError ?? "" })}
+        badgeDesign={currentDesign}
+        status={displayStatus}
+        onExitWithoutBadge={handleBackToGoals}
+        onRetry={handleRetry}
+      />
     );
   }
 
   return (
-    <View style={{ flex: 1 }}>
-      {fallbackHost}
-      <Confetti
-        visible={showConfetti}
-        onComplete={() => setShowConfetti(false)}
-      />
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View
-          style={styles.card}
-          accessible={false}
-          accessibilityRole="summary"
-          accessibilityLabel={
-            stepRows.length === 0
-              ? tCompletion("completion:celebration.summaryA11yNoSteps", {
-                  title: goal.title,
-                })
-              : tCompletion("completion:celebration.summaryA11y", {
-                  count: stepRows.length,
-                  title: goal.title,
-                })
-          }
-        >
-          <View style={styles.iconContainer} accessibilityElementsHidden>
-            <Text style={styles.iconEmoji}>{"\u{1F3AF}"}</Text>
-          </View>
-          <Text
-            variant="headline"
-            style={styles.headline}
-            accessibilityRole="header"
-          >
-            {tCompletion("completion:celebration.title")}
-          </Text>
-          <Text variant="body" style={styles.summary}>
-            {stepRows.length === 0
-              ? tCompletion("completion:celebration.summaryNoSteps", {
-                  title: goal.title,
-                })
-              : tCompletion("completion:celebration.summary", {
-                  count: stepRows.length,
-                  title: goal.title,
-                })}
-          </Text>
-
-          {showBakeChoice && previewDesign && (
-            <View
-              style={styles.previewContainer}
-              accessible
-              accessibilityRole="image"
-              accessibilityLabel={tCompletion(
-                "completion:celebration.previewA11y",
-              )}
-              testID="completion-bake-preview"
-            >
-              <BadgeRenderer
-                design={previewDesign}
-                size={160}
-                showShadow={false}
-              />
-            </View>
-          )}
-
-          {showBakeChoice ? (
-            <View style={styles.actions}>
-              <Button
-                label={tCompletion("completion:celebration.bakeIt")}
-                onPress={handleBakeIt}
-                variant="primary"
-                testID="completion-bake-it-button"
-                // Prevents userConfirmedBake from flipping without a usable
-                // source: the choice UI would disappear and post-bake actions
-                // would render even though useCreateBadge is still disabled
-                // (no PNG → enabled=false), letting the user navigate away
-                // before the bake fires.
-                disabled={!hasAnyBakeSource}
-              />
-              <Button
-                label={tCompletion("completion:celebration.redesignFirst")}
-                onPress={handleRedesignFirst}
-                variant="secondary"
-                testID="completion-redesign-first-button"
-              />
-            </View>
-          ) : (
-            <View style={styles.actions}>
-              <Button
-                label={tCompletion("completion:celebration.addFinalEvidence")}
-                onPress={handleAddEvidence}
-                variant={hasGoalEvidence ? "secondary" : "primary"}
-              />
-              <Button
-                label={tCompletion("completion:celebration.viewJourney")}
-                onPress={handleViewJourney}
-                variant={hasGoalEvidence ? "primary" : "secondary"}
-              />
-              {isCompleted && (
-                <Button
-                  label={tCompletion("completion:celebration.reopenGoal")}
-                  onPress={handleReopenGoal}
-                  variant="secondary"
-                />
-              )}
-            </View>
-          )}
-
-          {isBadgeCreating && (
-            <View
-              style={styles.badgeStatus}
-              accessible
-              accessibilityRole="none"
-              accessibilityLiveRegion="polite"
-              accessibilityLabel={tCompletion("completion:badge.creatingA11y")}
-            >
-              <ActivityIndicator size="small" />
-              <Text variant="label" style={styles.badgeStatusText}>
-                {tCompletion("completion:badge.creating")}
-              </Text>
-            </View>
-          )}
-
-          {badgeStatus === "no-key" && (
-            <View
-              style={styles.badgeStatus}
-              accessible
-              accessibilityRole="alert"
-              accessibilityLabel={tCompletion("completion:badge.noKeyA11y")}
-            >
-              <Text variant="label" style={styles.badgeStatusText}>
-                {tCompletion("completion:badge.noKeyMessage")}
-              </Text>
-            </View>
-          )}
-
-          {badgeStatus === "error" && badgeError && (
-            <View style={styles.badgeErrorContainer}>
-              <View
-                style={styles.badgeStatus}
-                accessible
-                accessibilityRole="alert"
-                accessibilityLabel={tCompletion("completion:badge.errorA11y", {
-                  message: badgeError,
-                })}
-              >
-                <Text variant="label" style={styles.badgeStatusText}>
-                  {tCompletion("completion:badge.errorMessage", {
-                    message: badgeError,
-                  })}
-                </Text>
-              </View>
-              {/* Recovery from the terminal error state (#39): re-arms the
-                  bake pipeline in place without leaving the celebration. */}
-              <Button
-                label={tCompletion("common:actions.retry")}
-                onPress={retryBake}
-                variant="secondary"
-                testID="completion-retry-bake-button"
-              />
-            </View>
-          )}
-
-          {hasGoalEvidence && (
-            <View style={styles.evidenceSection}>
-              <Text variant="label" style={styles.evidenceSectionTitle}>
-                {tCompletion("completion:celebration.evidenceListTitle")}
-              </Text>
-              {goalEvidenceRows.map((ev) => {
-                const evType = validateEvidenceType(ev.type ?? "file");
-                const icon = EVIDENCE_TYPE_ICONS[evType] ?? "\u{1F4C4}";
-                return (
-                  <View
-                    key={ev.id}
-                    style={styles.evidenceItem}
-                    accessible
-                    accessibilityRole="text"
-                    accessibilityLabel={tCompletion(
-                      "celebration.evidenceItemA11y",
-                      {
-                        type: ev.type ?? "file",
-                        description: ev.description ?? ev.type ?? "",
-                      },
-                    )}
-                  >
-                    <Text style={styles.evidenceIcon}>{icon}</Text>
-                    <Text
-                      variant="body"
-                      style={styles.evidenceLabel}
-                      numberOfLines={1}
-                    >
-                      {ev.description ??
-                        ev.type ??
-                        tCompletion("completion:celebration.evidenceFallback")}
-                    </Text>
-                  </View>
-                );
-              })}
-            </View>
-          )}
-        </View>
-      </ScrollView>
-      {badgeRow && (
-        <BadgeEarnedModal
-          visible={showBadgeModal}
-          imageUri={badgeRow.imageUri ?? PLACEHOLDER_IMAGE_URI}
-          isFirstBadge={capturedIsFirstBadge.current}
-          onViewBadge={handleViewBadge}
-          onContinue={handleDismissBadgeModal}
-        />
+    <FinishRevealStage
+      {...revealCopy(t)}
+      badgeDesign={currentDesign}
+      goalTitle={goalTitle}
+      earnedDateLabel={formatDate(
+        (goal.completedAt ?? goal.createdAt) as string | null,
+        i18n.language,
       )}
-    </View>
+      onViewBadge={handleViewBadge}
+      onBackToGoals={handleBackToGoals}
+      animationPref={animationPref}
+    />
   );
 }
 
+/**
+ * The `finish` route: celebrate → design → baking → reveal, wired to the real
+ * `useCreateBadge` pipeline and real navigation.
+ *
+ * Each stage is a self-contained full-bleed component (#470–#472, #499) — the
+ * screen owns only the stage machine, the badge design threaded through it, the
+ * bake-time capture, and the exits. It deliberately renders no `ModeIndicator`,
+ * `ScreenSubHeader`, or `Confetti`: every redesigned full-screen flow in this
+ * epic drops that legacy chrome, and #470 D4 already ruled confetti out of the
+ * finish route. Presented as a stack modal so the tab bar stays hidden (D1).
+ */
 export function CompletionFlowScreen({ route }: CompletionFlowScreenProps) {
-  const navigation = useNavigation();
-  const { t } = useTranslation(["completion"]);
   const { goalId } = route.params;
-
-  // Consume outside the inner Suspense boundary so the entry survives
-  // Evolu-triggered remounts (inner consume() ate the entry on first remount
-  // before the bake-firing mount could see it). State, not ref, so a fresh
-  // BadgeDesigner save during the same stack visit can flow through.
-  const [pendingDesign, setPendingDesign] = useState(() =>
-    pendingDesignStore.consume(goalId),
-  );
-  const [pendingCapturedPng, setPendingCapturedPng] = useState<
-    Buffer | undefined
-  >(() =>
-    pendingDesign ? Buffer.from(pendingDesign.pngBase64, "base64") : undefined,
-  );
-
-  useFocusEffect(
-    useCallback(() => {
-      const fresh = pendingDesignStore.consume(goalId);
-      if (!fresh) return;
-      setPendingDesign(fresh);
-      setPendingCapturedPng(Buffer.from(fresh.pngBase64, "base64"));
-    }, [goalId]),
-  );
 
   return (
     <View style={styles.container}>
-      <ScreenSubHeader
-        label={t("completion:title")}
-        onBack={() => navigation.goBack()}
-      />
       <ErrorBoundary>
         <Suspense
           fallback={
             <ActivityIndicator style={styles.loadingIndicator} size="large" />
           }
         >
-          <CompletionContent
-            goalId={goalId}
-            pendingDesignJson={pendingDesign?.designJson}
-            pendingCapturedPng={pendingCapturedPng}
-          />
+          <FinishFlowContent goalId={goalId} />
         </Suspense>
       </ErrorBoundary>
-      <ModeIndicator mode="complete" />
     </View>
   );
 }

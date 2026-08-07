@@ -7,9 +7,9 @@ import { Pressable, View } from "react-native";
 import { useUnistyles } from "react-native-unistyles";
 import { useTranslation } from "react-i18next";
 
-import { Text } from "../../components/Text";
-import { BrutalistSlider } from "../../components/BrutalistSlider";
-import { ColorPicker } from "../../badges/ColorPicker";
+import { Text } from "../components/Text";
+import { BrutalistSlider } from "../components/BrutalistSlider";
+import { ColorPicker } from "./ColorPicker";
 import {
   BADGE_COLOR_THEME_SENTINEL,
   BADGE_DUOTONE_OPACITY_DEFAULT,
@@ -17,9 +17,9 @@ import {
   BADGE_DUOTONE_OPACITY_MIN,
   BADGE_DUOTONE_OPACITY_STEP,
   BadgeFrame,
-} from "../../badges/types";
-import type { BadgeDesign } from "../../badges/types";
-import { getSafeTextColor } from "../../utils/accessibility";
+} from "./types";
+import type { BadgeDesign } from "./types";
+import { getSafeTextColor } from "../utils/accessibility";
 import { ChannelPalette } from "./ChannelPalette";
 import { styles } from "./BadgeColorsAccordion.styles";
 

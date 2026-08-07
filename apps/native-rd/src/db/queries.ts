@@ -208,15 +208,14 @@ export function updateGoal(
 /**
  * Mark goal as completed with current timestamp
  * @param id - Goal ID
+ * @param evidence - All non-deleted evidence rows belonging to the goal or its
+ *   steps — the same combined set `canCompleteGoal` expects (#449 D13)
  * @returns Update command
  * @throws Error if timestamp generation fails
  */
-export function completeGoal(
-  id: GoalId,
-  goalEvidence: { type: string | null }[],
-) {
+export function completeGoal(id: GoalId, evidence: { type: string | null }[]) {
   breadcrumb({ category: "goal", message: "complete" });
-  if (!canCompleteGoal(goalEvidence)) {
+  if (!canCompleteGoal(evidence)) {
     throw new Error(
       "Cannot complete goal: no evidence attached. Add at least one evidence item first.",
     );
@@ -349,15 +348,19 @@ export function canCompleteStep(
 }
 
 /**
- * Check if a goal has at least one goal-level evidence item.
+ * Check if a goal has at least one typed evidence item anywhere beneath it.
  *
- * @param goalEvidence - All non-deleted evidence rows attached directly to the goal
+ * "Beneath it" means either scope: rows attached directly to the goal *and*
+ * rows attached to any of its steps. Callers are responsible for passing both
+ * (see `useCreateBadge`, which concatenates `evidenceByGoalQuery` and
+ * `stepEvidenceByGoalQuery`) — a step-driven ride never writes a goal-scoped
+ * row, and the goal demonstrably has proof, just filed under steps (#449 D13).
+ *
+ * @param evidence - All non-deleted evidence rows belonging to the goal or its steps
  * @returns true if the goal can be completed
  */
-export function canCompleteGoal(
-  goalEvidence: { type: string | null }[],
-): boolean {
-  return goalEvidence.some((e) => e.type !== null);
+export function canCompleteGoal(evidence: { type: string | null }[]): boolean {
+  return evidence.some((e) => e.type !== null);
 }
 
 // Step CRUD

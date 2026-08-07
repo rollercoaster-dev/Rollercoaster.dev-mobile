@@ -28,7 +28,16 @@ export function GoalsStack() {
     >
       <Stack.Screen name="Goals" component={GoalsScreen} />
       <Stack.Screen name="FocusMode" component={FocusModeScreen} />
-      <Stack.Screen name="CompletionFlow" component={CompletionFlowScreen} />
+      {/* Modal presentation covers the tab bar on iOS with no changes to the
+          custom FocusPillTabBar — matching the canonical prototype, which
+          excludes `finish` from showTab exactly as it excludes `newgoal`.
+          The transition style is owned here, so neither entry point's plain
+          navigate("CompletionFlow", { goalId }) changes (#449 D1). */}
+      <Stack.Screen
+        name="CompletionFlow"
+        component={CompletionFlowScreen}
+        options={{ presentation: "modal" }}
+      />
       <Stack.Screen name="TimelineJourney" component={TimelineJourneyScreen} />
       <Stack.Screen name="EvidenceViewer" component={EvidenceViewerScreen} />
       {/* presentation: "modal" is a true full-screen native modal on both

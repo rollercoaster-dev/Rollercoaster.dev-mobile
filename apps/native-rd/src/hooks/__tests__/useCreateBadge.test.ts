@@ -650,6 +650,69 @@ describe("useCreateBadge", () => {
     });
   });
 
+  // #449 D13: the redesigned finishing flow drops the mandatory evidence-prompt
+  // phase, so a step-driven ride reaches the gate with zero goal-scoped rows.
+  // The gate must count both scopes or that ride is unbakeable — and Retry
+  // can't clear it, since nothing between attempts changes the evidence count.
+  describe("completion gate counts step-scoped evidence (#449)", () => {
+    const stepOnlyQueries = (query: string) => {
+      if (query === "mock-goals-query") return [MOCK_GOAL];
+      if (query === "mock-evidence-query") return []; // no goal-scoped rows
+      if (query === "mock-step-evidence-query")
+        return [
+          {
+            id: "ev-step-1",
+            type: "photo",
+            uri: "file:///proof.jpg",
+            description: null,
+            stepTitle: "Wire the box",
+          },
+        ];
+      if (query === "mock-badge-query") return [];
+      return [];
+    };
+
+    it("bakes to done when the only evidence is step-scoped", async () => {
+      mockUseQuery.mockImplementation(stepOnlyQueries);
+
+      const { result } = renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
+      await act(async () => {});
+
+      expect(result.current.error).toBeNull();
+      expect(result.current.status).toBe("done");
+      expect(mockCreateBadge).toHaveBeenCalled();
+    });
+
+    // Asserted on the argument, not just the resulting status: the db mock's
+    // canCompleteGoal is a local mirror of the real predicate, so a status
+    // assertion alone would still pass if the hook kept feeding goal-scoped
+    // rows only and the mirror drifted. This pins the widened array itself.
+    it("passes the combined goal+step array to completeGoal", async () => {
+      mockUseQuery.mockImplementation(stepOnlyQueries);
+
+      renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
+      await act(async () => {});
+
+      expect(mockCompleteGoal).toHaveBeenCalledWith(GOAL_ID, [
+        { type: "photo" },
+      ]);
+    });
+
+    it("still throws when neither scope has a typed row", async () => {
+      mockUseQuery.mockImplementation((query: string) => {
+        if (query === "mock-goals-query") return [MOCK_GOAL];
+        if (query === "mock-badge-query") return [];
+        return [];
+      });
+
+      const { result } = renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
+      await waitFor(() => expect(result.current.status).toBe("error"));
+
+      expect(result.current.error).toContain("no evidence attached");
+      expect(mockCreateBadge).not.toHaveBeenCalled();
+    });
+  });
+
   // The criteria narrative is localized to the active UI language and composed
   // here (not in the pure credentialBuilder) so it can reach i18next. Assert
   // against i18n.t(key) rather than hardcoded English: the contract is "the

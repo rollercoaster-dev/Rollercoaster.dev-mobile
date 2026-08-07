@@ -10,7 +10,7 @@ import { FrameSelector } from "../../badges/FrameSelector";
 import { CenterModeSelector } from "../../badges/CenterModeSelector";
 import { PathTextEditor } from "../../badges/PathTextEditor";
 import { BannerEditor } from "../../badges/BannerEditor";
-import { BadgeColorsAccordion } from "../../screens/BadgeDesignerScreen/BadgeColorsAccordion";
+import { BadgeColorsAccordion } from "../../badges/BadgeColorsAccordion";
 import { CollapsibleSection } from "../../components/CollapsibleSection";
 import {
   BadgeShape,

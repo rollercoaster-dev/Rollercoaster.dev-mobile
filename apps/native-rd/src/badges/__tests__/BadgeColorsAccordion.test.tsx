@@ -11,7 +11,7 @@ import {
   renderWithProviders,
   screen,
   fireEvent,
-} from "../../../__tests__/test-utils";
+} from "../../__tests__/test-utils";
 import { BadgeColorsAccordion } from "../BadgeColorsAccordion";
 import {
   BadgeShape,
@@ -19,7 +19,7 @@ import {
   BadgeIconWeight,
   BADGE_COLOR_THEME_SENTINEL,
   type BadgeDesign,
-} from "../../../badges/types";
+} from "../types";
 
 function createDesign(overrides: Partial<BadgeDesign> = {}): BadgeDesign {
   return {
