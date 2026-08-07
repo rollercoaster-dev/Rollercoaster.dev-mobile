@@ -39,85 +39,136 @@ jest.mock("../../../db", () => ({
   badgesWithGoalsQuery: { __brand: "badgesWithGoalsQuery" },
 }));
 
+// `design: null` throughout — this is a wiring test, so cells and the spotlight
+// render their initial-letter fallback tiles rather than dragging in
+// BadgeRenderer/react-native-svg. Visuals are BadgesWall.test.tsx's job.
 const makeBadgeRow = (overrides: Record<string, unknown> = {}) => ({
   id: "badge-1",
   goalId: "goal-1",
   imageUri: "pending:baked-image",
+  design: null,
   createdAt: "2026-01-28T00:00:00.000Z",
   goalTitle: "Learn TypeScript",
+  goalDescription: null,
   completedAt: "2026-01-28T00:00:00.000Z",
   ...overrides,
 });
 
+/**
+ * Route rows by query brand. BadgesWall's useAnimationPref also calls useQuery
+ * (with `userSettingsQuery`, which the db mock doesn't export) — the unbranded
+ * fall-through keeps badge rows from leaking into the animation pref.
+ */
+const mockBadges = (badges: Record<string, unknown>[]) => {
+  mockUseQuery.mockImplementation((query: { __brand?: string }) =>
+    query?.__brand === "badgesWithGoalsQuery" ? badges : [],
+  );
+};
+
 beforeEach(() => {
   jest.clearAllMocks();
-  mockUseQuery.mockReturnValue([]);
+  mockBadges([]);
   mockGetParent.mockReturnValue({ navigate: mockNavigate });
 });
 
 describe("BadgesScreen", () => {
   describe("empty state", () => {
-    it("renders empty state when no badges exist", () => {
+    it("renders the plain Badges header above the wall's empty state", () => {
       renderWithProviders(<BadgesScreen />);
-      expect(screen.getByText(i18n.t("badges:empty.title"))).toBeOnTheScreen();
-      expect(screen.getByText(i18n.t("badges:empty.body"))).toBeOnTheScreen();
+      expect(screen.getByText(i18n.t("badges:header"))).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("badges:wall.empty.title")),
+      ).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("badges:wall.empty.body")),
+      ).toBeOnTheScreen();
     });
 
-    it("renders Go to Goals action button", () => {
+    it("navigates to the Goals tab when the empty-state CTA is pressed", () => {
       renderWithProviders(<BadgesScreen />);
-      expect(screen.getByText(i18n.t("badges:empty.action"))).toBeOnTheScreen();
-    });
-
-    it("navigates to Goals tab when Go to Goals is pressed", () => {
-      renderWithProviders(<BadgesScreen />);
-      fireEvent.press(screen.getByText(i18n.t("badges:empty.action")));
+      fireEvent.press(screen.getByTestId("badges-wall-see-goals"));
       expect(mockNavigate).toHaveBeenCalledWith("GoalsTab", {
         screen: "Goals",
       });
     });
   });
 
-  describe("header", () => {
-    it("renders Badges title", () => {
+  describe("populated", () => {
+    const threeBadges = [
+      makeBadgeRow({ id: "badge-1", goalTitle: "Learn TypeScript" }),
+      makeBadgeRow({ id: "badge-2", goalTitle: "Learn Rust" }),
+      makeBadgeRow({ id: "badge-3", goalTitle: "Learn Elixir" }),
+    ];
+
+    it("passes the total badge count to the wall header", () => {
+      mockBadges(threeBadges);
       renderWithProviders(<BadgesScreen />);
-      expect(screen.getByText(i18n.t("badges:header"))).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("badges:wall.count", { count: 3 })),
+      ).toBeOnTheScreen();
+    });
+
+    it("spotlights the most recent badge and galleries the rest", () => {
+      mockBadges(threeBadges);
+      renderWithProviders(<BadgesScreen />);
+
+      expect(screen.getByTestId("badges-wall-spotlight")).toHaveProp(
+        "accessibilityLabel",
+        "Learn TypeScript",
+      );
+      expect(screen.getByTestId("badge-wall-cell-badge-2")).toBeOnTheScreen();
+      expect(screen.getByTestId("badge-wall-cell-badge-3")).toBeOnTheScreen();
+      // The spotlight badge is not repeated as a gallery cell.
+      expect(screen.queryByTestId("badge-wall-cell-badge-1")).toBeNull();
+    });
+
+    it("renders no purple ScreenHeader over the populated wall", () => {
+      mockBadges(threeBadges);
+      renderWithProviders(<BadgesScreen />);
+      expect(screen.queryByText(i18n.t("badges:header"))).toBeNull();
+    });
+
+    it("falls back to the untitled label when the goal was deleted", () => {
+      mockBadges([
+        makeBadgeRow({ id: "badge-1", goalTitle: null }),
+        makeBadgeRow({ id: "badge-2", goalTitle: null }),
+      ]);
+      renderWithProviders(<BadgesScreen />);
+
+      const fallback = i18n.t("badges:card.untitledFallback");
+      expect(screen.getByTestId("badges-wall-spotlight")).toHaveProp(
+        "accessibilityLabel",
+        fallback,
+      );
+      expect(screen.getByTestId("badge-wall-cell-badge-2")).toHaveProp(
+        "accessibilityLabel",
+        fallback,
+      );
     });
   });
 
-  describe("badge list", () => {
-    it("renders badge cards when badges exist", () => {
-      const badges = [
+  describe("navigation", () => {
+    beforeEach(() => {
+      mockBadges([
         makeBadgeRow({ id: "badge-1", goalTitle: "Learn TypeScript" }),
         makeBadgeRow({ id: "badge-2", goalTitle: "Learn Rust" }),
-      ];
-      mockUseQuery.mockReturnValue(badges);
-
-      renderWithProviders(<BadgesScreen />);
-      expect(screen.getByText("Learn TypeScript")).toBeOnTheScreen();
-      expect(screen.getByText("Learn Rust")).toBeOnTheScreen();
+      ]);
     });
 
-    it("navigates to BadgeDetail when a badge card is pressed", () => {
-      const badges = [
-        makeBadgeRow({ id: "badge-1", goalTitle: "Learn TypeScript" }),
-      ];
-      mockUseQuery.mockReturnValue(badges);
-
+    it("opens BadgeDetail from the spotlight", () => {
       renderWithProviders(<BadgesScreen />);
-      fireEvent.press(screen.getByText("Learn TypeScript"));
+      fireEvent.press(screen.getByTestId("badges-wall-spotlight"));
       expect(mockNavigate).toHaveBeenCalledWith("BadgeDetail", {
         badgeId: "badge-1",
       });
     });
 
-    it("formats earned date correctly", () => {
-      const badges = [
-        makeBadgeRow({ completedAt: "2026-01-28T00:00:00.000Z" }),
-      ];
-      mockUseQuery.mockReturnValue(badges);
-
+    it("opens BadgeDetail from a gallery cell", () => {
       renderWithProviders(<BadgesScreen />);
-      expect(screen.getByText("Jan 28, 2026")).toBeOnTheScreen();
+      fireEvent.press(screen.getByTestId("badge-wall-cell-badge-2"));
+      expect(mockNavigate).toHaveBeenCalledWith("BadgeDetail", {
+        badgeId: "badge-2",
+      });
     });
   });
 
@@ -128,9 +179,8 @@ describe("BadgesScreen", () => {
 
     it.each([
       "badges:header",
-      "badges:empty.title",
-      "badges:empty.body",
-      "badges:empty.action",
+      "badges:wall.empty.title",
+      "badges:wall.empty.body",
     ] as const)(
       "renders %s as bracketed copy under pseudo locale",
       async (key) => {
@@ -144,7 +194,7 @@ describe("BadgesScreen", () => {
 
     it("renders badges:card.untitledFallback as bracketed copy when goalTitle is null", async () => {
       await i18n.changeLanguage("pseudo");
-      mockUseQuery.mockReturnValue([makeBadgeRow({ goalTitle: null })]);
+      mockBadges([makeBadgeRow({ goalTitle: null })]);
       renderWithProviders(<BadgesScreen />);
       const pseudo = i18n.t("badges:card.untitledFallback");
       expect(pseudo.startsWith("[")).toBe(true);
