@@ -34,6 +34,44 @@
     "evidenceFallback": "Beleg",
     "evidenceItemA11y": "{{type}}-Beleg: {{description}}"
   },
+  "finish": {
+    "celebrate": {
+      "eyebrow": "Ziel abgeschlossen",
+      "headline": "Geschafft.",
+      "summary_one": "Einen Schritt für {{title}} abgeschlossen.",
+      "summary_other": "Alle {{count}} Schritte für {{title}} abgeschlossen.",
+      "summaryNoSteps": "{{title}} — abgeschlossen.",
+      "closingNotePromptLabel": "Abschlussnotiz hinzufügen",
+      "closingNoteOptionalLabel": "optional",
+      "closingNotePlaceholder": "Wie hat es sich angefühlt, das abzuschließen?",
+      "closingNoteA11yLabel": "Abschlussnotiz",
+      "closingNoteA11yHint": "Optional. Schreib ein paar Worte zum Abschluss dieses Ziels.",
+      "ctaLabel": "Badge gestalten →",
+      "ctaSubcopy": "das Andenken an diesen Erfolg — mach es zu deinem"
+    },
+    "design": {
+      "headerTitle": "Gestalte dein Badge",
+      "backA11yLabel": "Zurück",
+      "shapeSectionTitle": "Form",
+      "colorSectionTitle": "Farbe",
+      "centerSectionTitle": "Mitte",
+      "bottomLabelSectionTitle": "Unterschrift",
+      "bottomLabelPlaceholder": "ERREICHT 2026",
+      "bottomLabelA11yLabel": "Unterschrift",
+      "bakeLabel": "Badge fertigstellen",
+      "bakeSubcopy": "wird gespeichert und zu einem überprüfbaren Badge versiegelt"
+    },
+    "baking": {
+      "label": "Dein Badge wird erstellt…",
+      "successLabel": "Badge erstellt.",
+      "exitWithoutBadgeLabel": "Ohne Badge fortfahren"
+    },
+    "reveal": {
+      "eyebrow": "Erhalten",
+      "viewBadgeLabel": "Badge ansehen",
+      "backToGoalsLabel": "Zurück zu den Zielen"
+    }
+  },
   "badge": {
     "creating": "Dein Badge wird erstellt…",
     "creatingA11y": "Dein Badge wird erstellt…",

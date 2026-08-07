@@ -34,6 +34,44 @@
     "evidenceFallback": "Evidence",
     "evidenceItemA11y": "{{type}} evidence: {{description}}"
   },
+  "finish": {
+    "celebrate": {
+      "eyebrow": "Goal complete",
+      "headline": "You did it.",
+      "summary_one": "All {{count}} step done for {{title}}.",
+      "summary_other": "All {{count}} steps done for {{title}}.",
+      "summaryNoSteps": "{{title}} — done.",
+      "closingNotePromptLabel": "Add a closing note",
+      "closingNoteOptionalLabel": "optional",
+      "closingNotePlaceholder": "What did finishing this feel like?",
+      "closingNoteA11yLabel": "Closing note",
+      "closingNoteA11yHint": "Optional. Write a few words about finishing this goal.",
+      "ctaLabel": "Design your badge →",
+      "ctaSubcopy": "the keepsake for this win — make it yours"
+    },
+    "design": {
+      "headerTitle": "Make your badge",
+      "backA11yLabel": "Back",
+      "shapeSectionTitle": "Shape",
+      "colorSectionTitle": "Color",
+      "centerSectionTitle": "Center",
+      "bottomLabelSectionTitle": "Bottom label",
+      "bottomLabelPlaceholder": "EARNED 2026",
+      "bottomLabelA11yLabel": "Bottom label",
+      "bakeLabel": "Bake my badge",
+      "bakeSubcopy": "saves & seals it into a verifiable badge"
+    },
+    "baking": {
+      "label": "Baking your badge…",
+      "successLabel": "Badge created!",
+      "exitWithoutBadgeLabel": "Continue without a badge"
+    },
+    "reveal": {
+      "eyebrow": "Earned",
+      "viewBadgeLabel": "View badge",
+      "backToGoalsLabel": "Back to goals"
+    }
+  },
   "badge": {
     "creating": "Creating your badge…",
     "creatingA11y": "Creating your badge...",
