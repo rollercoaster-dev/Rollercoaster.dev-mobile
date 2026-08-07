@@ -30,6 +30,7 @@ export function SettingsSection({
     <View style={styles.container}>
       <Text style={styles.title}>{title}</Text>
       <View
+        testID="settings-rows"
         style={styles.rows}
         accessibilityRole={accessibilityRole}
         accessibilityLabel={accessibilityLabel}

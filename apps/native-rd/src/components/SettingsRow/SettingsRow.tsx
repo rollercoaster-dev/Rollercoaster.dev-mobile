@@ -24,10 +24,10 @@ export interface SettingsRowProps {
   /** Selected state for `accessibilityRole="radio"`; ignored for buttons. */
   checked?: boolean;
   /**
-   * Overrides the row's accessible name. Defaults to `label`. Pass a composite
-   * string (e.g. `"Compact. Tighter spacing"`) when the visible label alone is
-   * too terse for a screen reader but the extra copy must not change the
-   * on-screen text.
+   * Overrides the row's accessible name — on the pressable row and on the
+   * `toggle` Switch alike. Defaults to `label`. Pass a composite string (e.g.
+   * `"Compact. Tighter spacing"`) when the visible label alone is too terse for
+   * a screen reader but the extra copy must not change the on-screen text.
    */
   accessibilityLabel?: string;
   toggle?: {
@@ -47,6 +47,7 @@ export function SettingsRow({
   toggle,
 }: SettingsRowProps) {
   const { theme } = useUnistyles();
+  const accessibleName = accessibilityLabel ?? label;
   const longPressAccessibilityProps = onLongPress
     ? {
         accessibilityActions: [{ name: "longpress", label: "Long press" }],
@@ -66,7 +67,7 @@ export function SettingsRow({
         <Switch
           value={toggle.value}
           onValueChange={toggle.onValueChange}
-          accessibilityLabel={label}
+          accessibilityLabel={accessibleName}
           accessibilityRole="switch"
           trackColor={{
             false: theme.colors.backgroundTertiary,
@@ -92,7 +93,7 @@ export function SettingsRow({
         onPress={onPress}
         onLongPress={onLongPress}
         accessible
-        accessibilityLabel={accessibilityLabel ?? label}
+        accessibilityLabel={accessibleName}
         {...roleA11yProps}
         {...longPressAccessibilityProps}
         style={({ pressed }) => [styles.container, pressed && styles.pressed]}

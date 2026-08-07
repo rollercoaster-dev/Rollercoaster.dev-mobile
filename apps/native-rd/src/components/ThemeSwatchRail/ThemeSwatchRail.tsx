@@ -29,11 +29,20 @@ export function ThemeSwatchRail({
       {/*
         `accessible` is deliberately NOT set here. Setting it collapses every
         descendant Pressable into one a11y node on iOS, so VoiceOver/TalkBack
-        can only reach "the rail" and never the individual swatches. Role and
-        label alone give the group its semantics without swallowing children —
-        the same pattern as ShapeSelector / ColorPicker / FrameSelector. This
-        used to be branched on EXPO_PUBLIC_E2E_MODE, which meant production
-        screen readers got the broken tree while E2E got the good one.
+        can only reach "the rail" and never the individual swatches. This used
+        to be branched on EXPO_PUBLIC_E2E_MODE, which meant production screen
+        readers got the broken tree while E2E got the good one.
+
+        Known limitation (#500, verified via `maestro hierarchy`): without
+        `accessible`, iOS never materialises this wrapper as an accessibility
+        element, so the role and label below do NOT reach VoiceOver — the group
+        name is announced by the caller's visible section heading instead
+        (SettingsThemeSection's `settings:theme.title`). They are kept because
+        (a) Android/TalkBack does read container collection semantics, and
+        (b) `accessible` is the only thing that would surface them on iOS and
+        it is exactly what re-breaks child reachability. Per-swatch labels carry
+        the full contract, same as the shipped badge selectors (ShapeSelector /
+        ColorPicker / FrameSelector).
       */}
       <View
         accessibilityRole="radiogroup"

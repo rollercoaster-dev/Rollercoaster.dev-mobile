@@ -43,11 +43,12 @@ describe("SettingsSection", () => {
           <Text>A</Text>
         </SettingsSection>,
       );
-      // Queried via label, not getByRole: the container deliberately omits
+      // Queried via testID, not getByRole: the container deliberately omits
       // `accessible` (so it doesn't swallow its rows) and RNTL's role query
       // only matches elements whose `accessible` prop is truthy.
-      const group = screen.getByLabelText("Content density selection");
+      const group = screen.getByTestId("settings-rows");
       expect(group.props.accessibilityRole).toBe("radiogroup");
+      expect(group.props.accessibilityLabel).toBe("Content density selection");
     });
 
     it("never sets accessible on the rows container, so children stay reachable", () => {
@@ -63,18 +64,23 @@ describe("SettingsSection", () => {
       // Regression guard for #500 — `accessible` collapses the whole section
       // into one VoiceOver node on iOS.
       expect(
-        screen.getByLabelText("Content density selection").props.accessible,
+        screen.getByTestId("settings-rows").props.accessible,
       ).toBeUndefined();
     });
 
-    it("exposes no group role by default", () => {
+    it("leaves the rows container unlabelled and role-less by default", () => {
       renderWithProviders(
         <SettingsSection title="Section">
           <Text>A</Text>
+          <Text>B</Text>
         </SettingsSection>,
       );
-      expect(screen.queryByRole("radiogroup")).toBeNull();
-      expect(screen.queryByLabelText("Section")).toBeNull();
+      // Asserted on the container's own props: with `accessible` omitted,
+      // neither `queryByRole("radiogroup")` nor `queryByLabelText` can tell
+      // "no role" apart from "role present but not an a11y element" (D2).
+      const rows = screen.getByTestId("settings-rows");
+      expect(rows.props.accessibilityRole).toBeUndefined();
+      expect(rows.props.accessibilityLabel).toBeUndefined();
     });
   });
 });

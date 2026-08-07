@@ -62,18 +62,38 @@ describe("SettingsDensityRows", () => {
     expect(group.props.accessibilityRole).toBe("radiogroup");
   });
 
-  it("keeps every row individually reachable in production (no E2E branch)", () => {
-    expect(process.env.EXPO_PUBLIC_E2E_MODE).toBeUndefined();
-    renderWithProviders(
-      <SettingsDensityRows selectedLevel="default" onSelect={jest.fn()} />,
-    );
-    // Regression guard for #500: the group used to set `accessible={true}`
-    // outside E2E mode, collapsing all three rows into one VoiceOver node.
-    expect(screen.getAllByRole("radio")).toHaveLength(3);
-    for (const { id } of densityOptions) {
-      expect(screen.getByLabelText(a11yLabelOf(id))).toBeOnTheScreen();
-    }
-  });
+  // Regression guard for #500: the group used to set `accessible={true}`
+  // outside E2E mode, collapsing all three rows into one VoiceOver node. The
+  // component must now render the same tree either way — hence both cases.
+  it.each([
+    ["unset", undefined],
+    ['"true"', "true"],
+  ])(
+    "keeps every row individually reachable with EXPO_PUBLIC_E2E_MODE %s",
+    (_name, value) => {
+      const original = process.env.EXPO_PUBLIC_E2E_MODE;
+      if (value === undefined) {
+        delete process.env.EXPO_PUBLIC_E2E_MODE;
+      } else {
+        process.env.EXPO_PUBLIC_E2E_MODE = value;
+      }
+      try {
+        renderWithProviders(
+          <SettingsDensityRows selectedLevel="default" onSelect={jest.fn()} />,
+        );
+        expect(screen.getAllByRole("radio")).toHaveLength(3);
+        for (const { id } of densityOptions) {
+          expect(screen.getByLabelText(a11yLabelOf(id))).toBeOnTheScreen();
+        }
+      } finally {
+        if (original === undefined) {
+          delete process.env.EXPO_PUBLIC_E2E_MODE;
+        } else {
+          process.env.EXPO_PUBLIC_E2E_MODE = original;
+        }
+      }
+    },
+  );
 
   it.each(densityOptions.map((o) => o.id))(
     "announces %s as '<label>. <description>' in both checked and unchecked states",

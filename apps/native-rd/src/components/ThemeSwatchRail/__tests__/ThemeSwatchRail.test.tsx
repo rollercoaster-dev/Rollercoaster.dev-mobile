@@ -67,18 +67,43 @@ describe("ThemeSwatchRail", () => {
     expect(rail.props.accessibilityRole).toBe("radiogroup");
   });
 
-  it("keeps every swatch individually reachable in production (no E2E branch)", () => {
-    expect(process.env.EXPO_PUBLIC_E2E_MODE).toBeUndefined();
-    renderWithProviders(
-      <ThemeSwatchRail selectedThemeId="light-default" onSelect={jest.fn()} />,
-    );
-    // Regression guard for #500: the wrapper used to set `accessible={true}`
-    // outside E2E mode, collapsing all 7 swatches into one VoiceOver node.
-    expect(screen.getAllByRole("radio")).toHaveLength(themeOptions.length);
-    for (const option of themeOptions) {
-      expect(screen.getByLabelText(themeLabelOf(option.id))).toBeOnTheScreen();
-    }
-  });
+  // Regression guard for #500: the wrapper used to set `accessible={true}`
+  // outside E2E mode, collapsing all 7 swatches into one VoiceOver node. The
+  // component must now render the same tree either way — hence both cases.
+  it.each([
+    ["unset", undefined],
+    ['"true"', "true"],
+  ])(
+    "keeps every swatch individually reachable with EXPO_PUBLIC_E2E_MODE %s",
+    (_name, value) => {
+      const original = process.env.EXPO_PUBLIC_E2E_MODE;
+      if (value === undefined) {
+        delete process.env.EXPO_PUBLIC_E2E_MODE;
+      } else {
+        process.env.EXPO_PUBLIC_E2E_MODE = value;
+      }
+      try {
+        renderWithProviders(
+          <ThemeSwatchRail
+            selectedThemeId="light-default"
+            onSelect={jest.fn()}
+          />,
+        );
+        expect(screen.getAllByRole("radio")).toHaveLength(themeOptions.length);
+        for (const option of themeOptions) {
+          expect(
+            screen.getByLabelText(themeLabelOf(option.id)),
+          ).toBeOnTheScreen();
+        }
+      } finally {
+        if (original === undefined) {
+          delete process.env.EXPO_PUBLIC_E2E_MODE;
+        } else {
+          process.env.EXPO_PUBLIC_E2E_MODE = original;
+        }
+      }
+    },
+  );
 
   it("renders the ✓ overlay on exactly the selected swatch", () => {
     renderWithProviders(

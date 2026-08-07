@@ -192,6 +192,31 @@ describe("SettingsRow", () => {
       // Visible copy is unchanged — only the accessible name is composed.
       expect(screen.getByText("Compact")).toBeOnTheScreen();
     });
+
+    it("applies the override to the toggle Switch too", () => {
+      renderWithProviders(
+        <SettingsRow
+          label="Reduce motion"
+          accessibilityLabel="Reduce motion. Disables screen transitions"
+          toggle={{ value: true, onValueChange: jest.fn() }}
+        />,
+      );
+      expect(screen.getByRole("switch").props.accessibilityLabel).toBe(
+        "Reduce motion. Disables screen transitions",
+      );
+    });
+
+    it("falls back to label on the Switch when no override is passed", () => {
+      renderWithProviders(
+        <SettingsRow
+          label="Reduce motion"
+          toggle={{ value: false, onValueChange: jest.fn() }}
+        />,
+      );
+      expect(screen.getByRole("switch").props.accessibilityLabel).toBe(
+        "Reduce motion",
+      );
+    });
   });
 
   it("renders value text only when value prop is provided", () => {
