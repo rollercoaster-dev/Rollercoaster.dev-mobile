@@ -7,6 +7,9 @@ export const styles = StyleSheet.create((theme) => ({
     // Full-bleed celebration band — reuses the existing #419 celebration tokens
     // that already back Badge Detail's hero header (D5).
     backgroundColor: theme.chrome.celebrationBg,
+    // Clips the decorative sparkle layer at the surface edge, as the hero band
+    // does — a glyph near a percentage edge would otherwise overhang.
+    overflow: "hidden",
   },
   center: {
     flex: 1,

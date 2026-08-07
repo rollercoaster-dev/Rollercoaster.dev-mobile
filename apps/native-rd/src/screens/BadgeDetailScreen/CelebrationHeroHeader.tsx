@@ -13,19 +13,16 @@
  * sparkle layer sits behind the content, scattered and clipped to the band —
  * this is the prototype's `showConfetti` decoration (small ✦/◆ glyphs at low
  * opacity), NOT the full-screen falling Confetti component used on completion.
+ * That layer now lives in the shared CelebrationSparkles component, which the
+ * finishing flow's reveal stage renders with its full-surface layout.
  */
 import React from "react";
 import { View } from "react-native";
-import {
-  ArrowLeft,
-  Check,
-  Diamond,
-  DotsThree,
-  Sparkle,
-} from "phosphor-react-native";
+import { ArrowLeft, Check, DotsThree } from "phosphor-react-native";
 import { useUnistyles } from "react-native-unistyles";
 import { Text } from "../../components/Text";
 import { IconButton } from "../../components/IconButton";
+import { CelebrationSparkles } from "../../components/CelebrationSparkles";
 import { BadgeRenderer } from "../../badges/BadgeRenderer";
 import { createDefaultBadgeDesign, type BadgeDesign } from "../../badges/types";
 import { palette } from "../../themes/adapter";
@@ -33,64 +30,6 @@ import { styles } from "./CelebrationHeroHeader.styles";
 
 /** Logical-pixel size of the hero badge. Matches the HTML prototype (D2). */
 const BADGE_SIZE = 146;
-
-/**
- * Scattered decorative sparkles, transcribed from the prototype's celebration
- * header (Badge Detail C Prototype: 6 ✦/◆ glyphs at the band edges, opacity
- * 0.4–0.55). Positions are band-relative pixels; the band's overflow:hidden
- * clips any that fall outside.
- */
-const SPARKLES = [
-  { kind: "sparkle", size: 16, opacity: 0.5, position: { top: 46, left: 30 } },
-  {
-    kind: "diamond",
-    size: 13,
-    opacity: 0.55,
-    position: { top: 34, right: 48 },
-  },
-  { kind: "diamond", size: 13, opacity: 0.5, position: { top: 150, left: 26 } },
-  {
-    kind: "sparkle",
-    size: 16,
-    opacity: 0.5,
-    position: { top: 168, right: 30 },
-  },
-  { kind: "sparkle", size: 11, opacity: 0.4, position: { top: 120, left: 54 } },
-  {
-    kind: "diamond",
-    size: 10,
-    opacity: 0.45,
-    position: { top: 110, right: 60 },
-  },
-] as const;
-
-/**
- * Static decorative sparkle layer. Painted behind the badge/chip, non-
- * interactive, and hidden from screen readers — purely celebratory chrome.
- */
-function Sparkles({ color }: { color: string }) {
-  return (
-    <View
-      style={styles.sparkleLayer}
-      pointerEvents="none"
-      accessibilityElementsHidden
-      importantForAccessibility="no-hide-descendants"
-      testID="celebration-sparkles"
-    >
-      {SPARKLES.map((s, i) => {
-        const Glyph = s.kind === "sparkle" ? Sparkle : Diamond;
-        return (
-          <View
-            key={i}
-            style={[styles.sparkle, s.position, { opacity: s.opacity }]}
-          >
-            <Glyph size={s.size} weight="fill" color={color} />
-          </View>
-        );
-      })}
-    </View>
-  );
-}
 
 export interface CelebrationHeroHeaderProps {
   /** Stored badge design, or null to fall back to the monogram default (D4). */
@@ -158,7 +97,9 @@ export function CelebrationHeroHeader({
   return (
     <View style={styles.band}>
       {/* Behind the content (painted first), clipped by the band. */}
-      {showConfetti ? <Sparkles color={theme.chrome.celebrationFg} /> : null}
+      {showConfetti ? (
+        <CelebrationSparkles color={theme.chrome.celebrationFg} layout="band" />
+      ) : null}
 
       {/* a11y labels default to English so the component stays i18n-free and
           Storybook-renderable in isolation. Callers pass localised strings via
