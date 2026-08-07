@@ -4,6 +4,7 @@ import {
   renderWithProviders,
   screen,
   fireEvent,
+  act,
 } from "../../../__tests__/test-utils";
 import { i18n } from "../../../i18n";
 import { NewGoalScreen } from "../NewGoalScreen";
@@ -246,6 +247,21 @@ describe("NewGoalScreen", () => {
     });
   });
 
+  // Both presses land on the same render, so a back that read the step and the
+  // history separately would pop only one screen (double-tap on a slow frame).
+  it("pops two screens when back is tapped twice within one render", () => {
+    renderWithProviders(<NewGoalScreen />);
+    advanceToBuild();
+    const back = screen.getByLabelText(t("common:screenHeader.a11y.goBack"));
+
+    act(() => {
+      fireEvent.press(back);
+      fireEvent.press(back);
+    });
+
+    expect(screen.getByText(t("newGoal:name.title"))).toBeOnTheScreen();
+  });
+
   describe("first-step evidence", () => {
     it("seeds row 1's planned evidence from the chip picked before any row existed", () => {
       const photo = t("common:evidenceTypes.photo.label");
@@ -295,6 +311,44 @@ describe("NewGoalScreen", () => {
       expect(
         screen.getByText(t("newGoal:build.stepCount", { count: 0 })),
       ).toBeOnTheScreen();
+    });
+
+    // The chip is single-select, row 1's evidence isn't: re-picking on step 2
+    // must move the pick to the front, never discard what the build screen's
+    // multi-select added.
+    it("keeps the build screen's extra evidence types when the chip is re-picked", () => {
+      renderWithProviders(<NewGoalScreen />);
+      advanceToBuild();
+
+      // Add Photo alongside row 1's default Note from the build list's sheet.
+      fireEvent.press(screen.getByTestId(`edit-goal-step-evidence-${ROW_1}`));
+      fireEvent.press(
+        screen.getByRole("checkbox", {
+          name: t("common:evidenceTypes.photo.label"),
+        }),
+      );
+      fireEvent.press(screen.getByTestId("new-goal-evidence-close"));
+
+      // Back to step 2 and pick a third type from the chip.
+      fireEvent.press(
+        screen.getByLabelText(t("common:screenHeader.a11y.goBack")),
+      );
+      fireEvent.press(screen.getByTestId("new-goal-evidence-chip"));
+      fireEvent.press(
+        screen.getByRole("radio", {
+          name: t("common:evidenceTypes.link.label"),
+        }),
+      );
+
+      fireEvent.press(screen.getByTestId("new-goal-next-button"));
+      fireEvent.press(screen.getByTestId("new-goal-build-ready-button"));
+      fireEvent.press(screen.getByTestId("new-goal-start-working-button"));
+
+      expect(mockCreateStep).toHaveBeenCalledWith("goal-1", FIRST_STEP, 0, [
+        "link",
+        "text",
+        "photo",
+      ]);
     });
   });
 

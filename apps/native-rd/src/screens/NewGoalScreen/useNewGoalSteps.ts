@@ -92,11 +92,28 @@ export function useNewGoalSteps(): {
     });
   }
 
+  /**
+   * Step 2's chip is single-select but row 1's evidence is a list the build
+   * screen can multi-select into, so the pick moves to the front instead of
+   * replacing the list — coming back to step 2 and re-picking must not silently
+   * drop the other types. Front position is what makes it the chip's value
+   * (see `plannedEvidenceType` below).
+   */
   function handlePlannedEvidenceTypeChange(type: EvidenceTypeValue) {
     setPendingEvidenceType(type);
     setSteps((prev) =>
       prev.map((step, index) =>
-        index === 0 ? { ...step, plannedEvidenceTypes: [type] } : step,
+        index === 0
+          ? {
+              ...step,
+              plannedEvidenceTypes: [
+                type,
+                ...step.plannedEvidenceTypes.filter(
+                  (existing) => existing !== type,
+                ),
+              ],
+            }
+          : step,
       ),
     );
   }

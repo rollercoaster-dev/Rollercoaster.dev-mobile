@@ -51,35 +51,34 @@ export function NewGoalScreen() {
     useNavigation<NativeStackNavigationProp<GoalsStackParamList, "NewGoal">>();
   const { t } = useTranslation(["newGoal", "common"]);
 
-  const [currentStep, setCurrentStep] = useState<NewGoalWizardStep>("name");
   /**
-   * Visited-screens stack, not a flat index into NEXT_STEP: quick-add jumps
+   * Visited-screens stack with the current step on top — one state, not a
+   * `currentStep` plus a separate history, so a double-tapped Back or Next can
+   * never read a stale half of the pair and drop a transition. It's a stack
+   * rather than a flat index into NEXT_STEP because quick-add jumps
    * name → build, and the back arrow has to return to *name*, not to the
    * skipped first-step screen.
    */
-  const [history, setHistory] = useState<NewGoalWizardStep[]>([]);
+  const [stack, setStack] = useState<NewGoalWizardStep[]>(["name"]);
+  const currentStep = stack[stack.length - 1];
   const [goalTitle, setGoalTitle] = useState("");
   const [evidencePickerOpen, setEvidencePickerOpen] = useState(false);
   const { steps, stepProps } = useNewGoalSteps();
 
-  function goTo(next: NewGoalWizardStep) {
-    setHistory((prev) => [...prev, currentStep]);
-    setCurrentStep(next);
-  }
-
   function handleNext() {
-    const next = NEXT_STEP[currentStep];
-    if (next) goTo(next);
+    setStack((prev) => {
+      const next = NEXT_STEP[prev[prev.length - 1]];
+      return next ? [...prev, next] : prev;
+    });
   }
 
   /** Quiet fast path: straight to the build list, `steps` untouched (D5). */
   function handleQuickAdd() {
-    goTo("build");
+    setStack((prev) => [...prev, "build"]);
   }
 
   function handleBack() {
-    setCurrentStep(history[history.length - 1] ?? "name");
-    setHistory((prev) => prev.slice(0, -1));
+    setStack((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev));
   }
 
   /** × close — nothing persisted, so nothing to confirm or roll back (D2). */
@@ -105,8 +104,7 @@ export function NewGoalScreen() {
    * what is really an empty field on a screen they can still get to.
    */
   function returnToNameStep() {
-    setCurrentStep("name");
-    setHistory([]);
+    setStack(["name"]);
     Alert.alert(
       t("newGoal:errors.missingTitleTitle"),
       t("newGoal:errors.missingTitleMessage"),
