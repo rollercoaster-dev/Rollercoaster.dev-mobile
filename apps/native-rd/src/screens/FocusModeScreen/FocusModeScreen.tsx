@@ -42,6 +42,7 @@ import {
   groupStepsByParent,
   flattenGroupedSteps,
   resolveNextActionableStep,
+  resolveActionableIndex,
   resolveStepDependencyBand,
   EvidenceType,
   StepStatus,
@@ -89,15 +90,18 @@ type StepRowLike = {
  * Which step Focus Mode is "on".
  *
  * The actionable step per {@link resolveNextActionableStep} (leaf / invite /
- * flat, orphan-promotion included — #292/#337), and `null` when nothing is
- * actionable. Nothing actionable means the goal is either fully set aside or
- * fully done, and the screen renders a dedicated state for each (#467 D5/D6) —
- * so this returns no fallback step rather than picking one.
+ * parked / flat, orphan-promotion included — #292/#337/#536), and `null` when
+ * nothing is actionable. Nothing actionable means the goal is either fully set
+ * aside or fully done, and the screen renders a dedicated state for each
+ * (#467 D5/D6) — so this returns no fallback step rather than picking one.
+ *
+ * Every actionable kind collapses to its row here, `parked` included: the
+ * screen still lands on that parent, it just doesn't yet render the state
+ * differently (#537 owns that).
  */
 function resolveFocusStepId(rows: readonly StepRowLike[]): string | null {
-  const actionable = resolveNextActionableStep(rows);
-  if (actionable.kind === "none") return null;
-  return rows[actionable.index]?.id ?? null;
+  const index = resolveActionableIndex(resolveNextActionableStep(rows));
+  return index === null ? null : (rows[index]?.id ?? null);
 }
 
 /**

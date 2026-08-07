@@ -39,10 +39,11 @@ jest.mock("../../../db", () => ({
   activeGoalsQuery: { __brand: "activeGoalsQuery" },
   stepsForActiveGoalsQuery: { __brand: "stepsForActiveGoalsQuery" },
   deleteGoal: jest.fn(),
-  StepStatus: { pending: "pending", completed: "completed" },
-  // Faithful copy of the real resolver (leaf/invite/flat/none + orphan
-  // promotion) so buildCockpitGoal's next-step resolution is exercised, not
-  // stubbed — keeps the #292/#337/#338 sub-step cases under test.
+  StepStatus: { pending: "pending", completed: "completed", paused: "paused" },
+  // Faithful copy of the real resolver (leaf/invite/parked/flat/none + orphan
+  // promotion, paused skipped like completed) so buildCockpitGoal's next-step
+  // resolution is exercised, not stubbed — keeps the #292/#337/#338 sub-step
+  // cases under test.
   // Keep in sync with resolveNextActionableStep in src/db/queries.ts.
   resolveNextActionableStep: (
     rows: readonly {
@@ -71,18 +72,29 @@ jest.mock("../../../db", () => ({
     });
     for (const step of topLevel) {
       const children = childrenByParent.get(step.id) ?? [];
-      const pendingChild = children.find((c) => c.status !== "completed");
+      const skip = (s: string | null) => s === "completed" || s === "paused";
+      const pendingChild = children.find((c) => !skip(c.status));
       if (pendingChild) {
         return { kind: "leaf", index: pendingChild.index, parentIndex: step.index }; // prettier-ignore
       }
-      if (step.status === "completed") continue;
+      if (skip(step.status)) continue;
       if (children.length > 0) {
-        return { kind: "invite", index: step.index, childCount: children.length }; // prettier-ignore
+        // All children completed is `invite`; any paused among them is
+        // `parked` — set aside is not done (#536).
+        const allChildrenCompleted = children.every((c) => c.status === "completed"); // prettier-ignore
+        return { kind: allChildrenCompleted ? "invite" : "parked", index: step.index, childCount: children.length }; // prettier-ignore
       }
       return { kind: "flat", index: step.index };
     }
     return { kind: "none" };
   },
+  // Behavioural stub of the index collapse, not a structural copy: the real
+  // resolveActionableIndex is an exhaustive switch, so a kind added without a
+  // case fails to compile there. This shim would silently return null instead —
+  // it agrees only for the five kinds above. queries.step.test.ts owns the
+  // real helper's coverage.
+  resolveActionableIndex: (result: { kind: string; index?: number }) =>
+    result.kind === "none" ? null : (result.index ?? null),
 }));
 
 const mockReportError = jest.fn();
@@ -354,6 +366,40 @@ describe("GoalsScreen", () => {
       expect(screen.getByTestId("goals-cockpit-next-step")).toHaveTextContent(
         "Wire the circuits",
       );
+    });
+
+    // Same shape as INVITE_STEPS with one child set aside instead of done, so
+    // the resolver returns `parked` rather than `invite` (#536).
+    const PARKED_STEPS = [
+      { id: "s1", goalId, parentStepId: null, title: "Plan layout", status: "completed" }, // prettier-ignore
+      { id: "s2", goalId, parentStepId: null, title: "Wire the circuits", status: "pending" }, // prettier-ignore
+      { id: "s2a", goalId, parentStepId: "s2", title: "15-amp lighting circuit", status: "completed" }, // prettier-ignore
+      { id: "s2b", goalId, parentStepId: "s2", title: "20-amp small-appliance circuit", status: "completed" }, // prettier-ignore
+      { id: "s2c", goalId, parentStepId: "s2", title: "240V dryer circuit", status: "paused" }, // prettier-ignore
+      { id: "s3", goalId, parentStepId: null, title: "Inspection & labels", status: "pending" }, // prettier-ignore
+    ];
+
+    // #536 splits `parked` out of `invite`; the cockpit is explicitly *not*
+    // supposed to change as a result (#537 owns any distinct rendering). This
+    // pins that, and is the only place a parked result reaches a screen at all
+    // — without it the parked branch in this file's resolver mock is dead code.
+    it("leads with the pending parent as the hero next step (parked state)", () => {
+      mockData([goalRow], PARKED_STEPS);
+      renderWithProviders(<GoalsScreen />);
+      expect(screen.getByTestId("goals-cockpit-next-step")).toHaveTextContent(
+        "Wire the circuits",
+      );
+    });
+
+    // A paused sub-step is skipped, not treated as the next action — the mock
+    // resolver's paused skip had silently diverged from production until #536
+    // and no fixture here exercised it.
+    it("never offers a set-aside sub-step as the hero next step", () => {
+      mockData([goalRow], PARKED_STEPS);
+      renderWithProviders(<GoalsScreen />);
+      expect(
+        screen.getByTestId("goals-cockpit-next-step"),
+      ).not.toHaveTextContent("240V dryer circuit");
     });
 
     it("counts every unit (parents + children) for progress — 4/6", () => {

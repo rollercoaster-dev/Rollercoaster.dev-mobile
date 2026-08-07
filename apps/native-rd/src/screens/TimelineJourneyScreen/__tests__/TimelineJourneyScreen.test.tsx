@@ -112,8 +112,8 @@ jest.mock("../../../db", () => ({
     };
   },
   // Faithful copy of the real resolver (queries.ts) so the screen's accent runs
-  // real leaf/invite/flat bucketing — including the paused skip (#417) — instead
-  // of a stub. Same convention as groupStepsByParent above.
+  // real leaf/invite/parked/flat bucketing — including the paused skip (#417)
+  // — instead of a stub. Same convention as groupStepsByParent above.
   resolveNextActionableStep: (
     rows: readonly {
       id: string;
@@ -155,8 +155,13 @@ jest.mock("../../../db", () => ({
       }
       if (step.status === "completed" || step.status === "paused") continue;
       if (children.length > 0) {
+        // All children completed is `invite`; any paused among them is
+        // `parked` — set aside is not done (#536).
+        const allChildrenCompleted = children.every(
+          (c) => c.status === "completed",
+        );
         return {
-          kind: "invite",
+          kind: allChildrenCompleted ? "invite" : "parked",
           index: step.index,
           childCount: children.length,
         };
@@ -165,6 +170,13 @@ jest.mock("../../../db", () => ({
     }
     return { kind: "none" };
   },
+  // Behavioural stub of the index collapse, not a structural copy: the real
+  // resolveActionableIndex is an exhaustive switch, so a kind added without a
+  // case fails to compile there. This shim would silently return null instead —
+  // it agrees only for the five kinds above. queries.step.test.ts owns the real
+  // helper's coverage.
+  resolveActionableIndex: (result: { kind: string; index?: number }) =>
+    result.kind === "none" ? null : (result.index ?? null),
 }));
 
 const mockUseQuery = jest.fn();
@@ -637,8 +649,9 @@ describe("TimelineJourneyScreen", () => {
 
     // A manually-completed parent does NOT hide a still-pending child — the
     // pending leaf stays current (completion is per-step, not cascaded). This is
-    // the branch that makes findCurrentLeafId diverge from the prototype's
-    // nextInfo; it mirrors FocusMode's findFirstPendingLeafIndex (#292/#293).
+    // the branch that makes this screen's accent diverge from the prototype's
+    // nextInfo, and it comes from the shared resolveNextActionableStep, so Focus
+    // Mode agrees with it by construction rather than by convention (#292/#293).
     it("keeps a pending child current even when its parent is completed", () => {
       setupQueries({
         steps: [
@@ -696,6 +709,43 @@ describe("TimelineJourneyScreen", () => {
       });
       renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
       // The single accent sits on the parent header, not on either done child.
+      expect(screen.getAllByText("Working")).toHaveLength(1);
+      expect(screen.getByLabelText("Open parent, Working")).toBeOnTheScreen();
+    });
+
+    // Parked state (#536): same shape as the invite case but one child is set
+    // aside rather than done, so the resolver returns `parked`. The accent must
+    // land in exactly the same place — the split is a resolver-level honesty
+    // fix, and giving parked its own rendering belongs to #537. This is the
+    // only Timeline fixture that evaluates the parked branch of the resolver
+    // mock above.
+    it("marks the parent current in the parked state (remaining children set aside)", () => {
+      setupQueries({
+        steps: [
+          {
+            id: "p",
+            title: "Open parent",
+            status: "pending",
+            ordinal: 0,
+            parentStepId: null,
+          },
+          {
+            id: "c1",
+            title: "Sub done",
+            status: "completed",
+            ordinal: 0,
+            parentStepId: "p",
+          },
+          {
+            id: "c2",
+            title: "Sub set aside",
+            status: "paused",
+            ordinal: 1,
+            parentStepId: "p",
+          },
+        ],
+      });
+      renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
       expect(screen.getAllByText("Working")).toHaveLength(1);
       expect(screen.getByLabelText("Open parent, Working")).toBeOnTheScreen();
     });

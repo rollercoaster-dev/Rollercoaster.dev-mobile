@@ -181,7 +181,7 @@ jest.mock("../../../db", () => {
       }
       return out;
     },
-    // Faithful copy of the real resolver (leaf/invite/flat/none + orphan
+    // Faithful copy of the real resolver (leaf/invite/parked/flat/none + orphan
     // promotion, paused skipped like completed) so the #292/#337 resolution the
     // screen depends on is exercised, not stubbed.
     // Keep in sync with resolveNextActionableStep in src/db/queries.ts.
@@ -220,12 +220,22 @@ jest.mock("../../../db", () => {
         }
         if (skip(step.status)) continue;
         if (children.length > 0) {
-          return { kind: "invite", index: step.index, childCount: children.length }; // prettier-ignore
+          // All children completed is `invite`; any paused among them is
+          // `parked` — set aside is not done (#536).
+          const allChildrenCompleted = children.every((c) => c.status === "completed"); // prettier-ignore
+          return { kind: allChildrenCompleted ? "invite" : "parked", index: step.index, childCount: children.length }; // prettier-ignore
         }
         return { kind: "flat", index: step.index };
       }
       return { kind: "none" };
     },
+    // Behavioural stub of the index collapse, not a structural copy: the real
+    // resolveActionableIndex is an exhaustive switch, so a kind added without a
+    // case fails to compile there. This shim would silently return null
+    // instead — it agrees only for the five kinds above. queries.step.test.ts
+    // owns the real helper's coverage.
+    resolveActionableIndex: (result: { kind: string; index?: number }) =>
+      result.kind === "none" ? null : (result.index ?? null),
   };
 });
 
@@ -1212,9 +1222,23 @@ describe("FocusModeScreen", () => {
       step("step-2", { title: "Practice", ordinal: 1 }),
     ];
 
+    // INVITE_STEPS with one child set aside instead of done → `parked`, not
+    // `invite` (#536). Focus Mode must still land on the parent: the split is a
+    // resolver-level honesty fix, and rendering it differently is #537's job.
+    // Without this row the parked branch of this file's resolver mock is never
+    // evaluated, so "no screen behavior changed" would be untested.
+    const PARKED_STEPS = [
+      step("step-1", { title: "Read docs", status: "completed" }),
+      step("step-2", { title: "Practice", ordinal: 1 }),
+      step("step-2a", { title: "Drill A", status: "completed", parentStepId: "step-2" }), // prettier-ignore
+      step("step-2b", { title: "Drill B", status: "paused", ordinal: 1, parentStepId: "step-2" }), // prettier-ignore
+      step("step-3", { title: "Build it", ordinal: 2 }),
+    ];
+
     it.each([
       ["the first pending leaf, not its container parent", LEAF_STEPS, "Drill A"], // prettier-ignore
       ["the parent itself once all its children are done", INVITE_STEPS, "Practice"], // prettier-ignore
+      ["the parent itself when its remaining children are set aside", PARKED_STEPS, "Practice"], // prettier-ignore
       ["the leaf after flattening interleaved query order", INTERLEAVED_STEPS, "Drill A"], // prettier-ignore
       ["the first pending child when an earlier sibling is done", PARTIAL_LEAF_STEPS, "Drill B"], // prettier-ignore
       ["an orphaned sub-step promoted to a reachable lead", ORPHAN_STEPS, "Drill A"], // prettier-ignore
