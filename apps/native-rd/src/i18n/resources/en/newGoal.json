@@ -6,11 +6,71 @@
       "placeholder": "What do you want to learn?"
     }
   },
-  "errors": {
-    "titleRequired": "Title is required",
-    "createFailed": "Failed to create goal"
-  },
   "cta": {
     "create": "Create Goal"
+  },
+  "header": {
+    "label": "New goal"
+  },
+  "name": {
+    "eyebrow": "Step 1 of 4",
+    "title": "What do you want to work toward?",
+    "placeholder": "Name your goal",
+    "hint": "Something you'll show progress on.",
+    "next": "Next →"
+  },
+  "quickAdd": {
+    "prefix": "or ",
+    "label": "Quick add — skip to the list ›",
+    "a11yLabel": "Quick add, skip to the list"
+  },
+  "step": {
+    "goalEyebrow": "Goal",
+    "headline": "What's the first step?",
+    "placeholder": "One small thing to start",
+    "evidenceEyebrow": "Evidence",
+    "changeEvidence": "change",
+    "changeEvidenceA11yLabel": "Change evidence type, currently {{label}}",
+    "evidenceSheetTitle": "Evidence type"
+  },
+  "build": {
+    "yourSteps": "Your steps",
+    "addStepPlaceholder": "Add step...",
+    "addStepButtonLabel": "Add step",
+    "stepCount_one": "{{count}} step",
+    "stepCount_other": "{{count}} steps",
+    "evidencePickerTitle": "Planned evidence",
+    "evidenceTypesLabel": "Evidence types",
+    "addSubStepLabel": "add a sub-step",
+    "breakIntoSubStepsLabel": "break into sub-steps",
+    "newSubStepTitle": "New sub-step",
+    "breakIntoSubStepsA11yLabel": "Break \"{{title}}\" into sub-steps",
+    "addSubStepA11yLabel": "Add a sub-step to \"{{title}}\"",
+    "announceReorder": "Moved \"{{title}}\" to position {{position}}",
+    "deleteStepConfirmTitle": "Delete step?",
+    "deleteStepConfirmMessage": "Delete \"{{title}}\"? Its evidence and any sub-steps will be removed too.",
+    "deleteSubStepConfirmTitle": "Delete sub-step?",
+    "deleteSubStepConfirmMessage": "Delete \"{{title}}\"? Its evidence will be removed too.",
+    "nestUnderTriggerA11yLabel": "Nest this step under another step",
+    "nestUnderPickerTitle": "Choose a step to nest under",
+    "nestUnderRowLabel": "Nest under \"{{title}}\"",
+    "nestUnderRowA11yLabel": "Nest this step under {{title}}",
+    "unNestA11yLabel": "Promote this step to top level",
+    "announcePromote": "Promoted \"{{title}}\" to top level",
+    "announceNestedUnder": "Nested \"{{title}}\" under \"{{parentTitle}}\"",
+    "readyLabel": "I'm ready →"
+  },
+  "ready": {
+    "headline": "You're set.",
+    "stepCountSummary_one": "{{count}} step · evidence on each",
+    "stepCountSummary_other": "{{count}} steps · evidence on each",
+    "badgeNote": "You'll design your badge when you finish.",
+    "startWorking": "Start Working"
+  },
+  "errors": {
+    "titleRequired": "Title is required",
+    "createFailed": "Failed to create goal",
+    "createFailedTitle": "Could not create goal",
+    "createFailedMessage": "Something went wrong. Please try again."
   }
 }
