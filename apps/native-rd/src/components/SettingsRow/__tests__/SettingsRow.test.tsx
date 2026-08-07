@@ -164,6 +164,36 @@ describe("SettingsRow", () => {
     });
   });
 
+  describe("accessible name override", () => {
+    it("uses label as the accessible name when accessibilityLabel is unset", () => {
+      renderWithProviders(<SettingsRow label="Account" onPress={() => {}} />);
+      expect(
+        screen.getByRole("button", { name: "Account" }).props
+          .accessibilityLabel,
+      ).toBe("Account");
+    });
+
+    it("uses accessibilityLabel as the accessible name while the visible text stays label", () => {
+      renderWithProviders(
+        <SettingsRow
+          label="Compact"
+          accessibilityLabel="Compact. Tighter spacing (0.75×)"
+          accessibilityRole="radio"
+          checked
+          onPress={() => {}}
+        />,
+      );
+      const radio = screen.getByRole("radio", {
+        name: "Compact. Tighter spacing (0.75×)",
+      });
+      expect(radio.props.accessibilityLabel).toBe(
+        "Compact. Tighter spacing (0.75×)",
+      );
+      // Visible copy is unchanged — only the accessible name is composed.
+      expect(screen.getByText("Compact")).toBeOnTheScreen();
+    });
+  });
+
   it("renders value text only when value prop is provided", () => {
     const { unmount } = renderWithProviders(
       <SettingsRow label="Version" value="1.2.3" />,

@@ -23,6 +23,13 @@ export interface SettingsRowProps {
   accessibilityRole?: "button" | "radio";
   /** Selected state for `accessibilityRole="radio"`; ignored for buttons. */
   checked?: boolean;
+  /**
+   * Overrides the row's accessible name. Defaults to `label`. Pass a composite
+   * string (e.g. `"Compact. Tighter spacing"`) when the visible label alone is
+   * too terse for a screen reader but the extra copy must not change the
+   * on-screen text.
+   */
+  accessibilityLabel?: string;
   toggle?: {
     value: boolean;
     onValueChange: (value: boolean) => void;
@@ -36,6 +43,7 @@ export function SettingsRow({
   onLongPress,
   accessibilityRole = "button",
   checked,
+  accessibilityLabel,
   toggle,
 }: SettingsRowProps) {
   const { theme } = useUnistyles();
@@ -84,7 +92,7 @@ export function SettingsRow({
         onPress={onPress}
         onLongPress={onLongPress}
         accessible
-        accessibilityLabel={label}
+        accessibilityLabel={accessibilityLabel ?? label}
         {...roleA11yProps}
         {...longPressAccessibilityProps}
         style={({ pressed }) => [styles.container, pressed && styles.pressed]}
