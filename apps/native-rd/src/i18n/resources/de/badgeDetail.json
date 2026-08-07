@@ -12,13 +12,6 @@
     "details": "Details",
     "export": "Export"
   },
-  "identityA11y": {
-    "icon": "Goal-Identität: {{icon}}",
-    "color": "Goal-Farbindikator"
-  },
-  "image": {
-    "a11y": "Badge-Bild für {{title}}"
-  },
   "evidenceList": {
     "a11yLabel_one": "{{count}} Beleg eingereicht",
     "a11yLabel_other": "{{count}} Belege eingereicht",

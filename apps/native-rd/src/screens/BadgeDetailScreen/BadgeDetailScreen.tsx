@@ -246,8 +246,6 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
   const goalTitle =
     (badge.goalTitle as string) ?? t("badgeDetail:fallback.untitled");
   const goalDescription = badge.goalDescription as string | null;
-  const goalIcon = badge.goalIcon as string | null;
-  const goalColor = badge.goalColor as string | null;
   const earnedDate = formatDate(
     (badge.completedAt ?? badge.createdAt) as string | null,
     i18n.language,
@@ -257,7 +255,6 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
     badge.credential as string | null,
   );
   const evidenceItems = extractEvidenceItems(badge.credential as string | null);
-  const hasIdentityChip = Boolean(goalIcon || goalColor);
   // The chip asserts verifiability, so it is gated on an actual stored
   // credential — never on the badge merely existing. Undated credentials get
   // the bare "Verifiable" label rather than an "earned " with nothing after it.
@@ -286,29 +283,9 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
         />
 
         <View style={styles.body}>
-          {hasIdentityChip ? (
-            <View
-              style={styles.identityChip}
-              accessible
-              accessibilityRole="image"
-              accessibilityLabel={
-                goalIcon
-                  ? t("badgeDetail:identityA11y.icon", { icon: goalIcon })
-                  : t("badgeDetail:identityA11y.color")
-              }
-            >
-              {goalIcon ? (
-                <Text style={styles.chipIcon}>{goalIcon}</Text>
-              ) : null}
-              {goalColor ? (
-                <View
-                  style={[styles.chipColorDot, { backgroundColor: goalColor }]}
-                />
-              ) : null}
-            </View>
-          ) : null}
-
-          {earnedDate ? (
+          {/* The hero's chip already carries the earned date for credentialed
+              badges, so this line only fills the gap when there is no chip. */}
+          {!isVerified && earnedDate ? (
             <Text style={styles.description}>
               {t("badgeDetail:earned", { date: earnedDate })}
             </Text>

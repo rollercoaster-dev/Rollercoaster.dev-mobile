@@ -43,23 +43,6 @@ export const styles = StyleSheet.create((theme) => ({
     ...theme.textStyles.body,
     color: theme.colors.text,
   },
-  identityChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: theme.space[2],
-  },
-  chipIcon: {
-    fontSize: theme.size.lg,
-    lineHeight: theme.size.lg * 1.2,
-  },
-  chipColorDot: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    borderWidth: theme.borderWidth.thin,
-    borderColor: theme.colors.border,
-  },
   sectionLabel: {
     ...theme.textStyles.label,
     color: theme.colors.textMuted,

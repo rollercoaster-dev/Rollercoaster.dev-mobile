@@ -115,15 +115,38 @@ describe("BadgeDetailScreen", () => {
     expect(screen.getByText("Learn TypeScript")).toBeOnTheScreen();
   });
 
-  it("renders earned date", () => {
+  // The earned date lives in the hero's verifiable chip for credentialed
+  // badges. The standalone line only fills the gap when there is no chip, so
+  // the date is never shown twice and never lost.
+  it("shows the standalone earned line only when the hero has no chip", () => {
     mockUseQuery.mockReturnValue([
-      makeRow({ completedAt: "2026-01-28T00:00:00.000Z" }),
+      makeRow({
+        credential: null,
+        completedAt: "2026-01-28T00:00:00.000Z",
+      }),
     ]);
 
     renderWithProviders(
       <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
     );
     expect(screen.getByText("Earned Jan 28, 2026")).toBeOnTheScreen();
+  });
+
+  it("drops the standalone earned line when the hero's chip carries the date", () => {
+    mockUseQuery.mockReturnValue([
+      makeRow({
+        credential: '{"type":"VC"}',
+        completedAt: "2026-01-28T00:00:00.000Z",
+      }),
+    ]);
+
+    renderWithProviders(
+      <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+    );
+    expect(screen.queryByText("Earned Jan 28, 2026")).toBeNull();
+    expect(
+      screen.getByText("Verifiable · earned Jan 28, 2026"),
+    ).toBeOnTheScreen();
   });
 
   it('renders "Untitled" when goal is null (orphaned badge)', () => {
@@ -199,6 +222,20 @@ describe("BadgeDetailScreen", () => {
       );
       expect(screen.queryByTestId("verified-credential-chip")).toBeNull();
     });
+  });
+
+  // The goal's icon/color chip is not part of Direction C's About/Details
+  // blocks and belongs to no storied component, so it is gone from the screen.
+  it("renders no identity chip even when the goal has an icon and color", () => {
+    mockUseQuery.mockReturnValue([
+      makeRow({ goalIcon: "🎯", goalColor: "#4caf50" }),
+    ]);
+
+    renderWithProviders(
+      <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+    );
+    expect(screen.queryByText("🎯")).toBeNull();
+    expect(screen.queryByLabelText(/Goal identity/)).toBeNull();
   });
 
   describe("overflow menu", () => {

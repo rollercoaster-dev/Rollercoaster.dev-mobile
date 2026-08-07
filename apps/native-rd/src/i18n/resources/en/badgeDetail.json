@@ -18,13 +18,6 @@
     "details": "Details",
     "export": "Export"
   },
-  "identityA11y": {
-    "icon": "Goal identity: {{icon}}",
-    "color": "Goal color indicator"
-  },
-  "image": {
-    "a11y": "Badge image for {{title}}"
-  },
   "evidenceList": {
     "a11yLabel_one": "{{count}} evidence item submitted",
     "a11yLabel_other": "{{count}} evidence items submitted",
