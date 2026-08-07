@@ -10,6 +10,7 @@ import {
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useUnistyles } from "react-native-unistyles";
 import { useQuery } from "@evolu/react";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "phosphor-react-native";
@@ -19,6 +20,7 @@ import { Card } from "../../components/Card";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { IconButton } from "../../components/IconButton";
 import { HeaderBand } from "../../components/ScreenHeader";
+import { useTopInsetColor } from "../../navigation/TopInsetColor";
 import { ConfirmDeleteModal } from "../../components/ConfirmDeleteModal";
 import { badgeWithGoalQuery, deleteBadge } from "../../db";
 import type { BadgeId } from "../../db";
@@ -182,6 +184,13 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
   const [showOverflowMenu, setShowOverflowMenu] = useState(false);
   const { shouldAnimate } = useAnimationPref();
   const insets = useSafeAreaInsets();
+  const { theme } = useUnistyles();
+  // The celebration band is the first thing under the status bar, so the
+  // device top-inset strip App.tsx paints has to be the band's surface — not
+  // the purple header chrome, which belongs to screens that actually have a
+  // ScreenHeader. Null while the badge is missing: that path renders
+  // DetailFallbackHeader, which *is* a header band.
+  useTopInsetColor(badge ? theme.chrome.celebrationBg : null);
   const {
     exportVerifiableBadge,
     exportImage,
