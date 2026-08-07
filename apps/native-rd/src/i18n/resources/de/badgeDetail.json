@@ -6,18 +6,17 @@
   },
   "earned": "Verliehen am {{date}}",
   "createdAt": "Erstellt am {{date}}",
+  "hero": {
+    "credentialLabel": "Verifizierbar · verliehen am {{date}}",
+    "credentialLabelUndated": "Verifizierbar",
+    "overflowLabel": "Weitere Optionen",
+    "overflowDismiss": "Menü schließen"
+  },
   "sections": {
     "about": "Über",
     "howEarned": "So wurde es verdient",
     "details": "Details",
     "export": "Export"
-  },
-  "identityA11y": {
-    "icon": "Goal-Identität: {{icon}}",
-    "color": "Goal-Farbindikator"
-  },
-  "image": {
-    "a11y": "Badge-Bild für {{title}}"
   },
   "evidenceList": {
     "a11yLabel_one": "{{count}} Beleg eingereicht",

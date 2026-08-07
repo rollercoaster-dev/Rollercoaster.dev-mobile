@@ -1,14 +1,15 @@
-import React, { Suspense, useMemo, useRef, useState } from "react";
+import React, { Suspense, useMemo, useState } from "react";
 import {
   View,
   ScrollView,
-  Image,
+  Modal,
+  Pressable,
   ActivityIndicator,
   Alert,
-  type LayoutChangeEvent,
 } from "react-native";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQuery } from "@evolu/react";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "phosphor-react-native";
@@ -23,10 +24,7 @@ import { badgeWithGoalQuery, deleteBadge } from "../../db";
 import type { BadgeId } from "../../db";
 import { PLACEHOLDER_IMAGE_URI } from "../../hooks/useCreateBadge";
 import { useBadgeExport } from "../../hooks/useBadgeExport";
-import {
-  BadgeRenderer,
-  type BadgeRendererHandle,
-} from "../../badges/BadgeRenderer";
+import { useAnimationPref } from "../../hooks/useAnimationPref";
 import { parseBadgeDesign } from "../../badges/types";
 import { EVIDENCE_TYPE_ICONS } from "../../constants/evidenceIcons";
 import type { EvidenceTypeValue } from "../../types/evidence";
@@ -39,15 +37,22 @@ import type {
   BadgesStackParamList,
   RootTabParamList,
 } from "../../navigation/types";
+import { CelebrationHeroHeader } from "./CelebrationHeroHeader";
+import { BadgeOverflowMenu } from "./BadgeOverflowMenu";
 import { styles } from "./BadgeDetailScreen.styles";
 
 /**
- * Initial reservation for the floating preview before onLayout fires.
- * The overlay measures itself and updates this — picked generously enough
- * to cover a fully-decorated badge (banner + frame + bottom label) so the
- * scroll content doesn't briefly flash on top of the badge during mount.
+ * Distance from the top of the hero band to the bottom of the ⋯ button, so the
+ * overflow popover hangs just below its trigger: the band's `paddingTop`
+ * (`space[3]` = 12) plus the IconButton's `md` size (44).
+ *
+ * It has to be added to `insets.top` at render time rather than baked into the
+ * stylesheet: RN `Modal` mounts in its own root view measured from the physical
+ * screen top, while the hero lives inside the `marginTop: insets.top` container
+ * in `App.tsx`. A constant offset alone lands the menu over the nav row — and,
+ * on notched devices, up inside the status bar.
  */
-const PREVIEW_OVERLAY_INITIAL_HEIGHT = 280;
+const OVERFLOW_POPOVER_TOP_OFFSET = 56;
 
 const logger = new Logger("BadgeDetailScreen");
 
@@ -143,43 +148,26 @@ function extractEvidenceItems(
 }
 
 /**
- * Header band rendered between the ScrollView and the floating preview so
- * document order matches the visual stack: scroll content (back) → topBar
- * (middle) → preview overlay (front). Relying on document order rather than
- * just `zIndex` keeps the layering robust across RN platforms / versions
- * where parent stacking contexts can override sibling zIndex resolution.
+ * Minimal header for the states that have no badge data to feed the hero:
+ * the Suspense fallback and the badge-not-found case. The celebration hero
+ * owns the back affordance everywhere else, so this exists only to keep a
+ * way out of the screen while data is loading or missing.
  */
-function DetailTopBar({
-  onBack,
-  onLayout,
-}: {
-  onBack: () => void;
-  onLayout: (e: LayoutChangeEvent) => void;
-}) {
+function DetailFallbackHeader({ onBack }: { onBack: () => void }) {
   const { t } = useTranslation(["badgeDetail"]);
   return (
-    <View style={styles.topBar} onLayout={onLayout}>
-      {/* Title intentionally omitted — the badge floats over the band and
-          any header text would peek out behind it. */}
-      <HeaderBand>
-        <IconButton
-          icon={<ArrowLeft size={24} weight="bold" />}
-          onPress={onBack}
-          tone="chrome"
-          accessibilityLabel={t("badgeDetail:fallback.goBack")}
-        />
-      </HeaderBand>
-    </View>
+    <HeaderBand>
+      <IconButton
+        icon={<ArrowLeft size={24} weight="bold" />}
+        onPress={onBack}
+        tone="chrome"
+        accessibilityLabel={t("badgeDetail:fallback.goBack")}
+      />
+    </HeaderBand>
   );
 }
 
-function BadgeDetailContent({
-  badgeId,
-  onTopBarLayout,
-}: {
-  badgeId: string;
-  onTopBarLayout: (e: LayoutChangeEvent) => void;
-}) {
+function BadgeDetailContent({ badgeId }: { badgeId: string }) {
   const navigation =
     useNavigation<NativeStackNavigationProp<BadgesStackParamList>>();
   const { t, i18n } = useTranslation(["badgeDetail", "common"]);
@@ -190,11 +178,10 @@ function BadgeDetailContent({
   const rows = useQuery(query);
   const badge = rows[0] ?? null;
 
-  const [imageLoadFailed, setImageLoadFailed] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [previewHeight, setPreviewHeight] = useState(
-    PREVIEW_OVERLAY_INITIAL_HEIGHT,
-  );
+  const [showOverflowMenu, setShowOverflowMenu] = useState(false);
+  const { shouldAnimate } = useAnimationPref();
+  const insets = useSafeAreaInsets();
   const {
     exportVerifiableBadge,
     exportImage,
@@ -202,7 +189,6 @@ function BadgeDetailContent({
     isExportingImage,
     isExportingJSON,
   } = useBadgeExport();
-  const badgeRendererRef = useRef<BadgeRendererHandle | null>(null);
 
   // The journey/timeline screen lives in the Goals stack (it's the same
   // view a user sees while still working toward the goal). Hop tabs via the
@@ -258,20 +244,16 @@ function BadgeDetailContent({
   if (!badge) {
     return (
       <>
+        <DetailFallbackHeader onBack={() => navigation.goBack()} />
         <View style={styles.centered}>
           <Text variant="body">{t("badgeDetail:fallback.badgeNotFound")}</Text>
         </View>
-        <DetailTopBar
-          onBack={() => navigation.goBack()}
-          onLayout={onTopBarLayout}
-        />
       </>
     );
   }
 
   const imageUri = badge.imageUri as string | null;
-  const hasRealImage =
-    imageUri && imageUri !== PLACEHOLDER_IMAGE_URI && !imageLoadFailed;
+  const hasRealImage = Boolean(imageUri && imageUri !== PLACEHOLDER_IMAGE_URI);
   // Nullable because badgeWithGoalQuery LEFT-JOINs on `goal.isDeleted IS
   // NULL`: soft-deleted goals surface as a null join, masking goalId even
   // though badges.goalId itself is non-null in the schema.
@@ -279,8 +261,6 @@ function BadgeDetailContent({
   const goalTitle =
     (badge.goalTitle as string) ?? t("badgeDetail:fallback.untitled");
   const goalDescription = badge.goalDescription as string | null;
-  const goalIcon = badge.goalIcon as string | null;
-  const goalColor = badge.goalColor as string | null;
   const earnedDate = formatDate(
     (badge.completedAt ?? badge.createdAt) as string | null,
     i18n.language,
@@ -290,243 +270,251 @@ function BadgeDetailContent({
     badge.credential as string | null,
   );
   const evidenceItems = extractEvidenceItems(badge.credential as string | null);
-  const hasIdentityChip = Boolean(goalIcon || goalColor);
+  // The chip asserts verifiability, so it is gated on an actual stored
+  // credential — never on the badge merely existing. Undated credentials get
+  // the bare "Verifiable" label rather than an "earned " with nothing after it.
+  const isVerified = Boolean(badge.credential);
+  const credentialLabel = isVerified
+    ? earnedDate
+      ? t("badgeDetail:hero.credentialLabel", { date: earnedDate })
+      : t("badgeDetail:hero.credentialLabelUndated")
+    : null;
+
+  const closeOverflowMenu = () => setShowOverflowMenu(false);
 
   return (
     <>
-      <ScrollView
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingTop: previewHeight },
-        ]}
-      >
-        <Text style={styles.title}>{goalTitle}</Text>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <CelebrationHeroHeader
+          badgeDesign={design}
+          badgeTitle={goalTitle}
+          credentialLabel={credentialLabel}
+          isVerified={isVerified}
+          showConfetti={shouldAnimate}
+          onBack={() => navigation.goBack()}
+          onOverflow={() => setShowOverflowMenu(true)}
+          backAccessibilityLabel={t("badgeDetail:fallback.goBack")}
+          overflowAccessibilityLabel={t("badgeDetail:hero.overflowLabel")}
+        />
 
-        {hasIdentityChip ? (
-          <View
-            style={styles.identityChip}
-            accessible
-            accessibilityRole="image"
-            accessibilityLabel={
-              goalIcon
-                ? t("badgeDetail:identityA11y.icon", { icon: goalIcon })
-                : t("badgeDetail:identityA11y.color")
-            }
-          >
-            {goalIcon ? <Text style={styles.chipIcon}>{goalIcon}</Text> : null}
-            {goalColor ? (
-              <View
-                style={[styles.chipColorDot, { backgroundColor: goalColor }]}
-              />
-            ) : null}
-          </View>
-        ) : null}
+        <View style={styles.body}>
+          {/* The hero's chip already carries the earned date for credentialed
+              badges, so this line only fills the gap when there is no chip. */}
+          {!isVerified && earnedDate ? (
+            <Text style={styles.description}>
+              {t("badgeDetail:earned", { date: earnedDate })}
+            </Text>
+          ) : null}
 
-        {earnedDate ? (
-          <Text style={styles.description}>
-            {t("badgeDetail:earned", { date: earnedDate })}
-          </Text>
-        ) : null}
+          <Card>
+            <View style={styles.infoSection}>
+              {goalDescription ? (
+                <View style={styles.infoBlock}>
+                  <Text style={styles.sectionLabel}>
+                    {t("badgeDetail:sections.about")}
+                  </Text>
+                  <Text style={styles.bodyText}>{goalDescription}</Text>
+                </View>
+              ) : null}
 
-        <Card>
-          <View style={styles.infoSection}>
-            {goalDescription ? (
-              <View style={styles.infoBlock}>
-                <Text style={styles.sectionLabel}>
-                  {t("badgeDetail:sections.about")}
-                </Text>
-                <Text style={styles.bodyText}>{goalDescription}</Text>
-              </View>
-            ) : null}
-
-            {criteriaNarrative || evidenceItems ? (
-              <View style={styles.infoBlock}>
-                <Text style={styles.sectionLabel}>
-                  {t("badgeDetail:sections.howEarned")}
-                </Text>
-                {criteriaNarrative ? (
-                  <Text style={styles.bodyText}>{criteriaNarrative}</Text>
-                ) : null}
-                {evidenceItems ? (
-                  // No `accessible` here — would flatten descendants into a
-                  // single a11y node and prevent screen-reader users from
-                  // focusing individual rows. The list label is exposed via
-                  // accessibilityLabel + role="list" without merging.
-                  <View
-                    style={styles.evidenceList}
-                    accessibilityRole="list"
-                    accessibilityLabel={t(
-                      "badgeDetail:evidenceList.a11yLabel",
-                      {
-                        count: evidenceItems.length,
-                      },
-                    )}
-                  >
-                    {evidenceItems.map((ev) => {
-                      const icon = ev.type ? EVIDENCE_TYPE_ICONS[ev.type] : "•";
-                      const typeLabel = ev.type
-                        ? t(`common:evidenceTypes.${ev.type}.label`)
-                        : null;
-                      // For unknown/missing genres, still announce *some* type
-                      // context so the row doesn't read as a bare proper noun.
-                      const a11yTypeLabel =
-                        typeLabel ?? t("badgeDetail:evidenceList.fallbackType");
-                      const a11yLabel = t("badgeDetail:evidenceList.itemA11y", {
-                        name: ev.name,
-                        type: a11yTypeLabel,
-                      });
-                      return (
-                        <View
-                          key={ev.id}
-                          style={styles.evidenceRow}
-                          accessible
-                          accessibilityLabel={a11yLabel}
-                        >
-                          <Text
-                            style={styles.evidenceIcon}
-                            accessibilityElementsHidden
-                            importantForAccessibility="no"
+              {criteriaNarrative || evidenceItems ? (
+                <View style={styles.infoBlock}>
+                  <Text style={styles.sectionLabel}>
+                    {t("badgeDetail:sections.howEarned")}
+                  </Text>
+                  {criteriaNarrative ? (
+                    <Text style={styles.bodyText}>{criteriaNarrative}</Text>
+                  ) : null}
+                  {evidenceItems ? (
+                    // No `accessible` here — would flatten descendants into a
+                    // single a11y node and prevent screen-reader users from
+                    // focusing individual rows. The list label is exposed via
+                    // accessibilityLabel + role="list" without merging.
+                    <View
+                      style={styles.evidenceList}
+                      accessibilityRole="list"
+                      accessibilityLabel={t(
+                        "badgeDetail:evidenceList.a11yLabel",
+                        {
+                          count: evidenceItems.length,
+                        },
+                      )}
+                    >
+                      {evidenceItems.map((ev) => {
+                        const icon = ev.type
+                          ? EVIDENCE_TYPE_ICONS[ev.type]
+                          : "•";
+                        const typeLabel = ev.type
+                          ? t(`common:evidenceTypes.${ev.type}.label`)
+                          : null;
+                        // For unknown/missing genres, still announce *some* type
+                        // context so the row doesn't read as a bare proper noun.
+                        const a11yTypeLabel =
+                          typeLabel ??
+                          t("badgeDetail:evidenceList.fallbackType");
+                        const a11yLabel = t(
+                          "badgeDetail:evidenceList.itemA11y",
+                          {
+                            name: ev.name,
+                            type: a11yTypeLabel,
+                          },
+                        );
+                        return (
+                          <View
+                            key={ev.id}
+                            style={styles.evidenceRow}
+                            accessible
+                            accessibilityLabel={a11yLabel}
                           >
-                            {icon}
-                          </Text>
-                          <View style={styles.evidenceText}>
-                            <Text style={styles.bodyText}>{ev.name}</Text>
-                            {typeLabel ? (
-                              <Text
-                                variant="caption"
-                                style={styles.evidenceTypeLabel}
-                              >
-                                {typeLabel}
-                              </Text>
-                            ) : null}
+                            <Text
+                              style={styles.evidenceIcon}
+                              accessibilityElementsHidden
+                              importantForAccessibility="no"
+                            >
+                              {icon}
+                            </Text>
+                            <View style={styles.evidenceText}>
+                              <Text style={styles.bodyText}>{ev.name}</Text>
+                              {typeLabel ? (
+                                <Text
+                                  variant="caption"
+                                  style={styles.evidenceTypeLabel}
+                                >
+                                  {typeLabel}
+                                </Text>
+                              ) : null}
+                            </View>
                           </View>
-                        </View>
-                      );
-                    })}
-                  </View>
-                ) : null}
-              </View>
-            ) : null}
+                        );
+                      })}
+                    </View>
+                  ) : null}
+                </View>
+              ) : null}
 
+              <View style={styles.infoBlock}>
+                <Text style={styles.sectionLabel}>
+                  {t("badgeDetail:sections.details")}
+                </Text>
+                <Text style={styles.bodyText}>
+                  {t("badgeDetail:createdAt", {
+                    date: formatDate(
+                      badge.createdAt as string | null,
+                      i18n.language,
+                    ),
+                  })}
+                </Text>
+              </View>
+            </View>
+          </Card>
+
+          {goalId ? (
+            <Button
+              label={t("badgeDetail:actions.viewTimeline")}
+              variant="secondary"
+              onPress={() => handleViewTimeline(goalId)}
+            />
+          ) : null}
+
+          <Card>
             <View style={styles.infoBlock}>
               <Text style={styles.sectionLabel}>
-                {t("badgeDetail:sections.details")}
+                {t("badgeDetail:sections.export")}
               </Text>
-              <Text style={styles.bodyText}>
-                {t("badgeDetail:createdAt", {
-                  date: formatDate(
-                    badge.createdAt as string | null,
-                    i18n.language,
-                  ),
-                })}
-              </Text>
-            </View>
-          </View>
-        </Card>
-
-        {goalId ? (
-          <Button
-            label={t("badgeDetail:actions.viewTimeline")}
-            variant="secondary"
-            onPress={() => handleViewTimeline(goalId)}
-          />
-        ) : null}
-
-        <Card>
-          <View style={styles.infoBlock}>
-            <Text style={styles.sectionLabel}>
-              {t("badgeDetail:sections.export")}
-            </Text>
-            {/* Primary: byte-preserving export of the baked PNG (carries the
+              {/* Primary: byte-preserving export of the baked PNG (carries the
                 OB 3.0 iTXt credential). On Android this bypasses the share
                 sheet entirely via SAF, so messengers can't transcode and
                 strip the credential. */}
-            <Button
-              label={t("badgeDetail:actions.exportVerifiable")}
-              variant="primary"
-              onPress={() => exportVerifiableBadge(imageUri, goalTitle)}
-              loading={isExportingImage}
-              disabled={!hasRealImage}
-            />
-            <Button
-              label={t("badgeDetail:actions.exportCredential")}
-              variant="secondary"
-              onPress={() =>
-                exportJSON(badge.credential as string | null, goalTitle)
-              }
-              loading={isExportingJSON}
-              disabled={!badge.credential}
-            />
-            {/* Honest "lossy" path: messenger photo flows may re-encode the
+              <Button
+                label={t("badgeDetail:actions.exportVerifiable")}
+                variant="primary"
+                onPress={() => exportVerifiableBadge(imageUri, goalTitle)}
+                loading={isExportingImage}
+                disabled={!hasRealImage}
+              />
+              <Button
+                label={t("badgeDetail:actions.exportCredential")}
+                variant="secondary"
+                onPress={() =>
+                  exportJSON(badge.credential as string | null, goalTitle)
+                }
+                loading={isExportingJSON}
+                disabled={!badge.credential}
+              />
+              {/* Honest "lossy" path: messenger photo flows may re-encode the
                 PNG and drop the iTXt chunk. Kept available for users who
                 only want to share the visual; the caption below explains
                 the trade-off. */}
-            <Button
-              label={t("badgeDetail:actions.saveAsImage")}
-              variant="secondary"
-              onPress={() => exportImage(imageUri)}
-              loading={isExportingImage}
-              disabled={!hasRealImage}
-              accessibilityHint={t("badgeDetail:actions.saveAsImageHint")}
-            />
-            <Text variant="caption" style={styles.exportCaption}>
-              {t("badgeDetail:exportCaption")}
-            </Text>
-          </View>
-        </Card>
-
-        <Button
-          label={t("badgeDetail:actions.delete")}
-          variant="destructive"
-          onPress={handleDelete}
-        />
-      </ScrollView>
-
-      {/* Document order matters: topBar must render between the ScrollView
-          and the previewOverlay so the visual stack (scroll → header →
-          floating badge) holds even on platforms where sibling zIndex is
-          ignored. */}
-      <DetailTopBar
-        onBack={() => navigation.goBack()}
-        onLayout={onTopBarLayout}
-      />
-
-      <View
-        style={[styles.previewOverlay, { top: 0 }]}
-        pointerEvents="none"
-        onLayout={(e) => {
-          const next = e.nativeEvent.layout.height;
-          setPreviewHeight((prev) => (prev === next ? prev : next));
-        }}
-      >
-        <View style={styles.previewContainer}>
-          {design ? (
-            <View collapsable={false} style={styles.badgeCanvas}>
-              <BadgeRenderer
-                ref={badgeRendererRef}
-                design={design}
-                size={160}
+              <Button
+                label={t("badgeDetail:actions.saveAsImage")}
+                variant="secondary"
+                onPress={() => exportImage(imageUri)}
+                loading={isExportingImage}
+                disabled={!hasRealImage}
+                accessibilityHint={t("badgeDetail:actions.saveAsImageHint")}
               />
-            </View>
-          ) : hasRealImage ? (
-            <Image
-              source={{ uri: imageUri }}
-              style={styles.badgeImage}
-              resizeMode="contain"
-              accessibilityLabel={t("badgeDetail:image.a11y", {
-                title: goalTitle,
-              })}
-              onError={() => setImageLoadFailed(true)}
-            />
-          ) : (
-            <View style={styles.badgeImage}>
-              <Text style={styles.badgeInitial}>
-                {(goalTitle.charAt(0) || "?").toUpperCase()}
+              <Text variant="caption" style={styles.exportCaption}>
+                {t("badgeDetail:exportCaption")}
               </Text>
             </View>
-          )}
+          </Card>
+
+          <Button
+            label={t("badgeDetail:actions.delete")}
+            variant="destructive"
+            onPress={handleDelete}
+          />
         </View>
-      </View>
+      </ScrollView>
+
+      {/* Positioning is the consumer's job (BadgeOverflowMenu ships content
+          only). A transparent Modal — the same overlay primitive
+          ConfirmDeleteModal uses — anchored under the ⋯ button by deriving the
+          offset from the hero's known geometry rather than measuring the real
+          button, which isn't worth the plumbing at this size. */}
+      <Modal
+        visible={showOverflowMenu}
+        transparent
+        animationType="fade"
+        onRequestClose={closeOverflowMenu}
+        accessibilityViewIsModal
+      >
+        <Pressable
+          style={styles.overflowBackdrop}
+          onPress={closeOverflowMenu}
+          accessibilityRole="button"
+          accessibilityLabel={t("badgeDetail:hero.overflowDismiss")}
+          testID="overflow-backdrop"
+        />
+        <View
+          style={[
+            styles.overflowPopover,
+            { top: insets.top + OVERFLOW_POPOVER_TOP_OFFSET },
+          ]}
+        >
+          <BadgeOverflowMenu
+            hasCredential={Boolean(badge.credential)}
+            shareBadgeLabel={t("badgeDetail:share.overflow.shareBadge")}
+            exportCredentialLabel={t(
+              "badgeDetail:share.overflow.exportCredential",
+            )}
+            deleteBadgeLabel={t("badgeDetail:share.overflow.deleteBadge")}
+            // TODO(#469): replace with BadgeShareSheet once slice 2/2 lands.
+            onShareBadge={() => {
+              closeOverflowMenu();
+              exportVerifiableBadge(imageUri, goalTitle);
+            }}
+            onExportCredential={() => {
+              closeOverflowMenu();
+              exportJSON(badge.credential as string | null, goalTitle);
+            }}
+            onDelete={() => {
+              closeOverflowMenu();
+              handleDelete();
+            }}
+          />
+        </View>
+      </Modal>
 
       <ConfirmDeleteModal
         visible={showDeleteModal}
@@ -544,12 +532,6 @@ function BadgeDetailContent({
 export function BadgeDetailScreen({ route }: BadgeDetailScreenProps) {
   const navigation = useNavigation();
   const { badgeId } = route.params;
-  const [topBarHeight, setTopBarHeight] = useState(64);
-
-  const handleTopBarLayout = (e: LayoutChangeEvent) => {
-    const next = e.nativeEvent.layout.height;
-    setTopBarHeight((prev) => (prev === next ? prev : next));
-  };
 
   return (
     <View style={styles.screen}>
@@ -557,25 +539,15 @@ export function BadgeDetailScreen({ route }: BadgeDetailScreenProps) {
         <Suspense
           fallback={
             <>
-              {/* Header stays mounted during data load so the user can still
-                  go back; once content resolves, BadgeDetailContent renders
-                  its own DetailTopBar between the ScrollView and the
-                  preview to preserve the stacking order. */}
-              <DetailTopBar
-                onBack={() => navigation.goBack()}
-                onLayout={handleTopBarLayout}
-              />
-              <ActivityIndicator
-                style={[styles.loadingIndicator, { marginTop: topBarHeight }]}
-                size="large"
-              />
+              {/* A back affordance stays mounted during data load so the user
+                  isn't trapped on a spinner; once content resolves the
+                  celebration hero supplies its own. */}
+              <DetailFallbackHeader onBack={() => navigation.goBack()} />
+              <ActivityIndicator style={styles.loadingIndicator} size="large" />
             </>
           }
         >
-          <BadgeDetailContent
-            badgeId={badgeId}
-            onTopBarLayout={handleTopBarLayout}
-          />
+          <BadgeDetailContent badgeId={badgeId} />
         </Suspense>
       </ErrorBoundary>
     </View>

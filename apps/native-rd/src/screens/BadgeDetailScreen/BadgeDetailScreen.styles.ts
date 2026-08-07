@@ -1,63 +1,30 @@
 import { StyleSheet } from "react-native-unistyles";
-import { shadowStyle } from "../../styles/shadows";
-import { BADGE_CANVAS_BACKGROUND } from "../../badges/constants";
 
 export const styles = StyleSheet.create((theme) => ({
   screen: {
     flex: 1,
     backgroundColor: theme.colors.background,
   },
-  topBar: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 2,
-  },
-  previewOverlay: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    alignItems: "center",
-    paddingVertical: theme.space[2],
-    zIndex: 3,
-  },
+  // No horizontal padding: the celebration hero is the first child and must
+  // run full-bleed to the screen edges. Everything below it lives in `body`,
+  // which carries the gutter instead.
   scrollContent: {
-    paddingHorizontal: theme.space[4],
     paddingBottom: theme.space[12],
+  },
+  body: {
+    paddingHorizontal: theme.space[4],
+    paddingTop: theme.space[4],
     gap: theme.space[4],
     alignItems: "stretch",
   },
-  previewContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    padding: theme.space[4],
-    borderRadius: 0,
-    borderWidth: theme.borderWidth.medium,
-    borderColor: theme.colors.border,
-    backgroundColor: BADGE_CANVAS_BACKGROUND,
-    ...shadowStyle(theme, "cardElevation"),
+  // Overflow menu host. `top` is supplied at render time by the screen, which
+  // adds the safe-area inset the Modal's own root view doesn't inherit.
+  overflowBackdrop: {
+    ...StyleSheet.absoluteFillObject,
   },
-  badgeCanvas: {
-    backgroundColor: BADGE_CANVAS_BACKGROUND,
-  },
-  badgeImage: {
-    width: 120,
-    height: 120,
-    borderRadius: theme.radius.sm,
-    borderWidth: theme.borderWidth.medium,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.accentPurple,
-    alignItems: "center",
-    justifyContent: "center",
-    ...shadowStyle(theme, "cardElevation"),
-  },
-  badgeInitial: {
-    fontSize: theme.size["5xl"],
-    lineHeight: theme.size["5xl"] * 1.3,
-    fontWeight: theme.fontWeight.black,
-    fontFamily: theme.fontFamily.headline,
-    color: theme.colors.background,
+  overflowPopover: {
+    position: "absolute",
+    right: theme.space[4],
   },
   infoSection: {
     width: "100%",
@@ -65,11 +32,6 @@ export const styles = StyleSheet.create((theme) => ({
   },
   infoBlock: {
     gap: theme.space[2],
-  },
-  title: {
-    ...theme.textStyles.headline,
-    color: theme.colors.text,
-    textAlign: "center",
   },
   description: {
     ...theme.textStyles.body,
@@ -79,23 +41,6 @@ export const styles = StyleSheet.create((theme) => ({
   bodyText: {
     ...theme.textStyles.body,
     color: theme.colors.text,
-  },
-  identityChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: theme.space[2],
-  },
-  chipIcon: {
-    fontSize: theme.size.lg,
-    lineHeight: theme.size.lg * 1.2,
-  },
-  chipColorDot: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    borderWidth: theme.borderWidth.thin,
-    borderColor: theme.colors.border,
   },
   sectionLabel: {
     ...theme.textStyles.label,

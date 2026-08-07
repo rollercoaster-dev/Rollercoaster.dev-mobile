@@ -6,18 +6,17 @@
   },
   "earned": "Earned {{date}}",
   "createdAt": "Created {{date}}",
+  "hero": {
+    "credentialLabel": "Verifiable · earned {{date}}",
+    "credentialLabelUndated": "Verifiable",
+    "overflowLabel": "More options",
+    "overflowDismiss": "Close menu"
+  },
   "sections": {
     "about": "About",
     "howEarned": "How it was earned",
     "details": "Details",
     "export": "Export"
-  },
-  "identityA11y": {
-    "icon": "Goal identity: {{icon}}",
-    "color": "Goal color indicator"
-  },
-  "image": {
-    "a11y": "Badge image for {{title}}"
   },
   "evidenceList": {
     "a11yLabel_one": "{{count}} evidence item submitted",
