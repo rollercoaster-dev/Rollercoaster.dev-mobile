@@ -49,6 +49,9 @@ jest.mock("../../../utils/haptics", () => ({
   triggerDragDrop: jest.fn(),
 }));
 
+// "none" keeps EditGoalStepList's accessible reorder / nest / un-nest controls
+// rendered — the only entry point for exercising the hierarchy handlers without
+// a live drag gesture.
 jest.mock("../../../hooks/useAnimationPref", () => ({
   useAnimationPref: () => ({
     animationPref: "none",
@@ -58,11 +61,11 @@ jest.mock("../../../hooks/useAnimationPref", () => ({
   }),
 }));
 
-// All goal/step mutations return an Evolu Result; the handlers now route
-// through runEvoluMutation and check `result.ok`, so the mocks must hand back a
-// success Result by default. Individual tests override with an ok:false Result
-// or a thrown error to exercise the failure branches. reorderSteps/
-// reorderSubSteps return void (they throw on failure), so they stay bare.
+// All goal/step mutations return an Evolu Result; the handlers route through
+// runEvoluMutation and check `result.ok`, so the mocks must hand back a success
+// Result by default. Individual tests override with an ok:false Result or a
+// thrown error to exercise the failure branches. reorderSteps/reorderSubSteps
+// return void (they throw on failure), so they stay bare.
 type MockResult = { ok: true } | { ok: false; error: unknown };
 const okResult: MockResult = { ok: true };
 const mockUpdateGoal = jest.fn((..._args: unknown[]): MockResult => okResult);
@@ -103,7 +106,7 @@ jest.mock("../../../db", () => ({
   deleteStep: (...args: unknown[]) => mockDeleteStep(...args),
   reorderSteps: (...args: unknown[]) => mockReorderSteps(...args),
   reorderSubSteps: (...args: unknown[]) => mockReorderSubSteps(...args),
-  // Faithful lightweight stand-ins for the pure grouping helpers.
+  // Faithful lightweight stand-ins for the pure query helpers.
   groupStepsByParent: (rows: StepRow[]) => {
     const rootIds = new Set(
       rows.filter((r) => r.parentStepId == null).map((r) => r.id),
@@ -123,8 +126,18 @@ jest.mock("../../../db", () => ({
     }
     return roots;
   },
-  flattenGroupedSteps: (grouped: (StepRow & { children: StepRow[] })[]) =>
-    grouped.flatMap((g) => [g, ...g.children]),
+  resolveStepDependencyBand: (step: StepRow, goalSteps: StepRow[]) => ({
+    // Self-references are invalid and resolve to null, same as the real helper.
+    afterStepTitle:
+      step.afterStepId && step.afterStepId !== step.id
+        ? ((goalSteps.find((s) => s.id === step.afterStepId)?.title as
+            | string
+            | undefined) ?? null)
+        : null,
+    waitingOnLabel: step.waitingOnLabel ?? null,
+    waitingOnExpectedAt: step.waitingOnExpectedAt ?? null,
+    dueAt: step.dueAt ?? null,
+  }),
 }));
 
 const mockUseQuery = jest.fn();
@@ -174,18 +187,18 @@ const STEPS_TREE = [
   },
 ];
 
-function makeRouteProps(cameFromFocus = false) {
+function makeRouteProps() {
   return {
     route: {
       key: "EditMode-1",
       name: "EditMode" as const,
-      params: { goalId: "goal-1", cameFromFocus },
+      params: { goalId: "goal-1" },
     },
     navigation: {} as any,
   };
 }
 
-function setupQueries(goal: object | null = GOAL, steps = STEPS) {
+function setupQueries(goal: object | null = GOAL, steps: object[] = STEPS) {
   mockUseQuery.mockImplementation((query: unknown) => {
     if (query === "goalsQuery") {
       return goal ? [goal] : [];
@@ -208,18 +221,20 @@ describe("EditModeScreen", () => {
   });
 
   describe("rendering", () => {
-    it("renders goal title in input", () => {
+    it("renders goal title in EditGoalView's title card", () => {
       setupQueries();
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
-      const titleInput = screen.getByLabelText("Goal title");
-      expect(titleInput.props.value).toBe("Learn TypeScript");
+      expect(screen.getByTestId("edit-goal-title-input").props.value).toBe(
+        "Learn TypeScript",
+      );
     });
 
-    it("renders goal description in textarea", () => {
+    it("renders goal description in the description input", () => {
       setupQueries();
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
-      const descInput = screen.getByLabelText("Goal description");
-      expect(descInput.props.value).toBe("Master the type system");
+      expect(
+        screen.getByTestId("edit-goal-description-input").props.value,
+      ).toBe("Master the type system");
     });
 
     it("renders step titles", () => {
@@ -230,24 +245,29 @@ describe("EditModeScreen", () => {
       expect(screen.getByText("Build project")).toBeOnTheScreen();
     });
 
+    it("renders sub-steps nested under their parent, not as top-level steps", () => {
+      setupQueries(GOAL, STEPS_TREE);
+      renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+
+      expect(screen.getByText("P1 child")).toBeOnTheScreen();
+      // Only the two roots count toward the "Steps" header.
+      expect(
+        screen.getByText(i18n.t("editGoal:stepList.count", { count: 2 })),
+      ).toBeOnTheScreen();
+    });
+
     it("renders step count", () => {
       setupQueries();
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
       expect(
-        screen.getByText(i18n.t("editGoal:stepList.count_other", { count: 3 })),
+        screen.getByText(i18n.t("editGoal:stepList.count", { count: 3 })),
       ).toBeOnTheScreen();
     });
 
-    it('renders "Start Working" when cameFromFocus is false', () => {
+    it('renders the "Done" footer button', () => {
       setupQueries();
-      renderWithProviders(<EditModeScreen {...makeRouteProps(false)} />);
-      expect(screen.getByTestId("start-working")).toBeOnTheScreen();
-    });
-
-    it('renders "Back to Focus" when cameFromFocus is true', () => {
-      setupQueries();
-      renderWithProviders(<EditModeScreen {...makeRouteProps(true)} />);
-      expect(screen.getByTestId("back-to-focus")).toBeOnTheScreen();
+      renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+      expect(screen.getByTestId("edit-goal-done-button")).toBeOnTheScreen();
     });
 
     it('shows "Goal not found." when goal does not exist', () => {
@@ -258,10 +278,10 @@ describe("EditModeScreen", () => {
       ).toBeOnTheScreen();
     });
 
-    it('renders "Edit Goal" header', () => {
+    it("renders a single Edit Goal header (EditGoalView is the screen host)", () => {
       setupQueries();
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
-      expect(screen.getByText(i18n.t("editGoal:title"))).toBeOnTheScreen();
+      expect(screen.getAllByText(i18n.t("editGoal:title"))).toHaveLength(1);
     });
   });
 
@@ -269,7 +289,7 @@ describe("EditModeScreen", () => {
     it("updates title input on change and debounces mutation", async () => {
       setupQueries();
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
-      const titleInput = screen.getByLabelText("Goal title");
+      const titleInput = screen.getByTestId("edit-goal-title-input");
       fireEvent.changeText(titleInput, "Updated Title");
       expect(titleInput.props.value).toBe("Updated Title");
 
@@ -283,26 +303,29 @@ describe("EditModeScreen", () => {
       });
     });
 
-    it("shows error when title is cleared", async () => {
+    it("alerts and skips the write when the title is cleared", async () => {
       setupQueries();
+      const alertSpy = jest.spyOn(Alert, "alert");
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
-      const titleInput = screen.getByLabelText("Goal title");
-      fireEvent.changeText(titleInput, "   ");
+      fireEvent.changeText(screen.getByTestId("edit-goal-title-input"), "   ");
 
       await act(async () => {
         jest.advanceTimersByTime(500);
       });
-      expect(
-        screen.getByText(i18n.t("editGoal:errors.titleRequired")),
-      ).toBeOnTheScreen();
+      expect(alertSpy).toHaveBeenCalledWith(
+        i18n.t("editGoal:errors.alertErrorTitle"),
+        i18n.t("editGoal:errors.titleRequired"),
+      );
       expect(mockUpdateGoal).not.toHaveBeenCalled();
     });
 
     it("updates description input on change and debounces mutation", async () => {
       setupQueries();
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
-      const descInput = screen.getByLabelText("Goal description");
-      fireEvent.changeText(descInput, "New description");
+      fireEvent.changeText(
+        screen.getByTestId("edit-goal-description-input"),
+        "New description",
+      );
 
       await act(async () => {
         jest.advanceTimersByTime(500);
@@ -312,34 +335,56 @@ describe("EditModeScreen", () => {
       });
     });
 
-    it("calls createStep when submitting add step input", () => {
+    // D4: the editor's add-step flow has no evidence-types input, so no
+    // plannedEvidenceTypes argument is written — the read path resolves the
+    // unset column to the default plan instead.
+    it("calls createStep without a planned-evidence argument", () => {
       setupQueries();
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
-      const addInput = screen.getByLabelText("Add a new step");
-      fireEvent.changeText(addInput, "New step");
-      fireEvent(addInput, "submitEditing");
-      expect(mockCreateStep).toHaveBeenCalledWith("goal-1", "New step", 3, [
-        "text",
-      ]);
+      fireEvent.changeText(
+        screen.getByTestId("edit-goal-add-step-input"),
+        "New step",
+      );
+      fireEvent.press(screen.getByTestId("edit-goal-add-step-button"));
+      expect(mockCreateStep).toHaveBeenCalledWith("goal-1", "New step", 3);
     });
 
-    it("calls deleteStep when delete button pressed", () => {
+    it("calls updateStep with the title only when a step is renamed inline", () => {
       setupQueries();
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
-      fireEvent.press(screen.getByLabelText('Delete "Read docs"'));
-      expect(mockDeleteStep).toHaveBeenCalledWith("step-1");
+
+      fireEvent.press(screen.getByTestId("edit-goal-step-title-step-1"));
+      const input = screen.getByTestId("edit-goal-step-edit-step-1");
+      fireEvent.changeText(input, "Read the docs");
+      fireEvent(input, "submitEditing");
+
+      expect(mockUpdateStep).toHaveBeenCalledWith("step-1", {
+        title: "Read the docs",
+      });
     });
 
-    it("navigates to FocusMode when button pressed", () => {
+    it("calls updateStep with planned evidence only when the picker toggles a type", () => {
       setupQueries();
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
-      fireEvent.press(screen.getByTestId("start-working"));
+
+      fireEvent.press(screen.getByTestId("edit-goal-step-evidence-step-1"));
+      fireEvent.press(screen.getByLabelText("Photo"));
+
+      expect(mockUpdateStep).toHaveBeenCalledWith("step-1", {
+        plannedEvidenceTypes: ["text", "photo"],
+      });
+    });
+
+    it("navigates to FocusMode when Done is pressed", () => {
+      setupQueries();
+      renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+      fireEvent.press(screen.getByTestId("edit-goal-done-button"));
       expect(mockNavigate).toHaveBeenCalledWith("FocusMode", {
         goalId: "goal-1",
       });
     });
 
-    it("navigates back when back button pressed", () => {
+    it("navigates back when the back button is pressed", () => {
       setupQueries();
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
       fireEvent.press(screen.getByLabelText("Go back"));
@@ -347,17 +392,122 @@ describe("EditModeScreen", () => {
     });
   });
 
-  describe("step deletion guard", () => {
-    it("does not show delete buttons when only 1 step exists", () => {
-      setupQueries(GOAL, SINGLE_STEP);
+  describe("step deletion", () => {
+    it("calls deleteStep only after the confirm modal is confirmed", () => {
+      setupQueries();
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
-      expect(screen.queryByLabelText('Delete "Only step"')).toBeNull();
+
+      fireEvent.press(screen.getByTestId("edit-goal-step-delete-step-1"));
+      expect(mockDeleteStep).not.toHaveBeenCalled();
+
+      fireEvent.press(
+        screen.getByRole("button", { name: i18n.t("common:actions.delete") }),
+      );
+      expect(mockDeleteStep).toHaveBeenCalledWith("step-1");
     });
 
-    it("shows delete buttons when multiple steps exist", () => {
+    it("deletes a sub-step through the same mutation", () => {
+      setupQueries(GOAL, STEPS_TREE);
+      renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+
+      fireEvent.press(screen.getByTestId("edit-goal-substep-delete-p1c1"));
+      fireEvent.press(
+        screen.getByRole("button", { name: i18n.t("common:actions.delete") }),
+      );
+      expect(mockDeleteStep).toHaveBeenCalledWith("p1c1");
+    });
+
+    // D9 drops the old "can't delete the goal's last step" guard: a goal with
+    // zero steps is a supported state across the redesign, not an error.
+    it("offers delete even when the goal has a single step", () => {
+      setupQueries(GOAL, SINGLE_STEP);
+      renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+
+      fireEvent.press(screen.getByTestId("edit-goal-step-delete-step-1"));
+      fireEvent.press(
+        screen.getByRole("button", { name: i18n.t("common:actions.delete") }),
+      );
+      expect(mockDeleteStep).toHaveBeenCalledWith("step-1");
+    });
+  });
+
+  describe("date/dependency chips", () => {
+    // One chip per tone, built from whatever columns the step carries. The
+    // resolver output is the same one Timeline and Focus read (#454).
+    it.each([
+      {
+        tone: "after",
+        row: { afterStepId: "step-2" },
+        expected: () =>
+          i18n.t("editGoal:stepList.dateDepChips.after", { title: "Practice" }),
+      },
+      {
+        tone: "waiting",
+        row: { waitingOnLabel: "Alex" },
+        expected: () =>
+          i18n.t("editGoal:stepList.dateDepChips.waitingOn", { who: "Alex" }),
+      },
+      {
+        tone: "due",
+        row: { dueAt: "2026-03-06T00:00:00.000Z" },
+        expected: () =>
+          i18n.t("editGoal:stepList.dateDepChips.due", {
+            date: "Mar 6, 2026",
+          }),
+      },
+    ])(
+      "renders the $tone chip on a step that carries it",
+      ({ row, expected }) => {
+        setupQueries(GOAL, [{ ...STEPS[0], ...row }, STEPS[1]]);
+        renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+        expect(screen.getByText(expected())).toBeOnTheScreen();
+      },
+    );
+
+    it("prefers the waiting-on chip over after when both columns are set", () => {
+      setupQueries(GOAL, [
+        { ...STEPS[0], afterStepId: "step-2", waitingOnLabel: "Alex" },
+        STEPS[1],
+      ]);
+      renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+
+      expect(
+        screen.getByText(
+          i18n.t("editGoal:stepList.dateDepChips.waitingOn", { who: "Alex" }),
+        ),
+      ).toBeOnTheScreen();
+      expect(
+        screen.queryByText(
+          i18n.t("editGoal:stepList.dateDepChips.after", { title: "Practice" }),
+        ),
+      ).toBeNull();
+    });
+
+    // The chip row has no testID of its own, so absence is asserted through the
+    // per-tone glyphs EditGoalStepRow renders inside it — never a placeholder
+    // like "no due date" (ND rule: show what's there, not what's absent).
+    it("renders no chip row at all when a step carries no band data", () => {
+      setupQueries(GOAL, [
+        { ...STEPS[0], dueAt: "2026-03-06T00:00:00.000Z" },
+        STEPS[1],
+      ]);
+      const withBand = renderWithProviders(
+        <EditModeScreen {...makeRouteProps()} />,
+      );
+      // The glyphs are hidden from the a11y tree (the chip text carries the
+      // meaning), so they only surface with includeHiddenElements.
+      expect(
+        screen.getByText("▦", { includeHiddenElements: true }),
+      ).toBeOnTheScreen();
+      withBand.unmount();
+
       setupQueries(GOAL, STEPS);
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
-      expect(screen.getByLabelText('Delete "Read docs"')).toBeOnTheScreen();
+      for (const glyph of ["↩", "⏳", "▦"]) {
+        expect(
+          screen.queryByText(glyph, { includeHiddenElements: true }),
+        ).toBeNull();
+      }
     });
   });
 
@@ -366,22 +516,15 @@ describe("EditModeScreen", () => {
       setupQueries(GOAL, STEPS_TREE);
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
 
-      // The affordance ghost for p1 sits after p1's last child.
-      fireEvent.press(screen.getByTestId("step-list-add-sub-step-p1"));
-      fireEvent.changeText(
-        screen.getByTestId("step-list-sub-step-input-p1"),
-        "New sub",
-      );
-      fireEvent.press(screen.getByTestId("step-list-add-sub-step-button-p1"));
+      fireEvent.press(screen.getByTestId("edit-goal-add-substep-p1"));
 
       // p1's only child has ordinal 0, so the next sibling ordinal is 1 —
       // NOT 8 (which a goal-wide max over p2c1's ordinal 7 would yield).
       expect(mockCreateSubStep).toHaveBeenCalledWith(
         "goal-1",
         "p1",
-        "New sub",
+        i18n.t("editGoal:editor.newSubStepTitle"),
         1,
-        ["text"],
       );
     });
 
@@ -389,36 +532,15 @@ describe("EditModeScreen", () => {
       setupQueries(GOAL, STEPS_TREE);
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
 
-      const addInput = screen.getByLabelText("Add a new step");
-      fireEvent.changeText(addInput, "New root");
-      fireEvent(addInput, "submitEditing");
+      fireEvent.changeText(
+        screen.getByTestId("edit-goal-add-step-input"),
+        "New root",
+      );
+      fireEvent.press(screen.getByTestId("edit-goal-add-step-button"));
 
       // Roots are ordinals 0 and 1, so the next root ordinal is 2 — NOT 8
       // (a goal-wide max would inherit the child's ordinal 7).
-      expect(mockCreateStep).toHaveBeenCalledWith("goal-1", "New root", 2, [
-        "text",
-      ]);
-    });
-  });
-
-  describe("accessibility", () => {
-    it("has accessibility labels on inputs", () => {
-      setupQueries();
-      renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
-      expect(screen.getByLabelText("Goal title")).toBeOnTheScreen();
-      expect(screen.getByLabelText("Goal description")).toBeOnTheScreen();
-      expect(screen.getByLabelText("Go back")).toBeOnTheScreen();
-      expect(screen.getByLabelText("Add a new step")).toBeOnTheScreen();
-    });
-
-    it("button has correct accessibility role", () => {
-      setupQueries();
-      renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
-      expect(
-        screen.getByRole("button", {
-          name: i18n.t("editGoal:actions.startWorking"),
-        }),
-      ).toBeOnTheScreen();
+      expect(mockCreateStep).toHaveBeenCalledWith("goal-1", "New root", 2);
     });
   });
 
@@ -431,9 +553,11 @@ describe("EditModeScreen", () => {
       const alertSpy = jest.spyOn(Alert, "alert");
 
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
-      const addInput = screen.getByLabelText("Add a new step");
-      fireEvent.changeText(addInput, "Bad step");
-      fireEvent(addInput, "submitEditing");
+      fireEvent.changeText(
+        screen.getByTestId("edit-goal-add-step-input"),
+        "Bad step",
+      );
+      fireEvent.press(screen.getByTestId("edit-goal-add-step-button"));
 
       expect(alertSpy).toHaveBeenCalledWith(
         i18n.t("editGoal:errors.alertErrorTitle"),
@@ -441,48 +565,69 @@ describe("EditModeScreen", () => {
       );
     });
 
-    it("shows error text when updateGoal title fails", async () => {
+    it("shows alert when createStep returns { ok: false }", () => {
       setupQueries();
-      mockUpdateGoal.mockImplementation(() => {
-        throw new Error("fail");
+      mockCreateStep.mockReturnValue({
+        ok: false,
+        error: { type: "WriteError" },
       });
+      const alertSpy = jest.spyOn(Alert, "alert");
 
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
-      const titleInput = screen.getByLabelText("Goal title");
-      fireEvent.changeText(titleInput, "Valid Title");
+      fireEvent.changeText(
+        screen.getByTestId("edit-goal-add-step-input"),
+        "Bad step",
+      );
+      fireEvent.press(screen.getByTestId("edit-goal-add-step-button"));
 
-      await act(async () => {
-        jest.advanceTimersByTime(500);
-      });
-      expect(
-        screen.getByText(i18n.t("editGoal:errors.updateTitleFailed")),
-      ).toBeOnTheScreen();
+      expect(alertSpy).toHaveBeenCalledWith(
+        i18n.t("editGoal:errors.alertErrorTitle"),
+        i18n.t("editGoal:errors.createStepMessage"),
+      );
     });
 
     // Evolu reports write failures via { ok: false } WITHOUT throwing, so the
     // ok:false path must surface the same feedback as the thrown path — a
     // discarded Result would let the failure vanish silently.
-    it("shows error text when updateGoal title returns { ok: false }", async () => {
+    it.each([
+      [
+        "throws",
+        () =>
+          mockUpdateGoal.mockImplementation(() => {
+            throw new Error("fail");
+          }),
+      ],
+      [
+        "returns { ok: false }",
+        () =>
+          mockUpdateGoal.mockReturnValue({
+            ok: false,
+            error: { type: "WriteError" },
+          }),
+      ],
+    ])("shows alert when updateGoal title %s", async (_desc, arm) => {
       setupQueries();
-      mockUpdateGoal.mockReturnValue({
-        ok: false,
-        error: { type: "WriteError" },
-      });
+      arm();
+      const alertSpy = jest.spyOn(Alert, "alert");
 
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
-      fireEvent.changeText(screen.getByLabelText("Goal title"), "Valid Title");
+      fireEvent.changeText(
+        screen.getByTestId("edit-goal-title-input"),
+        "Valid Title",
+      );
 
       await act(async () => {
         jest.advanceTimersByTime(500);
       });
-      expect(
-        screen.getByText(i18n.t("editGoal:errors.updateTitleFailed")),
-      ).toBeOnTheScreen();
+      expect(alertSpy).toHaveBeenCalledWith(
+        i18n.t("editGoal:errors.alertErrorTitle"),
+        i18n.t("editGoal:errors.updateTitleFailed"),
+      );
     });
 
     // Description saves fire-and-forget on a debounce; a rejected write must
-    // still surface an alert. Both failure modes (thrown + { ok: false }) must
-    // converge on the same feedback — mirrors the title-update coverage above.
+    // still surface an alert. Both failure modes must converge on the same
+    // feedback — mirrors the title-update coverage above.
     it.each([
       [
         "throws",
@@ -506,7 +651,7 @@ describe("EditModeScreen", () => {
 
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
       fireEvent.changeText(
-        screen.getByLabelText("Goal description"),
+        screen.getByTestId("edit-goal-description-input"),
         "New description",
       );
 
@@ -518,35 +663,48 @@ describe("EditModeScreen", () => {
         i18n.t("editGoal:errors.updateDescriptionMessage"),
       );
     });
+  });
 
-    it("shows alert when createStep returns { ok: false }", () => {
-      setupQueries();
-      mockCreateStep.mockReturnValue({
-        ok: false,
-        error: { type: "WriteError" },
-      });
-      const alertSpy = jest.spyOn(Alert, "alert");
-
+  describe("overflow menu → delete goal", () => {
+    function openMenu() {
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
-      const addInput = screen.getByLabelText("Add a new step");
-      fireEvent.changeText(addInput, "Bad step");
-      fireEvent(addInput, "submitEditing");
+      fireEvent.press(screen.getByTestId("edit-goal-overflow-trigger"));
+    }
 
-      expect(alertSpy).toHaveBeenCalledWith(
-        i18n.t("editGoal:errors.alertErrorTitle"),
-        i18n.t("editGoal:errors.createStepMessage"),
+    it("opens the ⋯ popover with Delete goal as its only action", () => {
+      setupQueries();
+      openMenu();
+      expect(screen.getByTestId("edit-goal-overflow-delete")).toBeOnTheScreen();
+    });
+
+    it("closes the popover without deleting when Cancel is pressed", () => {
+      setupQueries();
+      openMenu();
+      fireEvent.press(
+        screen.getByRole("button", { name: i18n.t("common:actions.cancel") }),
       );
+
+      expect(screen.queryByTestId("edit-goal-overflow-delete")).toBeNull();
+      expect(mockDeleteGoal).not.toHaveBeenCalled();
+    });
+
+    it("routes Delete goal through the confirm modal before mutating", () => {
+      setupQueries();
+      openMenu();
+      fireEvent.press(screen.getByTestId("edit-goal-overflow-delete"));
+
+      expect(mockDeleteGoal).not.toHaveBeenCalled();
+      expect(
+        screen.getByText(i18n.t("editGoal:confirmDelete.title")),
+      ).toBeOnTheScreen();
     });
   });
 
   describe("delete goal (destructive navigation guard)", () => {
     function openDeleteConfirm() {
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
-      fireEvent.press(
-        screen.getByRole("button", {
-          name: i18n.t("editGoal:actions.deleteGoal"),
-        }),
-      );
+      fireEvent.press(screen.getByTestId("edit-goal-overflow-trigger"));
+      fireEvent.press(screen.getByTestId("edit-goal-overflow-delete"));
     }
 
     it("navigates to Goals and closes the modal only after a successful delete", () => {
@@ -602,7 +760,7 @@ describe("EditModeScreen", () => {
   });
 
   describe("reparent wiring (#330)", () => {
-    // animationPref is mocked to "none" file-wide, so StepList renders its
+    // animationPref is mocked to "none" file-wide, so the editor renders its
     // accessible reorder / nest / un-nest controls — the reachable entry point
     // for exercising the reparent handlers without a live drag gesture.
 
@@ -649,7 +807,7 @@ describe("EditModeScreen", () => {
       setupQueries(GOAL, TREE_TWO_CHILDREN);
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
 
-      fireEvent.press(screen.getByLabelText('Move "Child A" down'));
+      fireEvent.press(screen.getByTestId("edit-goal-substep-down-p1c1"));
 
       expect(mockReorderSubSteps).toHaveBeenCalledWith("goal-1", "p1", [
         "p1c2",
@@ -657,11 +815,24 @@ describe("EditModeScreen", () => {
       ]);
     });
 
+    it("calls reorderSteps with the new root order when a step is moved down", () => {
+      setupQueries();
+      renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+
+      fireEvent.press(screen.getByTestId("edit-goal-step-down-step-1"));
+
+      expect(mockReorderSteps).toHaveBeenCalledWith("goal-1", [
+        "step-2",
+        "step-1",
+        "step-3",
+      ]);
+    });
+
     it("promotes a child via updateStep with parentStepId null and a root-scoped ordinal", () => {
       setupQueries(GOAL, STEPS_TREE);
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
 
-      fireEvent.press(screen.getByTestId("step-un-nest-p1c1"));
+      fireEvent.press(screen.getByTestId("edit-goal-substep-un-nest-p1c1"));
 
       // Roots p1(0)/p2(1) → next root ordinal is 2, NOT the child's old ordinal.
       expect(mockUpdateStep).toHaveBeenCalledWith("p1c1", {
@@ -674,8 +845,8 @@ describe("EditModeScreen", () => {
       setupQueries(GOAL, TREE_LEAF_ROOT);
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
 
-      fireEvent.press(screen.getByTestId("step-nest-under-lr"));
-      fireEvent.press(screen.getByTestId("step-nest-target-lr-p1"));
+      fireEvent.press(screen.getByTestId("edit-goal-step-nest-under-lr"));
+      fireEvent.press(screen.getByTestId("edit-goal-step-nest-target-lr-p1"));
 
       // p1's only child has ordinal 3 → next child ordinal is 4.
       expect(mockUpdateStep).toHaveBeenCalledWith("lr", {

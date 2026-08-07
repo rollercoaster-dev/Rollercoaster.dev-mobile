@@ -426,7 +426,6 @@ describe("TimelineJourneyScreen", () => {
     setupQueries();
     renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
     fireEvent.press(screen.getByLabelText("Edit ›"));
-    // No cameFromFocus — this entry is from the Timeline, not Focus (D5).
     expect(mockNavigate).toHaveBeenCalledWith("EditMode", { goalId: "goal-1" });
   });
 
