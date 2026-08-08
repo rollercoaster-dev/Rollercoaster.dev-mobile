@@ -620,6 +620,10 @@ export function NewGoalWizard({
               <ScrollView
                 contentContainerStyle={styles.buildScrollContent}
                 showsVerticalScrollIndicator={false}
+                // See EditGoalView's scroll: inline rename commits on blur, so
+                // taps must reach the row controls (clear button) instead of being
+                // consumed by the keyboard dismissal.
+                keyboardShouldPersistTaps="handled"
               >
                 {/* The build step reuses EditGoalStepList (#489/#490) — same "Your
                   steps" header + count, drag-reorderable rows, evidence chips,

@@ -435,6 +435,11 @@ export function EditGoalView({
           style={styles.scroll}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          // Rename rows commit on blur, and the default ("never") swallows the
+          // first tap to dismiss the keyboard — which blurs the field and
+          // closes the editor. "handled" delivers taps to the row's own
+          // controls (the clear button, evidence chip) while an edit is in flight.
+          keyboardShouldPersistTaps="handled"
         >
           {/* Optional description (D3) — rendered only when the prop is supplied;
             no "add a description" affordance when absent. */}

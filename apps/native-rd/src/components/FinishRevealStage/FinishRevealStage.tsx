@@ -5,6 +5,7 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from "react-native-reanimated";
+import { useUnistyles } from "react-native-unistyles";
 
 import { BadgeRenderer } from "../../badges/BadgeRenderer";
 import { type BadgeDesign } from "../../badges/types";
@@ -12,6 +13,7 @@ import type { AnimationPref } from "../../hooks/useAnimationPref";
 import { getSpringConfig } from "../../utils/animation";
 import { Text } from "../Text";
 import { Button } from "../Button";
+import { CelebrationSparkles } from "../CelebrationSparkles";
 import { styles } from "./FinishRevealStage.styles";
 
 const DEFAULT_BADGE_SIZE = 200;
@@ -42,7 +44,8 @@ export interface FinishRevealStageProps {
 
 /**
  * Reveal stage of the finishing flow — the earned-badge moment. A full-bleed
- * celebration band (D5 tokens) frames an "Earned" eyebrow, the large badge with
+ * celebration band (D5 tokens), textured with the same static sparkle layer as
+ * Badge Detail's hero, frames an "Earned" eyebrow, the large badge with
  * a one-shot pop-in scale animation (gated by `animationPref`, D6), the goal
  * title, an earned-date label, a primary "View badge" CTA, and a quiet
  * underlined "Back to goals" link (D7, not a boxed Button variant).
@@ -61,6 +64,7 @@ export function FinishRevealStage({
   animationPref,
   badgeSize = DEFAULT_BADGE_SIZE,
 }: FinishRevealStageProps) {
+  const { theme } = useUnistyles();
   const shouldAnimate = animationPref !== "none";
   // Start at resting scale when motion is off so there is no undersized frame;
   // otherwise start small and spring to full size once mounted.
@@ -80,6 +84,19 @@ export function FinishRevealStage({
 
   return (
     <View style={styles.band} testID="finish-reveal-stage">
+      {/* Painted first so it sits behind the badge/title/CTA, clipped by the
+          band. Same decoration as Badge Detail's hero, scattered for a
+          full-height surface — it gives the flat yellow field texture without
+          competing with the badge. Suppressed with motion off, matching how
+          the hero gates it. */}
+      {shouldAnimate ? (
+        <CelebrationSparkles
+          color={theme.chrome.celebrationFg}
+          layout="screen"
+          testID="finish-reveal-sparkles"
+        />
+      ) : null}
+
       <View style={styles.center}>
         <Text variant="mono" style={styles.eyebrow}>
           {eyebrow}

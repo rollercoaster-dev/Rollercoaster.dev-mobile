@@ -60,6 +60,7 @@ export function FrameSelector({
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
+        style={selectorStyles.rail}
         contentContainerStyle={selectorStyles.row}
       >
         {FRAMES.map((frame) => {

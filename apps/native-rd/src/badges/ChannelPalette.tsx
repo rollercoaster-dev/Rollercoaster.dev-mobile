@@ -52,6 +52,7 @@ export function ChannelPalette({
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
+        style={styles.paletteRail}
         contentContainerStyle={styles.paletteRow}
       >
         <Pressable
