@@ -20,6 +20,10 @@
       }
     }
   },
+  "onboarding": {
+    "title": "Einstieg",
+    "replayWelcome": "Begrüßung nochmal ansehen"
+  },
   "language": {
     "title": "Sprache (dev)",
     "pseudo": "Pseudo-Locale"
