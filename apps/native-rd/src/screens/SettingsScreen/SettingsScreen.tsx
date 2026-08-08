@@ -18,10 +18,11 @@ import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { ScreenHeader } from "../../components/ScreenHeader";
 import { SettingsSection } from "../../components/SettingsSection";
 import { SettingsRow } from "../../components/SettingsRow";
-import { ThemeSwitcher } from "../../components/ThemeSwitcher";
+import { SettingsThemeSection } from "../../components/SettingsThemeSection";
+import { SettingsDensityRows } from "../../components/SettingsDensityRows";
 import { useToast } from "../../components/Toast";
 import { useDensity } from "../../hooks/useDensity";
-import { densityOptions } from "../../utils/density";
+import { useThemeContext } from "../../hooks/useTheme";
 import { Logger } from "../../shims/rd-logger";
 import { styles } from "./SettingsScreen.styles";
 
@@ -48,32 +49,28 @@ export function triggerSentryNativeCrash(): void {
   Sentry.nativeCrash();
 }
 
-function DensityPicker() {
+/**
+ * Owns the density state for `SettingsDensityRows` (#416 D2). `useDensity()`
+ * reads an Evolu query and can suspend, so the hook stays INSIDE the screen's
+ * Suspense/ErrorBoundary rather than being hoisted to `SettingsScreen` — the
+ * boundary placement the old inline picker had.
+ */
+function DensitySection() {
   const { densityLevel, setDensity } = useDensity();
   const { showToast } = useToast();
   const { t } = useTranslation(["settings"]);
 
   return (
-    <SettingsSection title={t("settings:density.title")}>
-      {densityOptions.map((option) => (
-        <SettingsRow
-          key={option.id}
-          label={t(`settings:density.options.${option.id}.label`)}
-          value={
-            densityLevel === option.id
-              ? "✓"
-              : t(`settings:density.options.${option.id}.description`)
-          }
-          onPress={() => {
-            // setDensity returns false only when the persist failed; surface a
-            // toast so the row doesn't look "saved" while nothing persisted.
-            if (!setDensity(option.id)) {
-              showToast({ message: t("settings:errors.densitySaveFailed") });
-            }
-          }}
-        />
-      ))}
-    </SettingsSection>
+    <SettingsDensityRows
+      selectedLevel={densityLevel}
+      onSelect={(level) => {
+        // setDensity returns false only when the persist failed; surface a
+        // toast so the row doesn't look "saved" while nothing persisted.
+        if (!setDensity(level)) {
+          showToast({ message: t("settings:errors.densitySaveFailed") });
+        }
+      }}
+    />
   );
 }
 
@@ -98,6 +95,26 @@ function LanguagePicker() {
               });
           },
         }}
+      />
+    </SettingsSection>
+  );
+}
+
+/**
+ * Onboarding section — one row that re-opens the first-launch welcome as a
+ * modal (#416 D3/D6). Uses the plain `SettingsRow` button affordance (its `›`
+ * chevron) rather than a bespoke card, and never mutates `hasSeenWelcome`.
+ */
+function OnboardingSection() {
+  const navigation =
+    useNavigation<NativeStackNavigationProp<SettingsStackParamList>>();
+  const { t } = useTranslation(["settings"]);
+
+  return (
+    <SettingsSection title={t("settings:onboarding.title")}>
+      <SettingsRow
+        label={t("settings:onboarding.replayWelcome")}
+        onPress={() => navigation.navigate("Welcome")}
       />
     </SettingsSection>
   );
@@ -130,6 +147,8 @@ export function SettingsScreen({
 } = {}) {
   const tabInset = useTabScreenContentInset();
   const { t } = useTranslation(["settings"]);
+  const { themeName, setTheme } = useThemeContext();
+  const { showToast } = useToast();
 
   return (
     <View style={styles.screen}>
@@ -138,17 +157,29 @@ export function SettingsScreen({
         contentContainerStyle={[styles.scrollContent, tabInset]}
         style={styles.scrollContainer}
       >
-        <ThemeSwitcher />
+        <SettingsThemeSection
+          selectedThemeId={themeName}
+          onSelect={(id) => {
+            // setTheme applies the theme in-session immediately and returns
+            // false only when persisting it failed — the swatch still shows as
+            // selected; the toast says the choice won't survive a restart.
+            if (!setTheme(id)) {
+              showToast({ message: t("settings:errors.themeSaveFailed") });
+            }
+          }}
+        />
 
         <ErrorBoundary>
           <Suspense fallback={<ActivityIndicator />}>
-            <DensityPicker />
+            <DensitySection />
           </Suspense>
         </ErrorBoundary>
 
         {__DEV__ && <LanguagePicker />}
 
         {__DEV__ && <DevToolsSection />}
+
+        <OnboardingSection />
 
         <SettingsSection title={t("settings:about.title")}>
           <SettingsRow
