@@ -32,32 +32,6 @@ export const styles = StyleSheet.create((theme) => ({
   copy: {
     color: theme.colors.textSecondary,
   },
-  sampleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: theme.space[3],
-  },
-  sampleBadge: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: theme.colors.accentPurple,
-    borderWidth: theme.borderWidth.thin,
-    borderColor: theme.colors.border,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  sampleBadgeText: {
-    color: theme.colors.accentPurpleFg,
-    fontSize: theme.size.lg,
-    fontWeight: theme.fontWeight.bold,
-  },
-  sampleText: {
-    flex: 1,
-  },
-  sampleMeta: {
-    color: theme.colors.textSecondary,
-  },
   pickerLabel: {
     color: theme.colors.textSecondary,
     textTransform: "uppercase",

@@ -5,8 +5,13 @@ import {
   fireEvent,
 } from "../../../__tests__/test-utils";
 import { i18n } from "../../../i18n";
+import { themeA11yLabel } from "../../../i18n/labels";
+import { themeOptions } from "../../../hooks/useTheme";
 
 import { WelcomeScreen } from "../WelcomeScreen";
+
+const themeLabelOf = (id: (typeof themeOptions)[number]["id"]) =>
+  themeA11yLabel(i18n.t.bind(i18n), id);
 
 const mockSetTheme = jest.fn();
 
@@ -50,33 +55,16 @@ describe("WelcomeScreen", () => {
       ).toBeOnTheScreen();
     });
 
-    it("renders all 7 theme option labels", () => {
+    // The rail renders only the selected theme's name as visible text; the
+    // other 6 exist solely as each swatch's accessibilityLabel, so this asserts
+    // reachability via label, not via getByText.
+    it("renders all 7 theme options as labelled swatches", () => {
       renderWithProviders(<WelcomeScreen onGetStarted={jest.fn()} />);
-      expect(
-        screen.getByText(i18n.t("common:theme.options.light-default.label")),
-      ).toBeOnTheScreen();
-      expect(
-        screen.getByText(i18n.t("common:theme.options.dark-default.label")),
-      ).toBeOnTheScreen();
-      expect(
-        screen.getByText(
-          i18n.t("common:theme.options.light-highContrast.label"),
-        ),
-      ).toBeOnTheScreen();
-      expect(
-        screen.getByText(i18n.t("common:theme.options.light-dyslexia.label")),
-      ).toBeOnTheScreen();
-      expect(
-        screen.getByText(
-          i18n.t("common:theme.options.light-autismFriendly.label"),
-        ),
-      ).toBeOnTheScreen();
-      expect(
-        screen.getByText(i18n.t("common:theme.options.light-lowVision.label")),
-      ).toBeOnTheScreen();
-      expect(
-        screen.getByText(i18n.t("common:theme.options.light-lowInfo.label")),
-      ).toBeOnTheScreen();
+      for (const option of themeOptions) {
+        expect(
+          screen.getByLabelText(themeLabelOf(option.id)),
+        ).toBeOnTheScreen();
+      }
     });
 
     it('renders "Get Started" button', () => {
@@ -99,7 +87,7 @@ describe("WelcomeScreen", () => {
         screen.getByText(i18n.t("common:theme.preview.title")),
       ).toBeOnTheScreen();
       expect(
-        screen.getByText(i18n.t("welcome:sample.progress")),
+        screen.getByText(i18n.t("common:theme.preview.progress")),
       ).toBeOnTheScreen();
     });
   });
@@ -115,6 +103,12 @@ describe("WelcomeScreen", () => {
       );
       expect(onGetStarted).toHaveBeenCalledTimes(1);
     });
+
+    it("calls setTheme when a swatch is pressed", () => {
+      renderWithProviders(<WelcomeScreen onGetStarted={jest.fn()} />);
+      fireEvent.press(screen.getByLabelText(themeLabelOf("dark-default")));
+      expect(mockSetTheme).toHaveBeenCalledWith("dark-default");
+    });
   });
 
   // A pseudo-render smoke check catches reverts to hard-coded English that
@@ -129,12 +123,11 @@ describe("WelcomeScreen", () => {
 
     // Multiple representative keys raise the cost of a partial-revert
     // regression: a developer would have to revert ALL of these to escape
-    // detection. Covers hero/body/sample/picker/CTA axes.
+    // detection. Covers hero/body/picker/CTA axes.
     it.each([
       "welcome:hero.greeting",
       "welcome:hero.title",
       "welcome:intro.body1",
-      "welcome:sample.progress",
       "welcome:themePicker.label",
       "welcome:cta.getStarted",
     ] as const)(
@@ -164,8 +157,13 @@ describe("WelcomeScreen", () => {
 
     it('theme options container has accessibilityRole="radiogroup"', () => {
       renderWithProviders(<WelcomeScreen onGetStarted={jest.fn()} />);
-      const radiogroup = screen.getByRole("radiogroup");
-      expect(radiogroup).toBeOnTheScreen();
+      // Queried via label, not getByRole: the rail deliberately omits
+      // `accessible` (#500) so its radios stay individually reachable, and
+      // RNTL's role query only matches elements with a truthy `accessible`.
+      const radiogroup = screen.getByLabelText(
+        i18n.t("common:theme.picker.groupLabel"),
+      );
+      expect(radiogroup.props.accessibilityRole).toBe("radiogroup");
     });
   });
 });
