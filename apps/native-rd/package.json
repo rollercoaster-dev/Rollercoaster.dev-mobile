@@ -25,6 +25,7 @@
     "storybook:web": "storybook dev -p 6006 --config-dir .storybook-web",
     "storybook:web:build": "storybook build --config-dir .storybook-web --output-dir .storybook-web-static",
     "test:e2e": "bash scripts/run-e2e.sh",
+    "test:e2e:required": "bash scripts/run-e2e.sh --include-tags required",
     "test:e2e:single": "maestro test",
     "logs:agent": "bash scripts/agent-logs.sh",
     "start:worktree": "bash scripts/worktree-boot.sh",
