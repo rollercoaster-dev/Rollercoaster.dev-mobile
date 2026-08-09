@@ -211,6 +211,15 @@ describe("EditGoalView", () => {
     expect(onGoalTitleChange).toHaveBeenCalledWith("New title");
   });
 
+  it("gives the goal title input a return key that dismisses the keyboard", () => {
+    // #502 regression: the rename field is single-line, so without a return key
+    // the keyboard has no dismiss action and strands the Done button below it.
+    renderWithProviders(<EditGoalView {...makeProps()} />);
+    expect(
+      screen.getByTestId("edit-goal-title-input").props.returnKeyType,
+    ).toBe("done");
+  });
+
   describe("row anatomy", () => {
     it("omits the date/dependency chip row when a step has no chips", () => {
       renderWithProviders(<EditGoalView {...makeProps()} />);

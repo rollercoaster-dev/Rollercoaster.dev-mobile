@@ -98,6 +98,7 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
             keyboardType="url"
             returnKeyType="next"
             textContentType="URL"
+            testID="capture-link-url"
           />
 
           <Input
@@ -107,6 +108,7 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
             onChangeText={setCaption}
             maxLength={1000}
             returnKeyType="done"
+            testID="capture-link-caption"
           />
         </View>
 
@@ -140,6 +142,7 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
             onPress={handleSave}
             disabled={saving}
             loading={saving}
+            testID="capture-link-save"
           />
           <Button
             label={t("common:actions.cancel")}

@@ -4,7 +4,7 @@ import {
   useTopInsetColorState,
 } from "./src/navigation/TopInsetColor";
 import { StatusBar } from "expo-status-bar";
-import { View } from "react-native";
+import { LogBox, View } from "react-native";
 import {
   SafeAreaProvider,
   useSafeAreaInsets,
@@ -29,6 +29,15 @@ import { WelcomeScreen } from "./src/screens/WelcomeScreen";
 import { getContrastRatio } from "./src/utils/accessibility";
 
 const STORYBOOK_ENABLED = process.env.EXPO_PUBLIC_STORYBOOK_ENABLED === "true";
+
+// LogBox is a native overlay in its own window: `maestro hierarchy` does not
+// show it, but it intercepts every tap — so a flow fails "element not found"
+// while the element is right there behind it. Any console.error raises it, and
+// bake-recovery.yaml provokes one deliberately. Same reasoning (and same E2E
+// gate) as run-e2e.sh's dev-menu suppression; dev builds keep LogBox (#502).
+if (process.env.EXPO_PUBLIC_E2E_MODE === "true") {
+  LogBox.ignoreAllLogs(true);
+}
 
 let StorybookUI: React.ComponentType | null = null;
 if (STORYBOOK_ENABLED) {
@@ -77,7 +86,10 @@ function ThemedApp() {
   if (isFirstLaunch === null) {
     // Loading: Evolu hasn't read settings from SQLite yet
     body = (
-      <View style={{ flex: 1, backgroundColor: theme.colors.background }} />
+      <View
+        testID="app-loading"
+        style={{ flex: 1, backgroundColor: theme.colors.background }}
+      />
     );
   } else if (isFirstLaunch) {
     // First launch — show WelcomeScreen above NavigationContainer.

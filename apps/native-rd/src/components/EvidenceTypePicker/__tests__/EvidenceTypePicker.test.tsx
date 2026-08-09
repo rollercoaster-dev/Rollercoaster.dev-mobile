@@ -360,4 +360,37 @@ describe("EvidenceTypePicker", () => {
       setFocus.mockRestore();
     });
   });
+
+  // E2E selector contract (#502): both grids are addressed by type, so a flow
+  // can plan `[text, link]` and later single-select `text` without matching
+  // localized copy. Authoring chips and capture cells are distinct surfaces and
+  // carry distinct id prefixes.
+  describe("E2E testIDs (#502)", () => {
+    it.each(EVIDENCE_OPTIONS.map((opt) => opt.type))(
+      "authoring chip for %s carries evidence-type-chip-<type>",
+      (type) => {
+        renderWithProviders(<EvidenceTypePicker {...defaultProps} />);
+        expect(
+          screen.getByTestId(`evidence-type-chip-${type}`),
+        ).toBeOnTheScreen();
+      },
+    );
+
+    it.each(EVIDENCE_OPTIONS.map((opt) => opt.type))(
+      "capture cell for %s carries evidence-type-cell-<type>",
+      (type) => {
+        renderWithProviders(
+          <EvidenceTypePicker
+            mode="capture"
+            visible
+            onSelectType={jest.fn()}
+            onClose={jest.fn()}
+          />,
+        );
+        expect(
+          screen.getByTestId(`evidence-type-cell-${type}`),
+        ).toBeOnTheScreen();
+      },
+    );
+  });
 });

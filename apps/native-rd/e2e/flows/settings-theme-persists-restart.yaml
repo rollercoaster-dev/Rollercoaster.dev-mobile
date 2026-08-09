@@ -1,25 +1,23 @@
 appId: dev.rollercoaster.app
+tags:
+  - required
+env:
+  METRO_HOST: localhost
+  METRO_PORT: "8081"
 ---
 # Theme persistence — verify Night Ride survives a full app restart.
-# Status: required (issue #943 acceptance criteria)
-# Criteria: stable feature, outcome assertion present, deterministic
-# Companion: settings-theme-switch.yaml asserts immediate selection;
-# this flow extends it with a relaunch to verify Evolu-backed persistence.
-
-# Fresh install — clearState wipes Evolu's SQLite so we start at
-# WelcomeScreen and avoid bleed from a prior run that already set a theme.
-- launchApp:
-    clearState: true
-    clearKeychain: true
-# Expo SDK 55+ dev-launcher bypass — cold launch via simctl doesn't carry
-# the bundle URL the way `expo run:ios` does. See .claude/skills/maestro-e2e.
-- openLink: "exp+rollercoasterdev://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8081"
-
-# First-run onboarding prefix — hasSeenWelcome was wiped with the install.
-- assertVisible: "Welcome to your ride."
-- tapOn: "The Full Ride. Standard theme"
-- tapOn: "Get Started"
-- assertVisible: "Goals"
+#
+# Companion: settings-theme-switch.yaml asserts immediate selection; this flow
+# extends it with a relaunch to verify Evolu-backed persistence.
+#
+# The prologue starts from `light-default` ("The Full Ride") so the switch below
+# is a real change rather than a re-selection.
+- runFlow:
+    file: ../subflows/launch-and-onboard.yaml
+    env:
+      METRO_HOST: ${METRO_HOST}
+      METRO_PORT: ${METRO_PORT}
+      THEME_SWATCH: light-default
 
 # Switch to Night Ride and verify immediate selection.
 - tapOn:
@@ -27,19 +25,29 @@ appId: dev.rollercoaster.app
 # Section heading of SettingsThemeSection (`settings:theme.title`) — since #416
 # the Settings picker is the ThemeSwatchRail, not the old ThemeSwitcher.
 - assertVisible: "Theme"
-- tapOn: "Night Ride. Dark mode"
+- tapOn:
+    id: "theme-swatch-dark-default"
 - assertVisible:
     id: "selected-theme"
     text: "Night Ride"
 
-# Restart with state preserved — clearState defaults to false here, so
-# Evolu's SQLite (and userSettings.theme) survives across the relaunch.
-- launchApp
-- openLink: "exp+rollercoasterdev://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8081"
+# Restart with state PRESERVED — this relaunch is deliberately inline rather
+# than a second runFlow of the prologue, which would clearState and destroy the
+# very thing under test.
+- stopApp
+- openLink: "exp+rollercoasterdev://expo-development-client/?url=http%3A%2F%2F${METRO_HOST}%3A${METRO_PORT}"
+# Positive barrier, same reasoning as the prologue's: a negative assertion
+# passes instantly on the empty tree that exists before the bundle mounts.
+# Post-restart we land on the cockpit, not Welcome.
+- extendedWaitUntil:
+    visible:
+      id: "goals-cockpit-new-goal"
+    timeout: 60000
 
-# We should land directly on Goals — hasSeenWelcome=1 was persisted before
-# the restart, so onboarding doesn't replay.
-- assertVisible: "Goals"
+# The barrier above doubles as the "onboarding did not replay" assertion:
+# hasSeenWelcome=1 was persisted before the restart, so we land straight on the
+# cockpit. Asserted on the cockpit's own testID, never `assertVisible: "Goals"`
+# — GoalsScreen renders "Today" whenever a hero goal is pinned (#502 D7).
 
 - tapOn:
     id: "tab-SettingsTab"

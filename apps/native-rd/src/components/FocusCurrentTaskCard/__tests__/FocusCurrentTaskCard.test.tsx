@@ -520,6 +520,56 @@ describe("FocusCurrentTaskCard", () => {
     });
     assertButtonsLabelledAndSized();
   });
+
+  // E2E selector contract (#502): the canonical ride drives every state
+  // transition off these ids and waits on `focus-current-task-title` + the step
+  // title, since auto-advance has no spinner of its own. A rename must break
+  // Jest before it breaks Maestro.
+  describe("E2E testIDs (#502)", () => {
+    it("in-progress exposes the title and the set-aside control", () => {
+      renderCard({ status: "in-progress" });
+      expect(screen.getByTestId("focus-current-task-title")).toBeOnTheScreen();
+      expect(
+        screen.getByTestId("focus-current-task-set-aside"),
+      ).toBeOnTheScreen();
+    });
+
+    it("reveals mark-complete only once every planned type is captured", () => {
+      renderCard({ status: "in-progress", plannedEvidenceTypes: ["photo"] });
+      expect(
+        screen.queryByTestId("focus-current-task-mark-complete"),
+      ).toBeNull();
+
+      screen.unmount();
+      renderCard({
+        status: "in-progress",
+        plannedEvidenceTypes: ["photo"],
+        capturedEvidence: captured,
+      });
+      expect(
+        screen.getByTestId("focus-current-task-mark-complete"),
+      ).toBeOnTheScreen();
+    });
+
+    it.each([
+      ["paused", "focus-current-task-pick-up"],
+      ["completed", "focus-current-task-reopen"],
+      ["all-complete", "focus-current-task-design-badge"],
+    ] as [FocusCardStatus, string][])("%s exposes %s", (status, testID) => {
+      renderCard({ status, capturedEvidence: captured });
+      expect(screen.getByTestId(testID)).toBeOnTheScreen();
+    });
+
+    it.each(["in-progress", "paused", "completed"] as FocusCardStatus[])(
+      "%s exposes focus-current-task-title",
+      (status) => {
+        renderCard({ status, capturedEvidence: captured });
+        expect(
+          screen.getByTestId("focus-current-task-title"),
+        ).toHaveTextContent("Reset the kitchen");
+      },
+    );
+  });
 });
 
 function assertButtonsLabelledAndSized() {

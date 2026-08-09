@@ -1,23 +1,35 @@
 appId: dev.rollercoaster.app
+tags:
+  - required
+env:
+  METRO_HOST: localhost
+  METRO_PORT: "8081"
 ---
-# Theme switcher — verify "Night Ride" selection takes effect
-# Status: required
-# Criteria: stable feature, outcome assertion present, deterministic
-- launchApp
+# Theme switcher — verify "Night Ride" selection takes effect.
+#
+# Companion: settings-theme-persists-restart.yaml extends this with a relaunch.
+#
+# This flow used to open with a bare `launchApp` and no onboarding prefix, so
+# its outcome assertion only passed on state left behind by the alphabetically
+# preceding flow — which happened to set and persist Night Ride already. It now
+# takes the shared prologue like every other flow, starting from `light-default`
+# ("The Full Ride") so switching to Night Ride is a real change.
+- runFlow:
+    file: ../subflows/launch-and-onboard.yaml
+    env:
+      METRO_HOST: ${METRO_HOST}
+      METRO_PORT: ${METRO_PORT}
+      THEME_SWATCH: light-default
+
 # Settings tab is a gear icon — no text node to match, must use testID.
 - tapOn:
     id: "tab-SettingsTab"
 - assertVisible: "Settings"
 # Section heading of SettingsThemeSection (`settings:theme.title`). Since #416
-# the Settings theme picker is the ThemeSwatchRail, not the old ThemeSwitcher —
-# "Pick what feels right" (common:theme.picker.title) is no longer rendered here.
+# the Settings theme picker is the ThemeSwatchRail, not the old ThemeSwitcher.
 - assertVisible: "Theme"
-# Each swatch is a Pressable with accessible=true and a composed
-# accessibilityLabel `${label}. ${description}`. The wrapper collapses
-# the inner Text nodes (accessible-wrapper trap), so we must match the
-# composed string — see ThemeSwatchRail.tsx and themeOptions in
-# hooks/useTheme.ts.
-- tapOn: "Night Ride. Dark mode"
+- tapOn:
+    id: "theme-swatch-dark-default"
 # The rail's caption carries the `selected-theme` testID and always renders the
 # SELECTED theme's label, so the combined matcher is a real outcome assertion:
 # it fails if the tap didn't take effect, where a bare id match would not.

@@ -112,6 +112,7 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
         {/* eslint-disable-next-line local/no-shared-component-reimplementation */}
         <TextInput
           ref={textInputRef}
+          testID="capture-text-body"
           style={[styles.textInput, isFocused && styles.textInputFocused]}
           placeholder={t("captureText:input.placeholder")}
           placeholderTextColor={theme.colors.textMuted}
@@ -136,6 +137,7 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
             onChangeText={setCaption}
             maxLength={1000}
             returnKeyType="done"
+            testID="capture-text-caption"
           />
         </View>
 
@@ -158,6 +160,7 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
             onPress={handleSave}
             disabled={!canSave}
             loading={saving}
+            testID="capture-text-save"
           />
         </View>
       </Animated.View>

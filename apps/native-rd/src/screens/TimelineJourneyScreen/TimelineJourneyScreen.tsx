@@ -243,12 +243,16 @@ function TimelineContent({
               onPress={handleBack}
               variant="secondary"
               size="sm"
+              // Label alternates between backToFocus and backToBadge depending
+              // on where the screen was opened from, so flows address it by id.
+              testID="timeline-back-button"
             />
             <Button
               label={t("timelineJourney:editButton")}
               onPress={handleEditPress}
               variant="secondary"
               size="sm"
+              testID="timeline-edit-button"
             />
           </View>
         </View>

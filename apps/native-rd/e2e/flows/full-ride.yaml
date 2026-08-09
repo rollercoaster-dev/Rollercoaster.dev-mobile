@@ -1,0 +1,554 @@
+appId: dev.rollercoaster.app
+tags:
+  - required
+env:
+  METRO_HOST: localhost
+  METRO_PORT: "8081"
+---
+# ============================================================================
+# THE CANONICAL FULL RIDE (#502)
+#
+# One self-contained lifecycle a human can watch once and believe the redesign
+# works end to end: a goal created through the 4-step wizard with a two-type
+# evidence plan, its steps renamed / reordered / reparented through the only
+# non-drag path, every planned type captured, completion auto-advancing past a
+# set-aside step, the Timeline handing off to the exact Focus step (paused and
+# completed variants), a step reopen, and a bake that lands on Badge Detail
+# with a real signed PNG and a populated Badges wall.
+#
+# Addressing conventions:
+#   - Per-step controls interpolate an Evolu-generated id a pre-written flow can
+#     never construct, so they are matched by `id:` REGEX + `index:`. The flow
+#     authored the list order itself, so `index:` is deterministic here. Every
+#     such selector names the expected row and the derivation inline (#502 D5).
+#   - In-wizard rows ARE literal (`step-1`, `sub-1`): useNewGoalSteps mints them
+#     from a monotonic ref counter, and there is no StrictMode (#502 D6).
+#   - Text matching is permitted for exactly four assertion classes, and every
+#     text matcher names the a11y label that actually reaches the tree — never
+#     the visible copy. On iOS an `accessible` ancestor collapses its Text
+#     children away (#502 D20).
+#
+# Four load-bearing assertions, by what they tell you on failure:
+#   step 12 — the Autism-Friendly theme did not take; the reorder leg is
+#             unreachable (D3 broke)
+#   step 17 — rename, reorder or reparent did not persist (all of bullet 2)
+#   step 20 — the multi-evidence gate regressed
+#   step 41 — the bake produced a placeholder, not a real PNG
+# ============================================================================
+
+# --- Prologue: isolation, boot, determinism lever ---------------------------
+- runFlow:
+    file: ../subflows/launch-and-onboard.yaml
+    env:
+      METRO_HOST: ${METRO_HOST}
+      METRO_PORT: ${METRO_PORT}
+      THEME_SWATCH: light-autismFriendly
+
+# --- Bullet 1: create a goal with multiple planned evidence types -----------
+# 1. Open the wizard.
+- tapOn:
+    id: "goals-cockpit-new-goal"
+- assertVisible:
+    id: "new-goal-wizard-content"
+
+# 2. Name it.
+- tapOn:
+    id: "new-goal-title-input"
+- inputText: "Alpha goal"
+# The Next button sits in a footer the soft keyboard covers, so the tap would
+# land on the keyboard and the wizard would silently stay put while Maestro
+# reported the tap COMPLETED. `hideKeyboard` is unsupported by this app, so the
+# input carries `returnKeyType="done"` and Enter blurs it (#502).
+- pressKey: Enter
+- tapOn:
+    id: "new-goal-next-button"
+
+# 3. First step. The first non-blank character mints the local row `step-1`.
+- tapOn:
+    id: "new-goal-first-step-input"
+- inputText: "Alpha step"
+- pressKey: Enter
+
+# 4. Plan its first type = Note. The capture grid is single-select and its
+#    handler self-closes the sheet, so no explicit close tap is needed here.
+- tapOn:
+    id: "new-goal-evidence-chip"
+- assertVisible:
+    id: "animated-sheet-overlay"
+- tapOn:
+    id: "evidence-type-cell-text"
+
+# 5. Advance to the build step (same testID, mutually exclusive branch).
+- tapOn:
+    id: "new-goal-next-button"
+
+# 6. Add two more steps. Both default to plannedEvidenceTypes: [text].
+#    Enter, not the + button: the add row sits at the bottom of the build
+#    ScrollView, under the keyboard, and its input is deliberately
+#    `blurOnSubmit={false}` for rapid multi-add — so the keyboard never lifts
+#    off the + button. `onSubmitEditing` and `onPress` are the same
+#    `handleAddStep` (EditGoalStepList.tsx:518,529), so this is the identical
+#    code path, reached the way a user reaches it here.
+- tapOn:
+    id: "edit-goal-add-step-input"
+- inputText: "Bravo step"
+- pressKey: Enter
+- inputText: "Charlie step"
+- pressKey: Enter
+# Enter does not blur (blurOnSubmit={false}), so the keyboard is still up and
+# would cover both the evidence sheet's close button and the footer CTA. The
+# steps header is inert and lives inside the build ScrollView, whose
+# keyboardShouldPersistTaps="handled" turns a tap on it into a dismissal.
+- tapOn:
+    id: "edit-goal-steps-header"
+
+# 7. Widen Alpha's plan to [text, link]. Unlike step 4's single-select grid,
+#    the build step's multi-select handler mutates state and never closes the
+#    sheet, so the close tap is mandatory. Deselecting the last remaining type
+#    is a silent no-op, so the flow only ever ADDS.
+- tapOn:
+    id: "edit-goal-step-evidence-step-1"
+- assertVisible:
+    id: "animated-sheet-overlay"
+- tapOn:
+    id: "evidence-type-chip-link"
+- tapOn:
+    id: "new-goal-evidence-close"
+
+# 8. Commit the plan and enter Focus.
+- tapOn:
+    id: "new-goal-build-ready-button"
+- assertVisible:
+    id: "new-goal-start-working-button"
+- tapOn:
+    id: "new-goal-start-working-button"
+
+# 9. The two-type gate on arrival: one invite per still-unsatisfied planned
+#    type, and NO mark-complete — the card requires every planned type.
+- extendedWaitUntil:
+    visible:
+      id: "focus-current-task-add-text"
+    timeout: 15000
+- assertVisible:
+    id: "focus-current-task-add-link"
+- assertNotVisible:
+    id: "focus-current-task-mark-complete"
+
+# --- Bullet 2: edit / reorder / reparent ------------------------------------
+# Done in EditMode (real Evolu writes), not the wizard build step (local state
+# only), and reached the way a user reaches it.
+#
+# 10. Focus → Timeline. The tap target is the OUTER Pressable: the inner
+#     `focus-progress-strip-bar` sits inside an `accessible` wrapper and is
+#     collapsed out of the iOS a11y tree.
+- tapOn:
+    id: "focus-progress-strip"
+
+# 11. Timeline → EditMode.
+- tapOn:
+    id: "timeline-edit-button"
+- assertVisible:
+    id: "edit-goal-content"
+
+# 12. LOAD-BEARING: prove the determinism lever worked. The hierarchy action
+#     row renders only when showAccessibleControls is on, i.e. only because the
+#     prologue selected the Autism-Friendly theme. If this fails, the whole
+#     reorder leg below is unreachable and the failure is self-explaining.
+- assertVisible:
+    id: "edit-goal-step-hierarchy-actions-.*"
+
+# 13. EDIT: rename Alpha step. index 0 = the first root row (Alpha). Tapping
+#     the title opens the inline editor; the TextInput commits on submit.
+#     This is the only step exercising the "edit" third of bullet 2 and the
+#     only assertion behind EditModeScreen's 500ms title debounce.
+#     Both rename inputs are PREFILLED, and Maestro's `inputText` appends at the
+#     cursor rather than replacing — so the flow appends a suffix instead of
+#     erasing first. Erasing is not merely longer: `eraseText` leaves the field
+#     empty for longer than EditModeScreen's 500ms debounce, which fires
+#     `debouncedUpdateTitle("")` and pops the "Title cannot be empty" Alert
+#     mid-edit, stealing focus before the replacement can be typed.
+- tapOn:
+    id: "edit-goal-step-title-.*"
+    index: 0
+- inputText: " renamed"
+- pressKey: Enter
+
+# 14. EDIT: rename the goal itself. Asserted later in the Focus header, which
+#     re-proves the debounce committed across a navigation. Same append-don't-
+#     erase reasoning as step 13.
+- tapOn:
+    id: "edit-goal-title-input"
+- inputText: " renamed"
+- pressKey: Enter
+
+# 15. REORDER: move Charlie up over Bravo. Up buttons render on rows 2–3 only
+#     (row 1 is `isFirst`), so index 0 = Bravo's up, index 1 = Charlie's up.
+#     Root order becomes Alpha, Charlie, Bravo. Alpha stays first so the
+#     multi-type step is still the one Focus resolves.
+#     Scroll first: the third root row is clipped below the ScrollView's
+#     viewport, and iOS still reports a frame for it — one that lands on the
+#     floating tab bar, so a bare tap navigates to Settings instead. Index is
+#     hierarchy order, not screen position, so scrolling does not perturb it.
+- scrollUntilVisible:
+    element:
+      id: "edit-goal-step-up-.*"
+      index: 1
+    direction: DOWN
+    centerElement: true
+- tapOn:
+    id: "edit-goal-step-up-.*"
+    index: 1
+
+# 16. REPARENT (demote): nest Bravo under Charlie. Nest-under triggers render
+#     on every root row, so index 2 = Bravo (now third). In the picker modal,
+#     targets render in list order with the dragged row excluded, so
+#     index 0 = Alpha, index 1 = Charlie.
+#     The picker row is matched by id + text and NOT by index: Maestro applies
+#     `index:` to the set that survives the other matchers, so pairing the
+#     already-unique text with `index: 1` selects the second of one match and
+#     fails. The text half is the row Pressable's OWN accessibilityLabel
+#     ("Nest this step under …") — never the visible `Nest under "…"` child
+#     Text, which iOS collapses away. Verified in the tree via maestro
+#     hierarchy: both target rows render inside the RN Modal (#502 Risk 2).
+- scrollUntilVisible:
+    element:
+      id: "edit-goal-step-nest-under-.*"
+      index: 2
+    direction: DOWN
+    centerElement: true
+- tapOn:
+    id: "edit-goal-step-nest-under-.*"
+    index: 2
+- tapOn:
+    id: "edit-goal-step-nest-target-.*"
+    text: "Nest this step under Charlie step"
+
+# 17. LOAD-BEARING: back out and assert all four mutations persisted. Done is
+#     navigation only — title/description are already committed on a 500ms
+#     debounce, reorder/reparent immediately.
+- tapOn:
+    id: "edit-goal-done-button"
+- extendedWaitUntil:
+    visible: "Alpha goal renamed"
+    timeout: 10000
+- tapOn:
+    id: "focus-progress-strip"
+#     Ordinal ↔ title binding: only the interpolated `a11yGoTo` label carries
+#     BOTH the ordinal and the title, which is exactly what reorder changes.
+- assertVisible:
+    id: "timeline-node-1"
+    text: "Go to step 1: Alpha step renamed"
+- assertVisible:
+    id: "timeline-node-2"
+    text: "Go to step 2: Charlie step"
+- assertVisible:
+    id: "timeline-node-2-a"
+    text: "Go to step a: Bravo step"
+
+# 18. REPARENT (promote) back, so the completion legs run against a flat
+#     3-root list. A parent whose children are all paused is the resolver's
+#     `parked` kind, which has no distinct UI yet (#537) — the ride must not
+#     assert behaviour that is still in flux. Promote-back also covers
+#     `edit-goal-substep-un-nest-*` for free.
+- tapOn:
+    id: "timeline-edit-button"
+- assertVisible:
+    id: "edit-goal-content"
+- tapOn:
+    id: "edit-goal-substep-un-nest-.*"
+    index: 0
+- tapOn:
+    id: "edit-goal-done-button"
+
+# --- Bullet 3: capture every planned evidence type --------------------------
+# Current step is Alpha, plan [text, link]. Media types (photo / video /
+# voice_memo / file) hand control to Apple's pickers, outside the app's a11y
+# tree entirely, and stay covered by Jest + Storybook instead (#502 D17/OQ2).
+#
+# 19. Capture the Note. CaptureTextNote lifts its footer above the keyboard via
+#     useReanimatedKeyboardAnimation, so no dismissal is needed here.
+- extendedWaitUntil:
+    visible:
+      id: "focus-current-task-add-text"
+    timeout: 15000
+- tapOn:
+    id: "focus-current-task-add-text"
+- tapOn:
+    id: "capture-text-body"
+- inputText: "Outlined the Alpha approach."
+- tapOn:
+    id: "capture-text-save"
+
+# 20. LOAD-BEARING: the partial state. The card requires EVERY planned type,
+#     while the DB predicate canCompleteStep only requires one — asserting the
+#     card's reveal, not the DB outcome, is the only thing that proves the
+#     multi-evidence contract.
+- extendedWaitUntil:
+    visible:
+      id: "focus-current-task-add-link"
+    timeout: 15000
+- assertNotVisible:
+    id: "focus-current-task-add-text"
+- assertNotVisible:
+    id: "focus-current-task-mark-complete"
+
+# 21. Capture the Link. The keyboard dismissal is MANDATORY, not defensive:
+#     CaptureLinkScreen has no KeyboardAvoidingView and no keyboard-controller
+#     padding, so its Save button sits under the soft keyboard. Dismiss from
+#     the caption input (returnKeyType="done"); the URL input is labelled
+#     returnKeyType="next" but wires no onSubmitEditing/ref, so that label is
+#     cosmetic and focus never moves. Filed as a production bug.
+- tapOn:
+    id: "focus-current-task-add-link"
+- tapOn:
+    id: "capture-link-url"
+- inputText: "https://example.com"
+- tapOn:
+    id: "capture-link-caption"
+- pressKey: Enter
+- tapOn:
+    id: "capture-link-save"
+
+# 22. The gate opened.
+- extendedWaitUntil:
+    visible:
+      id: "focus-current-task-mark-complete"
+    timeout: 15000
+- assertVisible:
+    id: "focus-current-task-add-more"
+
+# --- Bullet 4: complete / auto-advance past a set-aside step ----------------
+# 23. Complete Alpha. Auto-advance has no spinner and no timer — currentStepId
+#     is re-derived every render from the live Evolu query — so the wait is on
+#     the NEXT step's identity, never a delay. Every step title in this ride is
+#     unique, which is what makes the wait unambiguous. This assertion alone
+#     proves the multi-evidence completion committed.
+- tapOn:
+    id: "focus-current-task-mark-complete"
+- extendedWaitUntil:
+    visible:
+      id: "focus-current-task-title"
+      text: "Charlie step"
+    timeout: 15000
+
+# 24. Cross-check the progress strip. This is the strip Pressable's OWN
+#     accessibilityLabel — the only node Maestro sees here. Do NOT assert
+#     "1 / 3 done": that Text is a child of the `accessible` Pressable, so iOS
+#     collapses it out of the tree, and a testID cannot rescue it.
+- assertVisible: "1 of 3 steps done. See all steps."
+
+# 25. Set Charlie aside. The scroll is required: the pause control is part of
+#     CardShell's scrolling BODY (below the title, metadata band, planned box
+#     and captured rail), not the pinned footer, and Maestro's tapOn does not
+#     auto-scroll.
+- scrollUntilVisible:
+    element:
+      id: "focus-current-task-set-aside"
+    direction: DOWN
+    centerElement: true
+- tapOn:
+    id: "focus-current-task-set-aside"
+
+# 26. Auto-advance skipped it. The resolver excludes paused steps in the DB
+#     layer, not the screen.
+- extendedWaitUntil:
+    visible:
+      id: "focus-current-task-title"
+      text: "Bravo step"
+    timeout: 15000
+
+# 27. Complete Bravo on its default [text] plan.
+- tapOn:
+    id: "focus-current-task-add-text"
+- tapOn:
+    id: "capture-text-body"
+- inputText: "Bravo done."
+- tapOn:
+    id: "capture-text-save"
+- extendedWaitUntil:
+    visible:
+      id: "focus-current-task-mark-complete"
+    timeout: 15000
+- tapOn:
+    id: "focus-current-task-mark-complete"
+
+# 28. Goal-level parked routing: nothing pending, one paused step left. Only
+#     the GOAL-level parked state is asserted, never a parked parent (#537).
+- extendedWaitUntil:
+    visible: "Nothing in progress."
+    timeout: 15000
+- assertVisible:
+    id: "focus-parked-row-.*"
+
+# --- Bullet 5: Timeline ↔ exact Focus step handoff --------------------------
+# A Timeline node dispatches navigate("FocusMode", { goalId, stepId }); the
+# header's back affordance is paramless. The pin is consumed in a useFocusEffect
+# and DROPPED on the first successful step-toggle — so every identity assertion
+# MUST precede any action. That ordering is a hard authoring constraint.
+#
+# 29. Timeline → the PAUSED step exactly. Landing on the paused VARIANT is the
+#     proof the exact step was pinned, not merely the goal.
+- tapOn:
+    id: "focus-progress-strip"
+- tapOn:
+    id: "timeline-node-2"
+- extendedWaitUntil:
+    visible:
+      id: "focus-current-task-title"
+      text: "Charlie step"
+    timeout: 15000
+- assertVisible:
+    id: "focus-current-task-pick-up"
+
+# 30. Resume, capture, complete.
+- tapOn:
+    id: "focus-current-task-pick-up"
+- extendedWaitUntil:
+    visible:
+      id: "focus-current-task-add-text"
+    timeout: 15000
+- tapOn:
+    id: "focus-current-task-add-text"
+- tapOn:
+    id: "capture-text-body"
+- inputText: "Charlie done."
+- tapOn:
+    id: "capture-text-save"
+- extendedWaitUntil:
+    visible:
+      id: "focus-current-task-mark-complete"
+    timeout: 15000
+- tapOn:
+    id: "focus-current-task-mark-complete"
+
+# 31. The all-complete card.
+- extendedWaitUntil:
+    visible:
+      id: "focus-current-task-design-badge"
+    timeout: 15000
+
+# --- Bullet 7 (partial): reopen where appropriate ---------------------------
+# Scoped to STEP reopen. Goal-level reopen is dropped because uncompleteGoal has
+# zero UI callers; badge redesign is dropped because nothing navigates to
+# BadgeDesigner in either stack (#502 D16). A completed step is only reachable
+# via the Timeline handoff, which makes this a second exact-step assertion.
+#
+# 32. Timeline → the COMPLETED step.
+- tapOn:
+    id: "focus-progress-strip"
+- tapOn:
+    id: "timeline-node-1"
+- extendedWaitUntil:
+    visible:
+      id: "focus-current-task-title"
+      text: "Alpha step renamed"
+    timeout: 15000
+- assertVisible:
+    id: "focus-current-task-reopen"
+
+# 33. Reopen, then re-complete. The plan is already satisfied, so the gate is
+#     open immediately.
+- tapOn:
+    id: "focus-current-task-reopen"
+- extendedWaitUntil:
+    visible:
+      id: "focus-current-task-add-more"
+    timeout: 15000
+- tapOn:
+    id: "focus-current-task-mark-complete"
+- extendedWaitUntil:
+    visible:
+      id: "focus-current-task-design-badge"
+    timeout: 15000
+
+# --- Bullet 6: finish, bake, land on Badge Detail / Badges wall -------------
+# 34. Enter the finish flow. It is a stack modal ROUTE, not an RN Modal, so its
+#     stages are queryable — which is what killed the old celebration-modal
+#     assertions.
+- tapOn:
+    id: "focus-current-task-design-badge"
+- extendedWaitUntil:
+    visible:
+      id: "finish-celebrate-stage"
+    timeout: 15000
+
+# 35. Skip the closing note. It persists a GOAL-scoped evidence row; skipping
+#     keeps the ride's evidence step-scoped, which canCompleteGoal accepts
+#     (it counts both scopes).
+- tapOn:
+    id: "finish-celebrate-cta"
+
+# 36. Design stage. Asserting the preview matters: the BadgeRenderer rasterizes
+#     there, and leaving the stage unmounts it.
+- assertVisible:
+    id: "finish-design-stage"
+- assertVisible:
+    id: "finish-design-preview"
+
+# 37. Bake. The baking interstitial is deliberately NEVER asserted: bakePNG is
+#     a synchronous PNG chunk rewrite and success is held only ~700ms before
+#     auto-advancing, so any assertion on it is a race.
+- tapOn:
+    id: "finish-design-bake"
+- extendedWaitUntil:
+    visible:
+      id: "finish-reveal-stage"
+    timeout: 20000
+
+# 38. Reveal — and that reduced motion is live. The sparkles render only when
+#     animationPref !== "none", so their absence is the RUNNING proof the
+#     Autism-Friendly theme took effect, rather than an assumption.
+- assertVisible:
+    id: "finish-reveal-badge-render"
+- assertNotVisible:
+    id: "finish-reveal-sparkles"
+
+# 39. Hand off to Badge Detail. The extended wait is mandatory: handleViewBadge
+#     silently no-ops with only a log warning when the Evolu badge row has not
+#     propagated yet.
+- tapOn:
+    id: "finish-reveal-view-badge"
+- extendedWaitUntil:
+    visible:
+      id: "verified-credential-chip"
+    timeout: 15000
+
+# 40. Badge Detail proof spine. The credential chip renders only when a stored
+#     credential resolves.
+- assertVisible:
+    id: "badge-renderer"
+
+# 41. LOAD-BEARING: a real baked PNG exists. Reaching reveal does NOT prove one
+#     landed — saveBadgePNG failure is swallowed and imageUri falls back to the
+#     placeholder while the bake still reports done. `share-row-verifiable`
+#     being ENABLED is gated on hasRealImage, so it carries the exact signal.
+#     Rows always render and degrade via accessibilityState.disabled rather
+#     than absence, so `enabled:` is the discriminator. No export is tapped —
+#     Sharing.shareAsync opens the iOS system sheet, outside Maestro's tree.
+- tapOn:
+    id: "badge-share-cta"
+- assertVisible:
+    id: "share-row-verifiable"
+    enabled: true
+- tapOn:
+    id: "badge-share-close"
+
+# 42. The Badges wall. The spotlight is rows[0] under `badge.createdAt DESC`,
+#     so the just-earned badge is deterministically the spotlight.
+- tapOn:
+    id: "tab-BadgesTab"
+- assertVisible:
+    id: "badges-wall-count"
+- assertVisible:
+    id: "badges-wall-spotlight"
+
+# 43. The Timeline bridge exists — asserted, not traversed. Entering the
+#     Timeline with an originBadgeId retargets both back affordances, which is
+#     a separate flow's concern. The button is absent entirely when the goal is
+#     soft-deleted, so its presence is a real assertion.
+- tapOn:
+    id: "badges-wall-spotlight"
+- extendedWaitUntil:
+    visible:
+      id: "badge-detail-view-timeline"
+    timeout: 15000

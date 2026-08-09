@@ -30,6 +30,7 @@
 - [ ] Type check passes (`bun run type-check`)
 - [ ] Format check passes (`bun run format:check`)
 - [ ] For visible UI changes: a11y audit passes (`cd apps/native-rd && bun run test:a11y`)
+- [ ] For changes to the goal/evidence/badge lifecycle: the Full Ride E2E gate passes (`cd apps/native-rd && bun run test:e2e:required`) — manual, not in CI; see `apps/native-rd/e2e/README.md`
 
 ## Related Issues
 

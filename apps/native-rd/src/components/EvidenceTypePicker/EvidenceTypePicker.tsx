@@ -127,6 +127,7 @@ export function EvidenceTypePicker(props: EvidenceTypePickerProps) {
           return (
             <Pressable
               key={opt.type}
+              testID={`evidence-type-chip-${opt.type}`}
               style={[styles.chip, isSelected && styles.chipSelected]}
               onPress={() => onToggleType?.(opt.type)}
               accessibilityRole="checkbox"
@@ -221,6 +222,7 @@ function CaptureGrid({ selectedType, onSelectType }: CaptureGridProps) {
         return (
           <Pressable
             key={opt.type}
+            testID={`evidence-type-cell-${opt.type}`}
             style={[styles.cell, isSelected && styles.cellSelected]}
             onPress={() => onSelectType(opt.type)}
             accessibilityRole="radio"

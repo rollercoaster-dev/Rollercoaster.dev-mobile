@@ -1,116 +1,137 @@
 appId: dev.rollercoaster.app
+tags:
+  - optional
+env:
+  METRO_HOST: localhost
+  METRO_PORT: "8081"
 ---
 # Evidence viewer flow — capture mixed-type evidence (one link + one text),
 # open the Timeline, tap a card to push EvidenceViewerScreen, switch via the
 # thumbnail strip, then back out to Timeline.
 #
-# Mixing two types (vs. two text notes): exercises distinct render branches
-# in EvidenceContent (LinkContent vs TextContent) — a real "viewer" smoke
-# test, not just pagination. Captions on both items give the Timeline cards
-# unique labels Maestro can match without ambiguity.
+# Mixing two types (vs. two text notes): exercises distinct render branches in
+# EvidenceContent (LinkContent vs TextContent) — a real "viewer" smoke test,
+# not just pagination. Captions on both items give the Timeline cards unique
+# labels Maestro can match without ambiguity.
 #
 # Captures are ordered link → text so the createdAt-desc viewer ordering puts
-# text at index 0 ("1 / 2") and link at index 1 ("2 / 2") — counter ascends
+# text at index 0 ("1 / 2") and link at index 1 ("2 / 2") — the counter ascends
 # in the same direction the flow walks the strip.
-- clearState
-- launchApp
-# Expo SDK 55 dev-client lands on its server picker after clearState
-# instead of auto-reloading the last bundle. Bypass via the dev-client
-# deep-link scheme `exp+<slug>://expo-development-client/?url=<bundle-url>`.
-# Onboarding hint + dev-menu modals are pre-disabled in run-e2e.sh.
-- openLink: "exp+rollercoasterdev://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8081"
-- assertVisible: "Welcome to your ride."
-- tapOn: "The Full Ride. Standard theme"
-- tapOn: "Get Started"
-- assertVisible: "Goals"
+#
+# THE ONE FLOW THAT STILL REQUIRES `EXPO_PUBLIC_E2E_MODE=true`: the thumbnail
+# strip and its cells drop their a11y grouping only under that gate
+# (EvidenceThumbnail / ViewerStripThumb). Launch via `bun run ios:e2e` —
+# EXPO_PUBLIC_* is inlined by Metro at serve time, so the ordinary `ios` build
+# does not carry it.
+#
+# The creation head and the capture entry were both rewritten for #502: the old
+# head drove the retired FAB → create → badge-designer path, and the old capture
+# entry went through EvidenceDrawer + FABMenu, which #455 deleted outright
+# (component AND locale keys). Neither set of selectors resolves any more.
+- runFlow:
+    file: ../subflows/launch-and-onboard.yaml
+    env:
+      METRO_HOST: ${METRO_HOST}
+      METRO_PORT: ${METRO_PORT}
+      THEME_SWATCH: light-autismFriendly
 
-# Create a goal
+# --- Create a goal with one step planning [text, link] ----------------------
 - tapOn:
-    id: "tab-fab-new-goal"
-- assertVisible: "New Goal"
-- tapOn: "What do you want to learn?"
+    id: "goals-cockpit-new-goal"
+- assertVisible:
+    id: "new-goal-wizard-content"
+- tapOn:
+    id: "new-goal-title-input"
 - inputText: "Curate evidence demo"
-- tapOn: "Create Goal"
-
-# Badge designer → use default. centerElement so the button is scrolled to
-# the middle of the screen rather than just into-bounds — without it the
-# button can sit under the FocusPillTabBar's lifted FAB and the tap lands on
-# the tab bar instead of the button.
-- assertVisible: "Design Badge"
-- scrollUntilVisible:
-    element: "Use This Design"
-    direction: DOWN
-    timeout: 10000
-    centerElement: true
-- tapOn: "Use This Design"
-
-# Edit mode — add a step
-- assertVisible: "Edit Goal"
+# The Next button sits in a footer the soft keyboard covers, and `hideKeyboard`
+# is unsupported by this app — the input carries `returnKeyType="done"` so Enter
+# blurs it (#502, same as full-ride.yaml).
+- pressKey: Enter
 - tapOn:
-    id: "step-list-new-step-input"
+    id: "new-goal-next-button"
+- tapOn:
+    id: "new-goal-first-step-input"
 - inputText: "Capture mixed evidence"
 - pressKey: Enter
-- assertVisible: "1 step"
-- hideKeyboard
+# Capture grid is single-select and self-closes on pick.
+- tapOn:
+    id: "new-goal-evidence-chip"
+- assertVisible:
+    id: "animated-sheet-overlay"
+- tapOn:
+    id: "evidence-type-cell-text"
+- tapOn:
+    id: "new-goal-next-button"
+# Build step: widen to [text, link]. The multi-select handler never closes the
+# sheet, so the close tap is required here (unlike the grid above).
+- tapOn:
+    id: "edit-goal-step-evidence-step-1"
+- assertVisible:
+    id: "animated-sheet-overlay"
+- tapOn:
+    id: "evidence-type-chip-link"
+- tapOn:
+    id: "new-goal-evidence-close"
+- tapOn:
+    id: "new-goal-build-ready-button"
+- assertVisible:
+    id: "new-goal-start-working-button"
+- tapOn:
+    id: "new-goal-start-working-button"
 
-# Enter Focus Mode
-- scrollUntilVisible:
-    element: "Start Working"
-    direction: DOWN
-    timeout: 10000
-- tapOn: "Start Working"
-- assertVisible: "Focus Mode"
-
-# Add a link evidence first (older). FAB → FABMenu → CaptureLinkScreen.
-# `pressKey: Enter` after the caption fires the keyboard's blue check
-# (returnKeyType="done") to dismiss the soft keyboard so the Save Link
-# button below it is tappable. CaptureLinkScreen has no KeyboardAvoidingView,
-# so without dismissing first the Save tap lands on the keyboard.
-#
-# Caption is tapped by placeholder text (not by "Caption (optional)" label)
-# because Input renders BOTH a Text label and a TextInput with the same
-# accessibilityLabel — tapping by label hits the non-interactive Text first
-# and inputText then appends to whichever field still holds focus.
+# --- Capture the link first (older) -----------------------------------------
+# Per-type invites replace the old FAB → FABMenu path. `pressKey: Enter` after
+# the caption fires the keyboard's blue check (returnKeyType="done") to dismiss
+# the soft keyboard so Save is tappable — CaptureLinkScreen has no
+# KeyboardAvoidingView, so without dismissing first the Save tap lands on the
+# keyboard. Enter on the URL field does not help: it is returnKeyType="next".
 - extendedWaitUntil:
-    visible: "Add evidence"
+    visible:
+      id: "focus-current-task-add-link"
     timeout: 15000
-- tapOn: "Add evidence"
-- tapOn: "Link"
+- tapOn:
+    id: "focus-current-task-add-link"
 - assertVisible: "Add Link"
-- tapOn: "https://example.com"
+- tapOn:
+    id: "capture-link-url"
 - inputText: "https://archive.org/details/community-history"
-- tapOn: "What is this link about?"
+- tapOn:
+    id: "capture-link-caption"
 - inputText: "Reference archive"
 - pressKey: Enter
-- tapOn: "Save Link"
-- assertVisible: "Focus Mode"
+- tapOn:
+    id: "capture-link-save"
 
-# Add a text note (newer). CaptureTextNote now wraps inputs in a ScrollView
-# inside KAV with the footer outside the scroll, so the caption Input is
-# reachable above the keyboard. After typing the caption, pressKey: Enter
-# fires the blue check (returnKeyType="done") to dismiss the keyboard so
-# Save Note is tappable.
-- tapOn: "Add evidence"
-- tapOn: "Note"
+# --- Capture the text note (newer) ------------------------------------------
+- extendedWaitUntil:
+    visible:
+      id: "focus-current-task-add-text"
+    timeout: 15000
+- tapOn:
+    id: "focus-current-task-add-text"
 - assertVisible: "Write a Note"
+- tapOn:
+    id: "capture-text-body"
 - inputText: "Reflection on archive sources"
-- tapOn: "Add a short caption"
+- tapOn:
+    id: "capture-text-caption"
 - inputText: "Text reflection"
 - pressKey: Enter
-- tapOn: "Save Note"
-- assertVisible: "Focus Mode"
+- tapOn:
+    id: "capture-text-save"
 
-# Close the EvidenceDrawer so its dim overlay doesn't capture the next tap
-# on the MiniTimeline above it.
-- tapOn: "Toggle evidence drawer"
-
-# Open the Timeline view via MiniTimeline's tap-to-expand affordance
-- tapOn: "Tap to expand timeline"
+# --- Timeline ---------------------------------------------------------------
+- extendedWaitUntil:
+    visible:
+      id: "focus-current-task-mark-complete"
+    timeout: 15000
+- tapOn:
+    id: "focus-progress-strip"
 - assertVisible: "Timeline"
 
-# Expand the step row so its evidence cards are visible.
-# Without this assert the next tap could appear-pass on a stale "Text
-# reflection" caption if the expand silently no-ops.
+# Expand the step row so its evidence cards are visible. Without the assert the
+# next tap could appear-pass on a stale "Text reflection" caption if the expand
+# silently no-ops.
 - tapOn:
     text: "Capture mixed evidence.*"
 - assertVisible: "Text reflection"

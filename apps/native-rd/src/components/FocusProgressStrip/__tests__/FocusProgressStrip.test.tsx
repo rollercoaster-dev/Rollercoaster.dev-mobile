@@ -88,4 +88,21 @@ describe("FocusProgressStrip", () => {
     expect(screen.getByText("2 / 5 done")).toBeTruthy();
     expect(getBar().props.accessibilityRole).toBe("progressbar");
   });
+
+  // E2E selector contract (#502): Focus\u2192Timeline is the only entry, and the
+  // tap target is the outer `accessible` Pressable \u2014 `focus-progress-strip-bar`
+  // sits inside it and is collapsed out of the iOS a11y tree.
+  describe("E2E testID (#502)", () => {
+    it("exposes focus-progress-strip on the pressable strip", () => {
+      renderWithProviders(
+        <FocusProgressStrip doneCount={1} totalCount={3} onPress={jest.fn()} />,
+      );
+      expect(screen.getByTestId("focus-progress-strip")).toBeOnTheScreen();
+    });
+
+    it("omits it when there is no handler (no phantom tap target)", () => {
+      renderWithProviders(<FocusProgressStrip doneCount={1} totalCount={3} />);
+      expect(screen.queryByTestId("focus-progress-strip")).toBeNull();
+    });
+  });
 });

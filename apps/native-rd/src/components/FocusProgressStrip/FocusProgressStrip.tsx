@@ -95,6 +95,7 @@ export function FocusProgressStrip({
         total,
       })}
       style={styles.strip}
+      testID="focus-progress-strip"
     >
       {content}
     </Pressable>

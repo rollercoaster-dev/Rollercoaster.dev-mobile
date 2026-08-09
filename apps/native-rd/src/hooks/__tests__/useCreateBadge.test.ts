@@ -840,7 +840,14 @@ describe("useCreateBadge", () => {
       await act(async () => {});
     });
 
-    it("resets status to idle and clears error after a bake failure", async () => {
+    it("clears the error and re-runs the pipeline against a STABLE goal ref", async () => {
+      // #502 regression, found by the bake-recovery E2E. The default query mock
+      // returns the same goal object on every render, which is what Evolu does
+      // between reactive ticks. Nothing else retryBake() touches is in the
+      // effect's dep array, so before the retry nonce the effect never re-fired
+      // here: Retry left the UI on an unbounded "Baking your badge…" spinner
+      // with no alert and no way out. The only test that had claimed to cover
+      // recovery passed because its mock minted a new goal object per render.
       mockBadges.bakePNG.mockImplementationOnce(() => {
         throw new Error("corrupt PNG chunk");
       });
@@ -851,16 +858,15 @@ describe("useCreateBadge", () => {
       // Precondition: the pipeline reached the terminal error state.
       expect(result.current.status).toBe("error");
       expect(result.current.error).toContain("corrupt PNG chunk");
+      expect(mockCreateBadge).not.toHaveBeenCalled();
 
       act(() => {
         result.current.retryBake();
       });
 
-      // The guard is cleared and the user-visible error is gone. With the
-      // default stable query mock the effect does not re-fire, so the hook
-      // rests at idle rather than immediately re-baking — isolating the reset.
-      expect(result.current.status).toBe("idle");
+      await waitFor(() => expect(result.current.status).toBe("done"));
       expect(result.current.error).toBeNull();
+      expect(mockCreateBadge).toHaveBeenCalledTimes(1);
     });
 
     it("is inert when called outside the error state (does not reset a done bake)", async () => {
@@ -881,11 +887,12 @@ describe("useCreateBadge", () => {
       expect(mockCreateBadge).toHaveBeenCalledTimes(1);
     });
 
-    it("re-runs the bake pipeline after retry when the host re-renders", async () => {
-      // Mirror Evolu's fresh-ref-per-render behaviour (see hook comments): a new
-      // goal object each render means the guarded effect re-evaluates on every
-      // render, so clearing hasTriggered via retryBake lets the next render
-      // re-enter the pipeline — exactly the production recovery path.
+    it("re-runs the bake pipeline after retry when the goal ref also churns", async () => {
+      // Companion to the stable-ref test above, with a new goal object per
+      // render and evidence present. Recovery must not depend on which of the
+      // two the host happens to produce. Note this fresh-ref mock is NOT what
+      // Evolu does between reactive ticks — believing it was is what let the
+      // broken retry ship (#502).
       mockUseQuery.mockImplementation((query: string) => {
         if (query === "mock-goals-query") return [{ ...MOCK_GOAL }];
         if (query === "mock-evidence-query")

@@ -13,6 +13,13 @@ import {
 
 export interface TimelineNodeProps {
   status: StepStatus;
+  /**
+   * Optional stable id for E2E addressing. The Timeline is the one surface
+   * where the *ordinal* is under test (reorder/reparent change it), so callers
+   * compose index-derived ids like `timeline-node-2-a` rather than deriving
+   * them from Evolu step ids, which a pre-written flow can never construct.
+   */
+  testID?: string;
   /** Step number displayed in the node. Ignored when isGoalNode or label is set. */
   stepNumber?: number;
   onPress?: () => void;
@@ -49,6 +56,7 @@ export function TimelineNode({
   label,
   showStateBadge = false,
   celebrate = false,
+  testID,
 }: TimelineNodeProps) {
   const isSmall = size === "sm";
   const { theme } = useUnistyles();
@@ -120,6 +128,7 @@ export function TimelineNode({
       accessibilityRole="image"
       accessibilityLabel={accessibilityLabel}
       style={nodeStyle}
+      testID={testID}
     >
       {content}
     </View>
@@ -131,6 +140,7 @@ export function TimelineNode({
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       style={({ pressed }) => [nodeStyle, pressed && styles.pressed]}
+      testID={testID}
     >
       {content}
     </Pressable>

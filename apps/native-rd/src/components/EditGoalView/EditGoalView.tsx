@@ -466,6 +466,9 @@ export function EditGoalView({
               style={styles.titleInput}
               value={goalTitle}
               onChangeText={onGoalTitleChange}
+              // Single-line rename; "done" blurs on submit so the keyboard
+              // never strands the Done button below it (#502).
+              returnKeyType="done"
               testID="edit-goal-title-input"
               accessibilityLabel={goalSectionLabel}
             />

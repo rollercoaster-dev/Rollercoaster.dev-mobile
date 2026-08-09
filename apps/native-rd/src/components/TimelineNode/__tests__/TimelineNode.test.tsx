@@ -146,4 +146,28 @@ describe("TimelineNode", () => {
     );
     expect(screen.queryByText("Done")).toBeNull();
   });
+
+  // E2E selector contract (#502): the Timeline is where reorder/reparent is
+  // proven, and the ordinal is the thing under test — so the node id is
+  // composed by the caller, not derived from an Evolu step id a Maestro flow
+  // could never construct. Applied to both render branches.
+  describe("E2E testID (#502)", () => {
+    it("applies testID to the pressable node", () => {
+      renderWithProviders(
+        <TimelineNode
+          {...baseProps}
+          onPress={jest.fn()}
+          testID="timeline-node-2"
+        />,
+      );
+      expect(screen.getByTestId("timeline-node-2")).toBeOnTheScreen();
+    });
+
+    it("applies testID to the handler-less node", () => {
+      renderWithProviders(
+        <TimelineNode {...baseProps} testID="timeline-node-2" />,
+      );
+      expect(screen.getByTestId("timeline-node-2")).toBeOnTheScreen();
+    });
+  });
 });

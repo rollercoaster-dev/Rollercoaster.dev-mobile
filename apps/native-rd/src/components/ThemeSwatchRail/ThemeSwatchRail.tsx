@@ -66,6 +66,7 @@ export function ThemeSwatchRail({
             return (
               <Pressable
                 key={id}
+                testID={`theme-swatch-${id}`}
                 onPress={() => onSelect(id)}
                 accessible
                 accessibilityRole="radio"

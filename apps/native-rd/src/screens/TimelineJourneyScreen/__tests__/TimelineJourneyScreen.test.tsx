@@ -422,6 +422,18 @@ describe("TimelineJourneyScreen", () => {
     });
   });
 
+  it("exposes the back CTA by testID, whichever label it carries", () => {
+    // Its label alternates between backToFocus and backToBadge with the
+    // navigation origin, so E2E flows address it by id (#502 bake-recovery
+    // needs it after dismissing the completion modal onto Timeline).
+    setupQueries();
+    renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
+    fireEvent.press(screen.getByTestId("timeline-back-button"));
+    expect(mockNavigate).toHaveBeenCalledWith("FocusMode", {
+      goalId: "goal-1",
+    });
+  });
+
   it('"Edit ›" navigates to EditMode for this goal', () => {
     setupQueries();
     renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
