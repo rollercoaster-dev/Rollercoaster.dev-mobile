@@ -86,6 +86,7 @@ export function WelcomeScreen({ onGetStarted }: WelcomeScreenProps) {
           label={t("welcome:cta.getStarted")}
           onPress={onGetStarted}
           size="lg"
+          testID="welcome-get-started"
         />
         <Text variant="caption" style={styles.footnote}>
           {t("welcome:cta.footnote")}

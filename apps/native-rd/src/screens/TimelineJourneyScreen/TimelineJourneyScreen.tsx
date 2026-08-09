@@ -249,6 +249,7 @@ function TimelineContent({
               onPress={handleEditPress}
               variant="secondary"
               size="sm"
+              testID="timeline-edit-button"
             />
           </View>
         </View>

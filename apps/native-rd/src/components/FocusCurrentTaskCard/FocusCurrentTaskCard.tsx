@@ -160,7 +160,12 @@ function InProgressView({
     <CardShell
       body={
         <>
-          <Text style={styles.title} accessible accessibilityRole="header">
+          <Text
+            style={styles.title}
+            accessible
+            accessibilityRole="header"
+            testID="focus-current-task-title"
+          >
             {title}
           </Text>
           <MetadataBand
@@ -187,6 +192,7 @@ function InProgressView({
             accessible
             accessibilityRole="button"
             accessibilityLabel={t("focusMode:currentTask.inProgress.pauseA11y")}
+            testID="focus-current-task-set-aside"
           >
             <Text style={styles.setAsideText}>
               {t("focusMode:currentTask.inProgress.pauseCta")}
@@ -205,6 +211,7 @@ function InProgressView({
               accessibilityLabel={t(
                 "focusMode:currentTask.inProgress.markCompleteA11y",
               )}
+              testID="focus-current-task-mark-complete"
             >
               <Text style={styles.primaryCtaText}>
                 {t("focusMode:currentTask.inProgress.markCompleteCta")}
@@ -279,7 +286,12 @@ function PausedView({ title, onPickUp }: FocusPausedCardProps) {
       body={
         <>
           <StateWordPill status="paused" />
-          <Text style={styles.title} accessible accessibilityRole="header">
+          <Text
+            style={styles.title}
+            accessible
+            accessibilityRole="header"
+            testID="focus-current-task-title"
+          >
             {title}
           </Text>
           <Text style={styles.bodyText}>
@@ -294,6 +306,7 @@ function PausedView({ title, onPickUp }: FocusPausedCardProps) {
           accessible
           accessibilityRole="button"
           accessibilityLabel={t("focusMode:currentTask.paused.pickUpA11y")}
+          testID="focus-current-task-pick-up"
         >
           <Text style={styles.primaryCtaText}>
             {t("focusMode:currentTask.paused.pickUpCta")}
@@ -318,7 +331,12 @@ function CompletedView({
       body={
         <>
           <StateWordPill status="completed" />
-          <Text style={styles.title} accessible accessibilityRole="header">
+          <Text
+            style={styles.title}
+            accessible
+            accessibilityRole="header"
+            testID="focus-current-task-title"
+          >
             {title}
           </Text>
           <CapturedEvidenceRail
@@ -334,6 +352,7 @@ function CompletedView({
           accessible
           accessibilityRole="button"
           accessibilityLabel={t("focusMode:currentTask.completed.reopenA11y")}
+          testID="focus-current-task-reopen"
         >
           <Text style={styles.secondaryCtaText}>
             {t("focusMode:currentTask.completed.reopenCta")}
@@ -374,6 +393,7 @@ function AllCompleteView({ onDesignBadge }: FocusAllCompleteCardProps) {
           accessibilityLabel={t(
             "focusMode:currentTask.allComplete.designBadgeA11y",
           )}
+          testID="focus-current-task-design-badge"
         >
           <Text style={styles.primaryCtaText}>
             {t("focusMode:currentTask.allComplete.designBadgeCta")}

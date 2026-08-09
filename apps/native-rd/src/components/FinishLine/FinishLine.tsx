@@ -56,6 +56,7 @@ export function FinishLine({
           accessibilityLabel={t("timelineJourney:finishLine.ctaA11yLabel")}
           onPress={onBadgePress}
           style={styles.ctaRow}
+          testID="finish-line-cta"
         >
           {badgeDesign ? (
             <BadgeRenderer

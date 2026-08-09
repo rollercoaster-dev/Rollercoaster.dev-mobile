@@ -77,7 +77,10 @@ function ThemedApp() {
   if (isFirstLaunch === null) {
     // Loading: Evolu hasn't read settings from SQLite yet
     body = (
-      <View style={{ flex: 1, backgroundColor: theme.colors.background }} />
+      <View
+        testID="app-loading"
+        style={{ flex: 1, backgroundColor: theme.colors.background }}
+      />
     );
   } else if (isFirstLaunch) {
     // First launch — show WelcomeScreen above NavigationContainer.

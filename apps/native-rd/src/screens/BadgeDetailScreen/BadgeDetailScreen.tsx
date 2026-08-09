@@ -422,6 +422,7 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
               label={t("badgeDetail:actions.viewTimeline")}
               variant="secondary"
               onPress={() => handleViewTimeline(goalId)}
+              testID="badge-detail-view-timeline"
             />
           ) : null}
         </View>
