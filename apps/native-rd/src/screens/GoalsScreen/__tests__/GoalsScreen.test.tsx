@@ -322,6 +322,20 @@ describe("GoalsScreen", () => {
       expect(screen.getByTestId("keep-warm-goal-2")).toBeOnTheScreen();
     });
 
+    // Guards against `heroIsPinned={pinnedGoalId !== null}` — a fallback hero is
+    // not the pinned goal, so its toggle must still read as inactive and pin.
+    it("shows the fallback hero as unpinned when the pin dangles", () => {
+      mockData(twoGoals, [], makeSettings("goal-gone"));
+
+      renderWithProviders(<GoalsScreen />);
+      const toggle = screen.getByTestId("goals-cockpit-hero-pin");
+      expect(toggle.props.accessibilityState.selected).toBe(false);
+
+      fireEvent.press(toggle);
+      expect(pinGoal).toHaveBeenCalledWith("settings-1", "goal-1");
+      expect(unpinGoal).not.toHaveBeenCalled();
+    });
+
     it("pins a keep-warm goal through pinGoal", () => {
       mockData(twoGoals, [], makeSettings(null));
 

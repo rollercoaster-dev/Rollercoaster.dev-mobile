@@ -60,12 +60,20 @@ export const styles = StyleSheet.create((theme) => ({
     justifyContent: "space-between",
     rowGap: theme.space[3],
   },
+  // Owns the grid width so the pin can sit outside the card's Pressable while
+  // still being positioned against it. The card Pressable is `accessible`, which
+  // collapses its whole subtree into one screen-reader node — a pin nested
+  // inside it would be unreachable, so it has to be a sibling.
+  keepWarmCell: {
+    width: "48%",
+    position: "relative",
+  },
   keepWarmCard: {
-    // Fixed width (not flex): each card is exactly half the row so two fit per
-    // line and a third wraps. No flexGrow/flexShrink — grow would stretch a lone
+    // Full width of the cell above, which is the half-row that makes two fit per
+    // line and a third wrap. No flexGrow/flexShrink — grow would stretch a lone
     // trailing card to full width (reads as a list) and shrink would let a third
     // compress onto the same line. space-between on the row supplies the gutter.
-    width: "48%",
+    width: "100%",
     backgroundColor: theme.surfaceBorder.surfaceCardBg,
     borderWidth: theme.borderWidth.thick,
     borderColor: theme.colors.border,
@@ -78,15 +86,19 @@ export const styles = StyleSheet.create((theme) => ({
     transform: [{ translateX: 2 }, { translateY: 2 }],
     shadowOffset: { width: 1, height: 1 },
   },
-  // Title and pin share the tile's top line. In-flow (not absolute) so the
-  // title shrinks around the control rather than running underneath it.
-  keepWarmHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: theme.space[2],
+  // Corner-parked like the hero's, and a sibling of the card rather than a
+  // child — see keepWarmCell. Sits above the card's shadow so taps land here.
+  keepWarmPin: {
+    position: "absolute",
+    top: theme.space[2],
+    right: theme.space[2],
+    zIndex: 1,
   },
   keepWarmTitle: {
-    flex: 1,
+    // Reserve the pin's corner so a long title truncates before it rather than
+    // running underneath — the pin is out of flow, so padding does the work
+    // that `flex: 1` beside an in-flow control used to.
+    paddingRight: theme.space[8],
     color: theme.surfaceBorder.surfaceCardFg,
   },
   keepWarmNextStep: {

@@ -241,26 +241,25 @@ export function GoalsCockpit({
           </Text>
           <View style={styles.keepWarmGrid}>
             {keepWarm.map((goal) => (
-              <Pressable
-                key={goal.id}
-                onPress={() => onOpenGoal(goal.id)}
-                onLongPress={() => onDeleteGoal(goal.id)}
-                accessible
-                accessibilityRole="button"
-                accessibilityLabel={goal.title}
-                // Tapping opens the goal in FocusMode (same as the hero's
-                // Start/Resume), so reuse resumeHint — not card.a11y.hint's
-                // "view details", which would misdescribe the destination.
-                accessibilityHint={t("goals:cockpit.resumeHint", {
-                  title: goal.title,
-                })}
-                testID={`keep-warm-${goal.id}`}
-                style={({ pressed }) => [
-                  styles.keepWarmCard,
-                  pressed && styles.keepWarmPressed,
-                ]}
-              >
-                <View style={styles.keepWarmHeader}>
+              <View key={goal.id} style={styles.keepWarmCell}>
+                <Pressable
+                  onPress={() => onOpenGoal(goal.id)}
+                  onLongPress={() => onDeleteGoal(goal.id)}
+                  accessible
+                  accessibilityRole="button"
+                  accessibilityLabel={goal.title}
+                  // Tapping opens the goal in FocusMode (same as the hero's
+                  // Start/Resume), so reuse resumeHint — not card.a11y.hint's
+                  // "view details", which would misdescribe the destination.
+                  accessibilityHint={t("goals:cockpit.resumeHint", {
+                    title: goal.title,
+                  })}
+                  testID={`keep-warm-${goal.id}`}
+                  style={({ pressed }) => [
+                    styles.keepWarmCard,
+                    pressed && styles.keepWarmPressed,
+                  ]}
+                >
                   <Text
                     variant="title"
                     style={styles.keepWarmTitle}
@@ -268,9 +267,24 @@ export function GoalsCockpit({
                   >
                     {goal.title}
                   </Text>
-                  {/* A keep-warm tile is never the pinned goal — pinning
-                      promotes it to hero (D2) — so this is always the
-                      inactive state and always pins. */}
+                  {goal.nextStepTitle ? (
+                    <Text
+                      variant="caption"
+                      style={styles.keepWarmNextStep}
+                      numberOfLines={1}
+                    >
+                      {goal.nextStepTitle}
+                    </Text>
+                  ) : null}
+                  <ProgressBar progress={goal.progress} />
+                </Pressable>
+                {/* Outside the Pressable above, which is `accessible` and so
+                    collapses its subtree into a single screen-reader node — a
+                    nested pin would be announced-and-activated as part of the
+                    card instead of as its own control. A keep-warm tile is
+                    never the pinned goal (pinning promotes it to hero, D2), so
+                    this is always the inactive state and always pins. */}
+                <View style={styles.keepWarmPin}>
                   <PinToggle
                     isPinned={false}
                     title={goal.title}
@@ -279,17 +293,7 @@ export function GoalsCockpit({
                     testID={`keep-warm-pin-${goal.id}`}
                   />
                 </View>
-                {goal.nextStepTitle ? (
-                  <Text
-                    variant="caption"
-                    style={styles.keepWarmNextStep}
-                    numberOfLines={1}
-                  >
-                    {goal.nextStepTitle}
-                  </Text>
-                ) : null}
-                <ProgressBar progress={goal.progress} />
-              </Pressable>
+              </View>
             ))}
           </View>
         </View>

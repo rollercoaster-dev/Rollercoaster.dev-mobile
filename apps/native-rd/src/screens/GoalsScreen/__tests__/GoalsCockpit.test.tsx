@@ -232,8 +232,39 @@ describe("GoalsCockpit", () => {
       expect(h.onPinGoal).not.toHaveBeenCalled();
     });
 
-    // The toggle is nested inside the tile Pressable, whose own press opens the
-    // goal and whose long-press deletes it. Tapping the pin must do neither.
+    // A keep-warm tile sets `accessible`, which collapses everything inside it
+    // into one screen-reader node. The pin therefore has to live outside that
+    // Pressable, or VoiceOver/TalkBack can neither reach nor activate it.
+    // getByTestId reads the element tree directly and would pass either way, so
+    // assert on the a11y tree instead.
+    it("exposes the keep-warm pin as its own screen-reader control", () => {
+      const h = handlers();
+      renderWithProviders(
+        <GoalsCockpit hero={makeHero()} keepWarm={keepWarm} {...h} />,
+      );
+      const tile = screen.getByTestId("keep-warm-kw-1");
+      const pin = screen.getByTestId("keep-warm-pin-kw-1");
+
+      // The pin must not be a descendant of the collapsed tile node.
+      const descendants: unknown[] = [];
+      const walk = (node: { children?: unknown[] }) => {
+        for (const child of node.children ?? []) {
+          descendants.push(child);
+          walk(child as { children?: unknown[] });
+        }
+      };
+      walk(tile);
+      // The title *is* inside the collapsed node — proves the walk descends, so
+      // the assertion below fails for the right reason rather than vacuously.
+      expect(descendants).toContain(
+        screen.getByText("Build a component library"),
+      );
+      expect(descendants).not.toContain(pin);
+      expect(tile.props.accessible).toBe(true);
+    });
+
+    // The pin sits over the tile, whose own press opens the goal and whose
+    // long-press deletes it. Tapping the pin must do neither.
     it("pins a keep-warm goal without opening or deleting it", () => {
       const h = handlers();
       renderWithProviders(
