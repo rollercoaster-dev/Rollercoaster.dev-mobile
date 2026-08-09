@@ -253,82 +253,119 @@ Ordered. **Default: one PR** — `.claude/skills/implement/SKILL.md:116` codifie
 
 Implemented 2026-08-09 on `feat/issue-502-e2e-canonical-ride`, branched from `586ef92`.
 
-| Commit | Planned                                              | Landed     | Note                                                                                                     |
-| ------ | ---------------------------------------------------- | ---------- | -------------------------------------------------------------------------------------------------------- |
-| 0      | File the E2E-CI-gate tracking issue                  | ❌ blocked | `gh issue create` denied by the local permission classifier. Docs written without a number — see D1-impl |
-| 1      | Stable testIDs for the lifecycle selectors           | `c61fad8`  | 23 of the 24 planned ids; see D2-impl for the one dropped                                                |
-| 2      | Thread testIDs through `TimelineNode` / `ChildRow`   | `dfef6ed`  | `nodeTestID` on `ChildRow` as planned; 5 test files lock the new ids                                     |
-| 3      | The canonical Full Ride flow + shared prologue       | `4988577`  | 513 lines, not ~275 — every `index:` selector carries its derivation inline, as D5/Risk 4 require        |
-| 4      | `bake-recovery.yaml`                                 | `1453560`  |                                                                                                          |
-| 5      | Delete the four flows targeting removed UI           | `4aa6cd5`  |                                                                                                          |
-| 6      | Rebase surviving flows on the prologue               | `b66ccc1`  |                                                                                                          |
-| 7      | Runner fails honestly, locale pinned, JUnit artifact | `f020cf2`  |                                                                                                          |
-| 8      | Document the manual gate                             | `9366756`  |                                                                                                          |
-| 9      | Record a green run and gate #383 on it               | ❌ blocked | Needs a dev-client build + Metro from this worktree on the booted simulator — a HITL step                |
+| Commit | Planned                                              | Landed                        | Note                                                                                                    |
+| ------ | ---------------------------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------- |
+| 0      | File the E2E-CI-gate tracking issue                  | **#560**                      | Filed 2026-08-09; `e2e/README.md:191` and `ci-contract.md:46` now cite the number. Supersedes D1-impl   |
+| 1      | Stable testIDs for the lifecycle selectors           | `c61fad8`                     | 23 of the 24 planned ids; see D2-impl for the one dropped                                               |
+| 2      | Thread testIDs through `TimelineNode` / `ChildRow`   | `dfef6ed`                     | `nodeTestID` on `ChildRow` as planned; 5 test files lock the new ids                                    |
+| 3      | The canonical Full Ride flow + shared prologue       | `4988577`                     | 513 lines, not ~275 — every `index:` selector carries its derivation inline, as D5/Risk 4 require       |
+| 4      | `bake-recovery.yaml`                                 | `1453560`                     |                                                                                                         |
+| 5      | Delete the four flows targeting removed UI           | `4aa6cd5`                     |                                                                                                         |
+| 6      | Rebase surviving flows on the prologue               | `b66ccc1`                     |                                                                                                         |
+| 7      | Runner fails honestly, locale pinned, JUnit artifact | `f020cf2`                     |                                                                                                         |
+| 8      | Document the manual gate                             | `9366756`                     |                                                                                                         |
+| 9      | Record a green run and gate #383 on it               | `7e6149e`+                    | `e2e/reports/full-ride-7e6149e.md` is tracked; the #383 body edit is the one step left                  |
+| —      | _unplanned_: make the suite actually pass on device  | `85e9e96` `210d090` `7e6149e` | Six defects the run surfaced, four of them in production code — see [Live-run status](#live-run-status) |
 
-**Actual size**: 1327 added / 510 deleted across 36 files, against the plan's ~815/430 estimate. The overage sits in `full-ride.yaml` (513 vs ~275) and `e2e/README.md` (160 vs ~130) and is all commentary the plan itself mandated. OQ1's "one PR, over the band" decision stands; the PR body should quote the real number.
+**Actual size**: 1327 added / 510 deleted across 36 files at commit 8, against the plan's ~815/430 estimate. The overage sits in `full-ride.yaml` (513 vs ~275) and `e2e/README.md` (160 vs ~130) and is all commentary the plan itself mandated. The three live-run commits add production fixes the plan did not anticipate, because nothing past ride step 2 had ever executed when it was written. OQ1's "one PR, over the band" decision stands; the PR body should quote the real number.
 
-**Static gates green at commit 8**: `type-check` ✅ · `lint` ✅ (pre-existing warnings only) · `test` ✅ 10023/10023 across 206 suites · `build` ✅ (no-op).
+**Static gates green at `7e6149e`**: `type-check` ✅ · `lint` ✅ 0 errors (200 pre-existing warnings) · `test` ✅ 10027/10027 across 206 suites · `test:e2e:required` ✅ 5/5 flows in 3m 2s.
 
 ### Discovery Log
 
-- [2026-08-09] **D1-impl — commit 0 could not be filed.** `gh issue create` is denied by the local permission classifier, so the CI-gate tracking issue, the OQ3 `BadgeDesignerScreen` deletion issue, and the Risk 9/10/11 filings do not exist yet. `e2e/README.md` and `docs/architecture/ci-contract.md` therefore refer to "the E2E-CI-gate tracking issue in this repo" by description rather than by number — deliberately, so nothing invents or re-cites `#889`. **Open action**: file the five issues, then replace those two phrases with the real number. This is the one place the implementation is knowingly incomplete rather than deviating.
+- [2026-08-09] **D1-impl — SUPERSEDED: commit 0 was filed as #560**, and `e2e/README.md:191` + `ci-contract.md:46` now cite the number instead of describing it. The remaining filings (Risk 9a/9b, Risk 10, Risk 11, OQ3, and the new alert-on-transient-empty defect) are still open. Kept for the record: ~~commit 0 could not be filed.~~ `gh issue create` is denied by the local permission classifier, so the CI-gate tracking issue, the OQ3 `BadgeDesignerScreen` deletion issue, and the Risk 9/10/11 filings do not exist yet. `e2e/README.md` and `docs/architecture/ci-contract.md` therefore refer to "the E2E-CI-gate tracking issue in this repo" by description rather than by number — deliberately, so nothing invents or re-cites `#889`. **Open action**: file the five issues, then replace those two phrases with the real number. This is the one place the implementation is knowingly incomplete rather than deviating.
 - [2026-08-09] **D2-impl — `finish-baking-success` was NOT added.** The success container at `FinishBakingStage.tsx:129-135` is `accessible`, so a testID on any child cannot reach the iOS a11y tree — the only way to give the success state a distinct id is to _rename_ the container's existing `finish-baking-stage`, which three Jest assertions lock as the live-region contract across all four states (`FinishBakingStage.test.tsx:27,49,75` plus `CompletionFlowScreen.test.tsx:185,280`, the latter mocking status `done` → `mapBakeStatus` → `success`). Neither `full-ride.yaml` nor `bake-recovery.yaml` asserts the interstitial anyway (D13 forbids it), and outcome discrimination already works via the distinct `finish-baking-error-alert` / `finish-baking-no-key-alert` ids. Net: a rename plus three test edits for an id no flow uses. Dropped, not deferred.
 - [2026-08-09] **D3-impl — ride step 14 needed an `eraseText`.** `edit-goal-title-input` is prefilled with the goal's current title, so `inputText` alone would append rather than replace. The flow taps the field, `eraseText`s, then types.
 - [2026-08-09] **D4-impl — the theme flows override `THEME_SWATCH` to `light-default`.** The prologue's default is `light-autismFriendly`, which is the determinism lever — but `settings-theme-switch.yaml` and `settings-theme-persists-restart.yaml` exist to prove a _switch_, so they must start from "The Full Ride". Both then tap `theme-swatch-dark-default` (Night Ride) by id instead of the composed `"Night Ride. Dark mode"` label, which the new swatch testID makes possible.
 - [2026-08-09] **D5-impl — `settings-theme-persists-restart.yaml` keeps its relaunch inline.** The restart leg deliberately does _not_ re-run the prologue: `clearState` would destroy the persisted theme, i.e. the thing under test. Only the first boot goes through the subflow.
 - [2026-08-09] **D6-impl — the retired-selector grep needed quote anchors.** The grep printed in the pre-implementation plan flags two _live_ ids as hits, because they are supersets of retired ones: `new-goal-title-input` (retired: `new-goal-title`) and `new-goal-start-working-button` (retired: `start-working`). The corrected pattern in `e2e/README.md` anchors both with quotes. Two flow comments were also reworded so they no longer embed retired literals — the gate is only useful if it stays at zero hits.
-- [2026-08-09] **D7-impl — `maestro hierarchy` verification (Verification steps 2, 2a, 2b, 2c) has NOT been run.** It needs a dev-client build served by Metro _from this worktree_; the only Metro currently listening on 8081 serves `~/Code/Rollercoaster.dev/Rollercoaster.dev-mobile`, i.e. a tree without these testIDs. Consequently Risk 1 (does the D3 theme lever reach `EditGoalStepList`?) and Risk 2 (are the nest-under picker's rows, inside an RN `Modal`, in the tree at all?) are **still open**, and Risk 3 (does `runFlow: ../subflows/…` resolve out of `flows/`?) is unverified. Ride step 12 is written so Risk 1 fails loudly and self-explainingly; Risk 2's documented fallback is `edit-goal-break-into-*` / `edit-goal-add-substep-*`; Risk 3's is inlining the prologue.
+- [2026-08-09] **D7-impl — SUPERSEDED, everything below was resolved by the green run.** Risks 1, 2 and 3 are all closed on device; see [Live-run status](#live-run-status-2026-08-09--green). Kept for the record: ~~`maestro hierarchy` verification (Verification steps 2, 2a, 2b, 2c) has NOT been run.~~ It needs a dev-client build served by Metro _from this worktree_; the only Metro currently listening on 8081 serves `~/Code/Rollercoaster.dev/Rollercoaster.dev-mobile`, i.e. a tree without these testIDs. Consequently Risk 1 (does the D3 theme lever reach `EditGoalStepList`?) and Risk 2 (are the nest-under picker's rows, inside an RN `Modal`, in the tree at all?) are **still open**, and Risk 3 (does `runFlow: ../subflows/…` resolve out of `flows/`?) is unverified. Ride step 12 is written so Risk 1 fails loudly and self-explainingly; Risk 2's documented fallback is `edit-goal-break-into-*` / `edit-goal-add-substep-*`; Risk 3's is inlining the prologue.
 
-## Live-run status (2026-08-09, first real simulator run)
+## Live-run status (2026-08-09) — ✅ **GREEN**
 
-**Where to pick up: `full-ride.yaml` step 2 — `hideKeyboard` is not supported by this app.** Everything before it is green and verified on device. Details in "Next steps" below.
+`bun run test:e2e:required` → **5/5 flows passed in 3m 2s**, exit 0, at `7e6149e`.
+`evidence-viewer.yaml` (`optional`) passes separately, so **all six flows on disk
+are green**. The recorded artifact is `e2e/reports/full-ride-7e6149e.md`, which
+carries the full environment block; it is not duplicated here.
 
-### Environment this was run against
+**Risks 1, 2 and 3 are all CLOSED on device** — see the run record. Ride step 12
+proved the Autism-Friendly theme unlocks the discrete hierarchy controls, and
+`maestro hierarchy` showed both nest-under target rows reaching the a11y tree
+from inside an RN `Modal`, so neither documented fallback was needed.
 
-|           |                                                                                                |
-| --------- | ---------------------------------------------------------------------------------------------- |
-| Maestro   | 2.8.0 (`/opt/homebrew/bin/maestro`)                                                            |
-| Simulator | iPhone 17 · iOS 26.5 · `75D0CBC4-A428-407D-BF2E-E5EE452737C7`                                  |
-| Metro     | this worktree, port **8081**, `EXPO_PUBLIC_E2E_MODE=true`                                      |
-| App       | `dev.rollercoaster.app` (iOS keeps the base bundle id — `app.config.js` only suffixes Android) |
-| Locale    | `en` (pinned)                                                                                  |
+### Hard prerequisite the run established
 
-**The simulator now has persistent UserDefaults written by hand** — `EXDevMenuShowsAtLaunch=NO`, `EXDevMenuShowFloatingActionButton=NO`, `EXDevMenuIsOnboardingFinished=YES`, `AppleLanguages=(en)`. `scripts/run-e2e.sh` writes all four, so a fresh machine needs nothing extra; they are noted here only so the state is not mistaken for app behaviour.
+**Exactly one Metro, and it must serve this worktree.** After a `clearState`
+reinstall the dev client auto-discovers any packager on the default port and
+ignores the `?url=` deep link — measured as 60s of waiting with zero requests
+reaching the intended port and a live bundle carrying none of the new testIDs.
+`stopApp` before `openLink` fixes the warm-app case but not a competing
+packager.
 
-**A second Metro on the default port breaks the suite.** The user's Metro for `~/Code/Rollercoaster.dev/Rollercoaster.dev-mobile` was serving 8081; after a `clearState` reinstall the dev client auto-discovers that server and **ignores the `?url=` deep link** (measured: 60s of waiting, zero requests reaching the intended port, and the live bundle carried none of the new testIDs). It was stopped with the user's approval and this worktree's Metro started on 8081 in its place. `stopApp` before `openLink` is necessary but **not sufficient** on its own — it fixes the warm-app case, not a competing packager. Treat "only one Metro, and it serves this worktree" as a hard prerequisite.
+### Six defects the run surfaced, in the order they were hit
 
-### Verified green on device
+Four are production bugs. None was worked around in yaml where the app was the
+thing at fault.
 
-- `badge-view.yaml` — **passes end to end**, prologue included.
-- The shared prologue: `runFlow: ../subflows/…` resolves out of `flows/` (**Risk 3 CLOSED**), `env` interpolates inside the `openLink` URL, `clearState`+`stopApp`+`openLink` pins the bundle to the intended port.
-- Commit 1/2 testIDs confirmed present in the real iOS a11y tree via `maestro hierarchy`: `welcome-get-started`, all seven `theme-swatch-<id>`, alongside the pre-existing `theme-swatch-row` / `selected-theme` / `theme-sample-card`.
-- `full-ride.yaml` reaches the wizard and types the goal title correctly (13 steps COMPLETED) before hitting the blocker below.
+| #   | Defect                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | Where fixed                                            |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------ |
+| 1   | **`EXDevMenuShowsAtLaunch` defaults to `true` on iOS**, so the dev menu auto-opened after every `clearState`. It and the floating action button are native overlays in a separate window: invisible to `maestro hierarchy`, but they intercept taps — a flow fails "element not found" while the element is on screen behind them. Affected the pre-existing flows too. `EXDevMenuDisableAutoLaunch` is deliberately not used: `readAutoLaunchDisabledState()` removes the key as it reads it, so it only ever covers the first flow of a suite. | `scripts/run-e2e.sh` (`5f3af3f`)                       |
+| 2   | **The boot barrier was a no-op.** `notVisible: app-loading` passes instantly against the empty tree between reinstall and bundle mount, so every following step raced the download. Replaced with a positive `extendedWaitUntil: visible: welcome-get-started`.                                                                                                                                                                                                                                                                                  | `e2e/subflows/launch-and-onboard.yaml` (`5f3af3f`)     |
+| 3   | **`launchApp` leaves the app running** with a packager already chosen, after which the deep link is ignored. `stopApp` before `openLink` makes it a cold start whose only input is the URL.                                                                                                                                                                                                                                                                                                                                                      | `e2e/subflows/launch-and-onboard.yaml` (`5f3af3f`)     |
+| 4   | **PRODUCTION — the New Goal wizard is a keyboard dead end.** Its name and first-step `TextInput`s set no `returnKeyType`, and their Next CTA sits in a footer the soft keyboard covers, with no keyboard avoidance and nothing that dismisses on tap. Same for `EditGoalView`'s goal-title field. Maestro's `hideKeyboard` is unsupported by this app ("doesn't expose a standard dismiss action"), which is the same fact from the outside.                                                                                                     | `NewGoalWizard.tsx` ×2, `EditGoalView.tsx` (`85e9e96`) |
+| 5   | **PRODUCTION — LogBox intercepts taps.** Any `console.error` raises it, and `bake-recovery.yaml` provokes one deliberately. Same overlay-in-its-own-window shape as defect 1. Suppressed under the existing `EXPO_PUBLIC_E2E_MODE` gate; dev builds keep it.                                                                                                                                                                                                                                                                                     | `App.tsx` (`7e6149e`)                                  |
+| 6   | **PRODUCTION — `retryBake()` never retried.** It cleared the never-reset `hasTriggered` guard and set status to `"idle"`, but nothing it touches is in the bake effect's dependency array, so the effect never re-fired — and `mapBakeStatus` folds `"idle"` into the busy phase, leaving an **unbounded "Baking your badge…" spinner with no alert, no retry and no exit**. Fixed with a `retryNonce` dep.                                                                                                                                      | `useCreateBadge.ts` + two tests (`7e6149e`)            |
 
-### Three real bugs found and fixed (`5f3af3f`)
+**Defect 6 is the one worth carrying forward as a lesson.** `useCreateBadge.test.ts`
+already had a test named "re-runs the bake pipeline after retry", and it passed —
+because its mock returned `[{ ...MOCK_GOAL }]`, a **new object every render**, so
+the effect re-ran on identity change regardless of the nonce. Evolu returns a
+stable row between reactive ticks, so production took the path no test covered.
+The test file now exercises the stable-ref case, which is the production shape,
+and keeps the fresh-ref case as an explicitly-labelled companion.
 
-1. **`EXDevMenuShowsAtLaunch` defaults to `true` on iOS**, so the dev menu auto-opened after every `clearState`. The runner only seeded `EXDevMenuIsOnboardingFinished`, which suppresses the onboarding _hint_, not the menu. The menu and the floating action button are native overlays **in a separate window**: `maestro hierarchy` does not show them, but they intercept taps — so a flow fails "element not found" while the element is on screen behind the modal. This affected the pre-existing flows too. `EXDevMenuDisableAutoLaunch` is deliberately not used: `readAutoLaunchDisabledState()` removes the key as it reads it, so it only ever covers the first flow of a suite.
-2. **The boot barrier was a no-op.** `notVisible: app-loading` passes instantly against the empty tree that exists between reinstall and bundle mount, so every following step raced the download. Now a positive `extendedWaitUntil: visible: welcome-get-started` (and `goals-cockpit-new-goal` on the restart leg).
-3. **`launchApp` leaves the app running** with a packager already chosen, after which the deep link is ignored. `stopApp` before `openLink` makes it a cold start whose only input is the URL.
+### Four flow-level findings (the app was not at fault)
 
-### Blocker: `hideKeyboard` is unsupported by this app
+- **`inputText` appends into prefilled fields**, so ride steps 13/14 append a
+  `" renamed"` suffix rather than erasing first. Erasing is not merely more
+  verbose: `eraseText` leaves the field empty for longer than `EditModeScreen`'s
+  500ms debounce, which fires `debouncedUpdateTitle("")` and pops the
+  "Title cannot be empty" `Alert` mid-edit, stealing focus before the
+  replacement can be typed. **That alert-on-transient-empty is itself a real
+  product defect** and is filed as a follow-up — it is not fixed here because
+  the Alert channel was a deliberate choice in an earlier issue.
+- **The keyboard survives the add-step input by design.** `edit-goal-add-step-input`
+  is `blurOnSubmit={false}` for rapid multi-add, so `pressKey: Enter` adds a step
+  and leaves the keyboard up, covering the evidence sheet's close button and the
+  footer CTA. The flow taps the steps header — inert, inside a ScrollView with
+  `keyboardShouldPersistTaps="handled"`, so the tap becomes a dismissal. That
+  header gained a testID for the purpose.
+- **Clipped rows still report a frame.** The third root row sits below the
+  ScrollView's viewport, and iOS reports a frame for it that lands on the
+  floating tab bar — so a bare tap navigated to **Settings** while Maestro
+  reported COMPLETED. Both bottom-row controls now `scrollUntilVisible` with
+  `centerElement: true` first. Index is hierarchy order, not screen position, so
+  scrolling does not perturb D5's `index:` selectors.
+- **Maestro applies `index:` AFTER the other matchers.** Pairing the
+  already-unique nest-target text with `index: 1` selected the second of one
+  match and failed. D20(d)'s "index-primary with text as an optional guard" is
+  therefore not expressible — for that row the text matcher stands alone, which
+  is fine because it is unique and self-documenting.
+- **The bake error stage has no exit affordance**, only Retry. Leaving it means
+  dismissing the sheet: `CompletionFlow` is `presentation: "modal"`
+  (`GoalsStack.tsx:39`), whose iOS gesture is a downward drag — Maestro's `back`
+  is a left-edge swipe and does nothing to it. Dismissing lands on **Timeline**,
+  not Focus, so the flow then taps the Timeline back CTA, which gained a testID
+  because its label alternates with the navigation origin.
 
-`full-ride.yaml` step 2 fails with:
+### What is left
 
-> Couldn't hide the keyboard. This can happen if the app uses a custom input or doesn't expose a standard dismiss action.
-
-The underlying problem is real and still needs solving: the wizard's `TextInput`s set **no `returnKeyType`** (`NewGoalWizard.tsx:517-524`, `:566-571`), so `pressKey: Enter` cannot dismiss either, and `new-goal-next-button` sits in a footer the soft keyboard covers — the tap lands on the keyboard and the wizard silently stays on step 1 while Maestro reports the tap COMPLETED.
-
-`- hideKeyboard` was added to `full-ride.yaml`, `bake-recovery.yaml` and `evidence-viewer.yaml` and is **uncommitted and known-broken**. It must be replaced before anything else runs.
-
-### Next steps, in order
-
-1. **Replace every `- hideKeyboard`** (5 in `full-ride.yaml`, 2 in `bake-recovery.yaml`, 2 in `evidence-viewer.yaml`) with a tap on a non-interactive element — Maestro's own suggested workaround, and the idiom `goal-lifecycle-complete.yaml` used before deletion. The wizard headline is the natural target: `tapOn: "What do you want to work toward?"` on the name step, the step headline on the first-step step. Prefer an `id:` if one can be added cheaply; otherwise these are text matchers on visible copy and must be justified inline like every other one.
-2. **Consider fixing the production side instead**, which would delete the whole class of problem: give the wizard inputs `returnKeyType="done"` (the add-step input at `EditGoalStepList.tsx:521` already has it) or lift the footer above the keyboard the way `CaptureTextNote` does. That is a production behaviour change, so it belongs in its own commit with its own Jest coverage — but it is arguably the honest fix, and it is the same defect already filed as Risk 10 for `CaptureLinkScreen`.
-3. **Re-run `full-ride.yaml` alone** (`maestro test e2e/flows/full-ride.yaml`) and work down the remaining 30-odd steps. Expect further findings — nothing past step 2 has ever executed.
-4. **Then `bake-recovery.yaml`, then `bun run test:e2e:required`** for the whole gate.
-5. **Risks 1 and 2 remain unverified** — the run has not reached EditMode yet. Ride step 12 will answer Risk 1 (does the Autism-Friendly theme unlock the discrete hierarchy controls?); step 16 will answer Risk 2 (are the nest-under picker's rows, inside an RN `Modal`, reachable at all?). Fallbacks for both are documented in the Risks table.
-6. **Commit 9 stays open** until a full green `test:e2e:required` exists to record.
+1. **Edit issue #383's body** to add the blocking checklist item citing
+   `e2e/reports/full-ride-7e6149e.md`. This is the last piece of commit 9 and the
+   only thing that makes acceptance criterion 5 enforceable rather than an
+   honour system.
+2. **File the remaining follow-ups** (Risk 9a/9b, Risk 10, Risk 11, OQ3, plus the
+   new alert-on-transient-empty defect). #560 is filed and both docs now cite it.
 
 ## Verification
 

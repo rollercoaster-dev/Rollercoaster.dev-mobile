@@ -188,7 +188,7 @@ E2E is **not** in CI. It is a manual gate run on a local simulator before mergin
 - Git SHA
 - `EXPO_PUBLIC_E2E_MODE`
 
-CI enforcement is tracked separately — see the E2E-CI-gate tracking issue in this repo. (The `#889` pointer this file used to carry belonged to the **predecessor monorepo's** issue space and is unreachable from here.)
+CI enforcement is tracked separately in **#560**. (The `#889` pointer this file used to carry belonged to the **predecessor monorepo's** issue space and is unreachable from here.)
 
 ### Guarding against regressions to removed UI
 
