@@ -5,7 +5,7 @@ import { TimelineNode } from "../TimelineNode";
 import { stepStateColorMap } from "../TimelineNode/stepStateColorMap";
 import { TimelineEvidenceCard } from "../TimelineEvidenceCard";
 import type { StepStatus } from "../../types/steps";
-import type { EvidenceItemData } from "../EvidenceDrawer";
+import type { EvidenceItemData } from "../../types/evidence";
 import { toLetterOrdinal } from "../../utils/format";
 import { MetadataBand } from "./TimelineStep.parts";
 import { styles } from "./TimelineStep.styles";

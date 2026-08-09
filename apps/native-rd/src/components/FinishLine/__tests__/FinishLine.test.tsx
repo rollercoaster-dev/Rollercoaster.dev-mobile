@@ -11,7 +11,7 @@ import {
   BadgeIconWeight,
   type BadgeDesign,
 } from "../../../badges/types";
-import type { EvidenceItemData } from "../../EvidenceDrawer";
+import type { EvidenceItemData } from "../../../types/evidence";
 
 const evidence: EvidenceItemData[] = [
   { id: "ev-1", type: "photo", label: "Final photo" },

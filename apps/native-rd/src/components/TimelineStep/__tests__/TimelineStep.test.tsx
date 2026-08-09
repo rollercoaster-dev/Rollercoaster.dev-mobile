@@ -8,7 +8,7 @@ import {
 import { i18n } from "../../../i18n";
 import { TimelineStep } from "../TimelineStep";
 import type { TimelineStepChild } from "../TimelineStep";
-import type { EvidenceItemData } from "../../EvidenceDrawer";
+import type { EvidenceItemData } from "../../../types/evidence";
 
 const baseStep = {
   id: "step-1",

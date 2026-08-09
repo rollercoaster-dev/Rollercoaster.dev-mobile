@@ -138,15 +138,6 @@
     "items_one": "{{count}} item",
     "items_other": "{{count}} items"
   },
-  "timeline": {
-    "hint": "Tap to expand timeline",
-    "a11y": {
-      "label": "Step progress timeline — tap to expand",
-      "hint": "Opens full timeline view",
-      "step": "Step {{index}}: {{status}}",
-      "goalEvidence": "Goal evidence"
-    }
-  },
   "timelineBreakdown": {
     "legend": {
       "completed": "{{count}} done",

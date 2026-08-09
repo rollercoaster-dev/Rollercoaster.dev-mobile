@@ -28,7 +28,6 @@ import { Checkbox } from "../components/Checkbox";
 import { CollapsibleSection } from "../components/CollapsibleSection";
 import { ConfirmDeleteModal } from "../components/ConfirmDeleteModal/ConfirmDeleteModal";
 import { StepList, type Step } from "../components/StepList/StepList";
-import { MiniTimeline } from "../components/MiniTimeline/MiniTimeline";
 import {
   TimelineStep,
   type TimelineStepChild,
@@ -417,52 +416,6 @@ describe("Accessibility Contracts", () => {
         row,
         i18n.t("editGoal:stepList.a11y.nestUnderA11y", { title: "Parent" }),
       );
-    });
-  });
-
-  // #292 sub-step nodes render smaller than top-level nodes but must still meet
-  // the 44pt touch target via a widened hitSlop. Existing MiniTimeline tests
-  // lock the visual node width; these lock the compensating hitSlop contract.
-  describe("MiniTimeline node hit targets", () => {
-    const stepLabel = (index: number, status: string) =>
-      i18n.t("common:timeline.a11y.step", { index, status });
-
-    function renderParentChild() {
-      renderWithProviders(
-        <MiniTimeline
-          steps={[
-            { status: "completed" },
-            { status: "pending", isChild: true },
-          ]}
-          currentIndex={0}
-          onStepTap={jest.fn()}
-          onTimelineTap={jest.fn()}
-          accessibilityLabel="Timeline"
-        />,
-      );
-    }
-
-    it.each([
-      ["top-level", 1, "completed", 15],
-      ["child", 2, "pending", 17],
-    ] as const)("%s node carries hitSlop %i", (_kind, index, status, slop) => {
-      renderParentChild();
-      const node = screen.getByLabelText(stepLabel(index, status));
-      expect(node.props.hitSlop).toBe(slop);
-    });
-
-    it("child node touch size (width + 2·hitSlop) meets the 44pt minimum", () => {
-      renderParentChild();
-      const child = screen.getByLabelText(stepLabel(2, "pending"));
-      const innerWidth = (
-        StyleSheet.flatten(
-          screen.getByTestId("timeline-node-1").props.style,
-        ) as { width?: number } | null
-      )?.width;
-      expect(innerWidth).toBeDefined();
-      expect(
-        innerWidth! + 2 * (child.props.hitSlop as number),
-      ).toBeGreaterThanOrEqual(44);
     });
   });
 

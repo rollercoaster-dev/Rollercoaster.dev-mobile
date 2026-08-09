@@ -33,7 +33,7 @@ import type {
   TimelineJourneyScreenProps,
 } from "../../navigation/types";
 import type { StepStatus as UIStepStatus } from "../../types/steps";
-import type { EvidenceItemData } from "../../components/EvidenceDrawer";
+import type { EvidenceItemData } from "../../types/evidence";
 import { validateEvidenceType } from "../../types/evidence";
 import { Logger } from "../../shims/rd-logger";
 import { styles } from "./TimelineJourneyScreen.styles";

@@ -8,7 +8,7 @@ import { GOAL_NODE_SIZE } from "../TimelineNode/TimelineNode.styles";
 import { goalNodeBg, goalNodeFg } from "../TimelineNode/stepStateColorMap";
 import { BadgeShape, BadgeFrame, BadgeIconWeight } from "../../badges/types";
 import type { BadgeDesign } from "../../badges/types";
-import type { EvidenceItemData } from "../EvidenceDrawer";
+import type { EvidenceItemData } from "../../types/evidence";
 import {
   themes,
   themeNames,

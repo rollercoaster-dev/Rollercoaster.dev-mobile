@@ -156,15 +156,6 @@
     "items_one": "{{count}} Element",
     "items_other": "{{count}} Elemente"
   },
-  "timeline": {
-    "hint": "Tippen zum Erweitern der Zeitleiste",
-    "a11y": {
-      "label": "Schritt-Fortschritts-Zeitleiste — tippen zum Erweitern",
-      "hint": "Öffnet Vollansicht der Zeitleiste",
-      "step": "Schritt {{index}}: {{status}}",
-      "goalEvidence": "Ziel-Nachweis"
-    }
-  },
   "timelineBreakdown": {
     "legend": {
       "completed": "{{count}} erledigt",

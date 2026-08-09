@@ -5,7 +5,7 @@ import {
   fireEvent,
 } from "../../../__tests__/test-utils";
 import { TimelineEvidenceCard } from "../TimelineEvidenceCard";
-import type { EvidenceItemData } from "../../EvidenceDrawer";
+import type { EvidenceItemData } from "../../../types/evidence";
 
 const evidence: EvidenceItemData = {
   id: "ev-1",

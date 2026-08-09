@@ -23,6 +23,18 @@ export function validateEvidenceType(type: string): EvidenceTypeValue {
     : EvidenceType.file;
 }
 
+/**
+ * One captured evidence artifact as the timeline surfaces render it.
+ * Lived in `components/EvidenceDrawer` until that component was deleted;
+ * the timeline family (TimelineStep, TimelineEvidenceCard, FinishLine)
+ * are its consumers now.
+ */
+export interface EvidenceItemData {
+  id: string;
+  type: EvidenceTypeValue;
+  label: string;
+}
+
 export interface EvidenceOption {
   readonly type: EvidenceTypeValue;
   readonly icon: string;

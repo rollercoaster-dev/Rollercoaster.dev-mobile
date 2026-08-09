@@ -5,7 +5,7 @@ import { BadgeRenderer } from "../../badges/BadgeRenderer";
 import type { BadgeDesign } from "../../badges/types";
 import { TimelineNode } from "../TimelineNode";
 import { TimelineEvidenceCard } from "../TimelineEvidenceCard";
-import type { EvidenceItemData } from "../EvidenceDrawer";
+import type { EvidenceItemData } from "../../types/evidence";
 import { styles, BADGE_PREVIEW_SIZE } from "./FinishLine.styles";
 
 export interface FinishLineProps {

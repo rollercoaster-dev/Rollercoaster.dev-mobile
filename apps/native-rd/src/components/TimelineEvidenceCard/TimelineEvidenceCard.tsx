@@ -1,6 +1,6 @@
 import React from "react";
 import { Pressable, Text } from "react-native";
-import type { EvidenceItemData } from "../EvidenceDrawer";
+import type { EvidenceItemData } from "../../types/evidence";
 import {
   EVIDENCE_TYPE_ICONS,
   EVIDENCE_TYPE_LABELS,
