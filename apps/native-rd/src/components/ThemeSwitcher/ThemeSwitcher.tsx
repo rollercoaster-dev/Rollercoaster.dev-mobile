@@ -129,7 +129,12 @@ export function ThemeSwitcher() {
   // a11y node on iOS, which hides individual options from Maestro element
   // lookup. Drop the grouping in E2E mode; the Pressables retain their
   // own `accessible+role=radio+label` so screen readers still treat each
-  // option as a discrete radio in production. Mirrors ThemeChipGrid.
+  // option as a discrete radio in production.
+  //
+  // Note this is the pattern #500 rejected: production VoiceOver still gets the
+  // collapsed tree here, and only E2E gets the good one. ThemeSwatchRail — the
+  // replacement this screen adopts in #416 — omits `accessible` unconditionally
+  // instead. Left as-is because #416 unmounts this component outright.
   const isE2E = process.env.EXPO_PUBLIC_E2E_MODE === "true";
   const groupingA11y = isE2E
     ? ({ accessible: false } as const)
