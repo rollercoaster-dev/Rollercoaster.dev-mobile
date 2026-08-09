@@ -8,12 +8,19 @@ appId: dev.rollercoaster.app
 - tapOn:
     id: "tab-SettingsTab"
 - assertVisible: "Settings"
-- assertVisible: "Pick what feels right"
-# Each theme option is a Pressable with accessible=true and a composed
+# Section heading of SettingsThemeSection (`settings:theme.title`). Since #416
+# the Settings theme picker is the ThemeSwatchRail, not the old ThemeSwitcher —
+# "Pick what feels right" (common:theme.picker.title) is no longer rendered here.
+- assertVisible: "Theme"
+# Each swatch is a Pressable with accessible=true and a composed
 # accessibilityLabel `${label}. ${description}`. The wrapper collapses
 # the inner Text nodes (accessible-wrapper trap), so we must match the
-# composed string — see ThemeSwitcher.tsx:138-144 and themeOptions in
+# composed string — see ThemeSwatchRail.tsx and themeOptions in
 # hooks/useTheme.ts.
 - tapOn: "Night Ride. Dark mode"
+# The rail's caption carries the `selected-theme` testID and always renders the
+# SELECTED theme's label, so the combined matcher is a real outcome assertion:
+# it fails if the tap didn't take effect, where a bare id match would not.
 - assertVisible:
     id: "selected-theme"
+    text: "Night Ride"

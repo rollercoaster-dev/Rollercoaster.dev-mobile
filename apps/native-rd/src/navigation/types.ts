@@ -60,6 +60,11 @@ export type BadgesStackParamList = {
 
 export type SettingsStackParamList = {
   Settings: undefined;
+  /**
+   * Replay of the first-launch welcome, reached from Settings › Onboarding.
+   * Presentational only — it never touches `hasSeenWelcome` (#416 D3).
+   */
+  Welcome: undefined;
   /** Dev-only Hermes Intl coverage probe (#66); registered only when `__DEV__`. */
   IntlProbe: undefined;
 };

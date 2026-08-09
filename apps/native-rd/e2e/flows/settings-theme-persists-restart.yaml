@@ -24,10 +24,13 @@ appId: dev.rollercoaster.app
 # Switch to Night Ride and verify immediate selection.
 - tapOn:
     id: "tab-SettingsTab"
-- assertVisible: "Pick what feels right"
+# Section heading of SettingsThemeSection (`settings:theme.title`) — since #416
+# the Settings picker is the ThemeSwatchRail, not the old ThemeSwitcher.
+- assertVisible: "Theme"
 - tapOn: "Night Ride. Dark mode"
 - assertVisible:
     id: "selected-theme"
+    text: "Night Ride"
 
 # Restart with state preserved — clearState defaults to false here, so
 # Evolu's SQLite (and userSettings.theme) survives across the relaunch.
@@ -40,13 +43,13 @@ appId: dev.rollercoaster.app
 
 - tapOn:
     id: "tab-SettingsTab"
-- assertVisible: "Pick what feels right"
+- assertVisible: "Theme"
 
-# Deterministic post-restart assertion: the Pressable currently bearing the
-# `selected-theme` testID (only attached to the selected option — see
-# ThemeSwitcher.tsx:155) must also be the Night Ride card. If persistence
-# regressed and Unistyles defaulted back to light-default, the testID would
-# attach to "The Full Ride" instead and this combined matcher would fail.
+# Deterministic post-restart assertion: the node bearing the `selected-theme`
+# testID is the rail's caption label, which always renders the SELECTED theme's
+# name (see ThemeSwatchRail.tsx). If persistence regressed and the app defaulted
+# back to light-default, that caption would read "The Full Ride" and this
+# combined matcher would fail.
 - assertVisible:
     id: "selected-theme"
     text: "Night Ride"

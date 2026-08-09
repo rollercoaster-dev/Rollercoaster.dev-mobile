@@ -20,6 +20,10 @@
       }
     }
   },
+  "onboarding": {
+    "title": "Onboarding",
+    "replayWelcome": "Replay welcome"
+  },
   "language": {
     "title": "Language (dev)",
     "pseudo": "Pseudo locale"

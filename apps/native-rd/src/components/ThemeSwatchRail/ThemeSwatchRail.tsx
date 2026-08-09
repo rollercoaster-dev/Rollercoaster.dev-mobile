@@ -102,7 +102,17 @@ export function ThemeSwatchRail({
       </View>
 
       <View>
-        <Text style={styles.captionLabel}>
+        {/*
+          `selected-theme` is the E2E handle the required theme flows assert on
+          (e2e/flows/settings-theme-switch.yaml,
+          e2e/flows/settings-theme-persists-restart.yaml). It lives on the
+          caption — not on the selected swatch — because the swatch
+          renders no text, and the restart flow needs a combined
+          `id` + `text: "Night Ride"` matcher to prove the PERSISTED theme came
+          back, not just that something is selected. Inherited from
+          ThemeSwitcher, which carried the same testID before #416.
+        */}
+        <Text testID="selected-theme" style={styles.captionLabel}>
           {t(`common:theme.options.${selectedThemeId}.label`)}
         </Text>
         <Text style={styles.captionDescription}>
