@@ -17,8 +17,10 @@ const sizeValues = {
   lg: 52,
 } as const;
 
-// hitSlop expands touch target to 44pt minimum without inflating visual size
-const hitSlopValues: Record<IconButtonSize, number> = {
+// hitSlop expands touch target to 44pt minimum without inflating visual size.
+// Exported because hitSlop is a Pressable *prop*, not a style — leaving it in
+// the style object silently dropped it and left `sm` a bare 36pt target.
+export const hitSlopValues: Record<IconButtonSize, number> = {
   sm: 4,
   md: 0,
   lg: 0,
@@ -31,7 +33,6 @@ export const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.radius.sm,
     alignItems: "center" as const,
     justifyContent: "center" as const,
-    hitSlop: hitSlopValues[size],
   }),
   // Chrome and celebration are both transparent so the surface they sit on
   // shows through; the difference is which token the foreground resolves

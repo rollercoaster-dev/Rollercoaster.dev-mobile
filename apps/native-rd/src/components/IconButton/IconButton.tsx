@@ -2,6 +2,7 @@ import React from "react";
 import { Pressable, type StyleProp, type TextStyle } from "react-native";
 import { useUnistyles } from "react-native-unistyles";
 import {
+  hitSlopValues,
   resolveIconColor,
   styles,
   type IconButtonSize,
@@ -79,6 +80,9 @@ export function IconButton({
     <Pressable
       onPress={onPress}
       disabled={disabled}
+      // Prop, not style — this is what actually lifts `sm` from its 36pt box to
+      // the 44pt minimum the a11y guidelines require.
+      hitSlop={hitSlopValues[size]}
       testID={testID}
       accessible
       accessibilityRole="button"
