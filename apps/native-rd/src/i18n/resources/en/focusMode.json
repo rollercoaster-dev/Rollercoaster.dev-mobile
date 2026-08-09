@@ -75,7 +75,9 @@
   "header": {
     "showTimeline": "Show timeline",
     "hideTimeline": "Hide timeline",
-    "editGoal": "Edit goal"
+    "editGoal": "Edit goal",
+    "pinGoal": "Pin to cockpit",
+    "unpinGoal": "Unpin from cockpit"
   },
   "a11y": {
     "carousel": "Focus mode cards, {{count}} steps",

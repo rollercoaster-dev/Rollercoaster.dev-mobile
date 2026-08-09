@@ -25,6 +25,10 @@
     "start": "Start",
     "resume": "Resume",
     "resumeHint": "Opens {{title}} in focus mode",
+    "pinGoal": "Pin to cockpit",
+    "unpinGoal": "Unpin from cockpit",
+    "pinHint": "Keeps {{title}} in the cockpit hero slot",
+    "unpinHint": "Returns the hero slot to whatever you worked on last",
     "keepWarm": "Keep warm",
     "newGoal": "New goal"
   },
