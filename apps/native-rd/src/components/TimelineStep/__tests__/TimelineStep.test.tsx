@@ -467,4 +467,28 @@ describe("TimelineStep", () => {
       expect(onNodePress).toHaveBeenCalledWith("p2");
     });
   });
+
+  // E2E selector contract (#502): the ride asserts rename/reorder/reparent as
+  // `timeline-node-<ordinal>` + the interpolated a11yGoTo label. Root ordinals
+  // come from `stepIndex`; child ids are composed here because `ChildRow` has
+  // no `stepIndex` in scope.
+  describe("E2E node testIDs (#502)", () => {
+    const children: TimelineStepChild[] = [
+      { id: "c1", title: "First child", status: "pending", evidence: [] },
+      { id: "c2", title: "Second child", status: "pending", evidence: [] },
+    ];
+
+    it("numbers the root node from stepIndex", () => {
+      renderWithProviders(<TimelineStep {...baseProps} stepIndex={1} />);
+      expect(screen.getByTestId("timeline-node-2")).toBeOnTheScreen();
+    });
+
+    it("composes child ids as <root ordinal>-<letter ordinal>", () => {
+      renderWithProviders(
+        <TimelineStep {...baseProps} stepIndex={1} subSteps={children} />,
+      );
+      expect(screen.getByTestId("timeline-node-2-a")).toBeOnTheScreen();
+      expect(screen.getByTestId("timeline-node-2-b")).toBeOnTheScreen();
+    });
+  });
 });

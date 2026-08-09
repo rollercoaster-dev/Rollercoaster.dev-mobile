@@ -89,6 +89,7 @@ export function TimelineStep({
           <TimelineNode
             status={step.status}
             stepNumber={stepIndex + 1}
+            testID={`timeline-node-${stepIndex + 1}`}
             onPress={() => onNodePress(step.id)}
             accessibilityLabel={t("timelineJourney:step.a11yGoTo", {
               number: stepIndex + 1,
@@ -155,6 +156,7 @@ export function TimelineStep({
               key={child.id}
               child={child}
               ordinal={toLetterOrdinal(index)}
+              nodeTestID={`timeline-node-${stepIndex + 1}-${toLetterOrdinal(index)}`}
               onNodePress={onNodePress}
               onEvidencePress={onEvidencePress}
             />
@@ -174,11 +176,18 @@ export function TimelineStep({
 function ChildRow({
   child,
   ordinal,
+  nodeTestID,
   onNodePress,
   onEvidencePress,
 }: {
   child: TimelineStepChild;
   ordinal: string;
+  /**
+   * Composed by the parent, which is the only scope holding `stepIndex` — a
+   * child row knows its letter ordinal but not the root ordinal it hangs off.
+   * Keeps the id format in one place.
+   */
+  nodeTestID?: string;
   onNodePress: (stepId: string) => void;
   onEvidencePress: (evidenceId: string) => void;
 }) {
@@ -197,6 +206,7 @@ function ChildRow({
         status={child.status}
         size="sm"
         label={ordinal}
+        testID={nodeTestID}
         onPress={() => onNodePress(child.id)}
         accessibilityLabel={t("timelineJourney:step.a11yGoTo", {
           number: ordinal,
