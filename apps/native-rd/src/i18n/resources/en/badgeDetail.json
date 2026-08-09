@@ -15,8 +15,7 @@
   "sections": {
     "about": "About",
     "howEarned": "How it was earned",
-    "details": "Details",
-    "export": "Export"
+    "details": "Details"
   },
   "evidenceList": {
     "a11yLabel_one": "{{count}} evidence item submitted",
@@ -38,14 +37,9 @@
     }
   },
   "actions": {
-    "exportVerifiable": "Export Verifiable Badge",
-    "exportCredential": "Export Credential (JSON)",
-    "saveAsImage": "Save as Image",
-    "saveAsImageHint": "Shares this badge as a picture. The credential may be lost when sent through messengers.",
     "viewTimeline": "View timeline",
     "delete": "Delete Badge"
   },
-  "exportCaption": "Export Verifiable Badge keeps the OpenBadge credential. Save as Image is just a picture — some apps strip the proof when sharing.",
   "share": {
     "cta": "Share badge",
     "sheetTitle": "Share “{{goalTitle}}”",

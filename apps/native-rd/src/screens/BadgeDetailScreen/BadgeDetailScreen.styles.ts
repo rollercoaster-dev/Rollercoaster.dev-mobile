@@ -8,8 +8,17 @@ export const styles = StyleSheet.create((theme) => ({
   // No horizontal padding: the celebration hero is the first child and must
   // run full-bleed to the screen edges. Everything below it lives in `body`,
   // which carries the gutter instead.
+  scroll: {
+    flex: 1,
+  },
   scrollContent: {
     paddingBottom: theme.space[12],
+  },
+  // The Share CTA lives outside the scroll body (see BadgeDetailScreen.tsx),
+  // so it carries the gutter `body` would otherwise have given it.
+  shareCta: {
+    marginHorizontal: theme.space[4],
+    marginBottom: theme.space[4],
   },
   body: {
     paddingHorizontal: theme.space[4],
@@ -46,10 +55,6 @@ export const styles = StyleSheet.create((theme) => ({
     ...theme.textStyles.label,
     color: theme.colors.textMuted,
     textTransform: "uppercase",
-  },
-  exportCaption: {
-    color: theme.colors.textSecondary,
-    marginTop: theme.space[1],
   },
   centered: {
     flex: 1,

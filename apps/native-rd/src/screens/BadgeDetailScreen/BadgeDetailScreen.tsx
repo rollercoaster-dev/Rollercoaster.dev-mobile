@@ -39,6 +39,7 @@ import type {
 } from "../../navigation/types";
 import { CelebrationHeroHeader } from "./CelebrationHeroHeader";
 import { BadgeOverflowMenu } from "./BadgeOverflowMenu";
+import { BadgeShareSheet } from "./BadgeShareSheet";
 import { styles } from "./BadgeDetailScreen.styles";
 
 /**
@@ -189,6 +190,7 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showOverflowMenu, setShowOverflowMenu] = useState(false);
+  const [isShareSheetOpen, setIsShareSheetOpen] = useState(false);
   const { shouldAnimate } = useAnimationPref();
   const insets = useSafeAreaInsets();
   const {
@@ -328,7 +330,12 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
 
   return (
     <>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      {/* flex:1 so the Share CTA below stays a pinned footer rather than being
+          pushed off-screen by tall content. */}
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+      >
         <CelebrationHeroHeader
           badgeDesign={design}
           badgeTitle={goalTitle}
@@ -406,49 +413,6 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
             />
           ) : null}
 
-          <Card>
-            <View style={styles.infoBlock}>
-              <Text style={styles.sectionLabel}>
-                {t("badgeDetail:sections.export")}
-              </Text>
-              {/* Primary: byte-preserving export of the baked PNG (carries the
-                OB 3.0 iTXt credential). On Android this bypasses the share
-                sheet entirely via SAF, so messengers can't transcode and
-                strip the credential. */}
-              <Button
-                label={t("badgeDetail:actions.exportVerifiable")}
-                variant="primary"
-                onPress={() => exportVerifiableBadge(imageUri, goalTitle)}
-                loading={isExportingImage}
-                disabled={!hasRealImage}
-              />
-              <Button
-                label={t("badgeDetail:actions.exportCredential")}
-                variant="secondary"
-                onPress={() =>
-                  exportJSON(badge.credential as string | null, goalTitle)
-                }
-                loading={isExportingJSON}
-                disabled={!badge.credential}
-              />
-              {/* Honest "lossy" path: messenger photo flows may re-encode the
-                PNG and drop the iTXt chunk. Kept available for users who
-                only want to share the visual; the caption below explains
-                the trade-off. */}
-              <Button
-                label={t("badgeDetail:actions.saveAsImage")}
-                variant="secondary"
-                onPress={() => exportImage(imageUri)}
-                loading={isExportingImage}
-                disabled={!hasRealImage}
-                accessibilityHint={t("badgeDetail:actions.saveAsImageHint")}
-              />
-              <Text variant="caption" style={styles.exportCaption}>
-                {t("badgeDetail:exportCaption")}
-              </Text>
-            </View>
-          </Card>
-
           <Button
             label={t("badgeDetail:actions.delete")}
             variant="destructive"
@@ -456,6 +420,46 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
           />
         </View>
       </ScrollView>
+
+      {/* Single Share CTA + its export sheet, replacing the old stacked
+          3-button Export card. Mounted as a root-level sibling of the
+          ScrollView, not inside it: AnimatedSheet is an in-tree absolute
+          overlay, so nesting it in scroll content would anchor the sheet to
+          the content's bottom instead of the viewport's (same placement rule
+          EditGoalView documents). */}
+      <BadgeShareSheet
+        goalTitle={goalTitle}
+        isSheetOpen={isShareSheetOpen}
+        onOpenSheet={() => setIsShareSheetOpen(true)}
+        onCloseSheet={() => setIsShareSheetOpen(false)}
+        onShareVerifiable={() => exportVerifiableBadge(imageUri, goalTitle)}
+        onSaveImage={() => exportImage(imageUri)}
+        onExportCredential={() =>
+          exportJSON(badge.credential as string | null, goalTitle)
+        }
+        // A real baked image implies a real credential (both are written in the
+        // same createBadge call), so this one flag correctly gates the
+        // verifiable row too.
+        canShareImage={hasRealImage}
+        hasCredential={Boolean(badge.credential)}
+        isExportingImage={isExportingImage}
+        isExportingJSON={isExportingJSON}
+        ctaStyle={styles.shareCta}
+        ctaLabel={t("badgeDetail:share.cta")}
+        // Passed as a template, not interpolated: BadgeShareSheet does the
+        // {{goalTitle}} substitution itself (literal split/join, so a title
+        // containing `$` patterns can't corrupt the header).
+        sheetTitleTemplate={t("badgeDetail:share.sheetTitle")}
+        sheetSubtitle={t("badgeDetail:share.sheetSubtitle")}
+        closeLabel={t("common:actions.close")}
+        recommendedLabel={t("badgeDetail:share.recommended")}
+        verifiableLabel={t("badgeDetail:share.verifiable.label")}
+        verifiableDetail={t("badgeDetail:share.verifiable.detail")}
+        saveImageLabel={t("badgeDetail:share.saveImage.label")}
+        saveImageDetail={t("badgeDetail:share.saveImage.detail")}
+        exportCredentialLabel={t("badgeDetail:share.exportCredential.label")}
+        exportCredentialDetail={t("badgeDetail:share.exportCredential.detail")}
+      />
 
       {/* Positioning is the consumer's job (BadgeOverflowMenu ships content
           only). A transparent Modal — the same overlay primitive
@@ -489,10 +493,11 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
               "badgeDetail:share.overflow.exportCredential",
             )}
             deleteBadgeLabel={t("badgeDetail:share.overflow.deleteBadge")}
-            // TODO(#469): replace with BadgeShareSheet once slice 2/2 lands.
+            // Both share entry points land in the same sheet, so the overflow
+            // row can't quietly become a second, differently-behaving export.
             onShareBadge={() => {
               closeOverflowMenu();
-              exportVerifiableBadge(imageUri, goalTitle);
+              setIsShareSheetOpen(true);
             }}
             onExportCredential={() => {
               closeOverflowMenu();
