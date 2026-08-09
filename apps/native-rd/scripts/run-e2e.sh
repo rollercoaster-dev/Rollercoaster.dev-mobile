@@ -40,6 +40,22 @@ if xcrun simctl list devices booted 2>/dev/null | grep -q Booted; then
   xcrun simctl spawn booted defaults write \
     "${APP_BUNDLE_ID}" EXDevMenuIsOnboardingFinished -bool YES
 
+  # …but that key only suppresses the onboarding *hint*. The dev menu itself
+  # auto-opens because `EXDevMenuShowsAtLaunch` registers a default of `true` on
+  # iOS (expo-dev-menu `DevMenuPreferences.setup()`), and the floating action
+  # button registers `true` as well. Both are native overlays in a separate
+  # window: Maestro's hierarchy dump does not show them, but they DO intercept
+  # taps — so a flow fails with "element not found" while the element is right
+  # there behind the modal. Turn both off.
+  #
+  # Do NOT use `EXDevMenuDisableAutoLaunch` for this: `readAutoLaunchDisabledState()`
+  # removes the key as soon as it reads it, so it is a one-shot that only covers
+  # the first flow in a suite.
+  xcrun simctl spawn booted defaults write \
+    "${APP_BUNDLE_ID}" EXDevMenuShowsAtLaunch -bool NO
+  xcrun simctl spawn booted defaults write \
+    "${APP_BUNDLE_ID}" EXDevMenuShowFloatingActionButton -bool NO
+
   # Pin the simulator language to English.
   #
   # Several flows assert interpolated English a11y labels ("1 of 3 steps done.
@@ -51,7 +67,7 @@ if xcrun simctl list devices booted 2>/dev/null | grep -q Booted; then
   xcrun simctl spawn booted defaults write \
     "${APP_BUNDLE_ID}" AppleLanguages -array en
 else
-  echo "warning: no booted simulator; EXDevMenuIsOnboardingFinished and AppleLanguages not pre-seeded" >&2
+  echo "warning: no booted simulator; dev-menu suppression and AppleLanguages not pre-seeded" >&2
 fi
 
 # JUnit output is the artifact the visual/theme audit (#383) attaches to close

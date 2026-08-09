@@ -24,6 +24,13 @@ env:
 - launchApp:
     clearState: true
     clearKeychain: true
+# `launchApp` leaves the app RUNNING, and a running dev client has already
+# picked a packager — on a machine with any other Metro on the default 8081 it
+# picks that one, and the deep link below is then ignored (verified: 60s of
+# waiting with zero requests reaching the intended port). Stopping the app first
+# makes the `openLink` a cold start whose ONLY input is the URL, which is what
+# actually pins the bundle to ${METRO_HOST}:${METRO_PORT}.
+- stopApp
 # Expo SDK 55 dev-client lands on its server picker after clearState instead of
 # auto-reloading the last bundle. Bypass via the dev-client deep-link scheme
 # `exp+<slug>://expo-development-client/?url=<bundle-url>`. Onboarding hint +
@@ -33,14 +40,21 @@ env:
 # Metro on a path-hashed port in 8080–8179, so a hardcoded 8081 cannot run
 # against one (#502 D22).
 - openLink: "exp+rollercoasterdev://expo-development-client/?url=http%3A%2F%2F${METRO_HOST}%3A${METRO_PORT}"
-# While Evolu is still reading settings from SQLite, App.tsx renders a bare
-# background View — no text, no affordances, indistinguishable from "Welcome
-# failed to mount". Waiting for `app-loading` to disappear is the only honest
-# boot barrier.
+# Boot barrier. This MUST be a positive wait, not `notVisible: app-loading`:
+# between the `clearState` reinstall and the dev client finishing its bundle
+# fetch there is no React root at all, so a negative assertion passes instantly
+# on an empty tree and every following step races the bundle download.
+# `welcome-get-started` is the first thing that exists only once the bundle has
+# mounted AND Evolu has resolved `isFirstLaunch` to true, so it clears both.
 - extendedWaitUntil:
-    notVisible:
-      id: "app-loading"
-    timeout: 20000
+    visible:
+      id: "welcome-get-started"
+    timeout: 60000
+# Belt and braces: `app-loading` is the bare background View App.tsx renders
+# while `isFirstLaunch === null`. It cannot still be up once the CTA above is
+# visible, but asserting it keeps the id meaningful and documents the state.
+- assertNotVisible:
+    id: "app-loading"
 - tapOn:
     id: "theme-swatch-${THEME_SWATCH}"
 - tapOn:

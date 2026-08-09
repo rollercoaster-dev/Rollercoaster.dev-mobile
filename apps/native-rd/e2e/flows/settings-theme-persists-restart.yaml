@@ -34,19 +34,20 @@ env:
 # Restart with state PRESERVED — this relaunch is deliberately inline rather
 # than a second runFlow of the prologue, which would clearState and destroy the
 # very thing under test.
-- launchApp
+- stopApp
 - openLink: "exp+rollercoasterdev://expo-development-client/?url=http%3A%2F%2F${METRO_HOST}%3A${METRO_PORT}"
+# Positive barrier, same reasoning as the prologue's: a negative assertion
+# passes instantly on the empty tree that exists before the bundle mounts.
+# Post-restart we land on the cockpit, not Welcome.
 - extendedWaitUntil:
-    notVisible:
-      id: "app-loading"
-    timeout: 20000
+    visible:
+      id: "goals-cockpit-new-goal"
+    timeout: 60000
 
-# We should land directly on the cockpit — hasSeenWelcome=1 was persisted before
-# the restart, so onboarding doesn't replay. Asserted on the cockpit's own
-# testID, never `assertVisible: "Goals"`: GoalsScreen renders "Today" whenever a
-# hero goal is pinned and "Goals" only when empty (#502 D7).
-- assertVisible:
-    id: "goals-cockpit-new-goal"
+# The barrier above doubles as the "onboarding did not replay" assertion:
+# hasSeenWelcome=1 was persisted before the restart, so we land straight on the
+# cockpit. Asserted on the cockpit's own testID, never `assertVisible: "Goals"`
+# — GoalsScreen renders "Today" whenever a hero goal is pinned (#502 D7).
 
 - tapOn:
     id: "tab-SettingsTab"
