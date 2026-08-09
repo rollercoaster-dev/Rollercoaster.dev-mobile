@@ -136,21 +136,6 @@
       "markCompleteHint": "Öffnet Abschlussablauf zum Erfassen des finalen Nachweises"
     }
   },
-  "evidenceDrawer": {
-    "a11y": {
-      "label": "Nachweisschublade",
-      "labelGoal": "Ziel-Nachweisschublade",
-      "close": "Nachweisschublade schließen",
-      "toggle": "Nachweisschublade umschalten"
-    },
-    "label": {
-      "goal_one": "Zielbeleg: {{count}} Element",
-      "goal_other": "Zielbeleg: {{count}} Elemente",
-      "step_one": "{{count}} Belegelement",
-      "step_other": "{{count}} Belegelemente"
-    },
-    "emptyHint": "Noch kein Beleg — tippe + zum Hinzufügen"
-  },
   "evidenceCount": {
     "addEvidence": "+ Beleg hinzufügen",
     "items_one": "{{count}} Element",
