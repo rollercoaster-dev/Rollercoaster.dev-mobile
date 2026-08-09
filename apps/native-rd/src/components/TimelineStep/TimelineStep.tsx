@@ -77,6 +77,10 @@ export function TimelineStep({
   // same map the node uses (stepStateColorMap), replacing the old StatusBadge.
   // The word itself is the Timeline's own vocabulary (#453), not StepCard's.
   const statusLabel = t(stepStateColorMap[step.status].stateWordI18nKey);
+  // With no evidence there is nothing to disclose, so the header stops being a
+  // disclosure control entirely — no chevron, no `expanded` state to announce.
+  // Otherwise a screen reader would hear "expanded" while nothing mounts below.
+  const hasEvidence = evidence.length > 0;
 
   return (
     <View style={styles.wrapper}>
@@ -94,11 +98,13 @@ export function TimelineStep({
         </View>
         <View style={styles.contentCard}>
           <Pressable
-            onPress={() => setExpanded((prev) => !prev)}
+            onPress={
+              hasEvidence ? () => setExpanded((prev) => !prev) : undefined
+            }
             accessible
-            accessibilityRole="button"
+            accessibilityRole={hasEvidence ? "button" : "text"}
             accessibilityLabel={`${step.title}, ${statusLabel}`}
-            accessibilityState={{ expanded }}
+            accessibilityState={hasEvidence ? { expanded } : undefined}
             style={styles.header}
           >
             <View style={styles.titleContainer}>
@@ -107,12 +113,14 @@ export function TimelineStep({
               </Text>
             </View>
             <StateWord status={step.status} label={statusLabel} />
-            <Text
-              style={[styles.chevron, expanded && styles.chevronExpanded]}
-              accessibilityElementsHidden
-            >
-              {"\u25BC"}
-            </Text>
+            {hasEvidence && (
+              <Text
+                style={[styles.chevron, expanded && styles.chevronExpanded]}
+                accessibilityElementsHidden
+              >
+                {"\u25BC"}
+              </Text>
+            )}
           </Pressable>
           <MetadataBand
             afterStep={step.afterStep}
@@ -121,7 +129,7 @@ export function TimelineStep({
           />
           {/* No evidence → no section at all. An empty box saying "No evidence
               yet" is visual noise on a surface the user already reads as empty. */}
-          {expanded && evidence.length > 0 && (
+          {expanded && hasEvidence && (
             <View
               style={styles.evidenceSection}
               testID="timeline-evidence-section"
@@ -177,6 +185,8 @@ function ChildRow({
   // band (OQ-2); the evidence drawer below is pre-existing #293 behavior — the
   // prototype's E-only (no-drawer) child is a fidelity follow-up owned by #378.
   const statusLabel = t(stepStateColorMap[child.status].stateWordI18nKey);
+  // Same disclosure honesty as the parent step — see `hasEvidence` there.
+  const hasEvidence = child.evidence.length > 0;
 
   return (
     <View style={styles.childRow}>
@@ -192,14 +202,14 @@ function ChildRow({
       />
       <View style={styles.childContentCard}>
         <Pressable
-          onPress={() => setExpanded((prev) => !prev)}
+          onPress={hasEvidence ? () => setExpanded((prev) => !prev) : undefined}
           accessible
-          accessibilityRole="button"
+          accessibilityRole={hasEvidence ? "button" : "text"}
           accessibilityLabel={t("timelineJourney:step.a11yChildExpand", {
             ordinal,
             title: child.title,
           })}
-          accessibilityState={{ expanded }}
+          accessibilityState={hasEvidence ? { expanded } : undefined}
           style={styles.childHeader}
         >
           <View style={styles.titleContainer}>
@@ -208,15 +218,17 @@ function ChildRow({
             </Text>
           </View>
           <StateWord status={child.status} label={statusLabel} />
-          <Text
-            style={[styles.chevron, expanded && styles.chevronExpanded]}
-            accessibilityElementsHidden
-          >
-            {"\u25BC"}
-          </Text>
+          {hasEvidence && (
+            <Text
+              style={[styles.chevron, expanded && styles.chevronExpanded]}
+              accessibilityElementsHidden
+            >
+              {"\u25BC"}
+            </Text>
+          )}
         </Pressable>
         {/* Same as the parent step: nothing renders when there's no evidence. */}
-        {expanded && child.evidence.length > 0 && (
+        {expanded && hasEvidence && (
           <View
             style={styles.evidenceSection}
             testID="timeline-evidence-section"

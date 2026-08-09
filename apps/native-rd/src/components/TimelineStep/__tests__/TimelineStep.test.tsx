@@ -59,6 +59,8 @@ describe("TimelineStep", () => {
   it("expands evidence on header tap", () => {
     renderWithProviders(<TimelineStep {...baseProps} />);
     fireEvent.press(screen.getByLabelText("Read the docs, Working"));
+    // Positive control for the testID the empty-state tests assert absent.
+    expect(screen.getByTestId("timeline-evidence-section")).toBeOnTheScreen();
     expect(screen.getByText("Progress photo")).toBeOnTheScreen();
     expect(screen.getByText("Useful article")).toBeOnTheScreen();
   });
@@ -77,6 +79,27 @@ describe("TimelineStep", () => {
     fireEvent.press(screen.getByLabelText("Read the docs, Working"));
     expect(screen.queryByText("No evidence yet")).toBeNull();
     expect(screen.queryByTestId("timeline-evidence-section")).toBeNull();
+  });
+
+  it("header advertises no disclosure when a step has no evidence", () => {
+    renderWithProviders(<TimelineStep {...baseProps} evidence={[]} />);
+    const header = screen.getByLabelText("Read the docs, Working");
+    // Nothing to expand → not a button, no `expanded` to announce, no chevron.
+    expect(header.props.accessibilityRole).toBe("text");
+    expect(header.props.accessibilityState?.expanded).toBeUndefined();
+    expect(screen.queryByText("▼")).toBeNull();
+  });
+
+  it("header is a disclosure button when a step has evidence", () => {
+    renderWithProviders(<TimelineStep {...baseProps} />);
+    const header = screen.getByLabelText("Read the docs, Working");
+    expect(header.props.accessibilityRole).toBe("button");
+    expect(header.props.accessibilityState.expanded).toBe(false);
+    fireEvent.press(header);
+    expect(
+      screen.getByLabelText("Read the docs, Working").props.accessibilityState
+        .expanded,
+    ).toBe(true);
   });
 
   it("calls onNodePress with the step's own id when node is tapped", () => {
@@ -411,6 +434,19 @@ describe("TimelineStep", () => {
       // The parent step is collapsed here, so any section on screen would be
       // the expanded sub-step's — there is none.
       expect(screen.queryByTestId("timeline-evidence-section")).toBeNull();
+    });
+
+    it("sub-step header advertises no disclosure when it has no evidence", () => {
+      renderWithProviders(<TimelineStep {...baseProps} subSteps={subSteps} />);
+      // c2 ("Second child") is the evidence-less sub-step.
+      const header = screen.getByLabelText("Sub-step b: Second child");
+      expect(header.props.accessibilityRole).toBe("text");
+      expect(header.props.accessibilityState?.expanded).toBeUndefined();
+      // c1/c3 both have evidence, so their chevrons are the only ones left.
+      expect(
+        screen.getByLabelText("Sub-step a: First child").props
+          .accessibilityRole,
+      ).toBe("button");
     });
 
     it("calls onNodePress with the sub-step's own id, not its parent's", () => {

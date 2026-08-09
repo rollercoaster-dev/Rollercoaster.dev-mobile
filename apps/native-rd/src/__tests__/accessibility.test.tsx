@@ -434,7 +434,9 @@ describe("Accessibility Contracts", () => {
         id: "c-a",
         title: "Strip the wires",
         status: "in-progress",
-        evidence: [],
+        // Carries evidence so the header is a real disclosure control: since
+        // #455 a child with none is inert text, not an expandable button.
+        evidence: [{ id: "ev-a", type: "photo", label: "Stripped ends" }],
       },
       {
         id: "c-b",
@@ -472,6 +474,20 @@ describe("Accessibility Contracts", () => {
       expectAccessibleState(screen.getByLabelText(expandLabel), {
         expanded: true,
       });
+    });
+
+    it("child header with no evidence is inert text, not a button claiming expanded", () => {
+      renderWithSubSteps();
+      // c-b has no evidence: announcing "expanded" would be a lie, since
+      // nothing mounts below it (#455).
+      const header = screen.getByLabelText(
+        i18n.t("timelineJourney:step.a11yChildExpand", {
+          ordinal: "b",
+          title: "Connect the breaker",
+        }),
+      );
+      expectAccessibleRole(header, "text");
+      expect(header.props.accessibilityState?.expanded).toBeUndefined();
     });
 
     it("child node has button role, go-to label, and meets the 44pt target", () => {
