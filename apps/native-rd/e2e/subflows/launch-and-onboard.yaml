@@ -1,0 +1,52 @@
+appId: dev.rollercoaster.app
+env:
+  METRO_HOST: localhost
+  METRO_PORT: "8081"
+  # Autism-Friendly (`Still Water`). One tap buys every determinism lever at
+  # once: useAnimationPref.ts forces animationPref = "none" for this variant,
+  # which renders the discrete ↑/↓/nest hierarchy controls (EditGoalStepList),
+  # suppresses finish-reveal-sparkles, zeroes AnimatedSheet exit timing, and
+  # makes the tab knob snap instead of animate. Override per flow if a run
+  # needs a different theme — nothing here is locked in (#502 D3/D25).
+  THEME_SWATCH: light-autismFriendly
+---
+# Shared prologue: isolation → dev-client boot → onboarding → determinism lever.
+#
+# Lives in `e2e/subflows/`, NOT `e2e/flows/`, because scripts/run-e2e.sh runs
+# every yaml under `e2e/flows/` as a top-level flow. A prologue in `flows/`
+# would execute standalone on every suite run (#502 D2).
+#
+# Isolation idiom, used by every flow with no exceptions (#502 D1):
+#   - clearState    → one atomic reset of onboarding, theme, density and
+#                     pinnedGoalId, which all live in the same Evolu SQLite file
+#   - clearKeychain → Ed25519 signing keys live in Keychain and are NOT touched
+#                     by clearState, so a repeatable bake needs this too
+- launchApp:
+    clearState: true
+    clearKeychain: true
+# Expo SDK 55 dev-client lands on its server picker after clearState instead of
+# auto-reloading the last bundle. Bypass via the dev-client deep-link scheme
+# `exp+<slug>://expo-development-client/?url=<bundle-url>`. Onboarding hint +
+# dev-menu modals are pre-disabled in run-e2e.sh.
+#
+# Host AND port are parameterized: scripts/worktree-boot.sh puts a worktree's
+# Metro on a path-hashed port in 8080–8179, so a hardcoded 8081 cannot run
+# against one (#502 D22).
+- openLink: "exp+rollercoasterdev://expo-development-client/?url=http%3A%2F%2F${METRO_HOST}%3A${METRO_PORT}"
+# While Evolu is still reading settings from SQLite, App.tsx renders a bare
+# background View — no text, no affordances, indistinguishable from "Welcome
+# failed to mount". Waiting for `app-loading` to disappear is the only honest
+# boot barrier.
+- extendedWaitUntil:
+    notVisible:
+      id: "app-loading"
+    timeout: 20000
+- tapOn:
+    id: "theme-swatch-${THEME_SWATCH}"
+- tapOn:
+    id: "welcome-get-started"
+# Arrival is asserted on a surface testID, never `assertVisible: "Goals"`:
+# GoalsScreen renders "Today" whenever a hero goal is pinned and "Goals" only
+# when empty, so the text assertion is silently conditional (#502 D7).
+- assertVisible:
+    id: "goals-cockpit-new-goal"
