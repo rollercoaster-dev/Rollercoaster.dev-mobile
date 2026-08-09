@@ -63,6 +63,8 @@ const mockUncompleteStep = okMutation();
 const mockPauseStep = okMutation();
 const mockResumeStep = okMutation();
 const mockUpdateStep = okMutation();
+const mockPinGoal = okMutation();
+const mockUnpinGoal = okMutation();
 
 jest.mock("../../../db", () => {
   // The completion gate below calls the *production* helpers rather than
@@ -107,6 +109,8 @@ jest.mock("../../../db", () => {
     userSettingsQuery: "userSettingsQuery",
     createUserSettings: jest.fn(),
     updateUserSettings: jest.fn(),
+    pinGoal: (...args: unknown[]) => mockPinGoal(...args),
+    unpinGoal: (...args: unknown[]) => mockUnpinGoal(...args),
     completeStep: (...args: unknown[]) => mockCompleteStep(...args),
     uncompleteStep: (...args: unknown[]) => mockUncompleteStep(...args),
     pauseStep: (...args: unknown[]) => mockPauseStep(...args),
@@ -313,13 +317,16 @@ function setupQueries({
   goal = GOAL,
   steps = PHOTO_STEP,
   stepEvidence = [] as object[],
+  settings = null as object | null,
 }: {
   goal?: object | null;
   steps?: object[];
   stepEvidence?: object[];
+  settings?: object | null;
 } = {}) {
   mockUseQuery.mockImplementation((query: unknown) => {
     if (query === "goalsQuery") return goal ? [goal] : [];
+    if (query === "userSettingsQuery") return settings ? [settings] : [];
     if (
       typeof query === "string" &&
       query.startsWith("stepEvidenceByGoalQuery")
@@ -1248,6 +1255,51 @@ describe("FocusModeScreen", () => {
       setupQueries({ steps: [...steps] });
       renderWithProviders(<FocusModeScreen {...routeProps} />);
       expect(currentCardTitle()).toBe(expectedTitle);
+    });
+  });
+
+  describe("cockpit pin toggle (#396)", () => {
+    const SETTINGS = { id: "settings-1", pinnedGoalId: null };
+
+    it.each([
+      { name: "another goal is pinned", pinnedGoalId: "goal-2", pinned: false },
+      { name: "this goal is pinned", pinnedGoalId: "goal-1", pinned: true },
+    ])("reflects the pin state when $name", ({ pinnedGoalId, pinned }) => {
+      setupQueries({ settings: { ...SETTINGS, pinnedGoalId } });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      const toggle = screen.getByTestId("focus-mode-pin");
+      expect(toggle.props.accessibilityState.selected).toBe(pinned);
+      expect(toggle.props.accessibilityLabel).toBe(
+        t(pinned ? "focusMode:header.unpinGoal" : "focusMode:header.pinGoal"),
+      );
+    });
+
+    it("pins the goal when the toggle is inactive", () => {
+      setupQueries({ settings: SETTINGS });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      fireEvent.press(screen.getByTestId("focus-mode-pin"));
+      expect(mockPinGoal).toHaveBeenCalledWith("settings-1", "goal-1");
+      expect(mockUnpinGoal).not.toHaveBeenCalled();
+    });
+
+    it("unpins the goal when the toggle is active", () => {
+      setupQueries({ settings: { ...SETTINGS, pinnedGoalId: "goal-1" } });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      fireEvent.press(screen.getByTestId("focus-mode-pin"));
+      expect(mockUnpinGoal).toHaveBeenCalledWith("settings-1");
+      expect(mockPinGoal).not.toHaveBeenCalled();
+    });
+
+    it("is a no-op before the settings singleton bootstraps", () => {
+      setupQueries({ settings: null });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      fireEvent.press(screen.getByTestId("focus-mode-pin"));
+      expect(mockPinGoal).not.toHaveBeenCalled();
+      expect(mockUnpinGoal).not.toHaveBeenCalled();
     });
   });
 

@@ -97,6 +97,7 @@
     "goalNotFound": "Goal not found.",
     "somethingWrong": "Something went wrong. Please try again.",
     "couldNotUpdateStep": "Could not update step: {{message}}",
+    "couldNotChangePin": "Could not change the pin. Please try again.",
     "couldNotOpenCapture": "Could not open {{label}} capture screen",
     "couldNotDeleteEvidenceTitle": "Could not delete evidence"
   }
