@@ -2,76 +2,200 @@
 
 End-to-end test flows for the native-rd app, designed for agent authoring and execution.
 
+The suite is a **manual pre-merge gate**, not a CI job. See [The pre-merge gate](#the-pre-merge-gate).
+
 ## Prerequisites
 
 - **Maestro CLI**: `brew tap mobile-dev-inc/tap && brew install mobile-dev-inc/tap/maestro` (not in devDependencies — requires separate install). Do not use `brew install maestro`; that installs the wrong Homebrew cask for this runner.
-- **iOS Simulator**: Must be booted with the app installed (`npx expo run:ios`)
+- **iOS Simulator**: booted with the app installed. Build it with **`bun run ios:e2e`**, not `bun run ios` — `EXPO_PUBLIC_*` is inlined by Metro at serve time, and `scripts/run-e2e.sh` neither sets nor verifies it. Only `evidence-viewer.yaml` strictly needs the flag today, but a single build for the whole suite beats a two-build matrix.
 - **App ID**: `dev.rollercoaster.app`
+- **Simulator locale**: `scripts/run-e2e.sh` pins `AppleLanguages` to `en` on the booted simulator. Several flows assert interpolated English a11y labels, and `de` ships — a German simulator fails them in ways that read as product regressions. `test:e2e:single` bypasses the script, so pin it by hand for single-flow iteration (see below).
 
 ## Running Flows
 
 ```bash
-# Run all flows
+# The gate: required flows only, writing the JUnit artifact
+bun run test:e2e:required
+
+# Everything under e2e/flows/, including `optional`
 bun run test:e2e
 
-# Run a single flow
-bun run test:e2e:single e2e/flows/goal-create.yaml
-
-# JSON output for agent consumption
-maestro test --format junit e2e/flows/
+# A single flow. NOTE: this bypasses scripts/run-e2e.sh entirely, so the
+# UserDefaults pre-seeds below have to be done once per simulator by hand.
+xcrun simctl spawn booted defaults write dev.rollercoaster.app EXDevMenuIsOnboardingFinished -bool YES
+xcrun simctl spawn booted defaults write dev.rollercoaster.app AppleLanguages -array en
+bun run test:e2e:single e2e/flows/full-ride.yaml
 ```
+
+**Never** invoke this via the repo root's `bun run test:e2e` alias in a way you'd trust — that is `turbo test:e2e`. The task is `cache: false` as of #502; before that it declared `outputs: ["coverage/**"]`, which Maestro never writes, so a FULL-TURBO hit could report green having launched nothing.
+
+`scripts/run-e2e.sh` **fails hard** when the Maestro CLI is absent. Set `E2E_ALLOW_MISSING_MAESTRO=1` to opt out deliberately; it used to `exit 0` silently, which reported a green suite from a machine that ran zero flows.
+
+## Flow layout
+
+```
+e2e/
+  flows/      ← every yaml here is executed as a top-level flow
+  subflows/   ← shared fragments, referenced via runFlow, never run standalone
+  reports/    ← junit.xml (gitignored) + tracked run records
+```
+
+`scripts/run-e2e.sh` runs `maestro test e2e/flows/`, i.e. **everything in that directory**. That is why the shared prologue lives in `e2e/subflows/` — a prologue in `flows/` would execute standalone on every suite run, and it is also why no flow may `runFlow` another top-level flow (the callee would run twice).
+
+### The shared prologue
+
+Every flow opens with:
+
+```yaml
+- runFlow:
+    file: ../subflows/launch-and-onboard.yaml
+    env:
+      METRO_HOST: ${METRO_HOST}
+      METRO_PORT: ${METRO_PORT}
+      THEME_SWATCH: light-autismFriendly
+```
+
+It performs isolation → dev-client boot → boot barrier → theme selection → onboarding exit, and asserts arrival on the cockpit.
+
+- **Isolation is `launchApp: { clearState: true, clearKeychain: true }`, for every flow, no exceptions.** Onboarding, theme, density and `pinnedGoalId` all live in one Evolu SQLite file, so `clearState` resets them atomically — but Ed25519 signing keys live in Keychain and are **not** touched by it, so a repeatable bake needs `clearKeychain` too.
+- **`METRO_HOST` / `METRO_PORT` are parameterized** (`localhost` / `8081` defaults). `scripts/worktree-boot.sh` puts a worktree's Metro on a path-hashed port in 8080–8179, so a hardcoded port cannot run against one.
+- **`THEME_SWATCH` picks the theme during onboarding.** `light-autismFriendly` ("Still Water") is the default because it is the determinism lever: `useAnimationPref` forces `animationPref = "none"` for that variant, which renders the discrete ↑/↓/nest hierarchy controls (the only non-drag reorder path), suppresses `finish-reveal-sparkles`, zeroes `AnimatedSheet` exit timing, and makes the tab knob snap instead of animate. The theme flows override it to `light-default` so their switch is a real change.
+
+### Boot barrier
+
+While Evolu is still reading settings from SQLite, `App.tsx` renders a bare background `View` — no text, no affordances, indistinguishable from "Welcome failed to mount". The prologue waits on `extendedWaitUntil: { notVisible: { id: app-loading } }` rather than an implicit text assertion.
 
 ## Writing Flows
 
-Flows are YAML files in `e2e/flows/`. Each flow maps to a user story from `docs/vision/user-stories.md`.
+Flows are YAML files in `e2e/flows/`. Each maps to a user story from `docs/vision/user-stories.md`.
 
 ### Element matching
 
-Maestro matches elements by:
+1. **`id:`** — maps to `testID` (most stable). **Treated as a regex**, which is what makes the addressing scheme below work.
+2. **Text content** — maps to `accessibilityLabel` or visible text (simpler but brittle).
 
-1. **`id:`** — maps to `testID` prop (most stable)
-2. **Text content** — maps to `accessibilityLabel` or visible text (simpler but brittle)
+Prefer `id:` for interactive elements. Text matching is fine for assertions, subject to the collapse rule below.
 
-Prefer `id:` for interactive elements (buttons, inputs). Use text matching for assertions (`assertVisible`).
+### Addressing rows whose id you cannot know
+
+Every EditMode row testID interpolates an **Evolu-generated** id (`edit-goal-step-up-${step.id}`), which a pre-written flow can never construct. Address them by **`id:` regex + `index:`**:
+
+```yaml
+- tapOn:
+    id: "edit-goal-step-up-.*"
+    index: 1 # row 2 = Charlie; up buttons render on rows 2–3 only
+```
+
+`index:` is deterministic here because the flow authored the list order itself. Every such selector must carry an inline comment naming the expected row and the derivation — and the outcome should be asserted a step or two later (the Timeline's ordinal↔title matchers do this), so a mis-targeted tap fails loudly instead of passing quietly.
+
+**In-wizard rows are the exception**: `useNewGoalSteps` mints `step-<n>` / `sub-<n>` from a monotonic ref counter and there is no `StrictMode`, so `edit-goal-step-evidence-step-1` is knowable and literal ids are strictly better there.
+
+No index-alias testIDs are added to production components for the suite's benefit, and no screen-identity testIDs exist — screen arrival is asserted on an existing surface id (`goals-cockpit-new-goal`, `edit-goal-content`, `finish-celebrate-stage`, …). In particular, **never `assertVisible: "Goals"`**: `GoalsScreen` renders "Today" whenever a hero goal is pinned and "Goals" only when empty, so that assertion is silently conditional.
+
+### The iOS `accessible`-collapse trap
+
+On iOS, a view marked `accessible` becomes a single accessibility element and its `Text` children **do not reach the tree at all** — a testID on a child cannot rescue it. Any text matcher must therefore name **the a11y label that actually reaches the tree**, never the visible copy.
+
+Two live examples:
+
+- The progress strip's `Pressable` is `accessible` and carries `focusMode:progressStrip.a11yLabel` → assert **`"1 of 3 steps done. See all steps."`**, never the inner `"1 / 3 done"` Text.
+- The nest-under picker row's `Pressable` carries `editGoal:stepList.a11y.nestUnderA11y` → assert **`"Nest this step under Charlie step"`**, never the visible `Nest under "Charlie step"` child.
+
+This is verifiable, and should be verified, with `maestro hierarchy` — VoiceOver does not run in the Simulator, so the hierarchy dump is the only ground truth.
+
+### Soft keyboard occlusion
+
+`CaptureTextNote` lifts its footer above the keyboard (`useReanimatedKeyboardAnimation`). **`CaptureLinkScreen` does not** — no `KeyboardAvoidingView`, no keyboard-controller — so its Save button sits under the keyboard and the tap lands on the keyboard instead. Every link capture must dismiss first by tapping `capture-link-caption` (`returnKeyType="done"`) then `pressKey: Enter`. Enter on the URL field does nothing useful: it is `returnKeyType="next"` and only advances focus. The production fix is filed separately.
 
 ### Flow structure
 
 ```yaml
 appId: dev.rollercoaster.app
+tags:
+  - required
+env:
+  METRO_HOST: localhost
+  METRO_PORT: "8081"
 ---
-- launchApp
-- assertVisible: "Screen Title"
-- tapOn: "Button Label"
-- inputText:
-    id: "input-test-id"
-    text: "Value to type"
+- runFlow:
+    file: ../subflows/launch-and-onboard.yaml
+    env:
+      METRO_HOST: ${METRO_HOST}
+      METRO_PORT: ${METRO_PORT}
+      THEME_SWATCH: light-autismFriendly
+- tapOn:
+    id: "goals-cockpit-new-goal"
+- assertVisible:
+    id: "new-goal-wizard-content"
 ```
 
 ## Required vs Optional Flows
 
-Each flow YAML file has a `# Status: required` or `# Status: optional` comment header.
+**Maestro `tags:` is the single source of truth.** The old `# Status: required|optional` comment header is gone: nothing parsed it, and it had already drifted twice (one flow said `# Status: TDD-style`, another had no header at all). Tags are Maestro-native and selectable via `--include-tags required`.
 
-A flow qualifies as **required** when it meets ALL three criteria:
+A flow qualifies as `required` when it meets ALL three criteria:
 
-> **Note:** CI enforcement for required flows is not yet implemented — `scripts/run-e2e.sh` currently runs all flows unfiltered and Maestro is not executed in CI (only Jest unit tests run via `test:ci`). CI integration is tracked in epic #889.
+1. **Outcome assertions** — it verifies outcomes, not just that actions were performed
+2. **Stable feature** — it tests a stable, implemented feature, not an aspirational one
+3. **Deterministic** — no race conditions, no flaky element matching
 
-1. **Outcome assertions** — It has assertions that verify outcomes, not just that actions were performed
-2. **Stable feature** — It tests a stable, implemented feature (not aspirational)
-3. **Deterministic** — No race conditions or flaky element matching
-
-A flow is **optional** when it covers aspirational or partially-implemented features. Optional flows are tracked but excluded from CI gates.
+A flow is `optional` when it covers aspirational or partially-implemented features. Optional flows are tracked but excluded from the gate.
 
 ## Current Flows
 
-| Flow                         | Status   | User Story           | Description                                                               |
-| ---------------------------- | -------- | -------------------- | ------------------------------------------------------------------------- |
-| `goal-create.yaml`           | required | Lina's Quiet Victory | Create a goal, verify navigation to Design Badge screen                   |
-| `goal-create-complete.yaml`  | required | Lina's Quiet Victory | Create a goal, add a note in Focus Mode, complete it, add final goal note |
-| `badge-view.yaml`            | required | Badge tab            | Navigate to badges tab, verify empty state                                |
-| `settings-theme-switch.yaml` | required | Theme switch         | Navigate to settings, switch to Night Ride, verify change                 |
+| Flow                                   | Tag        | Covers                                                                                                                                                                                                                                                                                                                   |
+| -------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `full-ride.yaml`                       | `required` | **The canonical lifecycle.** Wizard creation with a two-type evidence plan → rename/reorder/reparent → capture every planned type → complete with auto-advance past a set-aside step → Timeline↔Focus exact-step handoff (paused and completed) → step reopen → bake → Badge Detail with a real signed PNG → Badges wall |
+| `bake-recovery.yaml`                   | `required` | The no-evidence bake gate: error alert → retry re-arms and re-throws → with evidence, the same bake reaches reveal. The only place `finish-baking-error-alert` / `finish-baking-retry-button` are asserted                                                                                                               |
+| `badge-view.yaml`                      | `required` | Badges tab navigation and empty state                                                                                                                                                                                                                                                                                    |
+| `settings-theme-switch.yaml`           | `required` | Settings → Night Ride, immediate selection                                                                                                                                                                                                                                                                               |
+| `settings-theme-persists-restart.yaml` | `required` | Night Ride survives a full app restart (Evolu-backed persistence)                                                                                                                                                                                                                                                        |
+| `evidence-viewer.yaml`                 | `optional` | Mixed-type evidence (link + text) → Timeline card → EvidenceViewerScreen → thumbnail strip. **The only flow requiring `EXPO_PUBLIC_E2E_MODE=true`**                                                                                                                                                                      |
 
-## Deferred Flows
+Plus `subflows/launch-and-onboard.yaml`, which is not a flow.
 
-| Flow                 | Blocked On                         | Notes                                                                                                                 |
-| -------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `goal-complete.yaml` | Separate goal completion scenarios | Keep for future completion-path variants beyond the main real quick-note flow covered by `goal-create-complete.yaml`. |
+### What the suite deliberately does not cover
+
+**Media evidence capture — `photo`, `video`, `voice_memo`, `file`.** Four of the six evidence types hand control to a different process the moment they are tapped (Apple's camera/photo picker, the Files app, the audio recorder), so they leave the app's accessibility tree entirely and Maestro cannot see them. Pre-granting permissions with `xcrun simctl privacy grant` would raise the ceiling to 4 of 6 at best — camera-`photo` and `voice_memo` are impossible on a simulator regardless — and permission alerts are stateful, firing once per install, which breaks the "isolated and repeatable" property the whole suite rests on.
+
+Compensating coverage, all pure-Jest plus Storybook stories:
+
+- `src/screens/CapturePhoto/__tests__/CapturePhoto.test.tsx`
+- `src/screens/CaptureVideoScreen/__tests__/CaptureVideoScreen.test.tsx`
+- `src/screens/CaptureFile/__tests__/CaptureFile.test.tsx`
+- `src/screens/VoiceMemoScreen/__tests__/VoiceMemoScreen.test.tsx`
+
+**Badge redesign and goal-level reopen.** Nothing navigates to `BadgeDesignerScreen` in either stack, and `uncompleteGoal` has zero UI callers — no flow can reach either. "Reopen" in `full-ride.yaml` is **step** reopen.
+
+**The `no-key` bake branch.** Logically unreachable: the hook sets it only when `isReady && !keyId`, but `isReady` already implies a `keyId`. The real no-key failure mode is an unbounded spinner with no alert, retry or exit — filed as a bug rather than asserted.
+
+## The pre-merge gate
+
+E2E is **not** in CI. It is a manual gate run on a local simulator before merging anything that touches the redesign lifecycle.
+
+**Procedure:**
+
+1. Terminal 1 — `cd apps/native-rd && bun run ios:e2e` (Metro + a dev-client build carrying the E2E flags)
+2. Terminal 2 — `bun run type-check && bun run lint && bun run test`
+3. Terminal 2 — `bun run test:e2e:required`
+4. Attach the resulting `e2e/reports/junit.xml` summary to the PR, and record a run file under `e2e/reports/` when the run is the artifact something else gates on.
+
+**Every run record must carry the environment block**, because a green run only means anything against a named environment:
+
+- Maestro version
+- Simulator device + iOS runtime
+- **Locale** (the suite pins `en`; record what the run actually used)
+- Git SHA
+- `EXPO_PUBLIC_E2E_MODE`
+
+CI enforcement is tracked separately — see the E2E-CI-gate tracking issue in this repo. (The `#889` pointer this file used to carry belonged to the **predecessor monorepo's** issue space and is unreachable from here.)
+
+### Guarding against regressions to removed UI
+
+The redesign retired a large set of selectors. This grep must return nothing:
+
+```bash
+rg -n 'tab-fab-new-goal|new-goal-title"|create-goal|"start-working"|completion-note-input|completion-save-note-button|badge-earned-image|use-this-design|step-list-|Customize|Add evidence|Toggle evidence drawer|Tap to expand timeline|New Goal|Design Badge|Use This Design|One last thing!|No badges yet|What do you want to learn\?|Create Goal' e2e/flows e2e/subflows
+```
+
+Note the quote anchors on `new-goal-title"` and `"start-working"`: the live `new-goal-title-input` and `new-goal-start-working-button` ids are supersets of retired ones, and an unanchored pattern flags them as false positives.
