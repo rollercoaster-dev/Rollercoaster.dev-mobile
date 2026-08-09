@@ -95,6 +95,12 @@ env:
 - pressKey: Enter
 - inputText: "Charlie step"
 - pressKey: Enter
+# Enter does not blur (blurOnSubmit={false}), so the keyboard is still up and
+# would cover both the evidence sheet's close button and the footer CTA. The
+# steps header is inert and lives inside the build ScrollView, whose
+# keyboardShouldPersistTaps="handled" turns a tap on it into a dismissal.
+- tapOn:
+    id: "edit-goal-steps-header"
 
 # 7. Widen Alpha's plan to [text, link]. Unlike step 4's single-select grid,
 #    the build step's multi-select handler mutates state and never closes the
@@ -155,24 +161,40 @@ env:
 #     the title opens the inline editor; the TextInput commits on submit.
 #     This is the only step exercising the "edit" third of bullet 2 and the
 #     only assertion behind EditModeScreen's 500ms title debounce.
+#     Both rename inputs are PREFILLED, and Maestro's `inputText` appends at the
+#     cursor rather than replacing — so the flow appends a suffix instead of
+#     erasing first. Erasing is not merely longer: `eraseText` leaves the field
+#     empty for longer than EditModeScreen's 500ms debounce, which fires
+#     `debouncedUpdateTitle("")` and pops the "Title cannot be empty" Alert
+#     mid-edit, stealing focus before the replacement can be typed.
 - tapOn:
     id: "edit-goal-step-title-.*"
     index: 0
-- inputText: "Alpha step renamed"
+- inputText: " renamed"
 - pressKey: Enter
 
 # 14. EDIT: rename the goal itself. Asserted later in the Focus header, which
-#     re-proves the debounce committed across a navigation.
+#     re-proves the debounce committed across a navigation. Same append-don't-
+#     erase reasoning as step 13.
 - tapOn:
     id: "edit-goal-title-input"
-- eraseText
-- inputText: "Alpha goal renamed"
+- inputText: " renamed"
 - pressKey: Enter
 
 # 15. REORDER: move Charlie up over Bravo. Up buttons render on rows 2–3 only
 #     (row 1 is `isFirst`), so index 0 = Bravo's up, index 1 = Charlie's up.
 #     Root order becomes Alpha, Charlie, Bravo. Alpha stays first so the
 #     multi-type step is still the one Focus resolves.
+#     Scroll first: the third root row is clipped below the ScrollView's
+#     viewport, and iOS still reports a frame for it — one that lands on the
+#     floating tab bar, so a bare tap navigates to Settings instead. Index is
+#     hierarchy order, not screen position, so scrolling does not perturb it.
+- scrollUntilVisible:
+    element:
+      id: "edit-goal-step-up-.*"
+      index: 1
+    direction: DOWN
+    centerElement: true
 - tapOn:
     id: "edit-goal-step-up-.*"
     index: 1
@@ -181,15 +203,24 @@ env:
 #     on every root row, so index 2 = Bravo (now third). In the picker modal,
 #     targets render in list order with the dragged row excluded, so
 #     index 0 = Alpha, index 1 = Charlie.
-#     `index:` is the primary matcher. The only valid text half here is the
-#     row Pressable's OWN accessibilityLabel ("Nest this step under …") — never
-#     the visible `Nest under "…"` child Text, which iOS collapses away.
+#     The picker row is matched by id + text and NOT by index: Maestro applies
+#     `index:` to the set that survives the other matchers, so pairing the
+#     already-unique text with `index: 1` selects the second of one match and
+#     fails. The text half is the row Pressable's OWN accessibilityLabel
+#     ("Nest this step under …") — never the visible `Nest under "…"` child
+#     Text, which iOS collapses away. Verified in the tree via maestro
+#     hierarchy: both target rows render inside the RN Modal (#502 Risk 2).
+- scrollUntilVisible:
+    element:
+      id: "edit-goal-step-nest-under-.*"
+      index: 2
+    direction: DOWN
+    centerElement: true
 - tapOn:
     id: "edit-goal-step-nest-under-.*"
     index: 2
 - tapOn:
     id: "edit-goal-step-nest-target-.*"
-    index: 1
     text: "Nest this step under Charlie step"
 
 # 17. LOAD-BEARING: back out and assert all four mutations persisted. Done is

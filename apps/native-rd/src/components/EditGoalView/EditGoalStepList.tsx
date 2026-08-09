@@ -394,6 +394,12 @@ export function EditGoalStepList({
           variant="headline"
           style={styles.stepsLabel}
           accessibilityRole="header"
+          // The add-step input is `blurOnSubmit={false}` so rapid multi-add
+          // keeps the keyboard up, which then covers the footer CTA and the
+          // evidence sheet. This header is the nearest inert tap target inside
+          // the host ScrollView, whose keyboardShouldPersistTaps="handled"
+          // turns a tap on it into a keyboard dismissal (#502).
+          testID="edit-goal-steps-header"
         >
           {stepsSectionLabel}
         </Text>
