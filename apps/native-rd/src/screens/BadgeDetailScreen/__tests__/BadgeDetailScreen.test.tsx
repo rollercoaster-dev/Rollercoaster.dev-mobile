@@ -338,13 +338,24 @@ describe("BadgeDetailScreen", () => {
       fireEvent.press(screen.getByTestId("overflow-row-delete"));
     };
 
+    // Asserts against the *live* overflow label ("Delete badge"), not the
+    // retired page-button copy — querying a string no resource file contains
+    // any more would make this guard unfailable.
     it("is not reachable from a standalone button on the page", () => {
       mockUseQuery.mockReturnValue([makeRow()]);
 
       renderWithProviders(
         <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
       );
-      expect(screen.queryByRole("button", { name: "Delete Badge" })).toBeNull();
+      // Closed overflow menu ⇒ no Delete affordance anywhere on the page.
+      expect(screen.queryByRole("button", { name: "Delete badge" })).toBeNull();
+      expect(screen.queryByTestId("overflow-row-delete")).toBeNull();
+
+      // ...and once opened, the only one that exists is the overflow row.
+      fireEvent.press(screen.getByTestId("celebration-hero-overflow"));
+      expect(
+        screen.getAllByRole("button", { name: "Delete badge" }),
+      ).toHaveLength(1);
     });
 
     it("opens the confirm-delete modal instead of deleting immediately", () => {
