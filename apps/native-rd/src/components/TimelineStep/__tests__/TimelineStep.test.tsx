@@ -72,10 +72,11 @@ describe("TimelineStep", () => {
     expect(screen.queryByText("Progress photo")).not.toBeOnTheScreen();
   });
 
-  it('shows "No evidence yet" when empty', () => {
+  it("renders no evidence section at all when a step has none", () => {
     renderWithProviders(<TimelineStep {...baseProps} evidence={[]} />);
     fireEvent.press(screen.getByLabelText("Read the docs, Working"));
-    expect(screen.getByText("No evidence yet")).toBeOnTheScreen();
+    expect(screen.queryByText("No evidence yet")).toBeNull();
+    expect(screen.queryByTestId("timeline-evidence-section")).toBeNull();
   });
 
   it("calls onNodePress with the step's own id when node is tapped", () => {
@@ -403,10 +404,13 @@ describe("TimelineStep", () => {
       expect(screen.queryByText("Child link")).toBeNull();
     });
 
-    it("shows the empty-evidence message for a sub-step with no evidence", () => {
+    it("renders no evidence section for a sub-step with no evidence", () => {
       renderWithProviders(<TimelineStep {...baseProps} subSteps={subSteps} />);
       fireEvent.press(screen.getByLabelText("Sub-step b: Second child"));
-      expect(screen.getByText("No evidence yet")).toBeOnTheScreen();
+      expect(screen.queryByText("No evidence yet")).toBeNull();
+      // The parent step is collapsed here, so any section on screen would be
+      // the expanded sub-step's — there is none.
+      expect(screen.queryByTestId("timeline-evidence-section")).toBeNull();
     });
 
     it("calls onNodePress with the sub-step's own id, not its parent's", () => {

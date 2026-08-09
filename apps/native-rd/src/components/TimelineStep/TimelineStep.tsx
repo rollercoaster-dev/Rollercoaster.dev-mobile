@@ -119,21 +119,20 @@ export function TimelineStep({
             waitingOn={step.waitingOn}
             dueDate={step.dueDate}
           />
-          {expanded && (
-            <View style={styles.evidenceSection}>
-              {evidence.length > 0 ? (
-                evidence.map((ev) => (
-                  <TimelineEvidenceCard
-                    key={ev.id}
-                    evidence={ev}
-                    onPress={onEvidencePress}
-                  />
-                ))
-              ) : (
-                <Text style={styles.noEvidence}>
-                  {t("timelineJourney:step.noEvidence")}
-                </Text>
-              )}
+          {/* No evidence → no section at all. An empty box saying "No evidence
+              yet" is visual noise on a surface the user already reads as empty. */}
+          {expanded && evidence.length > 0 && (
+            <View
+              style={styles.evidenceSection}
+              testID="timeline-evidence-section"
+            >
+              {evidence.map((ev) => (
+                <TimelineEvidenceCard
+                  key={ev.id}
+                  evidence={ev}
+                  onPress={onEvidencePress}
+                />
+              ))}
             </View>
           )}
         </View>
@@ -216,21 +215,19 @@ function ChildRow({
             {"\u25BC"}
           </Text>
         </Pressable>
-        {expanded && (
-          <View style={styles.evidenceSection}>
-            {child.evidence.length > 0 ? (
-              child.evidence.map((ev) => (
-                <TimelineEvidenceCard
-                  key={ev.id}
-                  evidence={ev}
-                  onPress={onEvidencePress}
-                />
-              ))
-            ) : (
-              <Text style={styles.noEvidence}>
-                {t("timelineJourney:step.noEvidence")}
-              </Text>
-            )}
+        {/* Same as the parent step: nothing renders when there's no evidence. */}
+        {expanded && child.evidence.length > 0 && (
+          <View
+            style={styles.evidenceSection}
+            testID="timeline-evidence-section"
+          >
+            {child.evidence.map((ev) => (
+              <TimelineEvidenceCard
+                key={ev.id}
+                evidence={ev}
+                onPress={onEvidencePress}
+              />
+            ))}
           </View>
         )}
       </View>

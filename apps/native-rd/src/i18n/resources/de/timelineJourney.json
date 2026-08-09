@@ -21,7 +21,6 @@
       "in-progress": "In Arbeit",
       "pending": "Als Nächstes"
     },
-    "noEvidence": "Noch keine Belege",
     "metadata": {
       "after": "nach {{title}}",
       "waitingOn": "wartet auf {{who}}",

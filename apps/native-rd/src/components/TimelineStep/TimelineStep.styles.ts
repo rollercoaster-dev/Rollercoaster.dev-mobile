@@ -110,11 +110,6 @@ export const styles = StyleSheet.create((theme) => ({
     fontSize: theme.size.xs,
     color: theme.colors.text,
   },
-  noEvidence: {
-    fontSize: theme.size.xs,
-    color: theme.colors.textSecondary,
-    fontStyle: "italic",
-  },
   // Indented sub-spine: a left rail descending from the parent node column.
   // The node column is GOAL_NODE_SIZE wide with the node centered, so
   // GOAL_NODE_SIZE / 2 lands the rail exactly on the parent node's centerline
