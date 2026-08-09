@@ -1,8 +1,13 @@
 import React from "react";
 import { StyleSheet } from "react-native";
-import { renderWithProviders, screen } from "../../../__tests__/test-utils";
+import {
+  renderWithProviders,
+  screen,
+  act,
+} from "../../../__tests__/test-utils";
 import { themeOptions } from "../../../hooks/useTheme";
 import { themes } from "../../../themes/compose";
+import { i18n } from "../../../i18n";
 
 import { ThemeSampleCard } from "../ThemeSampleCard";
 
@@ -43,5 +48,35 @@ describe("ThemeSampleCard", () => {
     renderWithProviders(<ThemeSampleCard themeId="light-default" />);
     expect(screen.queryByRole("button")).toBeNull();
     expect(screen.queryByRole("radio")).toBeNull();
+  });
+
+  // The assertions above compare against English literals, which pass whether
+  // or not the copy routes through t() — a hard-coded <Text>"Daily reading"
+  // satisfies them. Under pseudo the keys return bracketed text, so these only
+  // pass if the card really is going through i18n. This copy moved from
+  // welcome:sample.* to common:theme.preview.* in #414 and lost the
+  // pseudo-locale case WelcomeScreen used to carry for it; this is its home now.
+  describe("pseudo locale", () => {
+    afterEach(async () => {
+      if (i18n.language !== "en") {
+        await act(async () => {
+          await i18n.changeLanguage("en");
+        });
+      }
+    });
+
+    it.each([
+      "common:theme.preview.title",
+      "common:theme.preview.progress",
+      "common:theme.preview.cta",
+    ] as const)("renders %s as bracketed copy", async (key) => {
+      await act(async () => {
+        await i18n.changeLanguage("pseudo");
+      });
+      renderWithProviders(<ThemeSampleCard themeId="light-default" />);
+      const pseudo = i18n.t(key);
+      expect(pseudo.startsWith("[")).toBe(true);
+      expect(screen.getByText(pseudo)).toBeOnTheScreen();
+    });
   });
 });
