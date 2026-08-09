@@ -26,7 +26,7 @@ import { PLACEHOLDER_IMAGE_URI } from "../../hooks/useCreateBadge";
 import { useBadgeExport } from "../../hooks/useBadgeExport";
 import { useAnimationPref } from "../../hooks/useAnimationPref";
 import { parseBadgeDesign } from "../../badges/types";
-import { EVIDENCE_TYPE_ICONS } from "../../constants/evidenceIcons";
+import { ProofSpine } from "../../components/ProofSpine";
 import type { EvidenceTypeValue } from "../../types/evidence";
 import { formatDate } from "../../utils/format";
 import { reportError } from "../../services/sentry-report";
@@ -54,6 +54,15 @@ import { styles } from "./BadgeDetailScreen.styles";
  */
 const OVERFLOW_POPOVER_TOP_OFFSET = 56;
 
+/**
+ * `credentialBuilder` bakes every evidence id into the credential as
+ * `urn:ulid:<ulid>`, but EvidenceViewer resolves `initialEvidenceId` against
+ * the **live** evidence rows, whose ids are the bare ULID. Passing the
+ * prefixed id straight through would silently miss (`findIndex` → -1) and land
+ * the viewer on the first item instead of the tapped one.
+ */
+const EVIDENCE_ID_PREFIX = "urn:ulid:";
+
 const logger = new Logger("BadgeDetailScreen");
 
 /**
@@ -79,7 +88,7 @@ function extractCriteriaNarrative(credential: string | null): string | null {
 }
 
 /**
- * Shape rendered by the "how it was earned" evidence list. `type` is null when
+ * Shape fed to the proof spine's cards. `type` is null when
  * the credential's `genre` field is missing or unrecognised — the row still
  * renders, but with a neutral bullet and no type label, so older or
  * cross-version credentials degrade gracefully.
@@ -280,6 +289,41 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
       : t("badgeDetail:hero.credentialLabelUndated")
     : null;
 
+  // A proof card opens the evidence it stands for, in the same viewer the
+  // timeline uses. Cross-tab hop via the root parent, exactly as
+  // `handleViewTimeline` does — EvidenceViewer lives in the Goals stack.
+  const handleEvidencePress = (evidenceId: string) => {
+    if (!goalId) {
+      // Soft-deleted goal: the viewer reads live evidence rows for a goal that
+      // no longer surfaces, so there is nothing to land on. No-op and log,
+      // the same stance "View timeline" takes when its destination is gone.
+      logger.warn("Proof card tapped for a badge whose goal is deleted", {
+        badgeId,
+        evidenceId,
+      });
+      return;
+    }
+    const parent = navigation.getParent<NavigationProp<RootTabParamList>>();
+    if (!parent) {
+      logger.warn("Proof card tapped without a tab navigator parent", {
+        badgeId,
+        goalId,
+      });
+      return;
+    }
+    parent.navigate("GoalsTab", {
+      screen: "EvidenceViewer",
+      params: {
+        goalId,
+        initialEvidenceId: evidenceId.startsWith(EVIDENCE_ID_PREFIX)
+          ? evidenceId.slice(EVIDENCE_ID_PREFIX.length)
+          : evidenceId,
+      },
+      // Same cold-tab seeding as the timeline hop (#325).
+      initial: false,
+    });
+  };
+
   const closeOverflowMenu = () => setShowOverflowMenu(false);
 
   return (
@@ -306,6 +350,27 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
             </Text>
           ) : null}
 
+          {/* The narrative is the badge's own "how it was earned" sentence and
+              stands apart from the gallery below it: ProofSpine owns the
+              evidence, this owns the story. Older badges carry only this. */}
+          {criteriaNarrative ? (
+            <View style={styles.infoBlock}>
+              <Text style={styles.sectionLabel}>
+                {t("badgeDetail:sections.howEarned")}
+              </Text>
+              <Text style={styles.bodyText}>{criteriaNarrative}</Text>
+            </View>
+          ) : null}
+
+          {/* Fed from the baked credential, never live DB rows, so the spine
+              keeps rendering after the goal/step is edited or soft-deleted —
+              and matches what a third-party verifier would see. Mounted
+              unconditionally: ProofSpine owns its own honest empty state. */}
+          <ProofSpine
+            evidence={evidenceItems ?? []}
+            onCardPress={handleEvidencePress}
+          />
+
           <Card>
             <View style={styles.infoSection}>
               {goalDescription ? (
@@ -314,81 +379,6 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
                     {t("badgeDetail:sections.about")}
                   </Text>
                   <Text style={styles.bodyText}>{goalDescription}</Text>
-                </View>
-              ) : null}
-
-              {criteriaNarrative || evidenceItems ? (
-                <View style={styles.infoBlock}>
-                  <Text style={styles.sectionLabel}>
-                    {t("badgeDetail:sections.howEarned")}
-                  </Text>
-                  {criteriaNarrative ? (
-                    <Text style={styles.bodyText}>{criteriaNarrative}</Text>
-                  ) : null}
-                  {evidenceItems ? (
-                    // No `accessible` here — would flatten descendants into a
-                    // single a11y node and prevent screen-reader users from
-                    // focusing individual rows. The list label is exposed via
-                    // accessibilityLabel + role="list" without merging.
-                    <View
-                      style={styles.evidenceList}
-                      accessibilityRole="list"
-                      accessibilityLabel={t(
-                        "badgeDetail:evidenceList.a11yLabel",
-                        {
-                          count: evidenceItems.length,
-                        },
-                      )}
-                    >
-                      {evidenceItems.map((ev) => {
-                        const icon = ev.type
-                          ? EVIDENCE_TYPE_ICONS[ev.type]
-                          : "•";
-                        const typeLabel = ev.type
-                          ? t(`common:evidenceTypes.${ev.type}.label`)
-                          : null;
-                        // For unknown/missing genres, still announce *some* type
-                        // context so the row doesn't read as a bare proper noun.
-                        const a11yTypeLabel =
-                          typeLabel ??
-                          t("badgeDetail:evidenceList.fallbackType");
-                        const a11yLabel = t(
-                          "badgeDetail:evidenceList.itemA11y",
-                          {
-                            name: ev.name,
-                            type: a11yTypeLabel,
-                          },
-                        );
-                        return (
-                          <View
-                            key={ev.id}
-                            style={styles.evidenceRow}
-                            accessible
-                            accessibilityLabel={a11yLabel}
-                          >
-                            <Text
-                              style={styles.evidenceIcon}
-                              accessibilityElementsHidden
-                              importantForAccessibility="no"
-                            >
-                              {icon}
-                            </Text>
-                            <View style={styles.evidenceText}>
-                              <Text style={styles.bodyText}>{ev.name}</Text>
-                              {typeLabel ? (
-                                <Text
-                                  variant="caption"
-                                  style={styles.evidenceTypeLabel}
-                                >
-                                  {typeLabel}
-                                </Text>
-                              ) : null}
-                            </View>
-                          </View>
-                        );
-                      })}
-                    </View>
-                  ) : null}
                 </View>
               ) : null}
 

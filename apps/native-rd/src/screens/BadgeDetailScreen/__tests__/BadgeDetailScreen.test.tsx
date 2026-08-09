@@ -582,7 +582,7 @@ describe("BadgeDetailScreen", () => {
     });
   });
 
-  describe("how it was earned — evidence list", () => {
+  describe("proof spine", () => {
     const credentialWith = (evidence: unknown[], narrative = "Did it.") =>
       JSON.stringify({
         credentialSubject: {
@@ -591,7 +591,7 @@ describe("BadgeDetailScreen", () => {
         evidence,
       });
 
-    it("renders each evidence item's name and translated type label", () => {
+    it("renders a proof card per evidence item, with its translated type label", () => {
       const credential = credentialWith([
         {
           id: "urn:ulid:ev-1",
@@ -663,9 +663,140 @@ describe("BadgeDetailScreen", () => {
       renderWithProviders(
         <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
       );
-      // Singular: "1 evidence item submitted", not "1 evidence items submitted".
+      // Singular: "1 evidence item", not "1 evidence items".
       expect(
-        screen.getByLabelText("1 evidence item submitted"),
+        screen.getByLabelText("Proof gallery, 1 evidence item"),
+      ).toBeOnTheScreen();
+    });
+
+    // The credential bakes ids as `urn:ulid:<ulid>`, but EvidenceViewer matches
+    // the live evidence rows' bare ULID. Passing the prefixed id through would
+    // miss and silently land the viewer on the first item, not the tapped one.
+    it("opens the tapped evidence in EvidenceViewer with the urn: prefix stripped", () => {
+      const credential = credentialWith([
+        {
+          id: "urn:ulid:ev-1",
+          type: ["Evidence"],
+          name: "Watch intro video",
+          genre: "video",
+        },
+        {
+          id: "urn:ulid:ev-2",
+          type: ["Evidence"],
+          name: "Build a small app",
+          genre: "photo",
+        },
+      ]);
+      mockUseQuery.mockReturnValue([
+        makeRow({ credential, goalId: "goal-42" }),
+      ]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      fireEvent.press(
+        screen.getByLabelText("Build a small app, submitted as Photo"),
+      );
+
+      expect(mockParentNavigate).toHaveBeenCalledWith("GoalsTab", {
+        screen: "EvidenceViewer",
+        params: { goalId: "goal-42", initialEvidenceId: "ev-2" },
+        initial: false,
+      });
+    });
+
+    it("passes an unprefixed evidence id through untouched", () => {
+      const credential = credentialWith([
+        {
+          id: "ev-raw",
+          type: ["Evidence"],
+          name: "Legacy step",
+          genre: "text",
+        },
+      ]);
+      mockUseQuery.mockReturnValue([
+        makeRow({ credential, goalId: "goal-42" }),
+      ]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      fireEvent.press(screen.getByLabelText("Legacy step, submitted as Note"));
+
+      expect(mockParentNavigate).toHaveBeenCalledWith(
+        "GoalsTab",
+        expect.objectContaining({
+          params: { goalId: "goal-42", initialEvidenceId: "ev-raw" },
+        }),
+      );
+    });
+
+    // Same failure family as "View timeline" hiding for a soft-deleted goal:
+    // the destination needs live goal data that no longer surfaces.
+    it("no-ops safely when the badge's goal is soft-deleted (null goalId)", () => {
+      const credential = credentialWith([
+        {
+          id: "urn:ulid:ev-1",
+          type: ["Evidence"],
+          name: "Watch intro video",
+          genre: "video",
+        },
+      ]);
+      mockUseQuery.mockReturnValue([makeRow({ credential, goalId: null })]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      expect(() =>
+        fireEvent.press(
+          screen.getByLabelText("Watch intro video, submitted as Video"),
+        ),
+      ).not.toThrow();
+      expect(mockParentNavigate).not.toHaveBeenCalled();
+    });
+
+    it("no-ops safely when the tab parent is unavailable", () => {
+      mockGetParent.mockReturnValueOnce(
+        undefined as unknown as ReturnType<typeof mockGetParent>,
+      );
+      const credential = credentialWith([
+        {
+          id: "urn:ulid:ev-1",
+          type: ["Evidence"],
+          name: "Watch intro video",
+          genre: "video",
+        },
+      ]);
+      mockUseQuery.mockReturnValue([
+        makeRow({ credential, goalId: "goal-42" }),
+      ]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      expect(() =>
+        fireEvent.press(
+          screen.getByLabelText("Watch intro video, submitted as Video"),
+        ),
+      ).not.toThrow();
+      expect(mockParentNavigate).not.toHaveBeenCalled();
+    });
+
+    // #411's hard rule: absent evidence is named honestly in the gallery
+    // itself, never as a "missing"/"needed" prompt elsewhere on the page.
+    it("shows the gallery's own empty state when the credential carries no evidence", () => {
+      const credential = JSON.stringify({
+        credentialSubject: { achievement: { criteria: {} } },
+      });
+      mockUseQuery.mockReturnValue([makeRow({ credential })]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      expect(
+        screen.getByText(
+          "No evidence was attached to this goal — nothing to show in the gallery.",
+        ),
       ).toBeOnTheScreen();
     });
 
