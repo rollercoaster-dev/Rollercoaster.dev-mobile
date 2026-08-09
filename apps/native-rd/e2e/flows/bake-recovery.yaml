@@ -1,0 +1,149 @@
+appId: dev.rollercoaster.app
+tags:
+  - required
+env:
+  METRO_HOST: localhost
+  METRO_PORT: "8081"
+---
+# ============================================================================
+# BAKE RECOVERY (#502)
+#
+# The companion to full-ride.yaml, and the ONLY artifact behind the issue's
+# "bake recovery … asserted" clause: nowhere else are
+# `finish-baking-error-alert` / `finish-baking-retry-button` exercised.
+#
+# Kept separate rather than folded into the canonical ride because the only
+# UI-reachable deterministic bake failure is the no-evidence gate — which needs
+# ZERO evidence rows, mutually exclusive with the ride's whole point. Splitting
+# them keeps the ride's green signal unambiguous (#502 D14).
+#
+# The `no-key` branch is NOT asserted: it is logically unreachable (the hook
+# sets it only when `isReady && !keyId`, but `isReady` already implies a keyId),
+# and the real no-key failure mode is an unbounded spinner with no alert, no
+# retry and no exit. Filed as a bug instead (#502 D15).
+# ============================================================================
+
+- runFlow:
+    file: ../subflows/launch-and-onboard.yaml
+    env:
+      METRO_HOST: ${METRO_HOST}
+      METRO_PORT: ${METRO_PORT}
+      THEME_SWATCH: light-autismFriendly
+
+# --- A one-step goal with nothing captured ---------------------------------
+- tapOn:
+    id: "goals-cockpit-new-goal"
+- assertVisible:
+    id: "new-goal-wizard-content"
+- tapOn:
+    id: "new-goal-title-input"
+- inputText: "Recovery goal"
+- tapOn:
+    id: "new-goal-next-button"
+- tapOn:
+    id: "new-goal-first-step-input"
+- inputText: "Recovery step"
+- tapOn:
+    id: "new-goal-next-button"
+- tapOn:
+    id: "new-goal-build-ready-button"
+- assertVisible:
+    id: "new-goal-start-working-button"
+- tapOn:
+    id: "new-goal-start-working-button"
+
+# The step's default plan is [text] and nothing has been captured, so the
+# completion gate is shut — which is exactly the state under test.
+- extendedWaitUntil:
+    visible:
+      id: "focus-current-task-add-text"
+    timeout: 15000
+- assertNotVisible:
+    id: "focus-current-task-mark-complete"
+
+# --- Reach the bake anyway ---------------------------------------------------
+# The Finish Line CTA is tappable at ANY progress: `areAllStepsComplete` is
+# never consulted by its Pressable — the flag only feeds the goal node's
+# `celebrate` styling. So a zero-evidence goal can reach the bake.
+- tapOn:
+    id: "focus-progress-strip"
+- scrollUntilVisible:
+    element:
+      id: "finish-line-cta"
+    direction: DOWN
+    centerElement: true
+- tapOn:
+    id: "finish-line-cta"
+- extendedWaitUntil:
+    visible:
+      id: "finish-celebrate-stage"
+    timeout: 15000
+# Skip the closing note — it would persist a goal-scoped evidence row and
+# satisfy the very gate this flow is trying to trip.
+- tapOn:
+    id: "finish-celebrate-cta"
+- assertVisible:
+    id: "finish-design-stage"
+- tapOn:
+    id: "finish-design-bake"
+
+# --- 1. The gate throws before any mutation ---------------------------------
+- extendedWaitUntil:
+    visible:
+      id: "finish-baking-error-alert"
+    timeout: 20000
+
+# --- 2. Retry re-arms and re-throws -----------------------------------------
+# `retryBake()` walks the hook error → idle → building → …, and mapBakeStatus
+# folds that `idle` tick into a non-error value — which is what re-enables the
+# Retry button. Asserting the alert a second time is what proves the re-arm
+# path works, not just that the first failure rendered.
+- tapOn:
+    id: "finish-baking-retry-button"
+- extendedWaitUntil:
+    visible:
+      id: "finish-baking-error-alert"
+    timeout: 20000
+
+# --- 3. With evidence, the same bake succeeds -------------------------------
+# Back out to Focus and capture a note. Text, never link: CaptureLinkScreen has
+# the soft-keyboard hazard the canonical ride works around, and this flow has
+# no reason to take it.
+- back
+- extendedWaitUntil:
+    visible:
+      id: "focus-current-task-add-text"
+    timeout: 15000
+- tapOn:
+    id: "focus-current-task-add-text"
+- tapOn:
+    id: "capture-text-body"
+- inputText: "Recovered with evidence."
+- tapOn:
+    id: "capture-text-save"
+- extendedWaitUntil:
+    visible:
+      id: "focus-current-task-mark-complete"
+    timeout: 15000
+- tapOn:
+    id: "focus-current-task-mark-complete"
+- extendedWaitUntil:
+    visible:
+      id: "focus-current-task-design-badge"
+    timeout: 15000
+- tapOn:
+    id: "focus-current-task-design-badge"
+- extendedWaitUntil:
+    visible:
+      id: "finish-celebrate-stage"
+    timeout: 15000
+- tapOn:
+    id: "finish-celebrate-cta"
+- assertVisible:
+    id: "finish-design-stage"
+- tapOn:
+    id: "finish-design-bake"
+- extendedWaitUntil:
+    visible:
+      id: "finish-reveal-stage"
+    timeout: 20000
