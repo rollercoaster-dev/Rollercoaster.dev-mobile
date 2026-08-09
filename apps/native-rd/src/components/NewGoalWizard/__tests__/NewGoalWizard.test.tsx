@@ -172,6 +172,16 @@ describe("NewGoalWizard", () => {
       expect(onGoalTitleChange).toHaveBeenCalledWith("Learn guitar");
     });
 
+    it("gives the title input a return key that dismisses the keyboard", () => {
+      // #502 regression: without returnKeyType the soft keyboard has no dismiss
+      // action, and it covers the footer's Next button — the step is a dead end.
+      renderWizard({ currentStep: "name" });
+
+      expect(
+        screen.getByTestId("new-goal-title-input").props.returnKeyType,
+      ).toBe("done");
+    });
+
     it("fires distinct callbacks for Next and quick add", () => {
       const onNext = jest.fn();
       const onQuickAdd = jest.fn();
@@ -316,6 +326,15 @@ describe("NewGoalWizard", () => {
       );
 
       expect(onFirstStepTitleChange).toHaveBeenCalledWith("Cut the plywood");
+    });
+
+    it("gives the first-step input a return key that dismisses the keyboard", () => {
+      // Same #502 dead end as the name step's input.
+      renderWizard({ currentStep: "step" });
+
+      expect(
+        screen.getByTestId("new-goal-first-step-input").props.returnKeyType,
+      ).toBe("done");
     });
 
     it.each(["", "   ", "\n\t"])(
