@@ -114,7 +114,17 @@ env:
 # Back out to Focus and capture a note. Text, never link: CaptureLinkScreen has
 # the soft-keyboard hazard the canonical ride works around, and this flow has
 # no reason to take it.
-- back
+#
+# A downward drag, not `back`: the bake error stage offers Retry and nothing
+# else, so the only way out is dismissing the sheet. CompletionFlow is
+# `presentation: "modal"` (GoalsStack.tsx:39), whose iOS gesture is a drag from
+# the top — Maestro's `back` is a left-edge swipe and does nothing to it.
+- swipe:
+    start: "50%, 15%"
+    end: "50%, 95%"
+# Dismissing returns to whatever pushed the modal — Timeline, not Focus.
+- tapOn:
+    id: "timeline-back-button"
 - extendedWaitUntil:
     visible:
       id: "focus-current-task-add-text"

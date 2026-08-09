@@ -14,9 +14,19 @@
  * showing an error with no path forward (issue #39).
  *
  * `retryBake()` is that path: it clears `hasTriggered`, returns `status` to
- * `"idle"`, and clears `error`. On the next render the effect re-evaluates its
- * preconditions and — assuming the caller's `enabled` is still `true` — re-runs
- * the full pipeline from the start. It does NOT touch `enabled`; the caller's
+ * `"idle"`, clears `error`, and bumps `retryNonce` — a dep of the effect, so
+ * the effect re-evaluates its preconditions and — assuming the caller's
+ * `enabled` is still `true` — re-runs the full pipeline from the start.
+ *
+ * The nonce is load-bearing, not belt-and-braces. Nothing else `retryBake()`
+ * touches is in the dep array, so without it the retry only landed when the
+ * host happened to re-render with a fresh `goal` identity. Evolu hands back a
+ * stable row between reactive ticks, so in the app it never did: Retry left the
+ * UI on an unbounded "Baking your badge…" spinner with no alert and no way out
+ * (found by the #502 bake-recovery E2E; the unit test that "covered" this
+ * passed only because its mock minted a new goal object every render).
+ *
+ * It does NOT touch `enabled`; the caller's
  * commit-to-bake state is unchanged, so retry is in-place rather than bouncing
  * the user back to a pre-bake choice. The reset is gated to the `"error"`
  * state — calling it from `"done"`, `"no-key"`, or any in-flight status returns
@@ -127,6 +137,9 @@ export function useCreateBadge(
 
   const [status, setStatus] = useState<BadgeCreationStatus>("idle");
   const [error, setError] = useState<string | null>(null);
+  // Bumped by retryBake() so the guarded effect below actually re-fires; see
+  // the module docblock for why nothing else in its dep array can do that job.
+  const [retryNonce, setRetryNonce] = useState(0);
 
   // Refs let the effect read latest values without listing them as deps —
   // Evolu queries return fresh array refs every render.
@@ -406,7 +419,7 @@ export function useCreateBadge(
       }
       // No finally reset — hasTriggered.current stays true permanently
     })();
-  }, [existingBadge, isReady, keyId, goal, goalId, enabled]); // evidence read via ref, not deps
+  }, [existingBadge, isReady, keyId, goal, goalId, enabled, retryNonce]); // evidence read via ref, not deps
 
   // Recovery from the terminal "error" state: clear the never-reset guard and
   // return to "idle" so the guarded effect can re-run on the next render.
@@ -418,6 +431,7 @@ export function useCreateBadge(
     hasTriggered.current = false;
     setStatus("idle");
     setError(null);
+    setRetryNonce((n) => n + 1);
   }, [status]);
 
   return { status, error, retryBake };
