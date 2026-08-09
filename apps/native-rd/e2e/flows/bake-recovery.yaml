@@ -38,11 +38,17 @@ env:
 - tapOn:
     id: "new-goal-title-input"
 - inputText: "Recovery goal"
+# The wizard's TextInputs set no `returnKeyType`, so `pressKey: Enter` cannot
+# dismiss the keyboard — and the Next/Add buttons sit in a footer the soft
+# keyboard covers, so the tap lands on the keyboard and the wizard silently
+# stays put. `hideKeyboard` is the only working dismissal here.
+- hideKeyboard
 - tapOn:
     id: "new-goal-next-button"
 - tapOn:
     id: "new-goal-first-step-input"
 - inputText: "Recovery step"
+- hideKeyboard
 - tapOn:
     id: "new-goal-next-button"
 - tapOn:

@@ -280,6 +280,56 @@ Implemented 2026-08-09 on `feat/issue-502-e2e-canonical-ride`, branched from `58
 - [2026-08-09] **D6-impl — the retired-selector grep needed quote anchors.** The grep printed in the pre-implementation plan flags two _live_ ids as hits, because they are supersets of retired ones: `new-goal-title-input` (retired: `new-goal-title`) and `new-goal-start-working-button` (retired: `start-working`). The corrected pattern in `e2e/README.md` anchors both with quotes. Two flow comments were also reworded so they no longer embed retired literals — the gate is only useful if it stays at zero hits.
 - [2026-08-09] **D7-impl — `maestro hierarchy` verification (Verification steps 2, 2a, 2b, 2c) has NOT been run.** It needs a dev-client build served by Metro _from this worktree_; the only Metro currently listening on 8081 serves `~/Code/Rollercoaster.dev/Rollercoaster.dev-mobile`, i.e. a tree without these testIDs. Consequently Risk 1 (does the D3 theme lever reach `EditGoalStepList`?) and Risk 2 (are the nest-under picker's rows, inside an RN `Modal`, in the tree at all?) are **still open**, and Risk 3 (does `runFlow: ../subflows/…` resolve out of `flows/`?) is unverified. Ride step 12 is written so Risk 1 fails loudly and self-explainingly; Risk 2's documented fallback is `edit-goal-break-into-*` / `edit-goal-add-substep-*`; Risk 3's is inlining the prologue.
 
+## Live-run status (2026-08-09, first real simulator run)
+
+**Where to pick up: `full-ride.yaml` step 2 — `hideKeyboard` is not supported by this app.** Everything before it is green and verified on device. Details in "Next steps" below.
+
+### Environment this was run against
+
+|           |                                                                                                |
+| --------- | ---------------------------------------------------------------------------------------------- |
+| Maestro   | 2.8.0 (`/opt/homebrew/bin/maestro`)                                                            |
+| Simulator | iPhone 17 · iOS 26.5 · `75D0CBC4-A428-407D-BF2E-E5EE452737C7`                                  |
+| Metro     | this worktree, port **8081**, `EXPO_PUBLIC_E2E_MODE=true`                                      |
+| App       | `dev.rollercoaster.app` (iOS keeps the base bundle id — `app.config.js` only suffixes Android) |
+| Locale    | `en` (pinned)                                                                                  |
+
+**The simulator now has persistent UserDefaults written by hand** — `EXDevMenuShowsAtLaunch=NO`, `EXDevMenuShowFloatingActionButton=NO`, `EXDevMenuIsOnboardingFinished=YES`, `AppleLanguages=(en)`. `scripts/run-e2e.sh` writes all four, so a fresh machine needs nothing extra; they are noted here only so the state is not mistaken for app behaviour.
+
+**A second Metro on the default port breaks the suite.** The user's Metro for `~/Code/Rollercoaster.dev/Rollercoaster.dev-mobile` was serving 8081; after a `clearState` reinstall the dev client auto-discovers that server and **ignores the `?url=` deep link** (measured: 60s of waiting, zero requests reaching the intended port, and the live bundle carried none of the new testIDs). It was stopped with the user's approval and this worktree's Metro started on 8081 in its place. `stopApp` before `openLink` is necessary but **not sufficient** on its own — it fixes the warm-app case, not a competing packager. Treat "only one Metro, and it serves this worktree" as a hard prerequisite.
+
+### Verified green on device
+
+- `badge-view.yaml` — **passes end to end**, prologue included.
+- The shared prologue: `runFlow: ../subflows/…` resolves out of `flows/` (**Risk 3 CLOSED**), `env` interpolates inside the `openLink` URL, `clearState`+`stopApp`+`openLink` pins the bundle to the intended port.
+- Commit 1/2 testIDs confirmed present in the real iOS a11y tree via `maestro hierarchy`: `welcome-get-started`, all seven `theme-swatch-<id>`, alongside the pre-existing `theme-swatch-row` / `selected-theme` / `theme-sample-card`.
+- `full-ride.yaml` reaches the wizard and types the goal title correctly (13 steps COMPLETED) before hitting the blocker below.
+
+### Three real bugs found and fixed (`5f3af3f`)
+
+1. **`EXDevMenuShowsAtLaunch` defaults to `true` on iOS**, so the dev menu auto-opened after every `clearState`. The runner only seeded `EXDevMenuIsOnboardingFinished`, which suppresses the onboarding _hint_, not the menu. The menu and the floating action button are native overlays **in a separate window**: `maestro hierarchy` does not show them, but they intercept taps — so a flow fails "element not found" while the element is on screen behind the modal. This affected the pre-existing flows too. `EXDevMenuDisableAutoLaunch` is deliberately not used: `readAutoLaunchDisabledState()` removes the key as it reads it, so it only ever covers the first flow of a suite.
+2. **The boot barrier was a no-op.** `notVisible: app-loading` passes instantly against the empty tree that exists between reinstall and bundle mount, so every following step raced the download. Now a positive `extendedWaitUntil: visible: welcome-get-started` (and `goals-cockpit-new-goal` on the restart leg).
+3. **`launchApp` leaves the app running** with a packager already chosen, after which the deep link is ignored. `stopApp` before `openLink` makes it a cold start whose only input is the URL.
+
+### Blocker: `hideKeyboard` is unsupported by this app
+
+`full-ride.yaml` step 2 fails with:
+
+> Couldn't hide the keyboard. This can happen if the app uses a custom input or doesn't expose a standard dismiss action.
+
+The underlying problem is real and still needs solving: the wizard's `TextInput`s set **no `returnKeyType`** (`NewGoalWizard.tsx:517-524`, `:566-571`), so `pressKey: Enter` cannot dismiss either, and `new-goal-next-button` sits in a footer the soft keyboard covers — the tap lands on the keyboard and the wizard silently stays on step 1 while Maestro reports the tap COMPLETED.
+
+`- hideKeyboard` was added to `full-ride.yaml`, `bake-recovery.yaml` and `evidence-viewer.yaml` and is **uncommitted and known-broken**. It must be replaced before anything else runs.
+
+### Next steps, in order
+
+1. **Replace every `- hideKeyboard`** (5 in `full-ride.yaml`, 2 in `bake-recovery.yaml`, 2 in `evidence-viewer.yaml`) with a tap on a non-interactive element — Maestro's own suggested workaround, and the idiom `goal-lifecycle-complete.yaml` used before deletion. The wizard headline is the natural target: `tapOn: "What do you want to work toward?"` on the name step, the step headline on the first-step step. Prefer an `id:` if one can be added cheaply; otherwise these are text matchers on visible copy and must be justified inline like every other one.
+2. **Consider fixing the production side instead**, which would delete the whole class of problem: give the wizard inputs `returnKeyType="done"` (the add-step input at `EditGoalStepList.tsx:521` already has it) or lift the footer above the keyboard the way `CaptureTextNote` does. That is a production behaviour change, so it belongs in its own commit with its own Jest coverage — but it is arguably the honest fix, and it is the same defect already filed as Risk 10 for `CaptureLinkScreen`.
+3. **Re-run `full-ride.yaml` alone** (`maestro test e2e/flows/full-ride.yaml`) and work down the remaining 30-odd steps. Expect further findings — nothing past step 2 has ever executed.
+4. **Then `bake-recovery.yaml`, then `bun run test:e2e:required`** for the whole gate.
+5. **Risks 1 and 2 remain unverified** — the run has not reached EditMode yet. Ride step 12 will answer Risk 1 (does the Autism-Friendly theme unlock the discrete hierarchy controls?); step 16 will answer Risk 2 (are the nest-under picker's rows, inside an RN `Modal`, reachable at all?). Fallbacks for both are documented in the Risks table.
+6. **Commit 9 stays open** until a full green `test:e2e:required` exists to record.
+
 ## Verification
 
 ```bash

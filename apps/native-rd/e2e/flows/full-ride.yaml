@@ -55,6 +55,11 @@ env:
 - tapOn:
     id: "new-goal-title-input"
 - inputText: "Alpha goal"
+# The wizard's TextInputs set no `returnKeyType`, so `pressKey: Enter` cannot
+# dismiss the keyboard — and the Next/Add buttons sit in a footer the soft
+# keyboard covers, so the tap lands on the keyboard and the wizard silently
+# stays put. `hideKeyboard` is the only working dismissal here.
+- hideKeyboard
 - tapOn:
     id: "new-goal-next-button"
 
@@ -62,6 +67,7 @@ env:
 - tapOn:
     id: "new-goal-first-step-input"
 - inputText: "Alpha step"
+- hideKeyboard
 
 # 4. Plan its first type = Note. The capture grid is single-select and its
 #    handler self-closes the sheet, so no explicit close tap is needed here.
@@ -80,11 +86,13 @@ env:
 - tapOn:
     id: "edit-goal-add-step-input"
 - inputText: "Bravo step"
+- hideKeyboard
 - tapOn:
     id: "edit-goal-add-step-button"
 - tapOn:
     id: "edit-goal-add-step-input"
 - inputText: "Charlie step"
+- hideKeyboard
 - tapOn:
     id: "edit-goal-add-step-button"
 
@@ -159,6 +167,7 @@ env:
     id: "edit-goal-title-input"
 - eraseText
 - inputText: "Alpha goal renamed"
+- hideKeyboard
 
 # 15. REORDER: move Charlie up over Bravo. Up buttons render on rows 2–3 only
 #     (row 1 is `isFirst`), so index 0 = Bravo's up, index 1 = Charlie's up.
