@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { themeOptions } from "../../hooks/useTheme";
 import { themes, type ThemeName } from "../../themes/compose";
 import { themeA11yLabel } from "../../i18n/labels";
-import { getSwatch, stripeWidths } from "../ThemeChipGrid/swatch-utils";
+import { getSwatch, stripeWidths } from "./swatch-utils";
 import { styles } from "./ThemeSwatchRail.styles";
 
 interface ThemeSwatchRailProps {

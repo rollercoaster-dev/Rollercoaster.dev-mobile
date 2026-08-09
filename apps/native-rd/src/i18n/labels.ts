@@ -31,7 +31,7 @@ export function evidenceShortLabel<NS extends Namespace>(
 
 /**
  * Composite screen-reader label for a theme option: "<name>. <description>".
- * Used by both ThemeSwitcher and ThemeChipGrid so the a11y contract stays
+ * Used by both ThemeSwitcher and ThemeSwatchRail so the a11y contract stays
  * single-sourced.
  */
 export function themeA11yLabel<NS extends Namespace>(

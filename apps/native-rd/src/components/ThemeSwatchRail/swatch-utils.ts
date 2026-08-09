@@ -2,8 +2,9 @@ import { themes, type ThemeName } from "../../themes/compose";
 
 /**
  * Per-theme colors for a 3-stripe theme swatch (background + two accent
- * stripes) plus the chip's name-bar treatment. Single-sourced here so
- * ThemeChipGrid and ThemeSwatchRail extract identical colors and never drift.
+ * stripes) plus a name-bar treatment. Lived under ThemeChipGrid while both
+ * pickers existed; ThemeSwatchRail replaced that grid on Welcome (#414) and is
+ * the only consumer now, so it owns the file.
  */
 export interface ChipSwatch {
   stripeBg: string;
