@@ -6,8 +6,11 @@ export const styles = StyleSheet.create((theme) => ({
   rail: {
     gap: theme.space[3],
   },
-  scrollContent: {
+  // Wraps rather than scrolls — see the component's docblock for the width
+  // arithmetic. `gap` applies to both axes, so wrapped rows stay spaced too.
+  swatchRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: theme.space[3],
     paddingVertical: theme.space[1],
   },
