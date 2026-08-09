@@ -12,7 +12,7 @@
 - [x] `WelcomeScreen` renders `ThemeSwatchRail` (not `ThemeChipGrid`) directly below the picker label, and a live `ThemeSampleCard` above it, sourced from `useThemeContext()`.
 - [x] Tapping any of the 7 swatches calls `setTheme(id)`; the hero band, body copy, sample card, and footer/CTA all re-skin immediately (via Unistyles' existing reactive `theme.colors.*` usage — no new re-skin logic needed).
 - [x] `Get Started` still calls `onGetStarted` (App.tsx's `markSeen`), which the existing `useFirstLaunch` flow persists as `hasSeenWelcome`, unchanged by this PR.
-- [x] `WelcomeScreen.stories.tsx` renders without throwing "useThemeContext must be used within a ThemeProvider" (it will need one now that `WelcomeScreen` itself calls the hook, not just `ThemeChipGrid`).
+- [~] `WelcomeScreen.stories.tsx` renders without throwing "useThemeContext must be used within a ThemeProvider" — the `ThemeProvider` wrapper is in place and type-checks, but the story was not rendered in on-device Storybook.
 - [x] `bun run test --testPathPatterns WelcomeScreen` is green; `bun run type-check` and `bun run lint` are clean.
 
 ## Dependencies
@@ -89,8 +89,8 @@ Re-skin `WelcomeScreen` from the old `ThemeChipGrid` picker + inline "sample car
 
 - [x] Unit tests for `WelcomeScreen` (Jest 30, `@testing-library/react-native` v13) — extend the existing `src/screens/WelcomeScreen/__tests__/WelcomeScreen.test.tsx` in place; no new test file needed since `ThemeSwatchRail`/`ThemeSampleCard` already carry their own full unit coverage.
 - [x] `bun run test --testPathPatterns WelcomeScreen` green; `bun run type-check` and `bun run lint` clean.
-- [x] Manual: `npx expo run:ios` (or Simulator), first-run flow — verify tapping each of Full Ride, Night Ride, and one shadow-off theme (e.g. Bold Ink) live-updates hero band, body, sample card, and footer CTA colors; verify `Get Started` still navigates to Goals and the gate does not replay on relaunch.
-- [x] Manual: open `Screens/WelcomeScreen` in on-device Storybook and confirm it renders without the "useThemeContext must be used within a ThemeProvider" crash (regression check for D7).
+- [ ] Manual (NOT RUN — needs a device/sim pass): `npx expo run:ios` (or Simulator), first-run flow — verify tapping each of Full Ride, Night Ride, and one shadow-off theme (e.g. Bold Ink) live-updates hero band, body, sample card, and footer CTA colors; verify `Get Started` still navigates to Goals and the gate does not replay on relaunch.
+- [ ] Manual (NOT RUN — needs on-device Storybook): open `Screens/WelcomeScreen` in on-device Storybook and confirm it renders without the "useThemeContext must be used within a ThemeProvider" crash (regression check for D7).
 
 ## Not in Scope
 
