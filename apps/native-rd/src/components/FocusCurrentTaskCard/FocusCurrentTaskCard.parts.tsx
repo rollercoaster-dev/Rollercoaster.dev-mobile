@@ -27,6 +27,10 @@ export interface FocusCapturedEvidenceItem {
  * the word reads as the same state color as its node in every theme. Sits above
  * the title, left-aligned, in mono uppercase (prototype fidelity, L4). Carries the
  * word in its `accessibilityLabel` too — color is never the sole signal.
+ *
+ * The completed state also gets a visible "✓" (prototype fidelity). The glyph
+ * stays out of the `accessibilityLabel`: the state word alone is already the
+ * full accessible name, so spelling the checkmark in would just be redundant.
  */
 export function StateWordPill({ status }: { status: StepStateMapKey }) {
   const { t } = useTranslation(["common", "focusMode"]);
@@ -38,7 +42,9 @@ export function StateWordPill({ status }: { status: StepStateMapKey }) {
       accessibilityRole="text"
       accessibilityLabel={label}
     >
-      <Text style={styles.stateWordText(status)}>{label}</Text>
+      <Text style={styles.stateWordText(status)}>
+        {status === "completed" ? `✓ ${label}` : label}
+      </Text>
     </View>
   );
 }

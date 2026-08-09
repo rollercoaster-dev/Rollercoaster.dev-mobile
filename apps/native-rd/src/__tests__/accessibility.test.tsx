@@ -28,7 +28,6 @@ import { Checkbox } from "../components/Checkbox";
 import { CollapsibleSection } from "../components/CollapsibleSection";
 import { ConfirmDeleteModal } from "../components/ConfirmDeleteModal/ConfirmDeleteModal";
 import { StepList, type Step } from "../components/StepList/StepList";
-import { MiniTimeline } from "../components/MiniTimeline/MiniTimeline";
 import {
   TimelineStep,
   type TimelineStepChild,
@@ -420,52 +419,6 @@ describe("Accessibility Contracts", () => {
     });
   });
 
-  // #292 sub-step nodes render smaller than top-level nodes but must still meet
-  // the 44pt touch target via a widened hitSlop. Existing MiniTimeline tests
-  // lock the visual node width; these lock the compensating hitSlop contract.
-  describe("MiniTimeline node hit targets", () => {
-    const stepLabel = (index: number, status: string) =>
-      i18n.t("common:timeline.a11y.step", { index, status });
-
-    function renderParentChild() {
-      renderWithProviders(
-        <MiniTimeline
-          steps={[
-            { status: "completed" },
-            { status: "pending", isChild: true },
-          ]}
-          currentIndex={0}
-          onStepTap={jest.fn()}
-          onTimelineTap={jest.fn()}
-          accessibilityLabel="Timeline"
-        />,
-      );
-    }
-
-    it.each([
-      ["top-level", 1, "completed", 15],
-      ["child", 2, "pending", 17],
-    ] as const)("%s node carries hitSlop %i", (_kind, index, status, slop) => {
-      renderParentChild();
-      const node = screen.getByLabelText(stepLabel(index, status));
-      expect(node.props.hitSlop).toBe(slop);
-    });
-
-    it("child node touch size (width + 2·hitSlop) meets the 44pt minimum", () => {
-      renderParentChild();
-      const child = screen.getByLabelText(stepLabel(2, "pending"));
-      const innerWidth = (
-        StyleSheet.flatten(
-          screen.getByTestId("timeline-node-1").props.style,
-        ) as { width?: number } | null
-      )?.width;
-      expect(innerWidth).toBeDefined();
-      expect(
-        innerWidth! + 2 * (child.props.hitSlop as number),
-      ).toBeGreaterThanOrEqual(44);
-    });
-  });
-
   // #293 timeline sub-spine: each sub-step renders a ChildRow with a small
   // lettered node and a collapsible header. These lock the new ChildRow a11y
   // contract — role, label, expanded state, and the small node's 44pt target.
@@ -481,7 +434,9 @@ describe("Accessibility Contracts", () => {
         id: "c-a",
         title: "Strip the wires",
         status: "in-progress",
-        evidence: [],
+        // Carries evidence so the header is a real disclosure control: since
+        // #455 a child with none is inert text, not an expandable button.
+        evidence: [{ id: "ev-a", type: "photo", label: "Stripped ends" }],
       },
       {
         id: "c-b",
@@ -519,6 +474,20 @@ describe("Accessibility Contracts", () => {
       expectAccessibleState(screen.getByLabelText(expandLabel), {
         expanded: true,
       });
+    });
+
+    it("child header with no evidence is inert text, not a button claiming expanded", () => {
+      renderWithSubSteps();
+      // c-b has no evidence: announcing "expanded" would be a lie, since
+      // nothing mounts below it (#455).
+      const header = screen.getByLabelText(
+        i18n.t("timelineJourney:step.a11yChildExpand", {
+          ordinal: "b",
+          title: "Connect the breaker",
+        }),
+      );
+      expectAccessibleRole(header, "text");
+      expect(header.props.accessibilityState?.expanded).toBeUndefined();
     });
 
     it("child node has button role, go-to label, and meets the 44pt target", () => {

@@ -78,13 +78,13 @@ function Stage({
 export const AllStates: Story = {
   render: () => (
     <View style={stageStyles.column}>
-      <Stage label="Goals active — FAB visible">
+      <Stage label="Goals active">
         <FocusPillTabBar {...buildProps(0)} />
       </Stage>
-      <Stage label="Badges active — FAB visible">
+      <Stage label="Badges active">
         <FocusPillTabBar {...buildProps(1)} />
       </Stage>
-      <Stage label="Settings active — FAB hidden">
+      <Stage label="Settings active">
         <FocusPillTabBar {...buildProps(2)} />
       </Stage>
     </View>
@@ -109,7 +109,7 @@ export const BadgesActive: Story = {
 
 export const SettingsActive: Story = {
   render: () => (
-    <Stage label="Settings active (FAB hidden)">
+    <Stage label="Settings active">
       <FocusPillTabBar {...buildProps(2)} />
     </Stage>
   ),

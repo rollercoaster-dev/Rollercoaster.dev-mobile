@@ -51,8 +51,8 @@ export interface AnimatedSheetProps {
 
 /**
  * Shared animated bottom-sheet shell — an **in-tree** absolute scrim + sheet
- * that rises from the bottom of the nearest screen-sized ancestor, mirroring
- * EvidenceDrawer's overlay/drawer pattern. Deliberately NOT an RN `Modal`:
+ * that rises from the bottom of the nearest screen-sized ancestor.
+ * Deliberately NOT an RN `Modal`:
  * a Modal portals to the OS layer (and to `<body>` on web), escaping the
  * phone frame and losing the sheet chrome — the caller's frame is the correct
  * boundary for a mobile bottom sheet. Slide-up/scrim-fade timing respects the

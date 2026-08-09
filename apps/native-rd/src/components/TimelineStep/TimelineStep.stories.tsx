@@ -5,7 +5,7 @@ import { ScopedTheme, StyleSheet } from "react-native-unistyles";
 import { Text } from "../Text";
 import { TimelineStep } from "./TimelineStep";
 import type { TimelineStepData, TimelineStepChild } from "./TimelineStep";
-import type { EvidenceItemData } from "../EvidenceDrawer";
+import type { EvidenceItemData } from "../../types/evidence";
 import { themeNames, type ThemeName } from "../../themes/compose";
 
 const meta: Meta<typeof TimelineStep> = {

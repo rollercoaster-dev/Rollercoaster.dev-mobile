@@ -8,7 +8,7 @@ import {
 import { i18n } from "../../../i18n";
 import { TimelineStep } from "../TimelineStep";
 import type { TimelineStepChild } from "../TimelineStep";
-import type { EvidenceItemData } from "../../EvidenceDrawer";
+import type { EvidenceItemData } from "../../../types/evidence";
 
 const baseStep = {
   id: "step-1",
@@ -59,6 +59,10 @@ describe("TimelineStep", () => {
   it("expands evidence on header tap", () => {
     renderWithProviders(<TimelineStep {...baseProps} />);
     fireEvent.press(screen.getByLabelText("Read the docs, Working"));
+    // Positive control for the testID the empty-state tests assert absent.
+    expect(
+      screen.getByTestId("timeline-evidence-section-step-1"),
+    ).toBeOnTheScreen();
     expect(screen.getByText("Progress photo")).toBeOnTheScreen();
     expect(screen.getByText("Useful article")).toBeOnTheScreen();
   });
@@ -72,10 +76,32 @@ describe("TimelineStep", () => {
     expect(screen.queryByText("Progress photo")).not.toBeOnTheScreen();
   });
 
-  it('shows "No evidence yet" when empty', () => {
+  it("renders no evidence section at all when a step has none", () => {
     renderWithProviders(<TimelineStep {...baseProps} evidence={[]} />);
     fireEvent.press(screen.getByLabelText("Read the docs, Working"));
-    expect(screen.getByText("No evidence yet")).toBeOnTheScreen();
+    expect(screen.queryByText("No evidence yet")).toBeNull();
+    expect(screen.queryByTestId("timeline-evidence-section-step-1")).toBeNull();
+  });
+
+  it("header advertises no disclosure when a step has no evidence", () => {
+    renderWithProviders(<TimelineStep {...baseProps} evidence={[]} />);
+    const header = screen.getByLabelText("Read the docs, Working");
+    // Nothing to expand → not a button, no `expanded` to announce, no chevron.
+    expect(header.props.accessibilityRole).toBe("text");
+    expect(header.props.accessibilityState?.expanded).toBeUndefined();
+    expect(screen.queryByText("▼")).toBeNull();
+  });
+
+  it("header is a disclosure button when a step has evidence", () => {
+    renderWithProviders(<TimelineStep {...baseProps} />);
+    const header = screen.getByLabelText("Read the docs, Working");
+    expect(header.props.accessibilityRole).toBe("button");
+    expect(header.props.accessibilityState.expanded).toBe(false);
+    fireEvent.press(header);
+    expect(
+      screen.getByLabelText("Read the docs, Working").props.accessibilityState
+        .expanded,
+    ).toBe(true);
   });
 
   it("calls onNodePress with the step's own id when node is tapped", () => {
@@ -403,10 +429,26 @@ describe("TimelineStep", () => {
       expect(screen.queryByText("Child link")).toBeNull();
     });
 
-    it("shows the empty-evidence message for a sub-step with no evidence", () => {
+    it("renders no evidence section for a sub-step with no evidence", () => {
       renderWithProviders(<TimelineStep {...baseProps} subSteps={subSteps} />);
       fireEvent.press(screen.getByLabelText("Sub-step b: Second child"));
-      expect(screen.getByText("No evidence yet")).toBeOnTheScreen();
+      expect(screen.queryByText("No evidence yet")).toBeNull();
+      // c2 is the sub-step just expanded; its own section is the only one that
+      // could have mounted, and it doesn't.
+      expect(screen.queryByTestId("timeline-evidence-section-c2")).toBeNull();
+    });
+
+    it("sub-step header advertises no disclosure when it has no evidence", () => {
+      renderWithProviders(<TimelineStep {...baseProps} subSteps={subSteps} />);
+      // c2 ("Second child") is the evidence-less sub-step.
+      const header = screen.getByLabelText("Sub-step b: Second child");
+      expect(header.props.accessibilityRole).toBe("text");
+      expect(header.props.accessibilityState?.expanded).toBeUndefined();
+      // c1/c3 both have evidence, so their chevrons are the only ones left.
+      expect(
+        screen.getByLabelText("Sub-step a: First child").props
+          .accessibilityRole,
+      ).toBe("button");
     });
 
     it("calls onNodePress with the sub-step's own id, not its parent's", () => {

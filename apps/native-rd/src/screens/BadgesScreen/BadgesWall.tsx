@@ -50,7 +50,10 @@ export interface BadgesWallProps {
   count: number;
   /** Most-recently-earned badge, or null (0 badges / no spotlight). */
   spotlight: BadgesWallSpotlight | null;
-  /** Every earned badge, rendered one cell each — no cap (D9). */
+  /**
+   * Every earned badge *except* the spotlight (the container passes
+   * `rows.slice(1)`), rendered one cell each — no cap (D9).
+   */
   gallery: BadgesWallGalleryItem[];
   onOpenBadge: (id: string) => void;
   /** Empty-state CTA target — container wires this to the Goals tab (D12). */
@@ -202,6 +205,9 @@ export function BadgesWall({
     ),
   );
 
+  // The App Shell prototype's `☰` sort control was deliberately not built:
+  // #405 hardcodes newest-first (`badgesWithGoalsQuery` orders by
+  // `badge.createdAt desc`), so there is nothing to toggle between yet.
   const listHeader = (
     <View>
       <View style={styles.header}>

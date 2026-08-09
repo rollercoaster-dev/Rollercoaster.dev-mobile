@@ -117,14 +117,6 @@ describe("option array ↔ i18n key parity", () => {
     expect(jsonKeys).toEqual(unionKeys);
   });
 
-  // Forward-only: `common:timeline.a11y.step` interpolates `{{status}}` as a
-  // string (not a TS union), so a reverse keyset assertion would have no
-  // basis. The forward check guarantees the template-literal `t()` callsites
-  // in MiniTimeline and ProgressDots resolve to a real translation.
-  test("common:timeline.a11y.step resolves", () => {
-    expect(i18n.exists("common:timeline.a11y.step")).toBe(true);
-  });
-
   // --- BadgeDesigner: each enum union is the source of truth for a
   // template-literal `t()` key family. Forward walks the union; reverse
   // catches orphan JSON entries after a value is renamed in types.ts.

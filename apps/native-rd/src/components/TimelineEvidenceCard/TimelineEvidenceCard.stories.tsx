@@ -4,7 +4,7 @@ import { View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 import { Text } from "../Text";
 import { TimelineEvidenceCard } from "./TimelineEvidenceCard";
-import type { EvidenceItemData } from "../EvidenceDrawer";
+import type { EvidenceItemData } from "../../types/evidence";
 
 const meta: Meta<typeof TimelineEvidenceCard> = {
   title: "TimelineEvidenceCard",

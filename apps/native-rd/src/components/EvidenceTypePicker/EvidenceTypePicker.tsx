@@ -258,8 +258,8 @@ export interface CaptureSheetBodyProps {
 
 /**
  * Presentational body of the capture sheet — handle, header, sub-line, and the
- * single-select 3-up grid, on the EvidenceDrawer sheet chrome (background +
- * top/side borders + rounded top corners). Rendered inside the animated
+ * single-select 3-up grid, on the sheet chrome (background + top/side
+ * borders + rounded top corners). Rendered inside the animated
  * overlay by `CaptureSheet`, and directly by the `AllThemesMatrix` story —
  * the full picker brings an absolute-fill scrim anchored to its parent, so
  * seven live pickers would stack over the canvas; the body alone tiles. The

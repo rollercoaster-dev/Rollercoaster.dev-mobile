@@ -26,8 +26,9 @@ export const PILL_HEIGHT = 64;
 
 /** Distance the pill's outer edge sits above the tab bar slot — the bar
  * uses this as a negative top margin so its top half breaks above the
- * slot. Consumers (e.g. EvidenceDrawer, screen content padding) need the
- * same value to clear the lifted half. */
+ * slot. Consumers (`useTabScreenContentInset`, and screens that pad their
+ * own footer: FocusModeScreen, BadgeDetailScreen) need the same value to
+ * clear the lifted half. */
 export const PILL_LIFT = PILL_HEIGHT / 2 + borderWidth.medium;
 
 /** Fixed visual order of the three destinations in the track (#379). */

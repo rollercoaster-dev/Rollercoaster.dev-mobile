@@ -74,8 +74,8 @@ export const styles = StyleSheet.create((theme) => ({
 
   // --- Capture mode (mode="capture") bottom sheet ---
   // In-tree overlay (no RN Modal): fills the nearest screen-sized ancestor and
-  // anchors the sheet to its bottom edge. zIndex tiers mirror
-  // EvidenceDrawer.styles.ts (scrim below, sheet above sibling content).
+  // anchors the sheet to its bottom edge. zIndex tiers: scrim below, sheet
+  // above sibling content.
   overlay: {
     position: "absolute",
     top: 0,
@@ -85,8 +85,7 @@ export const styles = StyleSheet.create((theme) => ({
     justifyContent: "flex-end",
     zIndex: 20,
   },
-  // Fading scrim layer. Alpha suffix on theme.colors.shadow mirrors
-  // EvidenceDrawer.styles.ts's overlay treatment.
+  // Fading scrim layer: theme.colors.shadow at ~80% alpha (the `cc` suffix).
   scrim: {
     position: "absolute",
     top: 0,
@@ -100,8 +99,8 @@ export const styles = StyleSheet.create((theme) => ({
   backdrop: {
     flex: 1,
   },
-  // Sheet chrome matches EvidenceDrawer's drawer: opaque surface, medium top
-  // border + thin side borders, rounded top corners. Bottom safe-area inset is
+  // Sheet chrome: opaque surface, medium top border + thin side borders,
+  // rounded top corners. Bottom safe-area inset is
   // folded into paddingBottom (the root is a plain View, not SafeAreaView —
   // unistyles styles on SafeAreaView are dropped on web).
   sheet: (bottomInset: number) => ({

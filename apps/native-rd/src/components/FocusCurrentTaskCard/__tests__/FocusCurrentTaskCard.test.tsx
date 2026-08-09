@@ -94,6 +94,17 @@ describe("FocusCurrentTaskCard", () => {
       },
     );
 
+    it("completed pill shows a ✓ without spelling it into the a11y name", () => {
+      renderCard({ status: "completed", capturedEvidence: captured });
+      expect(screen.getByText("✓ Completed")).toBeTruthy();
+      expect(screen.getByLabelText("Completed")).toBeTruthy();
+    });
+
+    it("paused pill carries no ✓", () => {
+      renderCard({ status: "paused", capturedEvidence: captured });
+      expect(screen.getByText("Paused")).toBeTruthy();
+    });
+
     it("in-progress renders no state pill", () => {
       renderCard({ status: "in-progress" });
       // "In Progress" can never label a pill (StateWordPill only takes
