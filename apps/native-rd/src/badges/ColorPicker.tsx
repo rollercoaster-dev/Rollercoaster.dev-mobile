@@ -90,6 +90,7 @@ export function ColorPicker({
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
+        style={selectorStyles.rail}
         contentContainerStyle={selectorStyles.row}
       >
         {swatches.map(({ id, hex }) => {

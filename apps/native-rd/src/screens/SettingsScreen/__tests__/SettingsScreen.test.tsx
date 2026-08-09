@@ -8,6 +8,7 @@ import {
   waitFor,
 } from "../../../__tests__/test-utils";
 import { i18n } from "../../../i18n";
+import { themeA11yLabel } from "../../../i18n/labels";
 import { Logger } from "../../../shims/rd-logger";
 
 import { isSentryDebugToolsEnabled, SettingsScreen } from "../SettingsScreen";
@@ -32,11 +33,24 @@ const settingsScreenLogger = MockLogger.mock.results[settingsScreenLoggerIdx]
 // RN's jest setup sets __DEV__ as a runtime global; TS doesn't see it here.
 const devGlobal = global as unknown as { __DEV__: boolean };
 
+/** The 7 theme options the swatch rail renders, in `themeOptions` order. */
+const THEME_IDS = [
+  "light-default",
+  "dark-default",
+  "light-highContrast",
+  "light-dyslexia",
+  "light-autismFriendly",
+  "light-lowVision",
+  "light-lowInfo",
+] as const;
+
 /**
  * SettingsScreen component tests.
  *
- * Tests cover: header, ThemeSwitcher (variant picker), DensityPicker,
- * About section, and footer.
+ * Tests cover the screen's WIRING of the presentational sections — theme
+ * (SettingsThemeSection → useThemeContext), density (SettingsDensityRows →
+ * useDensity), the Onboarding replay row, About, and the footer. The sections'
+ * own visuals/a11y are covered by their component tests and #415's stories.
  */
 
 // Mock RN components that hit src/private/specs_DEPRECATED ESM files in RN 0.81
@@ -81,6 +95,21 @@ jest.mock("@sentry/react-native", () => ({
 
 const mockSetTheme = jest.fn();
 const mockSetDensity = jest.fn();
+const mockNavigate = jest.fn();
+
+jest.mock("@react-navigation/native", () => {
+  const actual = jest.requireActual("@react-navigation/native");
+  return {
+    ...actual,
+    useNavigation: () => ({
+      navigate: mockNavigate,
+      goBack: jest.fn(),
+      setOptions: jest.fn(),
+      addListener: jest.fn(() => jest.fn()),
+      canGoBack: jest.fn(() => true),
+    }),
+  };
+});
 
 jest.mock("../../../hooks/useTheme", () => {
   const actual = jest.requireActual("../../../hooks/useTheme");
@@ -134,39 +163,39 @@ describe("SettingsScreen", () => {
     expect(screen.getByText(i18n.t("settings:title"))).toBeOnTheScreen();
   });
 
-  it("renders the ThemeSwitcher with all theme options", () => {
+  it("renders the theme section with a swatch per theme option", () => {
     renderWithProviders(<SettingsScreen />);
-    expect(
-      screen.getByText(i18n.t("common:theme.picker.title")),
-    ).toBeOnTheScreen();
-    const themeIds = [
-      "light-default",
-      "dark-default",
-      "light-highContrast",
-      "light-dyslexia",
-      "light-autismFriendly",
-      "light-lowVision",
-      "light-lowInfo",
-    ] as const;
-    for (const id of themeIds) {
+    expect(screen.getByText(i18n.t("settings:theme.title"))).toBeOnTheScreen();
+    for (const id of THEME_IDS) {
       expect(
-        screen.getByText(i18n.t(`common:theme.options.${id}.label`)),
+        screen.getByLabelText(themeA11yLabel(i18n.t, id)),
       ).toBeOnTheScreen();
     }
   });
 
-  it("renders theme options with radio accessibility roles", () => {
+  it("renders theme and density options as radios", () => {
     renderWithProviders(<SettingsScreen />);
-    const radios = screen.getAllByRole("radio");
-    expect(radios.length).toBe(7); // 7 theme options
+    // 7 theme swatches + 3 density rows.
+    expect(screen.getAllByRole("radio")).toHaveLength(THEME_IDS.length + 3);
   });
 
-  it("calls setTheme when a theme option is pressed", () => {
+  it("calls setTheme when a theme swatch is pressed", () => {
     renderWithProviders(<SettingsScreen />);
     fireEvent.press(
-      screen.getByText(i18n.t("common:theme.options.dark-default.label")),
+      screen.getByLabelText(themeA11yLabel(i18n.t, "dark-default")),
     );
     expect(mockSetTheme).toHaveBeenCalledWith("dark-default");
+  });
+
+  it("shows a toast when setTheme reports a failed persist", () => {
+    mockSetTheme.mockReturnValue(false);
+    renderWithProviders(<SettingsScreen />);
+    fireEvent.press(
+      screen.getByLabelText(themeA11yLabel(i18n.t, "dark-default")),
+    );
+    expect(
+      screen.getByText(i18n.t("settings:errors.themeSaveFailed")),
+    ).toBeOnTheScreen();
   });
 
   it("renders the Content Density section with all options", () => {
@@ -217,6 +246,17 @@ describe("SettingsScreen", () => {
     ).toBeOnTheScreen();
   });
 
+  it("renders the Onboarding section and navigates to the Welcome replay", () => {
+    renderWithProviders(<SettingsScreen />);
+    expect(
+      screen.getByText(i18n.t("settings:onboarding.title")),
+    ).toBeOnTheScreen();
+    fireEvent.press(
+      screen.getByText(i18n.t("settings:onboarding.replayWelcome")),
+    );
+    expect(mockNavigate).toHaveBeenCalledWith("Welcome");
+  });
+
   it("renders the About section", () => {
     renderWithProviders(<SettingsScreen />);
     expect(screen.getByText(i18n.t("settings:about.title"))).toBeOnTheScreen();
@@ -244,12 +284,15 @@ describe("SettingsScreen", () => {
       if (i18n.language !== "en") await i18n.changeLanguage("en");
     });
 
-    // Multiple keys across header/density/about so a partial-revert
+    // Multiple keys across header/density/onboarding/about so a partial-revert
     // regression can't escape detection by sneaking past one asserted key.
     it.each([
       "settings:title",
+      "settings:theme.title",
       "settings:density.title",
       "settings:density.options.compact.label",
+      "settings:onboarding.title",
+      "settings:onboarding.replayWelcome",
       "settings:about.title",
       "settings:about.builtWith",
     ] as const)(

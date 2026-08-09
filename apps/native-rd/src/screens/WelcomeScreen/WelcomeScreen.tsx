@@ -5,10 +5,13 @@ import { useUnistyles } from "react-native-unistyles";
 import { useTranslation } from "react-i18next";
 import { Text } from "../../components/Text";
 import { Button } from "../../components/Button";
-import { Card } from "../../components/Card";
 import { BrandMark } from "../../components/BrandMark";
 import { HeaderBand } from "../../components/ScreenHeader/HeaderBand";
-import { ThemeChipGrid } from "../../components/ThemeChipGrid";
+import { ThemeSwatchRail } from "../../components/ThemeSwatchRail";
+import { ThemeSampleCard } from "../../components/ThemeSampleCard";
+import { useToast } from "../../components/Toast";
+import { useThemeContext } from "../../hooks/useTheme";
+import type { ThemeName } from "../../themes/compose";
 import { styles } from "./WelcomeScreen.styles";
 
 export interface WelcomeScreenProps {
@@ -17,8 +20,20 @@ export interface WelcomeScreenProps {
 
 export function WelcomeScreen({ onGetStarted }: WelcomeScreenProps) {
   const { theme } = useUnistyles();
+  const { themeName, setTheme } = useThemeContext();
+  const { showToast } = useToast();
   const insets = useSafeAreaInsets();
-  const { t } = useTranslation(["welcome", "common"]);
+  const { t } = useTranslation(["welcome", "common", "settings"]);
+
+  // setTheme applies the theme in-session immediately and returns false only
+  // when persisting it failed. The swatch still reads as selected (the theme
+  // did change); the toast tells the user it won't survive a restart. Mirrors
+  // ThemeSwitcher — without it, a first-run pick silently reverts on relaunch.
+  const handleSelectTheme = (id: ThemeName) => {
+    if (!setTheme(id)) {
+      showToast({ message: t("settings:errors.themeSaveFailed") });
+    }
+  };
 
   return (
     <View
@@ -50,24 +65,15 @@ export function WelcomeScreen({ onGetStarted }: WelcomeScreenProps) {
           {t("welcome:intro.body2")}
         </Text>
 
-        <Card size="compact">
-          <View style={styles.sampleRow}>
-            <View style={styles.sampleBadge}>
-              <Text style={styles.sampleBadgeText}>★</Text>
-            </View>
-            <View style={styles.sampleText}>
-              <Text variant="title">{t("common:theme.preview.title")}</Text>
-              <Text variant="caption" style={styles.sampleMeta}>
-                {t("welcome:sample.progress")}
-              </Text>
-            </View>
-          </View>
-        </Card>
+        <ThemeSampleCard themeId={themeName} />
 
         <Text variant="label" style={styles.pickerLabel}>
           {t("welcome:themePicker.label")}
         </Text>
-        <ThemeChipGrid />
+        <ThemeSwatchRail
+          selectedThemeId={themeName}
+          onSelect={handleSelectTheme}
+        />
       </ScrollView>
 
       <View

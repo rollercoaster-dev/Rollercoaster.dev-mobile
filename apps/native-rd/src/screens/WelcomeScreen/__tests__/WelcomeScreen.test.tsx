@@ -1,23 +1,39 @@
 import React from "react";
+import { StyleSheet } from "react-native";
 import {
   renderWithProviders,
   screen,
   fireEvent,
+  act,
 } from "../../../__tests__/test-utils";
 import { i18n } from "../../../i18n";
+import { themeA11yLabel } from "../../../i18n/labels";
+import { themeOptions } from "../../../hooks/useTheme";
+import { themes, type ThemeName } from "../../../themes/compose";
 
 import { WelcomeScreen } from "../WelcomeScreen";
 
-const mockSetTheme = jest.fn();
+const themeLabelOf = (id: (typeof themeOptions)[number]["id"]) =>
+  themeA11yLabel(i18n.t.bind(i18n), id);
+
+// Defaults to a successful persist. Tests that exercise the failure path
+// override it with `mockReturnValue(false)` — see "surfaces a toast".
+const mockSetTheme = jest.fn<boolean, [string]>();
+
+// Mutable so tests can prove the screen actually threads the context's
+// themeName into ThemeSampleCard/ThemeSwatchRail. With it pinned to the
+// default, swapping both props for the literal "light-default" kept every
+// assertion green — the wiring this issue exists to create was untested.
+let mockThemeName: ThemeName = "light-default";
 
 jest.mock("../../../hooks/useTheme", () => {
   const actual = jest.requireActual("../../../hooks/useTheme");
   return {
     ...actual,
     useThemeContext: () => ({
-      themeName: "light-default" as const,
+      themeName: mockThemeName,
       theme: require("../../../__tests__/mocks/unistyles").mockTheme,
-      isDark: false,
+      isDark: mockThemeName.startsWith("dark"),
       variant: "default" as const,
       setTheme: mockSetTheme,
     }),
@@ -26,6 +42,8 @@ jest.mock("../../../hooks/useTheme", () => {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockSetTheme.mockReturnValue(true);
+  mockThemeName = "light-default";
 });
 
 describe("WelcomeScreen", () => {
@@ -50,33 +68,58 @@ describe("WelcomeScreen", () => {
       ).toBeOnTheScreen();
     });
 
-    it("renders all 7 theme option labels", () => {
+    // The rail renders only the selected theme's name as visible text; the
+    // other 6 exist solely as each swatch's accessibilityLabel, so this asserts
+    // reachability via label, not via getByText.
+    it("renders all 7 theme options as labelled swatches", () => {
       renderWithProviders(<WelcomeScreen onGetStarted={jest.fn()} />);
-      expect(
-        screen.getByText(i18n.t("common:theme.options.light-default.label")),
-      ).toBeOnTheScreen();
-      expect(
-        screen.getByText(i18n.t("common:theme.options.dark-default.label")),
-      ).toBeOnTheScreen();
-      expect(
-        screen.getByText(
-          i18n.t("common:theme.options.light-highContrast.label"),
-        ),
-      ).toBeOnTheScreen();
-      expect(
-        screen.getByText(i18n.t("common:theme.options.light-dyslexia.label")),
-      ).toBeOnTheScreen();
-      expect(
-        screen.getByText(
-          i18n.t("common:theme.options.light-autismFriendly.label"),
-        ),
-      ).toBeOnTheScreen();
-      expect(
-        screen.getByText(i18n.t("common:theme.options.light-lowVision.label")),
-      ).toBeOnTheScreen();
-      expect(
-        screen.getByText(i18n.t("common:theme.options.light-lowInfo.label")),
-      ).toBeOnTheScreen();
+      for (const option of themeOptions) {
+        expect(
+          screen.getByLabelText(themeLabelOf(option.id)),
+        ).toBeOnTheScreen();
+      }
+    });
+
+    // Both children are driven by `useThemeContext().themeName`. These assert
+    // against a NON-default theme, so replacing either prop with the literal
+    // "light-default" fails here — which is the whole point of #414's wiring.
+    describe("threads the active theme into the rail and the sample card", () => {
+      beforeEach(() => {
+        mockThemeName = "dark-default";
+      });
+
+      it("marks the active theme's swatch as the checked radio", () => {
+        renderWithProviders(<WelcomeScreen onGetStarted={jest.fn()} />);
+        const checked = screen
+          .getAllByRole("radio")
+          .filter((r) => r.props.accessibilityState?.checked === true);
+        expect(checked).toHaveLength(1);
+        expect(checked[0].props.accessibilityLabel).toBe(
+          themeLabelOf("dark-default"),
+        );
+      });
+
+      it("captions the rail with the active theme's name", () => {
+        renderWithProviders(<WelcomeScreen onGetStarted={jest.fn()} />);
+        expect(
+          screen.getByText(i18n.t("common:theme.options.dark-default.label")),
+        ).toBeOnTheScreen();
+        expect(
+          screen.queryByText(
+            i18n.t("common:theme.options.light-default.label"),
+          ),
+        ).toBeNull();
+      });
+
+      it("previews the active theme's tokens in the sample card", () => {
+        renderWithProviders(<WelcomeScreen onGetStarted={jest.fn()} />);
+        const card = StyleSheet.flatten(
+          screen.getByTestId("theme-sample-card").props.style,
+        );
+        expect(card.backgroundColor).toBe(
+          themes["dark-default"].colors.backgroundSecondary,
+        );
+      });
     });
 
     it('renders "Get Started" button', () => {
@@ -99,7 +142,7 @@ describe("WelcomeScreen", () => {
         screen.getByText(i18n.t("common:theme.preview.title")),
       ).toBeOnTheScreen();
       expect(
-        screen.getByText(i18n.t("welcome:sample.progress")),
+        screen.getByText(i18n.t("common:theme.preview.progress")),
       ).toBeOnTheScreen();
     });
   });
@@ -115,6 +158,33 @@ describe("WelcomeScreen", () => {
       );
       expect(onGetStarted).toHaveBeenCalledTimes(1);
     });
+
+    it("calls setTheme when a swatch is pressed", () => {
+      renderWithProviders(<WelcomeScreen onGetStarted={jest.fn()} />);
+      fireEvent.press(screen.getByLabelText(themeLabelOf("dark-default")));
+      expect(mockSetTheme).toHaveBeenCalledWith("dark-default");
+    });
+
+    // #503 contract: setTheme returns false only when the Evolu write failed.
+    // The theme still applied in-session, so the only signal that the pick
+    // won't survive a restart is this toast. Without it the loss is silent —
+    // and first launch is where an ND user picks the variant they need.
+    it("surfaces a toast when persisting the theme fails", () => {
+      mockSetTheme.mockReturnValue(false);
+      renderWithProviders(<WelcomeScreen onGetStarted={jest.fn()} />);
+      fireEvent.press(screen.getByLabelText(themeLabelOf("dark-default")));
+      expect(
+        screen.getByText(i18n.t("settings:errors.themeSaveFailed")),
+      ).toBeOnTheScreen();
+    });
+
+    it("shows no toast when persisting the theme succeeds", () => {
+      renderWithProviders(<WelcomeScreen onGetStarted={jest.fn()} />);
+      fireEvent.press(screen.getByLabelText(themeLabelOf("dark-default")));
+      expect(
+        screen.queryByText(i18n.t("settings:errors.themeSaveFailed")),
+      ).toBeNull();
+    });
   });
 
   // A pseudo-render smoke check catches reverts to hard-coded English that
@@ -123,24 +193,32 @@ describe("WelcomeScreen", () => {
   // either way. Under pseudo it returns bracketed text, so the assertion
   // only passes if the component is actually routing through t().
   describe("pseudo locale", () => {
+    // changeLanguage re-renders every mounted useTranslation consumer, so it
+    // has to run inside act() — unwrapped it emitted 15 act warnings per run,
+    // which drowns out real ones. Same shape as ThemeSwatchRail.test.tsx.
     afterEach(async () => {
-      if (i18n.language !== "en") await i18n.changeLanguage("en");
+      if (i18n.language !== "en") {
+        await act(async () => {
+          await i18n.changeLanguage("en");
+        });
+      }
     });
 
     // Multiple representative keys raise the cost of a partial-revert
     // regression: a developer would have to revert ALL of these to escape
-    // detection. Covers hero/body/sample/picker/CTA axes.
+    // detection. Covers hero/body/picker/CTA axes.
     it.each([
       "welcome:hero.greeting",
       "welcome:hero.title",
       "welcome:intro.body1",
-      "welcome:sample.progress",
       "welcome:themePicker.label",
       "welcome:cta.getStarted",
     ] as const)(
       "renders %s as bracketed copy under pseudo locale",
       async (key) => {
-        await i18n.changeLanguage("pseudo");
+        await act(async () => {
+          await i18n.changeLanguage("pseudo");
+        });
         renderWithProviders(<WelcomeScreen onGetStarted={jest.fn()} />);
         const pseudo = i18n.t(key);
         expect(pseudo.startsWith("[")).toBe(true);
@@ -164,8 +242,13 @@ describe("WelcomeScreen", () => {
 
     it('theme options container has accessibilityRole="radiogroup"', () => {
       renderWithProviders(<WelcomeScreen onGetStarted={jest.fn()} />);
-      const radiogroup = screen.getByRole("radiogroup");
-      expect(radiogroup).toBeOnTheScreen();
+      // Queried via label, not getByRole: the rail deliberately omits
+      // `accessible` (#500) so its radios stay individually reachable, and
+      // RNTL's role query only matches elements with a truthy `accessible`.
+      const radiogroup = screen.getByLabelText(
+        i18n.t("common:theme.picker.groupLabel"),
+      );
+      expect(radiogroup.props.accessibilityRole).toBe("radiogroup");
     });
   });
 });

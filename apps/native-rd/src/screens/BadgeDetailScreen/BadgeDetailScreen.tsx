@@ -20,6 +20,7 @@ import { Card } from "../../components/Card";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { IconButton } from "../../components/IconButton";
 import { HeaderBand } from "../../components/ScreenHeader";
+import { useTopInsetColor } from "../../navigation/TopInsetColor";
 import { ConfirmDeleteModal } from "../../components/ConfirmDeleteModal";
 import { badgeWithGoalQuery, deleteBadge } from "../../db";
 import type { BadgeId } from "../../db";
@@ -33,7 +34,6 @@ import { formatDate } from "../../utils/format";
 import { reportError } from "../../services/sentry-report";
 import { runEvoluMutation } from "../../utils/evoluMutation";
 import { Logger } from "../../shims/rd-logger";
-import { useTopInsetColor } from "../../navigation/TopInsetColor";
 import type {
   BadgeDetailScreenProps,
   BadgesStackParamList,
@@ -195,13 +195,12 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
   const [isShareSheetOpen, setIsShareSheetOpen] = useState(false);
   const { shouldAnimate } = useAnimationPref();
   const insets = useSafeAreaInsets();
-  // The hero band is the screen's first pixel row, so the device top-inset
-  // strip App.tsx paints above the navigator has to be the celebration
-  // surface too — otherwise the band sits under an orphaned header-coloured
-  // strip it has nothing to do with (same opt-out the badge wall takes).
-  // `null` on the not-found branch below, which renders a ScreenHeader
-  // instead and wants the default.
   const { theme } = useUnistyles();
+  // The celebration band is the first thing under the status bar, so the
+  // device top-inset strip App.tsx paints has to be the band's surface — not
+  // the purple header chrome, which belongs to screens that actually have a
+  // ScreenHeader. Null while the badge is missing: that path renders
+  // DetailFallbackHeader, which *is* a header band.
   useTopInsetColor(badge ? theme.chrome.celebrationBg : null);
   const {
     exportVerifiableBadge,

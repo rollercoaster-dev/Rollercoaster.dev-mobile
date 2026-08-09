@@ -1,4 +1,5 @@
 import React from "react";
+import { ScrollView, StyleSheet } from "react-native";
 import {
   renderWithProviders,
   screen,
@@ -104,6 +105,19 @@ describe("ThemeSwatchRail", () => {
       }
     },
   );
+
+  // Regression guard: the swatches used to sit in a horizontal ScrollView with
+  // no scroll indicator. At 408pt of content in ~361pt of usable width the 7th
+  // theme was ~1pt from the edge — visually "there are only 6 themes". They
+  // must wrap so every option is on screen on every device.
+  it("wraps the swatches instead of hiding them in a horizontal scroller", () => {
+    renderWithProviders(
+      <ThemeSwatchRail selectedThemeId="light-default" onSelect={jest.fn()} />,
+    );
+    expect(screen.UNSAFE_queryAllByType(ScrollView)).toHaveLength(0);
+    const row = screen.getByTestId("theme-swatch-row");
+    expect(StyleSheet.flatten(row.props.style).flexWrap).toBe("wrap");
+  });
 
   it("renders the ✓ overlay on exactly the selected swatch", () => {
     renderWithProviders(

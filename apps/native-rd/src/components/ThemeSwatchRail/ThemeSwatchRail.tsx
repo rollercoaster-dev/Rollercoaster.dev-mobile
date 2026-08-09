@@ -1,9 +1,9 @@
-import { View, Text, Pressable, ScrollView } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { useTranslation } from "react-i18next";
 import { themeOptions } from "../../hooks/useTheme";
 import { themes, type ThemeName } from "../../themes/compose";
 import { themeA11yLabel } from "../../i18n/labels";
-import { getSwatch, stripeWidths } from "../ThemeChipGrid/swatch-utils";
+import { getSwatch, stripeWidths } from "./swatch-utils";
 import { styles } from "./ThemeSwatchRail.styles";
 
 interface ThemeSwatchRailProps {
@@ -12,11 +12,19 @@ interface ThemeSwatchRailProps {
 }
 
 /**
- * Controlled horizontal rail of circular 3-stripe theme swatches. Stateless —
- * the parent (Welcome #414 / Settings #415) owns the selected theme. Each
- * swatch extracts its colors via the shared `getSwatch`/`stripeWidths` so it
- * stays in lockstep with ThemeChipGrid. The selected swatch's name and
- * description render below the rail.
+ * Controlled rail of circular 3-stripe theme swatches. Stateless — the parent
+ * (Welcome #414 / Settings #415) owns the selected theme. Each swatch extracts
+ * its colors via the shared `getSwatch`/`stripeWidths`. The selected swatch's
+ * name and description render below the rail.
+ *
+ * The swatches WRAP rather than scroll horizontally. At 7 x 48pt + 6 x 12pt the
+ * row is 408pt wide, which overflows the content width of every shipping iPhone
+ * (393pt device - 32pt of screen padding = 361pt). A horizontal ScrollView put
+ * the 7th theme ~1pt from the edge — indistinguishable from "there are only 6
+ * themes" — and `showsHorizontalScrollIndicator={false}` left no cue either.
+ * Shrinking to fit is not an option: 44pt is the a11y floor for a touch target
+ * and 7 x 44 + 6 x 8 still overflows a 375pt SE. Wrapping keeps all 7 visible
+ * and the targets legal on every device and density.
  */
 export function ThemeSwatchRail({
   selectedThemeId,
@@ -48,11 +56,7 @@ export function ThemeSwatchRail({
         accessibilityRole="radiogroup"
         accessibilityLabel={t("common:theme.picker.groupLabel")}
       >
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-        >
+        <View testID="theme-swatch-row" style={styles.swatchRow}>
           {themeOptions.map(({ id }) => {
             const isSelected = selectedThemeId === id;
             const swatch = getSwatch(id);
@@ -98,11 +102,21 @@ export function ThemeSwatchRail({
               </Pressable>
             );
           })}
-        </ScrollView>
+        </View>
       </View>
 
       <View>
-        <Text style={styles.captionLabel}>
+        {/*
+          `selected-theme` is the E2E handle the required theme flows assert on
+          (e2e/flows/settings-theme-switch.yaml,
+          e2e/flows/settings-theme-persists-restart.yaml). It lives on the
+          caption — not on the selected swatch — because the swatch
+          renders no text, and the restart flow needs a combined
+          `id` + `text: "Night Ride"` matcher to prove the PERSISTED theme came
+          back, not just that something is selected. Inherited from
+          ThemeSwitcher, which carried the same testID before #416.
+        */}
+        <Text testID="selected-theme" style={styles.captionLabel}>
           {t(`common:theme.options.${selectedThemeId}.label`)}
         </Text>
         <Text style={styles.captionDescription}>

@@ -86,4 +86,29 @@ describe("FinishRevealStage", () => {
       expect(scaleFromStyle(badge.props.style)).toBe(expectedScale);
     },
   );
+
+  // The same decoration Badge Detail's hero carries, so the reveal surface
+  // isn't a flat yellow field. Static, but suppressed with motion off — the
+  // hero gates it the same way.
+  it.each([
+    ["full", true],
+    ["reduced", true],
+    ["none", false],
+  ] as const)(
+    "renders the sparkle layer for animationPref=%s: %s",
+    (animationPref, present) => {
+      renderWithProviders(
+        <FinishRevealStage {...makeProps({ animationPref })} />,
+      );
+      // Decorative layer is a11y-hidden, so opt into hidden elements.
+      const sparkles = screen.queryByTestId("finish-reveal-sparkles", {
+        includeHiddenElements: true,
+      });
+      if (present) {
+        expect(sparkles).toBeOnTheScreen();
+      } else {
+        expect(sparkles).toBeNull();
+      }
+    },
+  );
 });
