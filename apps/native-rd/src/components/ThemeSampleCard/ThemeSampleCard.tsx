@@ -27,13 +27,20 @@ function previewStyles(themeId: ThemeName) {
   const sizeScale = def.size ?? size;
   const fontFamily = def.fontFamily;
 
+  // Fill and border track the real `Card` component (backgroundSecondary +
+  // borderWidth.thick), not `colors.background`. WelcomeScreen paints its page
+  // in `colors.background`, so the old thin-bordered background-filled card was
+  // the same color as the surface behind it — separated by a 1pt hairline and a
+  // shadow that the highContrast, autismFriendly and lowInfo variants disable
+  // entirely. A preview of "what a card looks like in this theme" has to use
+  // the tokens a card actually uses.
   const sampleCard: ViewStyle = {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    backgroundColor: cardTheme.colors.background,
+    backgroundColor: cardTheme.colors.backgroundSecondary,
     borderColor: cardTheme.colors.border,
-    borderWidth: cardTheme.borderWidth.thin,
+    borderWidth: cardTheme.borderWidth.thick,
     borderRadius: cardTheme.radius.md,
     padding: 12,
     ...shadowStyle(cardTheme, "cardElevationSmall"),
@@ -108,7 +115,7 @@ export function ThemeSampleCard({ themeId }: ThemeSampleCardProps) {
   const preview = previewStyles(themeId);
 
   return (
-    <View style={preview.sampleCard}>
+    <View testID="theme-sample-card" style={preview.sampleCard}>
       <View style={preview.badge}>
         <Text style={preview.badgeText}>★</Text>
       </View>
