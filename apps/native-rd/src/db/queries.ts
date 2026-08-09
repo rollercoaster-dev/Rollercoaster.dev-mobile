@@ -1762,7 +1762,7 @@ export function markWelcomeSeen(id: UserSettingsId) {
  * @returns Update command
  */
 export function pinGoal(id: UserSettingsId, goalId: GoalId) {
-  breadcrumb({ category: "goal", message: "update" });
+  breadcrumb({ category: "settings", message: "pin" });
   try {
     return evolu.update("userSettings", {
       id,
@@ -1781,7 +1781,7 @@ export function pinGoal(id: UserSettingsId, goalId: GoalId) {
  * @returns Update command
  */
 export function unpinGoal(id: UserSettingsId) {
-  breadcrumb({ category: "goal", message: "update" });
+  breadcrumb({ category: "settings", message: "unpin" });
   try {
     return evolu.update("userSettings", {
       id,
