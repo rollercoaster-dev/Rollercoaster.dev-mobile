@@ -5,7 +5,6 @@ import {
   screen,
   fireEvent,
 } from "../../../__tests__/test-utils";
-import { UnistylesRuntime } from "react-native-unistyles";
 import { TopInsetColorProvider } from "../../../navigation/TopInsetColor";
 import { BadgeDetailScreen } from "../BadgeDetailScreen";
 import type { BadgeDetailScreenProps } from "../../../navigation/types";
