@@ -1,7 +1,6 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { useNavigation } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { SettingsScreen } from "../screens/SettingsScreen";
 import { WelcomeScreen } from "../screens/WelcomeScreen";
 import { IntlProbeScreen } from "../dev/IntlProbeScreen";
@@ -15,10 +14,9 @@ const Stack = createNativeStackNavigator<SettingsStackParamList>();
  * (#416 D3). Deliberately does NOT reset `hasSeenWelcome` — only a mark-seen
  * mutation exists in the DB layer today, so replay is a read-only re-view.
  */
-function WelcomeReplayScreen() {
-  const navigation =
-    useNavigation<NativeStackNavigationProp<SettingsStackParamList>>();
-
+function WelcomeReplayScreen({
+  navigation,
+}: NativeStackScreenProps<SettingsStackParamList, "Welcome">) {
   return <WelcomeScreen onGetStarted={() => navigation.goBack()} />;
 }
 
