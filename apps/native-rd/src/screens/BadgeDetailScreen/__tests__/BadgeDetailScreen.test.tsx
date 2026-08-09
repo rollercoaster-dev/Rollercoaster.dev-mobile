@@ -5,10 +5,10 @@ import {
   screen,
   fireEvent,
 } from "../../../__tests__/test-utils";
+import { TopInsetColorProvider } from "../../../navigation/TopInsetColor";
 import { BadgeDetailScreen } from "../BadgeDetailScreen";
 import type { BadgeDetailScreenProps } from "../../../navigation/types";
 import { createDefaultBadgeDesign } from "../../../badges/types";
-import { TopInsetColorProvider } from "../../../navigation/TopInsetColor";
 import { mockTheme } from "../../../__tests__/mocks/unistyles";
 
 const mockNavigate = jest.fn();
@@ -269,9 +269,9 @@ describe("BadgeDetailScreen", () => {
       expect(screen.queryByTestId("overflow-row-share")).toBeNull();
     });
 
-    // Interim wiring: the real share sheet lands with #469, but the row must
-    // still do something rather than be a dead tap.
-    it("exports the verifiable badge from the Share row", () => {
+    // Both share entry points must land in the same sheet — the overflow row
+    // is not a shortcut that exports directly with different behaviour.
+    it("opens the share sheet from the Share row", () => {
       mockUseQuery.mockReturnValue([
         makeRow({ imageUri: "file:///badges/badge.png" }),
       ]);
@@ -282,10 +282,8 @@ describe("BadgeDetailScreen", () => {
       openMenu();
       fireEvent.press(screen.getByTestId("overflow-row-share"));
 
-      expect(mockExportVerifiableBadge).toHaveBeenCalledWith(
-        "file:///badges/badge.png",
-        "Learn TypeScript",
-      );
+      expect(screen.getByTestId("share-row-verifiable")).toBeOnTheScreen();
+      expect(mockExportVerifiableBadge).not.toHaveBeenCalled();
     });
 
     it("exports the credential from the Export credential row", () => {
@@ -327,7 +325,7 @@ describe("BadgeDetailScreen", () => {
 
       expect(
         screen.getByText(
-          "This will permanently remove this badge. This cannot be undone.",
+          "The badge will be removed. Your goal and its evidence stay in the timeline — only the credential artifact is deleted.",
         ),
       ).toBeOnTheScreen();
       expect(mockDeleteBadge).not.toHaveBeenCalled();
@@ -335,18 +333,45 @@ describe("BadgeDetailScreen", () => {
   });
 
   describe("delete badge", () => {
+    // Delete is demoted to the overflow menu — there is no standalone
+    // destructive button on the page beside Share any more.
+    const openDeleteConfirm = () => {
+      fireEvent.press(screen.getByTestId("celebration-hero-overflow"));
+      fireEvent.press(screen.getByTestId("overflow-row-delete"));
+    };
+
+    // Asserts against the *live* overflow label ("Delete badge"), not the
+    // retired page-button copy — querying a string no resource file contains
+    // any more would make this guard unfailable.
+    it("is not reachable from a standalone button on the page", () => {
+      mockUseQuery.mockReturnValue([makeRow()]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      // Closed overflow menu ⇒ no Delete affordance anywhere on the page.
+      expect(screen.queryByRole("button", { name: "Delete badge" })).toBeNull();
+      expect(screen.queryByTestId("overflow-row-delete")).toBeNull();
+
+      // ...and once opened, the only one that exists is the overflow row.
+      fireEvent.press(screen.getByTestId("celebration-hero-overflow"));
+      expect(
+        screen.getAllByRole("button", { name: "Delete badge" }),
+      ).toHaveLength(1);
+    });
+
     it("opens the confirm-delete modal instead of deleting immediately", () => {
       mockUseQuery.mockReturnValue([makeRow()]);
 
       renderWithProviders(
         <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
       );
-      fireEvent.press(screen.getByRole("button", { name: "Delete Badge" }));
+      openDeleteConfirm();
 
       // Modal copy is visible; nothing has been deleted yet.
       expect(
         screen.getByText(
-          "This will permanently remove this badge. This cannot be undone.",
+          "The badge will be removed. Your goal and its evidence stay in the timeline — only the credential artifact is deleted.",
         ),
       ).toBeOnTheScreen();
       expect(mockDeleteBadge).not.toHaveBeenCalled();
@@ -358,7 +383,7 @@ describe("BadgeDetailScreen", () => {
       renderWithProviders(
         <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
       );
-      fireEvent.press(screen.getByRole("button", { name: "Delete Badge" }));
+      openDeleteConfirm();
       fireEvent.press(screen.getByRole("button", { name: "Delete" }));
 
       expect(mockDeleteBadge).toHaveBeenCalledWith("badge-1");
@@ -371,8 +396,8 @@ describe("BadgeDetailScreen", () => {
       renderWithProviders(
         <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
       );
-      fireEvent.press(screen.getByRole("button", { name: "Delete Badge" }));
-      fireEvent.press(screen.getByRole("button", { name: "Cancel" }));
+      openDeleteConfirm();
+      fireEvent.press(screen.getByRole("button", { name: "Keep it" }));
 
       expect(mockDeleteBadge).not.toHaveBeenCalled();
       expect(mockGoBack).not.toHaveBeenCalled();
@@ -388,7 +413,7 @@ describe("BadgeDetailScreen", () => {
       renderWithProviders(
         <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
       );
-      fireEvent.press(screen.getByRole("button", { name: "Delete Badge" }));
+      openDeleteConfirm();
       fireEvent.press(screen.getByRole("button", { name: "Delete" }));
 
       // Failure is surfaced and reported; the user is NOT navigated away and
@@ -415,7 +440,7 @@ describe("BadgeDetailScreen", () => {
       renderWithProviders(
         <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
       );
-      fireEvent.press(screen.getByRole("button", { name: "Delete Badge" }));
+      openDeleteConfirm();
       fireEvent.press(screen.getByRole("button", { name: "Delete" }));
 
       expect(mockReportError).toHaveBeenCalled();
@@ -427,138 +452,160 @@ describe("BadgeDetailScreen", () => {
     });
   });
 
-  describe("export buttons", () => {
-    it("renders all three export buttons when badge exists", () => {
+  describe("share sheet", () => {
+    const openSheet = () =>
+      fireEvent.press(screen.getByTestId("badge-share-cta"));
+
+    it("renders the single Share CTA instead of a stacked export card", () => {
       mockUseQuery.mockReturnValue([makeRow()]);
 
       renderWithProviders(
         <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
       );
+      expect(screen.getByTestId("badge-share-cta")).toBeOnTheScreen();
+      // The three old page-level export buttons are gone; they live in the
+      // sheet now, behind the one CTA.
+      expect(screen.queryByLabelText("Export Verifiable Badge")).toBeNull();
+      expect(screen.queryByLabelText("Export Credential (JSON)")).toBeNull();
+      expect(screen.queryByLabelText("Save as Image")).toBeNull();
+    });
+
+    it("opens the sheet, titled after the goal, when the CTA is pressed", () => {
+      mockUseQuery.mockReturnValue([makeRow()]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      expect(screen.queryByTestId("share-row-verifiable")).toBeNull();
+
+      openSheet();
+
+      expect(screen.getByTestId("share-row-verifiable")).toBeOnTheScreen();
+      // Proves the screen hands the sheet an *uninterpolated* template and
+      // lets the component substitute {{goalTitle}} itself.
       expect(
-        screen.getByLabelText("Export Verifiable Badge"),
+        screen.getByText("Share \u201cLearn TypeScript\u201d"),
       ).toBeOnTheScreen();
-      expect(
-        screen.getByLabelText("Export Credential (JSON)"),
-      ).toBeOnTheScreen();
-      expect(screen.getByLabelText("Save as Image")).toBeOnTheScreen();
     });
 
-    it('disables "Export Verifiable Badge" and "Save as Image" when image is placeholder', () => {
-      mockUseQuery.mockReturnValue([
-        makeRow({ imageUri: "pending:baked-image" }),
-      ]);
-
-      renderWithProviders(
-        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
-      );
-      expect(
-        screen.getByLabelText("Export Verifiable Badge").props
-          .accessibilityState,
-      ).toEqual(expect.objectContaining({ disabled: true }));
-      expect(
-        screen.getByLabelText("Save as Image").props.accessibilityState,
-      ).toEqual(expect.objectContaining({ disabled: true }));
-    });
-
-    it("enables the image-export buttons when badge has a real image", () => {
-      mockUseQuery.mockReturnValue([
-        makeRow({ imageUri: "file:///badges/badge.png" }),
-      ]);
-
-      renderWithProviders(
-        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
-      );
-      expect(
-        screen.getByLabelText("Export Verifiable Badge").props
-          .accessibilityState,
-      ).toEqual(expect.objectContaining({ disabled: false }));
-      expect(
-        screen.getByLabelText("Save as Image").props.accessibilityState,
-      ).toEqual(expect.objectContaining({ disabled: false }));
-    });
-
-    it('calls exportVerifiableBadge when "Export Verifiable Badge" is pressed', () => {
-      mockUseQuery.mockReturnValue([
-        makeRow({ imageUri: "file:///badges/badge.png" }),
-      ]);
-
-      renderWithProviders(
-        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
-      );
-      fireEvent.press(screen.getByLabelText("Export Verifiable Badge"));
-      expect(mockExportVerifiableBadge).toHaveBeenCalledWith(
-        "file:///badges/badge.png",
-        "Learn TypeScript",
-      );
-    });
-
-    it('calls exportImage when "Save as Image" is pressed', () => {
-      mockUseQuery.mockReturnValue([
-        makeRow({ imageUri: "file:///badges/badge.png" }),
-      ]);
-
-      renderWithProviders(
-        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
-      );
-      fireEvent.press(screen.getByLabelText("Save as Image"));
-      expect(mockExportImage).toHaveBeenCalledWith("file:///badges/badge.png");
-    });
-
-    // Regression: prior code branched on `design ?` and re-rasterized the
-    // live renderer instead of using the baked PNG on disk, so every
-    // export of a designer-saved badge shipped without the iTXt
-    // credential. The primary export must always forward the on-disk
-    // imageUri, even when `design` is populated.
-    it("exports the baked PNG on disk even when a design is set", () => {
-      const design = JSON.stringify(
-        createDefaultBadgeDesign("Learn TypeScript", "#4caf50"),
-      );
+    it.each([
+      {
+        row: "share-row-verifiable",
+        fn: () => mockExportVerifiableBadge,
+        args: ["file:///badges/badge.png", "Learn TypeScript"],
+      },
+      {
+        row: "share-row-image",
+        fn: () => mockExportImage,
+        args: ["file:///badges/badge.png"],
+      },
+      {
+        row: "share-row-credential",
+        fn: () => mockExportJSON,
+        args: ['{"type":"VC"}', "Learn TypeScript"],
+      },
+    ])("$row calls its useBadgeExport function", ({ row, fn, args }) => {
       mockUseQuery.mockReturnValue([
         makeRow({
           imageUri: "file:///badges/badge.png",
-          design,
+          credential: '{"type":"VC"}',
         }),
       ]);
 
       renderWithProviders(
         <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
       );
-      fireEvent.press(screen.getByLabelText("Export Verifiable Badge"));
+      openSheet();
+      fireEvent.press(screen.getByTestId(row));
 
-      expect(mockExportVerifiableBadge).toHaveBeenCalledTimes(1);
-      expect(mockExportVerifiableBadge).toHaveBeenCalledWith(
-        "file:///badges/badge.png",
-        "Learn TypeScript",
-      );
+      expect(fn()).toHaveBeenCalledWith(...args);
     });
 
-    // Parallel guard on the lossy path: even though "Save as Image" is the
-    // documented-as-lossy export, it must still forward `imageUri` (the
-    // baked PNG) rather than fall back to a re-rasterized renderer capture
-    // when a design is present. Locks the broader "no path re-rasterizes"
-    // intent — without this test, a future refactor could re-introduce a
-    // softer version of the original bug here without breaking anything.
-    it("save-as-image forwards the baked PNG even when a design is set", () => {
-      const design = JSON.stringify(
-        createDefaultBadgeDesign("Learn TypeScript", "#4caf50"),
-      );
-      mockUseQuery.mockReturnValue([
-        makeRow({
+    it.each([
+      {
+        name: "placeholder image",
+        overrides: { imageUri: "pending:baked-image" },
+        expected: {
+          "share-row-verifiable": true,
+          "share-row-image": true,
+          "share-row-credential": false,
+        },
+      },
+      {
+        name: "real image",
+        overrides: { imageUri: "file:///badges/badge.png" },
+        expected: {
+          "share-row-verifiable": false,
+          "share-row-image": false,
+          "share-row-credential": false,
+        },
+      },
+      {
+        name: "no credential",
+        overrides: {
           imageUri: "file:///badges/badge.png",
-          design,
-        }),
-      ]);
+          credential: null,
+        },
+        expected: {
+          "share-row-verifiable": false,
+          "share-row-image": false,
+          "share-row-credential": true,
+        },
+      },
+    ])(
+      "disables the right rows for a badge with a $name",
+      ({ overrides, expected }) => {
+        mockUseQuery.mockReturnValue([makeRow(overrides)]);
 
-      renderWithProviders(
-        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
-      );
-      fireEvent.press(screen.getByLabelText("Save as Image"));
+        renderWithProviders(
+          <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+        );
+        openSheet();
 
-      expect(mockExportImage).toHaveBeenCalledTimes(1);
-      expect(mockExportImage).toHaveBeenCalledWith("file:///badges/badge.png");
-    });
+        Object.entries(expected).forEach(([row, disabled]) => {
+          expect(screen.getByTestId(row).props.accessibilityState).toEqual(
+            expect.objectContaining({ disabled }),
+          );
+        });
+      },
+    );
 
-    it("surfaces a hint on Save as Image about messenger-stripped credentials", () => {
+    // Regression: prior code branched on `design ?` and re-rasterized the live
+    // renderer instead of using the baked PNG on disk, so every export of a
+    // designer-saved badge shipped without the iTXt credential. Both PNG paths
+    // must always forward the on-disk imageUri, even when `design` is set.
+    it.each([
+      {
+        row: "share-row-verifiable",
+        fn: () => mockExportVerifiableBadge,
+        args: ["file:///badges/badge.png", "Learn TypeScript"],
+      },
+      {
+        row: "share-row-image",
+        fn: () => mockExportImage,
+        args: ["file:///badges/badge.png"],
+      },
+    ])(
+      "$row exports the baked PNG on disk even when a design is set",
+      ({ row, fn, args }) => {
+        mockUseQuery.mockReturnValue([
+          makeRow({ imageUri: "file:///badges/badge.png", design: designJSON }),
+        ]);
+
+        renderWithProviders(
+          <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+        );
+        openSheet();
+        fireEvent.press(screen.getByTestId(row));
+
+        expect(fn()).toHaveBeenCalledTimes(1);
+        expect(fn()).toHaveBeenCalledWith(...args);
+      },
+    );
+
+    // The lossy path stays honest about what it costs — the warning rides the
+    // row's own a11y label, so screen-reader users get it too.
+    it("keeps the save-as-image trade-off in the row's announcement", () => {
       mockUseQuery.mockReturnValue([
         makeRow({ imageUri: "file:///badges/badge.png" }),
       ]);
@@ -566,25 +613,15 @@ describe("BadgeDetailScreen", () => {
       renderWithProviders(
         <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
       );
-      const btn = screen.getByLabelText("Save as Image");
-      expect(btn.props.accessibilityHint).toMatch(/credential may be lost/);
-    });
+      openSheet();
 
-    it('calls exportJSON when "Export Credential (JSON)" is pressed', () => {
-      mockUseQuery.mockReturnValue([makeRow({ credential: '{"type":"VC"}' })]);
-
-      renderWithProviders(
-        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
-      );
-      fireEvent.press(screen.getByLabelText("Export Credential (JSON)"));
-      expect(mockExportJSON).toHaveBeenCalledWith(
-        '{"type":"VC"}',
-        "Learn TypeScript",
-      );
+      expect(
+        screen.getByTestId("share-row-image").props.accessibilityLabel,
+      ).toMatch(/may drop the credential/);
     });
   });
 
-  describe("how it was earned — evidence list", () => {
+  describe("proof spine", () => {
     const credentialWith = (evidence: unknown[], narrative = "Did it.") =>
       JSON.stringify({
         credentialSubject: {
@@ -593,7 +630,7 @@ describe("BadgeDetailScreen", () => {
         evidence,
       });
 
-    it("renders each evidence item's name and translated type label", () => {
+    it("renders a proof card per evidence item, with its translated type label", () => {
       const credential = credentialWith([
         {
           id: "urn:ulid:ev-1",
@@ -665,9 +702,140 @@ describe("BadgeDetailScreen", () => {
       renderWithProviders(
         <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
       );
-      // Singular: "1 evidence item submitted", not "1 evidence items submitted".
+      // Singular: "1 evidence item", not "1 evidence items".
       expect(
-        screen.getByLabelText("1 evidence item submitted"),
+        screen.getByLabelText("Proof gallery, 1 evidence item"),
+      ).toBeOnTheScreen();
+    });
+
+    // The credential bakes ids as `urn:ulid:<ulid>`, but EvidenceViewer matches
+    // the live evidence rows' bare ULID. Passing the prefixed id through would
+    // miss and silently land the viewer on the first item, not the tapped one.
+    it("opens the tapped evidence in EvidenceViewer with the urn: prefix stripped", () => {
+      const credential = credentialWith([
+        {
+          id: "urn:ulid:ev-1",
+          type: ["Evidence"],
+          name: "Watch intro video",
+          genre: "video",
+        },
+        {
+          id: "urn:ulid:ev-2",
+          type: ["Evidence"],
+          name: "Build a small app",
+          genre: "photo",
+        },
+      ]);
+      mockUseQuery.mockReturnValue([
+        makeRow({ credential, goalId: "goal-42" }),
+      ]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      fireEvent.press(
+        screen.getByLabelText("Build a small app, submitted as Photo"),
+      );
+
+      expect(mockParentNavigate).toHaveBeenCalledWith("GoalsTab", {
+        screen: "EvidenceViewer",
+        params: { goalId: "goal-42", initialEvidenceId: "ev-2" },
+        initial: false,
+      });
+    });
+
+    it("passes an unprefixed evidence id through untouched", () => {
+      const credential = credentialWith([
+        {
+          id: "ev-raw",
+          type: ["Evidence"],
+          name: "Legacy step",
+          genre: "text",
+        },
+      ]);
+      mockUseQuery.mockReturnValue([
+        makeRow({ credential, goalId: "goal-42" }),
+      ]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      fireEvent.press(screen.getByLabelText("Legacy step, submitted as Note"));
+
+      expect(mockParentNavigate).toHaveBeenCalledWith(
+        "GoalsTab",
+        expect.objectContaining({
+          params: { goalId: "goal-42", initialEvidenceId: "ev-raw" },
+        }),
+      );
+    });
+
+    // Same failure family as "View timeline" hiding for a soft-deleted goal:
+    // the destination needs live goal data that no longer surfaces.
+    it("no-ops safely when the badge's goal is soft-deleted (null goalId)", () => {
+      const credential = credentialWith([
+        {
+          id: "urn:ulid:ev-1",
+          type: ["Evidence"],
+          name: "Watch intro video",
+          genre: "video",
+        },
+      ]);
+      mockUseQuery.mockReturnValue([makeRow({ credential, goalId: null })]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      expect(() =>
+        fireEvent.press(
+          screen.getByLabelText("Watch intro video, submitted as Video"),
+        ),
+      ).not.toThrow();
+      expect(mockParentNavigate).not.toHaveBeenCalled();
+    });
+
+    it("no-ops safely when the tab parent is unavailable", () => {
+      mockGetParent.mockReturnValueOnce(
+        undefined as unknown as ReturnType<typeof mockGetParent>,
+      );
+      const credential = credentialWith([
+        {
+          id: "urn:ulid:ev-1",
+          type: ["Evidence"],
+          name: "Watch intro video",
+          genre: "video",
+        },
+      ]);
+      mockUseQuery.mockReturnValue([
+        makeRow({ credential, goalId: "goal-42" }),
+      ]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      expect(() =>
+        fireEvent.press(
+          screen.getByLabelText("Watch intro video, submitted as Video"),
+        ),
+      ).not.toThrow();
+      expect(mockParentNavigate).not.toHaveBeenCalled();
+    });
+
+    // #411's hard rule: absent evidence is named honestly in the gallery
+    // itself, never as a "missing"/"needed" prompt elsewhere on the page.
+    it("shows the gallery's own empty state when the credential carries no evidence", () => {
+      const credential = JSON.stringify({
+        credentialSubject: { achievement: { criteria: {} } },
+      });
+      mockUseQuery.mockReturnValue([makeRow({ credential })]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      expect(
+        screen.getByText(
+          "No evidence was attached to this goal — nothing to show in the gallery.",
+        ),
       ).toBeOnTheScreen();
     });
 

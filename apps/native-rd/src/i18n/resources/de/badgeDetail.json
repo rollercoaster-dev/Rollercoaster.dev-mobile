@@ -15,12 +15,9 @@
   "sections": {
     "about": "Über",
     "howEarned": "So wurde es verdient",
-    "details": "Details",
-    "export": "Export"
+    "details": "Details"
   },
   "evidenceList": {
-    "a11yLabel_one": "{{count}} Beleg eingereicht",
-    "a11yLabel_other": "{{count}} Belege eingereicht",
     "itemA11y": "{{name}}, eingereicht als {{type}}",
     "fallbackType": "Beleg"
   },
@@ -38,14 +35,8 @@
     }
   },
   "actions": {
-    "exportVerifiable": "Verifizierbares Badge exportieren",
-    "exportCredential": "Credential exportieren (JSON)",
-    "saveAsImage": "Als Bild speichern",
-    "saveAsImageHint": "Teilt dieses Badge als Bild. Die Credential kann beim Versand über Messenger verloren gehen.",
-    "viewTimeline": "Verlauf ansehen",
-    "delete": "Badge löschen"
+    "viewTimeline": "Verlauf ansehen"
   },
-  "exportCaption": "Verifizierbares Badge exportieren behält die OpenBadge-Credential. Als Bild speichern ist nur ein Bild — manche Apps entfernen den Nachweis beim Teilen.",
   "share": {
     "cta": "Badge teilen",
     "sheetTitle": "„{{goalTitle}}“ teilen",
@@ -70,9 +61,9 @@
     }
   },
   "deleteConfirm": {
-    "title": "Badge löschen",
-    "message": "Das entfernt dieses Badge dauerhaft. Das kann nicht rückgängig gemacht werden.",
-    "cancel": "Abbrechen",
+    "title": "Badge löschen?",
+    "message": "Das Badge wird entfernt. Dein Ziel und die Belege bleiben in der Timeline — nur das Credential-Artefakt wird gelöscht.",
+    "cancel": "Behalten",
     "delete": "Löschen"
   },
   "deleteError": {

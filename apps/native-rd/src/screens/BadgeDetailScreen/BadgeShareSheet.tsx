@@ -17,7 +17,13 @@
  * (no) motion for free. The three share rows are the sheet's children.
  */
 import React, { useRef } from "react";
-import { View, Pressable, ActivityIndicator } from "react-native";
+import {
+  View,
+  Pressable,
+  ActivityIndicator,
+  type StyleProp,
+  type ViewStyle,
+} from "react-native";
 import {
   ShareNetwork,
   Star,
@@ -47,6 +53,13 @@ export interface BadgeShareSheetProps {
   isExportingImage: boolean;
   /** Loading flag for the credential (JSON) row. */
   isExportingJSON: boolean;
+  /**
+   * Layout for the CTA only (margins/spacing) — the sheet's own overlay is
+   * unaffected. Exists because the sheet is an in-tree absolute overlay and so
+   * must mount as a root-level sibling of its screen's ScrollView; the CTA
+   * rides along outside the scroll body's gutter and needs its own.
+   */
+  ctaStyle?: StyleProp<ViewStyle>;
 
   // --- Copy (i18n-free per D6; English defaults, #380 passes t() output). ---
   ctaLabel?: string;
@@ -76,6 +89,7 @@ export function BadgeShareSheet({
   hasCredential,
   isExportingImage,
   isExportingJSON,
+  ctaStyle,
   ctaLabel = "Share badge",
   sheetTitleTemplate = "Share “{{goalTitle}}”",
   sheetSubtitle = "Keep it provable, or just share the picture.",
@@ -120,7 +134,11 @@ export function BadgeShareSheet({
         accessibilityRole="button"
         accessibilityLabel={ctaLabel}
         testID="badge-share-cta"
-        style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]}
+        style={({ pressed }) => [
+          styles.cta,
+          pressed && styles.ctaPressed,
+          ctaStyle,
+        ]}
       >
         <ShareNetwork
           size={18}

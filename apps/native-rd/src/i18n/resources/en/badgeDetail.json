@@ -15,12 +15,9 @@
   "sections": {
     "about": "About",
     "howEarned": "How it was earned",
-    "details": "Details",
-    "export": "Export"
+    "details": "Details"
   },
   "evidenceList": {
-    "a11yLabel_one": "{{count}} evidence item submitted",
-    "a11yLabel_other": "{{count}} evidence items submitted",
     "itemA11y": "{{name}}, submitted as {{type}}",
     "fallbackType": "evidence"
   },
@@ -38,14 +35,8 @@
     }
   },
   "actions": {
-    "exportVerifiable": "Export Verifiable Badge",
-    "exportCredential": "Export Credential (JSON)",
-    "saveAsImage": "Save as Image",
-    "saveAsImageHint": "Shares this badge as a picture. The credential may be lost when sent through messengers.",
-    "viewTimeline": "View timeline",
-    "delete": "Delete Badge"
+    "viewTimeline": "View timeline"
   },
-  "exportCaption": "Export Verifiable Badge keeps the OpenBadge credential. Save as Image is just a picture — some apps strip the proof when sharing.",
   "share": {
     "cta": "Share badge",
     "sheetTitle": "Share “{{goalTitle}}”",
@@ -70,9 +61,9 @@
     }
   },
   "deleteConfirm": {
-    "title": "Delete Badge",
-    "message": "This will permanently remove this badge. This cannot be undone.",
-    "cancel": "Cancel",
+    "title": "Delete this badge?",
+    "message": "The badge will be removed. Your goal and its evidence stay in the timeline — only the credential artifact is deleted.",
+    "cancel": "Keep it",
     "delete": "Delete"
   },
   "deleteError": {
