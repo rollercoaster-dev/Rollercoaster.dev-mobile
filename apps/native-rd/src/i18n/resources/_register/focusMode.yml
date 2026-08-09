@@ -24,6 +24,3 @@ notes:
     a separate short clause (keep a leading separator like "·") rather
     than folding into waitingOn. Same wording as
     timelineJourney.step.metadata.* — keep the two in step.
-  - header.pinGoal / header.unpinGoal label the same cockpit-pin toggle as
-    goals.cockpit.pinGoal / unpinGoal and must use the identical wording —
-    it is one affordance on two screens, learned once.

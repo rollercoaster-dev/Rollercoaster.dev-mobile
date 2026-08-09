@@ -11,7 +11,7 @@ import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@evolu/react";
 import type { Result } from "@evolu/common";
-import { Pencil, PushPin } from "phosphor-react-native";
+import { Pencil } from "phosphor-react-native";
 import { useTranslation } from "react-i18next";
 import { Text } from "../../components/Text";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
@@ -32,9 +32,6 @@ import {
   goalsQuery,
   stepsByGoalQuery,
   stepEvidenceByGoalQuery,
-  userSettingsQuery,
-  pinGoal,
-  unpinGoal,
   completeStep,
   uncompleteStep,
   pauseStep,
@@ -48,7 +45,6 @@ import {
   resolveActionableIndex,
   resolveStepDependencyBand,
   EvidenceType,
-  GoalStatus,
   StepStatus,
 } from "../../db";
 import type { GoalId, StepId } from "../../db";
@@ -167,15 +163,6 @@ function FocusContent({
   const { showToast } = useToast();
   const rows = useQuery(goalsQuery);
   const goal = rows.find((r) => r.id === goalId);
-  // Same source of truth as the cockpit's pin toggle (#396 D7), so the two
-  // surfaces can never disagree about what is pinned.
-  const settings = useQuery(userSettingsQuery)[0] ?? null;
-  const isPinned = settings != null && settings.pinnedGoalId === goalId;
-  // The cockpit resolves its hero from `activeGoalsQuery`, but this screen reads
-  // `goalsQuery` and so also renders for completed goals. Offering the pin there
-  // would write a `pinnedGoalId` the cockpit can never honour while showing the
-  // toggle as active — a confirmed action with no effect. Hide it instead (D7).
-  const canPin = goal?.status === GoalStatus.active;
   const rawStepRows = useQuery(stepsByGoalQuery(goalId as GoalId));
   // Order rows parent-then-children (orphans promoted to top-level) so the
   // resolver sees the same sub-spine order EditModeScreen and the goal card do.
@@ -505,29 +492,6 @@ function FocusContent({
     navigation.navigate("EditMode", { goalId });
   }, [goalId, navigation]);
 
-  /**
-   * Toggle this goal's cockpit pin (#396 D7). A no-op while the `userSettings`
-   * singleton hasn't bootstrapped — there is no row to write to yet, and a tap
-   * in that window should do nothing rather than throw.
-   */
-  const handlePinPress = useCallback(() => {
-    if (!settings) return;
-    runEvoluMutation(
-      () =>
-        isPinned
-          ? unpinGoal(settings.id)
-          : pinGoal(settings.id, goalId as GoalId),
-      (error) => {
-        logger.error("Pin mutation failed", { goalId, error });
-        reportError(error, { area: "settings.pin" });
-        showToast({
-          message: t("focusMode:errors.couldNotChangePin"),
-          duration: 3000,
-        });
-      },
-    );
-  }, [goalId, isPinned, settings, showToast, t]);
-
   // The same finishing entry point every other surface uses (TimelineJourney's
   // FinishLine badge CTA) — one route, so #449 has a single path to retire (D8).
   const handleDesignBadge = useCallback(() => {
@@ -570,23 +534,6 @@ function FocusContent({
         >
           {goal.title}
         </Text>
-        {/* Same control, glyph and states as the cockpit's tile toggle (D7) —
-            one affordance on two screens, learned once. */}
-        {canPin ? (
-          <IconButton
-            icon={<PushPin size={20} weight={isPinned ? "fill" : "regular"} />}
-            onPress={handlePinPress}
-            tone="ghost"
-            selected={isPinned}
-            accessibilityLabel={t(
-              isPinned
-                ? "focusMode:header.unpinGoal"
-                : "focusMode:header.pinGoal",
-            )}
-            size="sm"
-            testID="focus-mode-pin"
-          />
-        ) : null}
         <IconButton
           icon={<Pencil size={20} weight="bold" />}
           onPress={handleEditPress}

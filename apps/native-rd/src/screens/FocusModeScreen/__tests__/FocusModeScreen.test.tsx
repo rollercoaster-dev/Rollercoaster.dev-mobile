@@ -63,8 +63,6 @@ const mockUncompleteStep = okMutation();
 const mockPauseStep = okMutation();
 const mockResumeStep = okMutation();
 const mockUpdateStep = okMutation();
-const mockPinGoal = okMutation();
-const mockUnpinGoal = okMutation();
 
 jest.mock("../../../db", () => {
   // The completion gate below calls the *production* helpers rather than
@@ -92,11 +90,6 @@ jest.mock("../../../db", () => {
       completed: "completed",
       paused: "paused",
     },
-    // The header's pin toggle is gated on the goal's own status (#396).
-    GoalStatus: {
-      active: "active",
-      completed: "completed",
-    },
     EvidenceType: {
       photo: "photo",
       text: "text",
@@ -114,8 +107,6 @@ jest.mock("../../../db", () => {
     userSettingsQuery: "userSettingsQuery",
     createUserSettings: jest.fn(),
     updateUserSettings: jest.fn(),
-    pinGoal: (...args: unknown[]) => mockPinGoal(...args),
-    unpinGoal: (...args: unknown[]) => mockUnpinGoal(...args),
     completeStep: (...args: unknown[]) => mockCompleteStep(...args),
     uncompleteStep: (...args: unknown[]) => mockUncompleteStep(...args),
     pauseStep: (...args: unknown[]) => mockPauseStep(...args),
@@ -1263,79 +1254,13 @@ describe("FocusModeScreen", () => {
     });
   });
 
-  describe("cockpit pin toggle (#396)", () => {
-    const SETTINGS = { id: "settings-1", pinnedGoalId: null };
+  // The cockpit pin (#396) is a Goals-screen affordance only — this screen
+  // deliberately has no pin control.
+  it("does not offer a pin toggle", () => {
+    setupQueries({ settings: { id: "settings-1", pinnedGoalId: "goal-1" } });
+    renderWithProviders(<FocusModeScreen {...routeProps} />);
 
-    it.each([
-      { name: "another goal is pinned", pinnedGoalId: "goal-2", pinned: false },
-      { name: "this goal is pinned", pinnedGoalId: "goal-1", pinned: true },
-    ])("reflects the pin state when $name", ({ pinnedGoalId, pinned }) => {
-      setupQueries({ settings: { ...SETTINGS, pinnedGoalId } });
-      renderWithProviders(<FocusModeScreen {...routeProps} />);
-
-      const toggle = screen.getByTestId("focus-mode-pin");
-      expect(toggle.props.accessibilityState.selected).toBe(pinned);
-      expect(toggle.props.accessibilityLabel).toBe(
-        t(pinned ? "focusMode:header.unpinGoal" : "focusMode:header.pinGoal"),
-      );
-    });
-
-    it("pins the goal when the toggle is inactive", () => {
-      setupQueries({ settings: SETTINGS });
-      renderWithProviders(<FocusModeScreen {...routeProps} />);
-
-      fireEvent.press(screen.getByTestId("focus-mode-pin"));
-      expect(mockPinGoal).toHaveBeenCalledWith("settings-1", "goal-1");
-      expect(mockUnpinGoal).not.toHaveBeenCalled();
-    });
-
-    it("unpins the goal when the toggle is active", () => {
-      setupQueries({ settings: { ...SETTINGS, pinnedGoalId: "goal-1" } });
-      renderWithProviders(<FocusModeScreen {...routeProps} />);
-
-      fireEvent.press(screen.getByTestId("focus-mode-pin"));
-      expect(mockUnpinGoal).toHaveBeenCalledWith("settings-1");
-      expect(mockPinGoal).not.toHaveBeenCalled();
-    });
-
-    it("is a no-op before the settings singleton bootstraps", () => {
-      setupQueries({ settings: null });
-      renderWithProviders(<FocusModeScreen {...routeProps} />);
-
-      fireEvent.press(screen.getByTestId("focus-mode-pin"));
-      expect(mockPinGoal).not.toHaveBeenCalled();
-      expect(mockUnpinGoal).not.toHaveBeenCalled();
-    });
-
-    it("toasts and reports when the pin write returns a failed Result", () => {
-      mockPinGoal.mockReturnValueOnce({
-        ok: false,
-        error: new Error("write rejected"),
-      } as never);
-      setupQueries({ settings: SETTINGS });
-      renderWithProviders(<FocusModeScreen {...routeProps} />);
-
-      fireEvent.press(screen.getByTestId("focus-mode-pin"));
-      expect(
-        screen.getByText(t("focusMode:errors.couldNotChangePin")),
-      ).toBeOnTheScreen();
-      expect(reportError).toHaveBeenCalledWith(expect.any(Error), {
-        area: "settings.pin",
-      });
-    });
-
-    // The cockpit resolves its hero from activeGoalsQuery, so a pin written
-    // against a completed goal could never take effect — the control must not
-    // be offered rather than confirming an action with no result.
-    it("hides the toggle once the goal is completed", () => {
-      setupQueries({
-        goal: { ...GOAL, status: "completed" },
-        settings: SETTINGS,
-      });
-      renderWithProviders(<FocusModeScreen {...routeProps} />);
-
-      expect(screen.queryByTestId("focus-mode-pin")).toBeNull();
-    });
+    expect(screen.queryByTestId("focus-mode-pin")).toBeNull();
   });
 
   describe("breadcrumbs", () => {
