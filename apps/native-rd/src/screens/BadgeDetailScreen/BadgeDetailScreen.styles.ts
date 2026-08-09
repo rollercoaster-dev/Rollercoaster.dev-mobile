@@ -1,5 +1,7 @@
 import { StyleSheet } from "react-native-unistyles";
 
+import { PILL_LIFT } from "../../navigation/FocusPillTabBar";
+
 export const styles = StyleSheet.create((theme) => ({
   screen: {
     flex: 1,
@@ -15,10 +17,15 @@ export const styles = StyleSheet.create((theme) => ({
     paddingBottom: theme.space[12],
   },
   // The Share CTA lives outside the scroll body (see BadgeDetailScreen.tsx),
-  // so it carries the gutter `body` would otherwise have given it.
+  // so it carries the gutter `body` would otherwise have given it — plus the
+  // clearance for the part of the tab pill that sticks up above its own slot
+  // (`PILL_LIFT`), which would otherwise clip the CTA's bottom edge. Not
+  // `useTabScreenContentInset()`: that doubles the lift and adds the safe-area
+  // inset for content scrolling *under* the bar, stranding ~100pt of dead
+  // space beneath a pinned footer (same rule FocusModeScreen documents).
   shareCta: {
     marginHorizontal: theme.space[4],
-    marginBottom: theme.space[4],
+    marginBottom: PILL_LIFT + theme.space[3],
   },
   body: {
     paddingHorizontal: theme.space[4],
