@@ -156,3 +156,34 @@ Slim `SettingsScreen.tsx` from a screen that builds its own ad hoc theme/density
   `lint` (0 errors), `bun run test` (211/211 suites, 10067/10067 tests),
   `SettingsScreen` suite 30/30, `build` (no-op). Plan checkboxes ticked; only
   the manual on-device pass remains open.
+
+## Follow-ups (from `/self-review`, 2026-08-09)
+
+Non-critical findings surfaced by the pre-PR review gate. The one CRITICAL
+finding (required Maestro theme flows still asserting on `ThemeSwitcher`-only
+markers) was fixed on this branch; these are deliberately deferred.
+
+- **`ThemeSwitcher` is now dead in the shipping app.** `SettingsScreen` was its
+  only reachable consumer; the remaining reference is `TestScreen.tsx:628`, and
+  `TestScreen` is registered in no navigator. `common:theme.picker.title` /
+  `common:theme.picker.selected` now have no shipping consumer. Deleting it is
+  out of scope for #416 — file a cleanup issue.
+- **Welcome replay may double-pay the top safe-area inset.** `WelcomeScreen`
+  hard-codes `<HeaderBand safeAreaTop>`, correct for presentations that escape
+  `App.tsx`'s `marginTop: insets.top`. The new `SettingsStack` replay route
+  hosts it _inside_ that offset navigator, so the replayed header band may show
+  a spurious top gap the first-launch render does not. Confidence is moderate
+  (55) — confirm during the outstanding manual on-device pass before acting.
+- **`ThemeChipGrid` discards `setTheme`'s boolean.** `ThemeChipGrid.tsx:47`
+  ignores the persist-failure return, and the replay modal newly makes it
+  reachable from Settings. Same failure, two behaviours one screen apart:
+  `SettingsScreen` toasts `settings:errors.themeSaveFailed`, the chip grid is
+  silent. `ToastProvider` is in scope for the modal, so the toast is available.
+- **`WelcomeReplayScreen` has no test coverage.** `SettingsStack.tsx` is at 0%
+  — there is no test file for any navigator in this repo. The route name is
+  type-checked, but `onGetStarted={() => navigation.goBack()}` is not, and it is
+  the only in-app affordance for leaving a header-less modal.
+- **The `themeName` → `selectedThemeId` binding is unasserted.** Every current
+  assertion passes if that prop were bound to a constant. One
+  `toHaveAccessibilityState({ checked: true })` on the light-default swatch
+  closes it.
