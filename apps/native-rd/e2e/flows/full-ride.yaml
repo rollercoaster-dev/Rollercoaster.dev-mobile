@@ -294,9 +294,10 @@ env:
 
 # 21. Capture the Link. The keyboard dismissal is MANDATORY, not defensive:
 #     CaptureLinkScreen has no KeyboardAvoidingView and no keyboard-controller
-#     padding, so its Save button sits under the soft keyboard. Enter on the
-#     URL input does not help (returnKeyType="next" only advances focus) —
-#     the caption input is returnKeyType="done". Filed as a production bug.
+#     padding, so its Save button sits under the soft keyboard. Dismiss from
+#     the caption input (returnKeyType="done"); the URL input is labelled
+#     returnKeyType="next" but wires no onSubmitEditing/ref, so that label is
+#     cosmetic and focus never moves. Filed as a production bug.
 - tapOn:
     id: "focus-current-task-add-link"
 - tapOn:

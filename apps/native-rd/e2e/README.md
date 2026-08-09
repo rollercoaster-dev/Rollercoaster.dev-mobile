@@ -63,7 +63,9 @@ It performs isolation → dev-client boot → boot barrier → theme selection �
 
 ### Boot barrier
 
-While Evolu is still reading settings from SQLite, `App.tsx` renders a bare background `View` — no text, no affordances, indistinguishable from "Welcome failed to mount". The prologue waits on `extendedWaitUntil: { notVisible: { id: app-loading } }` rather than an implicit text assertion.
+The barrier **must be a positive wait**: `extendedWaitUntil: { visible: { id: welcome-get-started }, timeout: 60000 }`. Between the `clearState` reinstall and the dev client finishing its bundle fetch there is no React root at all, so a negative assertion (`notVisible: app-loading`) passes instantly on an empty tree and every following step races the bundle download. `welcome-get-started` is the first element that exists only once the bundle has mounted **and** Evolu has resolved `isFirstLaunch` to `true`, so it clears both conditions at once.
+
+The prologue then asserts `assertNotVisible: { id: app-loading }` as belt and braces — `app-loading` is the bare background `View` `App.tsx` renders while `isFirstLaunch === null` (no text, no affordances, indistinguishable from "Welcome failed to mount"). It cannot still be up once the CTA is visible; the assertion keeps the id meaningful and documents the state. Copy this shape verbatim for any new barrier — never the negative-only form.
 
 ## Writing Flows
 
@@ -105,7 +107,7 @@ This is verifiable, and should be verified, with `maestro hierarchy` — VoiceOv
 
 ### Soft keyboard occlusion
 
-`CaptureTextNote` lifts its footer above the keyboard (`useReanimatedKeyboardAnimation`). **`CaptureLinkScreen` does not** — no `KeyboardAvoidingView`, no keyboard-controller — so its Save button sits under the keyboard and the tap lands on the keyboard instead. Every link capture must dismiss first by tapping `capture-link-caption` (`returnKeyType="done"`) then `pressKey: Enter`. Enter on the URL field does nothing useful: it is `returnKeyType="next"` and only advances focus. The production fix is filed separately.
+`CaptureTextNote` lifts its footer above the keyboard (`useReanimatedKeyboardAnimation`). **`CaptureLinkScreen` does not** — no `KeyboardAvoidingView`, no keyboard-controller — so its Save button sits under the keyboard and the tap lands on the keyboard instead. Every link capture must dismiss first by tapping `capture-link-caption` (`returnKeyType="done"`) then `pressKey: Enter`. Don't dismiss from the URL field instead: it is labelled `returnKeyType="next"`, but nothing wires `onSubmitEditing` or a ref to the caption input, so the label is cosmetic — the key advances no focus and leaves the caption field unvisited. The production fix is filed separately.
 
 ### Flow structure
 
