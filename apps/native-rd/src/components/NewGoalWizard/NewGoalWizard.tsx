@@ -537,7 +537,7 @@ export function NewGoalWizard({
                 onPress={onQuickAdd}
                 // `accessible` collapses the "or …" + link Text into one node so
                 // screen readers announce the single quickAddAccessibilityLabel,
-                // not each fragment separately (matches ProofSpine/FABMenu).
+                // not each fragment separately (matches ProofSpine).
                 accessible
                 accessibilityRole="button"
                 accessibilityLabel={quickAddAccessibilityLabel}
