@@ -5,6 +5,8 @@ import {
   screen,
   fireEvent,
 } from "../../../__tests__/test-utils";
+import { UnistylesRuntime } from "react-native-unistyles";
+import { TopInsetColorProvider } from "../../../navigation/TopInsetColor";
 import { BadgeDetailScreen } from "../BadgeDetailScreen";
 import type { BadgeDetailScreenProps } from "../../../navigation/types";
 import { createDefaultBadgeDesign } from "../../../badges/types";
@@ -616,6 +618,52 @@ describe("BadgeDetailScreen", () => {
       expect(
         screen.getByTestId("share-row-image").props.accessibilityLabel,
       ).toMatch(/may drop the credential/);
+    });
+  });
+
+  // App.tsx paints the device top-inset strip in the header color. The hero
+  // band is this screen's first pixel row, so it claims the strip instead —
+  // otherwise the celebration surface sits under an orphaned header band.
+  describe("top-inset strip", () => {
+    const renderWithStrip = () => {
+      const onChange = jest.fn();
+      renderWithProviders(
+        <TopInsetColorProvider onChange={onChange}>
+          <BadgeDetailScreen route={mockRoute} navigation={{} as never} />
+        </TopInsetColorProvider>,
+      );
+      return onChange;
+    };
+
+    it("extends the celebration surface into the strip", () => {
+      mockUseQuery.mockReturnValue([makeRow()]);
+
+      // Asserts the actual token, not merely "something was set" — painting
+      // the strip the wrong colour is the failure this guards against.
+      expect(renderWithStrip()).toHaveBeenCalledWith(
+        UnistylesRuntime.getTheme().chrome.celebrationBg,
+      );
+    });
+
+    // The not-found branch renders a ScreenHeader, which the default
+    // header-coloured strip is already the correct continuation of.
+    it("leaves the strip at the header color when the badge is missing", () => {
+      mockUseQuery.mockReturnValue([]);
+      expect(renderWithStrip()).not.toHaveBeenCalled();
+    });
+
+    it("releases the strip on unmount", () => {
+      mockUseQuery.mockReturnValue([makeRow()]);
+      const onChange = jest.fn();
+      const view = renderWithProviders(
+        <TopInsetColorProvider onChange={onChange}>
+          <BadgeDetailScreen route={mockRoute} navigation={{} as never} />
+        </TopInsetColorProvider>,
+      );
+      onChange.mockClear();
+      view.unmount();
+
+      expect(onChange).toHaveBeenCalledWith(null);
     });
   });
 

@@ -10,6 +10,7 @@ import {
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useUnistyles } from "react-native-unistyles";
 import { useQuery } from "@evolu/react";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "phosphor-react-native";
@@ -32,6 +33,7 @@ import { formatDate } from "../../utils/format";
 import { reportError } from "../../services/sentry-report";
 import { runEvoluMutation } from "../../utils/evoluMutation";
 import { Logger } from "../../shims/rd-logger";
+import { useTopInsetColor } from "../../navigation/TopInsetColor";
 import type {
   BadgeDetailScreenProps,
   BadgesStackParamList,
@@ -193,6 +195,14 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
   const [isShareSheetOpen, setIsShareSheetOpen] = useState(false);
   const { shouldAnimate } = useAnimationPref();
   const insets = useSafeAreaInsets();
+  // The hero band is the screen's first pixel row, so the device top-inset
+  // strip App.tsx paints above the navigator has to be the celebration
+  // surface too — otherwise the band sits under an orphaned header-coloured
+  // strip it has nothing to do with (same opt-out the badge wall takes).
+  // `null` on the not-found branch below, which renders a ScreenHeader
+  // instead and wants the default.
+  const { theme } = useUnistyles();
+  useTopInsetColor(badge ? theme.chrome.celebrationBg : null);
   const {
     exportVerifiableBadge,
     exportImage,
@@ -330,24 +340,27 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
 
   return (
     <>
+      {/* Pinned, not scrolled: the badge is the thing the screen is about, so
+          it holds its position while the detail below it moves. Its back and ⋯
+          controls double as the screen's chrome and must stay reachable. */}
+      <CelebrationHeroHeader
+        badgeDesign={design}
+        badgeTitle={goalTitle}
+        credentialLabel={credentialLabel}
+        isVerified={isVerified}
+        showConfetti={shouldAnimate}
+        onBack={() => navigation.goBack()}
+        onOverflow={() => setShowOverflowMenu(true)}
+        backAccessibilityLabel={t("badgeDetail:fallback.goBack")}
+        overflowAccessibilityLabel={t("badgeDetail:hero.overflowLabel")}
+      />
+
       {/* flex:1 so the Share CTA below stays a pinned footer rather than being
           pushed off-screen by tall content. */}
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
       >
-        <CelebrationHeroHeader
-          badgeDesign={design}
-          badgeTitle={goalTitle}
-          credentialLabel={credentialLabel}
-          isVerified={isVerified}
-          showConfetti={shouldAnimate}
-          onBack={() => navigation.goBack()}
-          onOverflow={() => setShowOverflowMenu(true)}
-          backAccessibilityLabel={t("badgeDetail:fallback.goBack")}
-          overflowAccessibilityLabel={t("badgeDetail:hero.overflowLabel")}
-        />
-
         <View style={styles.body}>
           {/* The hero's chip already carries the earned date for credentialed
               badges, so this line only fills the gap when there is no chip. */}
