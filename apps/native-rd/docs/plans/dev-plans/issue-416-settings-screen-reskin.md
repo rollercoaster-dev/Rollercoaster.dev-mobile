@@ -9,12 +9,12 @@
 
 ## Intent Verification
 
-- [ ] `SettingsScreen` renders, in order: header "Settings", Theme section (rail + live sample card), Content Density (3 rows), Onboarding ("Replay welcome" row), About (app/version/built-with) — matching `SettingsFrame.dc.html`'s Theme → Density → Onboarding → About stack.
-- [ ] Tapping a theme swatch in the Settings Theme section calls `useThemeContext().setTheme`, which re-skins the whole app (verified across Full Ride / Night Ride / one shadow-off theme per acceptance criteria), and shows the existing `settings:errors.themeSaveFailed` toast only when persistence fails.
-- [ ] Tapping a density row calls `useDensity().setDensity` exactly as today (unchanged behavior — only the presentational component changes from ad hoc `SettingsRow`s to `SettingsDensityRows`).
-- [ ] Tapping "Replay welcome" navigates to a modal `Welcome` screen inside `SettingsStack` that renders the unmodified `WelcomeScreen`; dismissing it (its existing "Get started" CTA) returns to Settings without touching the `hasSeenWelcome` flag.
-- [ ] The old `ThemeSwitcher` mount is gone from `SettingsScreen`; `__DEV__`-gated Language and Dev-tools sections still render only under `__DEV__`.
-- [ ] `bun run test --testPathPatterns SettingsScreen` is green; `bun run type-check` and `bun run lint` are clean.
+- [x] `SettingsScreen` renders, in order: header "Settings", Theme section (rail + live sample card), Content Density (3 rows), Onboarding ("Replay welcome" row), About (app/version/built-with) — matching `SettingsFrame.dc.html`'s Theme → Density → Onboarding → About stack.
+- [x] Tapping a theme swatch in the Settings Theme section calls `useThemeContext().setTheme`, and shows the existing `settings:errors.themeSaveFailed` toast only when persistence fails. _(Wiring covered by unit test; on-device re-skin across Full Ride / Night Ride / a shadow-off theme still outstanding — see Discovery Log.)_
+- [x] Tapping a density row calls `useDensity().setDensity` exactly as today (unchanged behavior — only the presentational component changes from ad hoc `SettingsRow`s to `SettingsDensityRows`).
+- [x] Tapping "Replay welcome" navigates to a modal `Welcome` screen inside `SettingsStack` that renders the unmodified `WelcomeScreen`; dismissing it (its existing "Get started" CTA) returns to Settings without touching the `hasSeenWelcome` flag.
+- [x] The old `ThemeSwitcher` mount is gone from `SettingsScreen`; `__DEV__`-gated Language and Dev-tools sections still render only under `__DEV__`.
+- [x] `bun run test --testPathPatterns SettingsScreen` is green; `bun run type-check` and `bun run lint` are clean.
 
 ## Dependencies
 
@@ -59,9 +59,9 @@ Slim `SettingsScreen.tsx` from a screen that builds its own ad hoc theme/density
 **Commit**: `feat(native-rd): add modal Welcome replay route to SettingsStack`
 **Changes**:
 
-- [ ] Add `Welcome: undefined;` to `SettingsStackParamList` in `types.ts`.
-- [ ] In `SettingsStack.tsx`, add a small wrapper component (e.g. `WelcomeReplayScreen`) that calls `useNavigation<NativeStackNavigationProp<SettingsStackParamList>>()` and renders `<WelcomeScreen onGetStarted={() => navigation.goBack()} />`.
-- [ ] Register `<Stack.Screen name="Welcome" component={WelcomeReplayScreen} options={{ presentation: "modal" }} />`, matching the `GoalsStack.tsx` `NewGoal`/`CompletionFlow` modal precedent (covers the tab bar with no extra `tabBarStyle` plumbing).
+- [x] Add `Welcome: undefined;` to `SettingsStackParamList` in `types.ts`.
+- [x] In `SettingsStack.tsx`, add a small wrapper component (e.g. `WelcomeReplayScreen`) that calls `useNavigation<NativeStackNavigationProp<SettingsStackParamList>>()` and renders `<WelcomeScreen onGetStarted={() => navigation.goBack()} />`.
+- [x] Register `<Stack.Screen name="Welcome" component={WelcomeReplayScreen} options={{ presentation: "modal" }} />`, matching the `GoalsStack.tsx` `NewGoal`/`CompletionFlow` modal precedent (covers the tab bar with no extra `tabBarStyle` plumbing).
 
 ### Step 2: Add Onboarding i18n keys
 
@@ -69,9 +69,9 @@ Slim `SettingsScreen.tsx` from a screen that builds its own ad hoc theme/density
 **Commit**: `feat(native-rd): add settings:onboarding i18n keys`
 **Changes**:
 
-- [ ] Add `"onboarding": { "title": "Onboarding", "replayWelcome": "Replay welcome" }` to `en/settings.json`, matching prototype copy verbatim (`SettingsFrame.dc.html:106,108`).
-- [ ] Add the German equivalents to `de/settings.json` (plain, matter-of-fact register per `_register/settings.yml` notes — e.g. "Erneut ansehen" / "Willkommen" style, avoiding the banned phrasings list).
-- [ ] Run `bun run gen:pseudo` to regenerate `pseudo/settings.json` — do not hand-edit it.
+- [x] Add `"onboarding": { "title": "Onboarding", "replayWelcome": "Replay welcome" }` to `en/settings.json`, matching prototype copy verbatim (`SettingsFrame.dc.html:106,108`).
+- [x] Add the German equivalents to `de/settings.json` (plain, matter-of-fact register per `_register/settings.yml` notes — e.g. "Erneut ansehen" / "Willkommen" style, avoiding the banned phrasings list).
+- [x] Run `bun run gen:pseudo` to regenerate `pseudo/settings.json` — do not hand-edit it.
 
 ### Step 3: Wire `SettingsThemeSection` and `SettingsDensityRows` into `SettingsScreen`
 
@@ -79,14 +79,14 @@ Slim `SettingsScreen.tsx` from a screen that builds its own ad hoc theme/density
 **Commit**: `feat(native-rd): mount verified theme/density sections in SettingsScreen`
 **Changes**:
 
-- [ ] Remove the `ThemeSwitcher` import and its `<ThemeSwitcher />` mount.
-- [ ] Remove the inline `DensityPicker` function; import `SettingsDensityRows` instead.
-- [ ] Import `SettingsThemeSection`, `useThemeContext` (from `hooks/useTheme`).
-- [ ] In `SettingsScreen`, destructure `{ themeName, setTheme } = useThemeContext()` and `{ densityLevel, setDensity } = useDensity()`.
-- [ ] Render `<SettingsThemeSection selectedThemeId={themeName} onSelect={(id) => { if (!setTheme(id)) showToast({ message: t("settings:errors.themeSaveFailed") }); }} />` where the screen renders today, replacing the `ThemeSwitcher` mount. Requires pulling in `useToast()` at the screen level (currently only used inside `DensityPicker`).
-- [ ] Wrap `SettingsDensityRows` the same way the old `DensityPicker` was wrapped (`Suspense` + `ErrorBoundary`), passing `selectedLevel={densityLevel}` and the same `onSelect` failure-toast logic as today's density picker.
-- [ ] Keep `__DEV__ && <LanguagePicker />` and `__DEV__ && <DevToolsSection />` exactly as-is, in their current position.
-- [ ] Keep the `About` `SettingsSection` and footer `Text` exactly as-is.
+- [x] Remove the `ThemeSwitcher` import and its `<ThemeSwitcher />` mount.
+- [x] Remove the inline `DensityPicker` function; import `SettingsDensityRows` instead.
+- [x] Import `SettingsThemeSection`, `useThemeContext` (from `hooks/useTheme`).
+- [x] In `SettingsScreen`, destructure `{ themeName, setTheme } = useThemeContext()` and `{ densityLevel, setDensity } = useDensity()`.
+- [x] Render `<SettingsThemeSection selectedThemeId={themeName} onSelect={(id) => { if (!setTheme(id)) showToast({ message: t("settings:errors.themeSaveFailed") }); }} />` where the screen renders today, replacing the `ThemeSwitcher` mount. Requires pulling in `useToast()` at the screen level (currently only used inside `DensityPicker`).
+- [x] Wrap `SettingsDensityRows` the same way the old `DensityPicker` was wrapped (`Suspense` + `ErrorBoundary`), passing `selectedLevel={densityLevel}` and the same `onSelect` failure-toast logic as today's density picker.
+- [x] Keep `__DEV__ && <LanguagePicker />` and `__DEV__ && <DevToolsSection />` exactly as-is, in their current position.
+- [x] Keep the `About` `SettingsSection` and footer `Text` exactly as-is.
 
 ### Step 4: Add the Onboarding section
 
@@ -94,8 +94,8 @@ Slim `SettingsScreen.tsx` from a screen that builds its own ad hoc theme/density
 **Commit**: `feat(native-rd): add Onboarding replay-welcome row to SettingsScreen`
 **Changes**:
 
-- [ ] Add an `OnboardingSection` component (mirroring `DevToolsSection`'s shape) with a `SettingsSection` titled `t("settings:onboarding.title")` containing one `SettingsRow` labeled `t("settings:onboarding.replayWelcome")`, `onPress={() => navigation.navigate("Welcome")}`.
-- [ ] Mount `<OnboardingSection />` between the density section and the About section (matching `SettingsFrame.dc.html`'s Theme → Density → Onboarding → About order) — i.e. after the `__DEV__` sections, before `About`, since the `__DEV__` sections are dev-only chrome not part of the real section order.
+- [x] Add an `OnboardingSection` component (mirroring `DevToolsSection`'s shape) with a `SettingsSection` titled `t("settings:onboarding.title")` containing one `SettingsRow` labeled `t("settings:onboarding.replayWelcome")`, `onPress={() => navigation.navigate("Welcome")}`.
+- [x] Mount `<OnboardingSection />` between the density section and the About section (matching `SettingsFrame.dc.html`'s Theme → Density → Onboarding → About order) — i.e. after the `__DEV__` sections, before `About`, since the `__DEV__` sections are dev-only chrome not part of the real section order.
 
 ### Step 5: Update tests
 
@@ -103,18 +103,18 @@ Slim `SettingsScreen.tsx` from a screen that builds its own ad hoc theme/density
 **Commit**: `test(native-rd): update SettingsScreen tests for theme/density/onboarding wiring`
 **Changes**:
 
-- [ ] Replace the `ThemeSwitcher`-shaped assertions ("renders … with all theme options", "renders theme options with radio accessibility roles", "calls setTheme when a theme option is pressed") with equivalent assertions against `SettingsThemeSection`'s rendered output (same `common:theme.options.*` keys/labels, same `mockSetTheme` mock already wired via the existing `useThemeContext` mock) — add a failure-toast test for `setTheme` returning `false`, mirroring the existing `setDensity` failure-toast test.
-- [ ] Update the density assertions to target `SettingsDensityRows`'s rendered markup (labels/values are unchanged; the existing `mockSetDensity` mock and failure-toast test carry over largely unchanged).
-- [ ] Add a mock for `useNavigation` (mirroring `BadgesScreen.test.tsx`'s `jest.mock("@react-navigation/native", ...)` pattern) and a test asserting `navigate("Welcome")` fires on "Replay welcome" press.
-- [ ] Add/extend the pseudo-locale `it.each` table to include `settings:onboarding.title` and `settings:onboarding.replayWelcome`.
-- [ ] Leave the About-section, footer, Sentry-debug-tools, and `LanguagePicker`/`DevToolsSection` `describe` blocks untouched — they cover code this issue does not change.
+- [x] Replace the `ThemeSwitcher`-shaped assertions ("renders … with all theme options", "renders theme options with radio accessibility roles", "calls setTheme when a theme option is pressed") with equivalent assertions against `SettingsThemeSection`'s rendered output (same `common:theme.options.*` keys/labels, same `mockSetTheme` mock already wired via the existing `useThemeContext` mock) — add a failure-toast test for `setTheme` returning `false`, mirroring the existing `setDensity` failure-toast test.
+- [x] Update the density assertions to target `SettingsDensityRows`'s rendered markup (labels/values are unchanged; the existing `mockSetDensity` mock and failure-toast test carry over largely unchanged).
+- [x] Add a mock for `useNavigation` (mirroring `BadgesScreen.test.tsx`'s `jest.mock("@react-navigation/native", ...)` pattern) and a test asserting `navigate("Welcome")` fires on "Replay welcome" press.
+- [x] Add/extend the pseudo-locale `it.each` table to include `settings:onboarding.title` and `settings:onboarding.replayWelcome`.
+- [x] Leave the About-section, footer, Sentry-debug-tools, and `LanguagePicker`/`DevToolsSection` `describe` blocks untouched — they cover code this issue does not change.
 
 ## Testing Strategy
 
-- [ ] Unit tests for `SettingsScreen` wiring (Jest 30, `@testing-library/react-native` v13) per Step 5 above.
-- [ ] Test file stays at `src/screens/SettingsScreen/__tests__/SettingsScreen.test.tsx` (existing location, mirrors `src/`).
-- [ ] Reuse `test.each` for the pseudo-locale key table (existing pattern).
-- [ ] No new visual/Storybook assertions — `SettingsThemeSection`/`SettingsDensityRows` visuals are already covered by #415's stories; this issue only tests wiring.
+- [x] Unit tests for `SettingsScreen` wiring (Jest 30, `@testing-library/react-native` v13) per Step 5 above.
+- [x] Test file stays at `src/screens/SettingsScreen/__tests__/SettingsScreen.test.tsx` (existing location, mirrors `src/`).
+- [x] Reuse `test.each` for the pseudo-locale key table (existing pattern).
+- [x] No new visual/Storybook assertions — `SettingsThemeSection`/`SettingsDensityRows` visuals are already covered by #415's stories; this issue only tests wiring.
 - [ ] Manual testing: run the app, confirm tapping a theme swatch in Settings re-skins the whole app live (Full Ride, Night Ride, one shadow-off theme e.g. `light-autismFriendly`), confirm density rows still scale spacing, confirm "Replay welcome" opens the Welcome modal and "Get started" dismisses back to Settings.
 
 ## Not in Scope
@@ -152,3 +152,7 @@ Slim `SettingsScreen.tsx` from a screen that builds its own ad hoc theme/density
   `bun run type-check`, `bun run lint` (0 errors; 201 pre-existing warnings).
   Manual on-device verification of live re-skin / modal dismissal is still
   outstanding.
+- [2026-08-09] Final validation re-run on the completed branch: `type-check`,
+  `lint` (0 errors), `bun run test` (211/211 suites, 10067/10067 tests),
+  `SettingsScreen` suite 30/30, `build` (no-op). Plan checkboxes ticked; only
+  the manual on-device pass remains open.
