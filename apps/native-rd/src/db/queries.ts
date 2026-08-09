@@ -1753,6 +1753,47 @@ export function markWelcomeSeen(id: UserSettingsId) {
 }
 
 /**
+ * Pin a goal to the cockpit hero slot (#396).
+ *
+ * Writing the id over whatever was there is what enforces the single-slot rule
+ * — there is no previous pin to clear (D1).
+ * @param id - UserSettings ID (from userSettingsQuery)
+ * @param goalId - Goal to pin
+ * @returns Update command
+ */
+export function pinGoal(id: UserSettingsId, goalId: GoalId) {
+  breadcrumb({ category: "settings", message: "pin" });
+  try {
+    return evolu.update("userSettings", {
+      id,
+      pinnedGoalId: goalId,
+    } as Parameters<typeof evolu.update>[1]);
+  } catch (error) {
+    logger.error("Failed to pin goal", { settingsId: id, goalId, error });
+    throw new Error("Failed to pin goal. Please try again.");
+  }
+}
+
+/**
+ * Clear the cockpit pin, returning the hero to the most-recently-worked
+ * default (#396). Idempotent — safe to call when nothing is pinned.
+ * @param id - UserSettings ID (from userSettingsQuery)
+ * @returns Update command
+ */
+export function unpinGoal(id: UserSettingsId) {
+  breadcrumb({ category: "settings", message: "unpin" });
+  try {
+    return evolu.update("userSettings", {
+      id,
+      pinnedGoalId: null,
+    } as Parameters<typeof evolu.update>[1]);
+  } catch (error) {
+    logger.error("Failed to unpin goal", { settingsId: id, error });
+    throw new Error("Failed to unpin goal. Please try again.");
+  }
+}
+
+/**
  * Store the keyId for the user's Ed25519 keypair
  * Called once after key generation — keyId references the key in SecureStore
  */

@@ -3,10 +3,11 @@ import { Pressable, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useUnistyles } from "react-native-unistyles";
 import Svg, { Circle } from "react-native-svg";
-import { Play } from "phosphor-react-native";
+import { Play, PushPin } from "phosphor-react-native";
 import { ProgressRing } from "../../components/ProgressRing";
 import { ProgressBar } from "../../components/ProgressBar";
 import { Button } from "../../components/Button";
+import { IconButton, type IconButtonTone } from "../../components/IconButton";
 import { Text } from "../../components/Text";
 import { styles } from "./GoalsCockpit.styles";
 
@@ -38,6 +39,10 @@ export interface GoalsCockpitProps {
   onNewGoal: () => void;
   /** Long-press a hero or keep-warm card to delete its goal (D14). */
   onDeleteGoal: (goalId: string) => void;
+  /** True when the hero holds the slot because it is pinned, not by recency. */
+  heroIsPinned: boolean;
+  onPinGoal: (goalId: string) => void;
+  onUnpinGoal: () => void;
 }
 
 /** Concentric-circle "target" reticle for the empty state (matches the Goals
@@ -48,6 +53,52 @@ function TargetIcon({ color }: { color: string }) {
       <Circle cx={12} cy={12} r={9} stroke={color} strokeWidth={2.5} />
       <Circle cx={12} cy={12} r={4} stroke={color} strokeWidth={2.5} />
     </Svg>
+  );
+}
+
+/**
+ * The cockpit's pin affordance (#396 D4), shared by the hero and every
+ * keep-warm tile so the control is identical wherever it appears — learned
+ * once, recognised everywhere.
+ *
+ * One glyph in two weights rather than PushPin/PushPinSlash: the tile's
+ * silhouette stays put when toggling, so the state change reads as a fill
+ * change, not a shape swap — calmer under autismFriendly/lowInfo. The state
+ * also rides `accessibilityState.selected` and the label, so it is never
+ * carried by the visual alone.
+ */
+function PinToggle({
+  isPinned,
+  title,
+  tone,
+  onPress,
+  testID,
+}: {
+  isPinned: boolean;
+  title: string;
+  tone: IconButtonTone;
+  onPress: () => void;
+  testID: string;
+}) {
+  const { t } = useTranslation(["goals"]);
+  return (
+    <IconButton
+      // No color prop: IconButton owns icon color per tone, so weight is the
+      // one visual channel a call site may vary.
+      icon={<PushPin size={20} weight={isPinned ? "fill" : "regular"} />}
+      onPress={onPress}
+      tone={tone}
+      size="sm"
+      selected={isPinned}
+      accessibilityLabel={t(
+        isPinned ? "goals:cockpit.unpinGoal" : "goals:cockpit.pinGoal",
+      )}
+      accessibilityHint={t(
+        isPinned ? "goals:cockpit.unpinHint" : "goals:cockpit.pinHint",
+        { title },
+      )}
+      testID={testID}
+    />
   );
 }
 
@@ -64,6 +115,9 @@ export function GoalsCockpit({
   onOpenGoal,
   onNewGoal,
   onDeleteGoal,
+  heroIsPinned,
+  onPinGoal,
+  onUnpinGoal,
 }: GoalsCockpitProps) {
   const { t } = useTranslation(["goals", "common"]);
   const { theme } = useUnistyles();
@@ -123,6 +177,17 @@ export function GoalsCockpit({
         onLongPress={() => onDeleteGoal(hero.id)}
         testID="goals-cockpit-hero"
       >
+        {/* Absolute so the pin sits in the hero's top-right corner without
+            displacing the centred ring/headline stack. */}
+        <View style={styles.heroPin}>
+          <PinToggle
+            isPinned={heroIsPinned}
+            title={hero.title}
+            tone="ghost"
+            onPress={() => (heroIsPinned ? onUnpinGoal() : onPinGoal(hero.id))}
+            testID="goals-cockpit-hero-pin"
+          />
+        </View>
         <ProgressRing
           progress={hero.progress}
           size={124}
@@ -176,43 +241,59 @@ export function GoalsCockpit({
           </Text>
           <View style={styles.keepWarmGrid}>
             {keepWarm.map((goal) => (
-              <Pressable
-                key={goal.id}
-                onPress={() => onOpenGoal(goal.id)}
-                onLongPress={() => onDeleteGoal(goal.id)}
-                accessible
-                accessibilityRole="button"
-                accessibilityLabel={goal.title}
-                // Tapping opens the goal in FocusMode (same as the hero's
-                // Start/Resume), so reuse resumeHint — not card.a11y.hint's
-                // "view details", which would misdescribe the destination.
-                accessibilityHint={t("goals:cockpit.resumeHint", {
-                  title: goal.title,
-                })}
-                testID={`keep-warm-${goal.id}`}
-                style={({ pressed }) => [
-                  styles.keepWarmCard,
-                  pressed && styles.keepWarmPressed,
-                ]}
-              >
-                <Text
-                  variant="title"
-                  style={styles.keepWarmTitle}
-                  numberOfLines={1}
+              <View key={goal.id} style={styles.keepWarmCell}>
+                <Pressable
+                  onPress={() => onOpenGoal(goal.id)}
+                  onLongPress={() => onDeleteGoal(goal.id)}
+                  accessible
+                  accessibilityRole="button"
+                  accessibilityLabel={goal.title}
+                  // Tapping opens the goal in FocusMode (same as the hero's
+                  // Start/Resume), so reuse resumeHint — not card.a11y.hint's
+                  // "view details", which would misdescribe the destination.
+                  accessibilityHint={t("goals:cockpit.resumeHint", {
+                    title: goal.title,
+                  })}
+                  testID={`keep-warm-${goal.id}`}
+                  style={({ pressed }) => [
+                    styles.keepWarmCard,
+                    pressed && styles.keepWarmPressed,
+                  ]}
                 >
-                  {goal.title}
-                </Text>
-                {goal.nextStepTitle ? (
                   <Text
-                    variant="caption"
-                    style={styles.keepWarmNextStep}
+                    variant="title"
+                    style={styles.keepWarmTitle}
                     numberOfLines={1}
                   >
-                    {goal.nextStepTitle}
+                    {goal.title}
                   </Text>
-                ) : null}
-                <ProgressBar progress={goal.progress} />
-              </Pressable>
+                  {goal.nextStepTitle ? (
+                    <Text
+                      variant="caption"
+                      style={styles.keepWarmNextStep}
+                      numberOfLines={1}
+                    >
+                      {goal.nextStepTitle}
+                    </Text>
+                  ) : null}
+                  <ProgressBar progress={goal.progress} />
+                </Pressable>
+                {/* Outside the Pressable above, which is `accessible` and so
+                    collapses its subtree into a single screen-reader node — a
+                    nested pin would be announced-and-activated as part of the
+                    card instead of as its own control. A keep-warm tile is
+                    never the pinned goal (pinning promotes it to hero, D2), so
+                    this is always the inactive state and always pins. */}
+                <View style={styles.keepWarmPin}>
+                  <PinToggle
+                    isPinned={false}
+                    title={goal.title}
+                    tone="surface"
+                    onPress={() => onPinGoal(goal.id)}
+                    testID={`keep-warm-pin-${goal.id}`}
+                  />
+                </View>
+              </View>
             ))}
           </View>
         </View>

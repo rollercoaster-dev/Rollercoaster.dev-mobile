@@ -25,6 +25,37 @@ describe("IconButton", () => {
     expect(screen.getByText("X")).toBeOnTheScreen();
   });
 
+  // hitSlop is a Pressable prop, not a style — it previously sat in the style
+  // object and was silently dropped, leaving `sm` a bare 36pt target against a
+  // 44pt guideline. 36 + 4 on every edge is what closes that gap.
+  it("expands the sm touch target to the 44pt minimum via hitSlop", () => {
+    renderWithProviders(
+      <IconButton
+        icon={<Text>X</Text>}
+        onPress={jest.fn()}
+        size="sm"
+        accessibilityLabel="Pin"
+      />,
+    );
+    expect(screen.getByRole("button", { name: "Pin" }).props.hitSlop).toBe(4);
+  });
+
+  // `selected` is opt-in: a plain action button must not be announced as a
+  // toggle that happens to be off.
+  it("leaves accessibilityState.selected unset unless asked", () => {
+    renderWithProviders(
+      <IconButton
+        icon={<Text>X</Text>}
+        onPress={jest.fn()}
+        accessibilityLabel="Edit"
+      />,
+    );
+    expect(
+      screen.getByRole("button", { name: "Edit" }).props.accessibilityState
+        .selected,
+    ).toBeUndefined();
+  });
+
   it("calls onPress when pressed", () => {
     const onPress = jest.fn();
     renderWithProviders(

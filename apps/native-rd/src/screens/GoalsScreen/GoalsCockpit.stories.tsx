@@ -39,6 +39,9 @@ const meta: Meta<typeof GoalsCockpit> = {
     onOpenGoal: noop,
     onNewGoal: noop,
     onDeleteGoal: noop,
+    heroIsPinned: false,
+    onPinGoal: noop,
+    onUnpinGoal: noop,
   },
 };
 
@@ -77,6 +80,12 @@ export const ManyKeepWarm: Story = {
       },
     ],
   },
+};
+
+// Pinned hero: the toggle flips to its active (filled) state and the tap verb
+// becomes unpin. Keep-warm pins stay inactive — pinning one promotes it here.
+export const PinnedHero: Story = {
+  args: { hero, keepWarm, heroIsPinned: true },
 };
 
 export const HeroOnly: Story = {

@@ -67,6 +67,8 @@ export {
   updateUserSettingsKey,
   clearUserSettingsKey,
   markWelcomeSeen,
+  pinGoal,
+  unpinGoal,
 } from "./queries";
 export type {
   GroupedStep,

@@ -2,6 +2,7 @@ import React from "react";
 import { Pressable, type StyleProp, type TextStyle } from "react-native";
 import { useUnistyles } from "react-native-unistyles";
 import {
+  hitSlopValues,
   resolveIconColor,
   styles,
   type IconButtonSize,
@@ -19,6 +20,14 @@ export interface IconButtonProps {
   tone?: IconButtonTone;
   disabled?: boolean;
   accessibilityLabel: string;
+  /**
+   * Toggle state for buttons that are on/off rather than one-shot (the cockpit
+   * pin, #396). Exposed as `accessibilityState.selected` so the state reaches a
+   * screen reader, not just the icon's fill. Omit for plain action buttons —
+   * `undefined` keeps them unannounced as toggles.
+   */
+  selected?: boolean;
+  accessibilityHint?: string;
   testID?: string;
 }
 
@@ -48,6 +57,8 @@ export function IconButton({
   tone = "surface",
   disabled = false,
   accessibilityLabel,
+  selected,
+  accessibilityHint,
   testID,
 }: IconButtonProps) {
   const { theme } = useUnistyles();
@@ -69,11 +80,15 @@ export function IconButton({
     <Pressable
       onPress={onPress}
       disabled={disabled}
+      // Prop, not style — this is what actually lifts `sm` from its 36pt box to
+      // the 44pt minimum the a11y guidelines require.
+      hitSlop={hitSlopValues[size]}
       testID={testID}
       accessible
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
-      accessibilityState={{ disabled }}
+      accessibilityHint={accessibilityHint}
+      accessibilityState={{ disabled, selected }}
       style={({ pressed }) => [
         styles.pressable(size),
         toneStyle,

@@ -19,12 +19,20 @@
     "title": "Couldn't delete goal",
     "message": "Something went wrong. Please try again."
   },
+  "pinError": {
+    "title": "Couldn't change the pin",
+    "message": "Something went wrong. Please try again."
+  },
   "cockpit": {
     "doThisNext": "Do this next · {{title}}",
     "ringSteps": "{{completed}} / {{total}} steps",
     "start": "Start",
     "resume": "Resume",
     "resumeHint": "Opens {{title}} in focus mode",
+    "pinGoal": "Pin to cockpit",
+    "unpinGoal": "Unpin from cockpit",
+    "pinHint": "Keeps {{title}} in the cockpit hero slot",
+    "unpinHint": "Returns the hero slot to whatever you worked on last",
     "keepWarm": "Keep warm",
     "newGoal": "New goal"
   },

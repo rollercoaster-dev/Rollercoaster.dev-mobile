@@ -61,6 +61,9 @@ export type ReportContext =
   | { area: "db.write" }
   | { area: "settings.density" }
   | { area: "settings.theme" }
+  // The cockpit pin is a userSettings write, not a goal write — it belongs with
+  // the other settings.* areas rather than under goal.mutate's closed kinds.
+  | { area: "settings.pin" }
   | { area: "render" };
 
 // No-op in dev — `initSentry()` returns early before any client is installed,
@@ -141,6 +144,9 @@ export type BreadcrumbInput =
   | { category: "badge"; message: "build" | "sign" | "bake" | "store" }
   | { category: "key"; message: "generate" | "verify" }
   | { category: "focus"; message: "enter" | "exit" }
+  // The cockpit pin writes userSettings, not goal — filing it under "goal"
+  // would plant a phantom "goal updated" crumb ahead of unrelated goal errors.
+  | { category: "settings"; message: "pin" | "unpin" }
   | { category: "appstate"; message: "defer" | "flush" | "drop" };
 
 // Hides Sentry.addBreadcrumb so call sites cannot pass arbitrary data — the

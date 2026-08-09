@@ -38,7 +38,10 @@ jest.mock("@evolu/react", () => {
 jest.mock("../../../db", () => ({
   activeGoalsQuery: { __brand: "activeGoalsQuery" },
   stepsForActiveGoalsQuery: { __brand: "stepsForActiveGoalsQuery" },
+  userSettingsQuery: { __brand: "userSettingsQuery" },
   deleteGoal: jest.fn(),
+  pinGoal: jest.fn(),
+  unpinGoal: jest.fn(),
   StepStatus: { pending: "pending", completed: "completed", paused: "paused" },
   // Faithful copy of the real resolver (leaf/invite/parked/flat/none + orphan
   // promotion, paused skipped like completed) so buildCockpitGoal's next-step
@@ -102,7 +105,7 @@ jest.mock("../../../services/sentry-report", () => ({
   reportError: (...args: unknown[]) => mockReportError(...args),
 }));
 
-const { deleteGoal } = require("../../../db");
+const { deleteGoal, pinGoal, unpinGoal } = require("../../../db");
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -111,6 +114,8 @@ beforeEach(() => {
   // deleteGoal returns an Evolu Result; confirmDelete now gates the modal
   // close on `.ok`, so the mock must hand back a success Result by default.
   deleteGoal.mockReturnValue({ ok: true, value: {} });
+  pinGoal.mockReturnValue({ ok: true, value: {} });
+  unpinGoal.mockReturnValue({ ok: true, value: {} });
 });
 
 const makeGoalRow = (overrides: Record<string, unknown> = {}) => ({
@@ -122,17 +127,24 @@ const makeGoalRow = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
-/** Route both home queries: goals to activeGoalsQuery, steps to the steps query. */
+/** Route the home queries: goals, steps, and the settings singleton. */
 const mockData = (
   goals: Record<string, unknown>[],
   steps: Record<string, unknown>[] = [],
+  settings: Record<string, unknown> | null = null,
 ) => {
   mockUseQuery.mockImplementation((query: { __brand?: string }) => {
     if (query?.__brand === "activeGoalsQuery") return goals;
     if (query?.__brand === "stepsForActiveGoalsQuery") return steps;
+    if (query?.__brand === "userSettingsQuery") return settings ? [settings] : []; // prettier-ignore
     return [];
   });
 };
+
+const makeSettings = (pinnedGoalId: string | null) => ({
+  id: "settings-1",
+  pinnedGoalId,
+});
 
 describe("GoalsScreen", () => {
   describe("empty state", () => {
@@ -269,6 +281,102 @@ describe("GoalsScreen", () => {
       expect(screen.getByTestId("goals-cockpit-next-step")).toHaveTextContent(
         "Recently touched step",
       );
+    });
+  });
+
+  describe("pinned hero (#396)", () => {
+    const twoGoals = [
+      makeGoalRow({ id: "goal-1", title: "Learn TypeScript" }),
+      makeGoalRow({ id: "goal-2", title: "Learn Rust" }),
+    ];
+
+    it("promotes the pinned goal over the recency default", () => {
+      mockData(twoGoals, [], makeSettings("goal-2"));
+
+      renderWithProviders(<GoalsScreen />);
+      expect(
+        screen.getByText(
+          i18n.t("goals:cockpit.doThisNext", { title: "Learn Rust" }),
+        ),
+      ).toBeOnTheScreen();
+      // The demoted default is a keep-warm card; the pinned goal is not.
+      expect(screen.getByTestId("keep-warm-goal-1")).toBeOnTheScreen();
+      expect(screen.queryByTestId("keep-warm-goal-2")).toBeNull();
+    });
+
+    it.each([
+      ["no settings row yet", null],
+      ["nothing pinned", makeSettings(null)],
+      // Completed/deleted goals leave activeGoalsQuery, so the pin dangles —
+      // the hero must fall back rather than render empty.
+      ["a pin pointing at a goal that is gone", makeSettings("goal-gone")],
+    ])("falls back to the most-recently-worked goal with %s", (_, settings) => {
+      mockData(twoGoals, [], settings);
+
+      renderWithProviders(<GoalsScreen />);
+      expect(
+        screen.getByText(
+          i18n.t("goals:cockpit.doThisNext", { title: "Learn TypeScript" }),
+        ),
+      ).toBeOnTheScreen();
+      expect(screen.getByTestId("keep-warm-goal-2")).toBeOnTheScreen();
+    });
+
+    // Guards against `heroIsPinned={pinnedGoalId !== null}` — a fallback hero is
+    // not the pinned goal, so its toggle must still read as inactive and pin.
+    it("shows the fallback hero as unpinned when the pin dangles", () => {
+      mockData(twoGoals, [], makeSettings("goal-gone"));
+
+      renderWithProviders(<GoalsScreen />);
+      const toggle = screen.getByTestId("goals-cockpit-hero-pin");
+      expect(toggle.props.accessibilityState.selected).toBe(false);
+
+      fireEvent.press(toggle);
+      expect(pinGoal).toHaveBeenCalledWith("settings-1", "goal-1");
+      expect(unpinGoal).not.toHaveBeenCalled();
+    });
+
+    it("pins a keep-warm goal through pinGoal", () => {
+      mockData(twoGoals, [], makeSettings(null));
+
+      renderWithProviders(<GoalsScreen />);
+      fireEvent.press(screen.getByTestId("keep-warm-pin-goal-2"));
+      expect(pinGoal).toHaveBeenCalledWith("settings-1", "goal-2");
+    });
+
+    it("unpins through unpinGoal when the hero toggle is active", () => {
+      mockData(twoGoals, [], makeSettings("goal-2"));
+
+      renderWithProviders(<GoalsScreen />);
+      fireEvent.press(screen.getByTestId("goals-cockpit-hero-pin"));
+      expect(unpinGoal).toHaveBeenCalledWith("settings-1");
+      expect(pinGoal).not.toHaveBeenCalled();
+    });
+
+    it("is a no-op before the settings singleton bootstraps", () => {
+      mockData(twoGoals, [], null);
+
+      renderWithProviders(<GoalsScreen />);
+      fireEvent.press(screen.getByTestId("goals-cockpit-hero-pin"));
+      expect(pinGoal).not.toHaveBeenCalled();
+      expect(unpinGoal).not.toHaveBeenCalled();
+    });
+
+    it("alerts and reports when the pin write fails", () => {
+      mockData(twoGoals, [], makeSettings(null));
+      pinGoal.mockReturnValue({ ok: false, error: new Error("write failed") });
+      const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+
+      renderWithProviders(<GoalsScreen />);
+      fireEvent.press(screen.getByTestId("goals-cockpit-hero-pin"));
+      expect(alertSpy).toHaveBeenCalledWith(
+        i18n.t("goals:pinError.title"),
+        i18n.t("goals:pinError.message"),
+      );
+      expect(mockReportError).toHaveBeenCalledWith(expect.anything(), {
+        area: "settings.pin",
+      });
+      alertSpy.mockRestore();
     });
   });
 

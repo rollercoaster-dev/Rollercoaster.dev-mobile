@@ -18,6 +18,9 @@ import {
   resolveNextActionableStep,
   resolveActionableIndex,
   deleteGoal,
+  userSettingsQuery,
+  pinGoal,
+  unpinGoal,
   StepStatus,
 } from "../../db";
 import { GoalsStackParamList } from "../../navigation/types";
@@ -95,6 +98,9 @@ function GoalsCockpitContainer({
   const navigation = useNavigation<Nav>();
   const rows = useQuery(activeGoalsQuery);
   const allSteps = useQuery(stepsForActiveGoalsQuery);
+  // Singleton settings row; `useUserSettingsRow` owns creating it at app start,
+  // so this container only ever reads.
+  const settings = useQuery(userSettingsQuery)[0] ?? null;
   const [deleteTarget, setDeleteTarget] = useState<GoalRow | null>(null);
 
   // Evolu's join surfaces goalId as nullable despite the schema; warn and
@@ -138,12 +144,24 @@ function GoalsCockpitContainer({
     [rows, stepsByGoalId],
   );
 
-  const heroRow = ranked[0] ?? null;
+  // A pin overrides the recency default (#396 D2). Looking it up in `ranked` —
+  // the active-goal set — is what self-heals a stale pin: a completed or deleted
+  // goal is no longer in the list, the find misses, and the hero falls back to
+  // the most-recently-worked one with no cleanup write.
+  const pinnedGoalId = settings?.pinnedGoalId ?? null;
+  const heroRow =
+    (pinnedGoalId
+      ? ranked.find((row) => row.id === pinnedGoalId)
+      : undefined) ??
+    ranked[0] ??
+    null;
   const hero: CockpitHeroGoal | null = heroRow
     ? buildCockpitGoal(heroRow, stepsByGoalId.get(heroRow.id) ?? [])
     : null;
+  // Filter by the row that actually became hero rather than `slice(1)` — a pin
+  // can promote any row, not just the first.
   const keepWarm = ranked
-    .slice(1)
+    .filter((row) => row.id !== heroRow?.id)
     .map((row) => buildCockpitGoal(row, stepsByGoalId.get(row.id) ?? []));
   const goalCount = ranked.length;
 
@@ -167,6 +185,19 @@ function GoalsCockpitContainer({
       },
     );
     if (ok) setDeleteTarget(null);
+  }
+
+  /**
+   * Both pin verbs share one failure path. `settings` is null only in the
+   * window before `useUserSettingsRow` bootstraps the singleton, and there is
+   * no row to write to yet — so the tap is a no-op rather than a throw.
+   */
+  function runPinMutation(mutate: () => ReturnType<typeof pinGoal>) {
+    runEvoluMutation(mutate, (error) => {
+      logger.error("Failed to change cockpit pin", { error });
+      reportError(error, { area: "settings.pin" });
+      Alert.alert(t("goals:pinError.title"), t("goals:pinError.message"));
+    });
   }
 
   return (
@@ -195,6 +226,17 @@ function GoalsCockpitContainer({
           onDeleteGoal={(goalId) =>
             setDeleteTarget(rows.find((r) => r.id === goalId) ?? null)
           }
+          heroIsPinned={heroRow !== null && heroRow.id === pinnedGoalId}
+          onPinGoal={(goalId) => {
+            if (!settings) return;
+            const target = ranked.find((row) => row.id === goalId);
+            if (!target) return;
+            runPinMutation(() => pinGoal(settings.id, target.id));
+          }}
+          onUnpinGoal={() => {
+            if (!settings) return;
+            runPinMutation(() => unpinGoal(settings.id));
+          }}
         />
       </ScrollView>
       <ConfirmDeleteModal

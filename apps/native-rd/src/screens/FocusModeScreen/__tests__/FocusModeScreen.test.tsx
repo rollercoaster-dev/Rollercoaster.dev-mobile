@@ -313,13 +313,16 @@ function setupQueries({
   goal = GOAL,
   steps = PHOTO_STEP,
   stepEvidence = [] as object[],
+  settings = null as object | null,
 }: {
   goal?: object | null;
   steps?: object[];
   stepEvidence?: object[];
+  settings?: object | null;
 } = {}) {
   mockUseQuery.mockImplementation((query: unknown) => {
     if (query === "goalsQuery") return goal ? [goal] : [];
+    if (query === "userSettingsQuery") return settings ? [settings] : [];
     if (
       typeof query === "string" &&
       query.startsWith("stepEvidenceByGoalQuery")
@@ -1249,6 +1252,15 @@ describe("FocusModeScreen", () => {
       renderWithProviders(<FocusModeScreen {...routeProps} />);
       expect(currentCardTitle()).toBe(expectedTitle);
     });
+  });
+
+  // The cockpit pin (#396) is a Goals-screen affordance only — this screen
+  // deliberately has no pin control.
+  it("does not offer a pin toggle", () => {
+    setupQueries({ settings: { id: "settings-1", pinnedGoalId: "goal-1" } });
+    renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+    expect(screen.queryByTestId("focus-mode-pin")).toBeNull();
   });
 
   describe("breadcrumbs", () => {

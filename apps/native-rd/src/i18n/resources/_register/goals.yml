@@ -23,3 +23,5 @@ notes:
   - '"Do this next" (cockpit.doThisNext) is a calm pointer to the next step, not a command — avoid imperative urgency ("Jetzt!", "Sofort").'
   - '"Keep warm" (cockpit.keepWarm) labels the secondary goals you are keeping active without pressure. Translate for the sense of "still simmering / not dropped", not the literal temperature ("warm halten" is acceptable; avoid "heiß").'
   - "cockpit.start vs cockpit.resume mirror the same Start/Resume distinction as the Resume phrasing above (start = no steps done yet, resume = some done)."
+  - 'cockpit.pinGoal / cockpit.unpinGoal label the pin toggle on each cockpit tile (the Goals screen is the only surface that offers it) — a quiet placement verb ("anheften"), not a claim or a reward ("sichern", "gewinnen" are wrong registers).'
+  - "cockpit.pinHint / cockpit.unpinHint are the screen-reader hints for that toggle. State what happens to the hero slot as a fact; no praise, no urgency."
