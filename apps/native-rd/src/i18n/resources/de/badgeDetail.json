@@ -61,6 +61,9 @@
     }
   },
   "deleteConfirm": {
+    "title": "Badge löschen?",
+    "message": "Das Badge wird entfernt. Dein Ziel und die Belege bleiben in der Timeline — nur das Credential-Artefakt wird gelöscht.",
+    "cancel": "Behalten",
     "delete": "Löschen"
   },
   "deleteError": {
