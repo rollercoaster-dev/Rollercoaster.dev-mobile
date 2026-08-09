@@ -1,32 +1,29 @@
 appId: dev.rollercoaster.app
+tags:
+  - required
 env:
   METRO_HOST: localhost
+  METRO_PORT: "8081"
 ---
-# Badge tab navigation smoke test
-# Status: required
-# Criteria: stable feature, assertVisible confirms navigation + empty state, deterministic
+# Badges tab navigation smoke test.
 #
-# Uses clearState so the assertion holds regardless of run order in
-# `bun run test:e2e`. Without it, Maestro's alphabetical execution puts
-# badge-redesign before badge-view and the earned badge breaks the empty-state
-# check. Trade: the flow is no longer a "no-clearState navigation smoke" — it
-# now exercises onboarding too. The full-suite reliability is worth the
-# slightly broader scope.
-- clearState
-- launchApp
-# Expo SDK 55 dev-client lands on its server picker after clearState
-# instead of auto-reloading the last bundle. Bypass via the dev-client
-# deep-link scheme `exp+<slug>://expo-development-client/?url=<bundle-url>`.
-# Onboarding hint + dev-menu modals are pre-disabled in run-e2e.sh.
-# METRO_HOST defaults to localhost (simulator); override with
-# `METRO_HOST=<host-lan-ip>` for physical-device runs (issue #1059 Phase 6).
-- openLink: "exp+rollercoasterdev://expo-development-client/?url=http%3A%2F%2F${METRO_HOST}%3A8081"
-- assertVisible: "Welcome to your ride."
-- tapOn: "The Full Ride. Standard theme"
-- tapOn: "Get Started"
-- assertVisible: "Goals"
+# Isolation comes from the shared prologue (clearState + clearKeychain), so the
+# empty-state assertion holds regardless of suite order — Maestro runs flows
+# alphabetically, and without the reset an earlier flow's earned badge breaks it.
+- runFlow:
+    file: ../subflows/launch-and-onboard.yaml
+    env:
+      METRO_HOST: ${METRO_HOST}
+      METRO_PORT: ${METRO_PORT}
+      THEME_SWATCH: light-autismFriendly
 
-# Tap the Badges tab and confirm empty state
+# Tap the Badges tab and confirm the empty state.
+#
+# Asserted by testID, not copy: the old text matcher pointed at
+# `badges:empty.title`, a key with NO consumer — BadgesWall renders
+# `badges:wall.empty.title` ("Your first badge is waiting"). The assertion had
+# been passing on nothing.
 - tapOn:
     id: "tab-BadgesTab"
-- assertVisible: "No badges yet"
+- assertVisible:
+    id: "badges-wall-see-goals"
