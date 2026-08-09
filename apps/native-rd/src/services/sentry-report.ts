@@ -61,6 +61,9 @@ export type ReportContext =
   | { area: "db.write" }
   | { area: "settings.density" }
   | { area: "settings.theme" }
+  // The cockpit pin is a userSettings write, not a goal write — it belongs with
+  // the other settings.* areas rather than under goal.mutate's closed kinds.
+  | { area: "settings.pin" }
   | { area: "render" };
 
 // No-op in dev — `initSentry()` returns early before any client is installed,

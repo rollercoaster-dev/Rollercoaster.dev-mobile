@@ -19,6 +19,10 @@
     "title": "Couldn't delete goal",
     "message": "Something went wrong. Please try again."
   },
+  "pinError": {
+    "title": "Couldn't change the pin",
+    "message": "Something went wrong. Please try again."
+  },
   "cockpit": {
     "doThisNext": "Do this next · {{title}}",
     "ringSteps": "{{completed}} / {{total}} steps",

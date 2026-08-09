@@ -18,6 +18,15 @@ export const styles = StyleSheet.create((theme) => ({
     alignItems: "center",
     ...shadowStyle(theme, "hardLg"),
   },
+  // Corner-parked pin: absolute so it never pushes the hero's centred stack
+  // off-axis. Inset by space[2] rather than the hero's space[5] padding so the
+  // 36pt control tucks into the corner instead of crowding the ring.
+  heroPin: {
+    position: "absolute",
+    top: theme.space[2],
+    right: theme.space[2],
+    zIndex: 1,
+  },
   overline: {
     color: theme.colors.textMuted,
     fontSize: 10,
@@ -69,7 +78,15 @@ export const styles = StyleSheet.create((theme) => ({
     transform: [{ translateX: 2 }, { translateY: 2 }],
     shadowOffset: { width: 1, height: 1 },
   },
+  // Title and pin share the tile's top line. In-flow (not absolute) so the
+  // title shrinks around the control rather than running underneath it.
+  keepWarmHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.space[2],
+  },
   keepWarmTitle: {
+    flex: 1,
     color: theme.surfaceBorder.surfaceCardFg,
   },
   keepWarmNextStep: {

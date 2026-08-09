@@ -41,6 +41,9 @@ const handlers = () => ({
   onOpenGoal: jest.fn(),
   onNewGoal: jest.fn(),
   onDeleteGoal: jest.fn(),
+  heroIsPinned: false,
+  onPinGoal: jest.fn(),
+  onUnpinGoal: jest.fn(),
 });
 
 describe("GoalsCockpit", () => {
@@ -153,5 +156,93 @@ describe("GoalsCockpit", () => {
     expect(screen.queryByTestId("goals-cockpit-hero")).toBeNull();
     fireEvent.press(screen.getByLabelText(i18n.t("goals:emptyState.cta")));
     expect(h.onNewGoal).toHaveBeenCalledTimes(1);
+  });
+
+  describe("pin toggle (#396)", () => {
+    it.each([
+      {
+        name: "hero, unpinned",
+        heroIsPinned: false,
+        testID: "goals-cockpit-hero-pin",
+        label: "goals:cockpit.pinGoal",
+        hint: "goals:cockpit.pinHint",
+        title: "Learn TypeScript",
+      },
+      {
+        name: "hero, pinned",
+        heroIsPinned: true,
+        testID: "goals-cockpit-hero-pin",
+        label: "goals:cockpit.unpinGoal",
+        hint: "goals:cockpit.unpinHint",
+        title: "Learn TypeScript",
+      },
+      {
+        name: "keep-warm tile",
+        heroIsPinned: false,
+        testID: "keep-warm-pin-kw-1",
+        label: "goals:cockpit.pinGoal",
+        hint: "goals:cockpit.pinHint",
+        title: "Build a component library",
+      },
+    ] as const)(
+      "labels the $name toggle and exposes its selected state",
+      ({ heroIsPinned, testID, label, hint, title }) => {
+        renderWithProviders(
+          <GoalsCockpit
+            hero={makeHero()}
+            keepWarm={keepWarm}
+            {...handlers()}
+            heroIsPinned={heroIsPinned}
+          />,
+        );
+        const toggle = screen.getByTestId(testID);
+        expect(toggle.props.accessibilityLabel).toBe(i18n.t(label));
+        expect(toggle.props.accessibilityHint).toBe(i18n.t(hint, { title }));
+        // Only the hero can be the pinned one, so a keep-warm toggle is always
+        // inactive regardless of heroIsPinned.
+        expect(toggle.props.accessibilityState.selected).toBe(
+          testID === "goals-cockpit-hero-pin" ? heroIsPinned : false,
+        );
+        expect(toggle.props.accessibilityRole).toBe("button");
+      },
+    );
+
+    it("pins the hero when the toggle is inactive", () => {
+      const h = handlers();
+      renderWithProviders(
+        <GoalsCockpit hero={makeHero()} keepWarm={[]} {...h} />,
+      );
+      fireEvent.press(screen.getByTestId("goals-cockpit-hero-pin"));
+      expect(h.onPinGoal).toHaveBeenCalledWith("hero");
+      expect(h.onUnpinGoal).not.toHaveBeenCalled();
+    });
+
+    it("unpins the hero when the toggle is active", () => {
+      const h = handlers();
+      renderWithProviders(
+        <GoalsCockpit
+          hero={makeHero()}
+          keepWarm={[]}
+          {...h}
+          heroIsPinned={true}
+        />,
+      );
+      fireEvent.press(screen.getByTestId("goals-cockpit-hero-pin"));
+      expect(h.onUnpinGoal).toHaveBeenCalledTimes(1);
+      expect(h.onPinGoal).not.toHaveBeenCalled();
+    });
+
+    // The toggle is nested inside the tile Pressable, whose own press opens the
+    // goal and whose long-press deletes it. Tapping the pin must do neither.
+    it("pins a keep-warm goal without opening or deleting it", () => {
+      const h = handlers();
+      renderWithProviders(
+        <GoalsCockpit hero={makeHero()} keepWarm={keepWarm} {...h} />,
+      );
+      fireEvent.press(screen.getByTestId("keep-warm-pin-kw-2"));
+      expect(h.onPinGoal).toHaveBeenCalledWith("kw-2");
+      expect(h.onOpenGoal).not.toHaveBeenCalled();
+      expect(h.onDeleteGoal).not.toHaveBeenCalled();
+    });
   });
 });

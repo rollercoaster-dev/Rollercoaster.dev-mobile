@@ -19,6 +19,8 @@ import {
   resolveActionableIndex,
   deleteGoal,
   userSettingsQuery,
+  pinGoal,
+  unpinGoal,
   StepStatus,
 } from "../../db";
 import { GoalsStackParamList } from "../../navigation/types";
@@ -185,6 +187,19 @@ function GoalsCockpitContainer({
     if (ok) setDeleteTarget(null);
   }
 
+  /**
+   * Both pin verbs share one failure path. `settings` is null only in the
+   * window before `useUserSettingsRow` bootstraps the singleton, and there is
+   * no row to write to yet — so the tap is a no-op rather than a throw.
+   */
+  function runPinMutation(mutate: () => ReturnType<typeof pinGoal>) {
+    runEvoluMutation(mutate, (error) => {
+      logger.error("Failed to change cockpit pin", { error });
+      reportError(error, { area: "settings.pin" });
+      Alert.alert(t("goals:pinError.title"), t("goals:pinError.message"));
+    });
+  }
+
   return (
     <>
       {/* "Today" framing + live goal count when goals exist; falls back to the
@@ -211,6 +226,17 @@ function GoalsCockpitContainer({
           onDeleteGoal={(goalId) =>
             setDeleteTarget(rows.find((r) => r.id === goalId) ?? null)
           }
+          heroIsPinned={heroRow !== null && heroRow.id === pinnedGoalId}
+          onPinGoal={(goalId) => {
+            if (!settings) return;
+            const target = ranked.find((row) => row.id === goalId);
+            if (!target) return;
+            runPinMutation(() => pinGoal(settings.id, target.id));
+          }}
+          onUnpinGoal={() => {
+            if (!settings) return;
+            runPinMutation(() => unpinGoal(settings.id));
+          }}
         />
       </ScrollView>
       <ConfirmDeleteModal

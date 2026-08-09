@@ -40,6 +40,8 @@ jest.mock("../../../db", () => ({
   stepsForActiveGoalsQuery: { __brand: "stepsForActiveGoalsQuery" },
   userSettingsQuery: { __brand: "userSettingsQuery" },
   deleteGoal: jest.fn(),
+  pinGoal: jest.fn(),
+  unpinGoal: jest.fn(),
   StepStatus: { pending: "pending", completed: "completed", paused: "paused" },
   // Faithful copy of the real resolver (leaf/invite/parked/flat/none + orphan
   // promotion, paused skipped like completed) so buildCockpitGoal's next-step
@@ -103,7 +105,7 @@ jest.mock("../../../services/sentry-report", () => ({
   reportError: (...args: unknown[]) => mockReportError(...args),
 }));
 
-const { deleteGoal } = require("../../../db");
+const { deleteGoal, pinGoal, unpinGoal } = require("../../../db");
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -112,6 +114,8 @@ beforeEach(() => {
   // deleteGoal returns an Evolu Result; confirmDelete now gates the modal
   // close on `.ok`, so the mock must hand back a success Result by default.
   deleteGoal.mockReturnValue({ ok: true, value: {} });
+  pinGoal.mockReturnValue({ ok: true, value: {} });
+  unpinGoal.mockReturnValue({ ok: true, value: {} });
 });
 
 const makeGoalRow = (overrides: Record<string, unknown> = {}) => ({
@@ -316,6 +320,49 @@ describe("GoalsScreen", () => {
         ),
       ).toBeOnTheScreen();
       expect(screen.getByTestId("keep-warm-goal-2")).toBeOnTheScreen();
+    });
+
+    it("pins a keep-warm goal through pinGoal", () => {
+      mockData(twoGoals, [], makeSettings(null));
+
+      renderWithProviders(<GoalsScreen />);
+      fireEvent.press(screen.getByTestId("keep-warm-pin-goal-2"));
+      expect(pinGoal).toHaveBeenCalledWith("settings-1", "goal-2");
+    });
+
+    it("unpins through unpinGoal when the hero toggle is active", () => {
+      mockData(twoGoals, [], makeSettings("goal-2"));
+
+      renderWithProviders(<GoalsScreen />);
+      fireEvent.press(screen.getByTestId("goals-cockpit-hero-pin"));
+      expect(unpinGoal).toHaveBeenCalledWith("settings-1");
+      expect(pinGoal).not.toHaveBeenCalled();
+    });
+
+    it("is a no-op before the settings singleton bootstraps", () => {
+      mockData(twoGoals, [], null);
+
+      renderWithProviders(<GoalsScreen />);
+      fireEvent.press(screen.getByTestId("goals-cockpit-hero-pin"));
+      expect(pinGoal).not.toHaveBeenCalled();
+      expect(unpinGoal).not.toHaveBeenCalled();
+    });
+
+    it("alerts and reports when the pin write fails", () => {
+      mockData(twoGoals, [], makeSettings(null));
+      pinGoal.mockReturnValue({ ok: false, error: new Error("write failed") });
+      const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+
+      renderWithProviders(<GoalsScreen />);
+      fireEvent.press(screen.getByTestId("goals-cockpit-hero-pin"));
+      expect(alertSpy).toHaveBeenCalledWith(
+        i18n.t("goals:pinError.title"),
+        i18n.t("goals:pinError.message"),
+      );
+      expect(mockReportError).toHaveBeenCalledWith(expect.anything(), {
+        area: "settings.pin",
+      });
+      alertSpy.mockRestore();
     });
   });
 
