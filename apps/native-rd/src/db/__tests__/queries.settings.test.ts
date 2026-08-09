@@ -4,10 +4,16 @@
  * Tests singleton pattern, validation, and fixed updateUserSettings API
  */
 
-import { createUserSettings, updateUserSettings } from "../queries";
-import type { UserSettingsId } from "../schema";
+import {
+  createUserSettings,
+  pinGoal,
+  unpinGoal,
+  updateUserSettings,
+} from "../queries";
+import type { GoalId, UserSettingsId } from "../schema";
 
 const mockSettingsId = "settings_test_123" as UserSettingsId;
+const mockGoalId = "goal_test_123" as GoalId;
 
 describe("UserSettings CRUD Operations", () => {
   test("createUserSettings should succeed", () => {
@@ -97,5 +103,32 @@ describe("UserSettings CRUD Operations", () => {
         focusTimelineHidden: null,
       }),
     ).not.toThrow();
+  });
+});
+
+describe("cockpit pin (#396)", () => {
+  test("pinGoal writes the goal id onto the settings singleton", () => {
+    const result = pinGoal(mockSettingsId, mockGoalId);
+    expect(result).toEqual({
+      ok: true,
+      value: { id: mockSettingsId, pinnedGoalId: mockGoalId },
+    });
+  });
+
+  test("unpinGoal clears pinnedGoalId", () => {
+    const result = unpinGoal(mockSettingsId);
+    expect(result).toEqual({
+      ok: true,
+      value: { id: mockSettingsId, pinnedGoalId: null },
+    });
+  });
+
+  test("pinning a second goal replaces the first — one slot, no clear step", () => {
+    pinGoal(mockSettingsId, mockGoalId);
+    const second = pinGoal(mockSettingsId, "goal_test_456" as GoalId);
+    expect(second).toEqual({
+      ok: true,
+      value: { id: mockSettingsId, pinnedGoalId: "goal_test_456" },
+    });
   });
 });
