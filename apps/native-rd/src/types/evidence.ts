@@ -30,9 +30,9 @@ export function validateEvidenceType(type: string): EvidenceTypeValue {
  * are its consumers now.
  */
 export interface EvidenceItemData {
-  id: string;
-  type: EvidenceTypeValue;
-  label: string;
+  readonly id: string;
+  readonly type: EvidenceTypeValue;
+  readonly label: string;
 }
 
 export interface EvidenceOption {

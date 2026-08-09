@@ -60,7 +60,9 @@ describe("TimelineStep", () => {
     renderWithProviders(<TimelineStep {...baseProps} />);
     fireEvent.press(screen.getByLabelText("Read the docs, Working"));
     // Positive control for the testID the empty-state tests assert absent.
-    expect(screen.getByTestId("timeline-evidence-section")).toBeOnTheScreen();
+    expect(
+      screen.getByTestId("timeline-evidence-section-step-1"),
+    ).toBeOnTheScreen();
     expect(screen.getByText("Progress photo")).toBeOnTheScreen();
     expect(screen.getByText("Useful article")).toBeOnTheScreen();
   });
@@ -78,7 +80,7 @@ describe("TimelineStep", () => {
     renderWithProviders(<TimelineStep {...baseProps} evidence={[]} />);
     fireEvent.press(screen.getByLabelText("Read the docs, Working"));
     expect(screen.queryByText("No evidence yet")).toBeNull();
-    expect(screen.queryByTestId("timeline-evidence-section")).toBeNull();
+    expect(screen.queryByTestId("timeline-evidence-section-step-1")).toBeNull();
   });
 
   it("header advertises no disclosure when a step has no evidence", () => {
@@ -431,9 +433,9 @@ describe("TimelineStep", () => {
       renderWithProviders(<TimelineStep {...baseProps} subSteps={subSteps} />);
       fireEvent.press(screen.getByLabelText("Sub-step b: Second child"));
       expect(screen.queryByText("No evidence yet")).toBeNull();
-      // The parent step is collapsed here, so any section on screen would be
-      // the expanded sub-step's — there is none.
-      expect(screen.queryByTestId("timeline-evidence-section")).toBeNull();
+      // c2 is the sub-step just expanded; its own section is the only one that
+      // could have mounted, and it doesn't.
+      expect(screen.queryByTestId("timeline-evidence-section-c2")).toBeNull();
     });
 
     it("sub-step header advertises no disclosure when it has no evidence", () => {

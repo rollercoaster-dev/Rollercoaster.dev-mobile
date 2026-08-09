@@ -132,7 +132,10 @@ export function TimelineStep({
           {expanded && hasEvidence && (
             <View
               style={styles.evidenceSection}
-              testID="timeline-evidence-section"
+              // Suffixed with the step id: a parent and a sub-step can be
+              // expanded in the same tree, and a shared testID would make
+              // `getByTestId` ambiguous.
+              testID={`timeline-evidence-section-${step.id}`}
             >
               {evidence.map((ev) => (
                 <TimelineEvidenceCard
@@ -231,7 +234,7 @@ function ChildRow({
         {expanded && hasEvidence && (
           <View
             style={styles.evidenceSection}
-            testID="timeline-evidence-section"
+            testID={`timeline-evidence-section-${child.id}`}
           >
             {child.evidence.map((ev) => (
               <TimelineEvidenceCard
