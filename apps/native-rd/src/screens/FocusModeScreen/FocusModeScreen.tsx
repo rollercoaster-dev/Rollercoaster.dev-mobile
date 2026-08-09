@@ -48,6 +48,7 @@ import {
   resolveActionableIndex,
   resolveStepDependencyBand,
   EvidenceType,
+  GoalStatus,
   StepStatus,
 } from "../../db";
 import type { GoalId, StepId } from "../../db";
@@ -170,6 +171,11 @@ function FocusContent({
   // surfaces can never disagree about what is pinned.
   const settings = useQuery(userSettingsQuery)[0] ?? null;
   const isPinned = settings != null && settings.pinnedGoalId === goalId;
+  // The cockpit resolves its hero from `activeGoalsQuery`, but this screen reads
+  // `goalsQuery` and so also renders for completed goals. Offering the pin there
+  // would write a `pinnedGoalId` the cockpit can never honour while showing the
+  // toggle as active — a confirmed action with no effect. Hide it instead (D7).
+  const canPin = goal?.status === GoalStatus.active;
   const rawStepRows = useQuery(stepsByGoalQuery(goalId as GoalId));
   // Order rows parent-then-children (orphans promoted to top-level) so the
   // resolver sees the same sub-spine order EditModeScreen and the goal card do.
@@ -566,19 +572,21 @@ function FocusContent({
         </Text>
         {/* Same control, glyph and states as the cockpit's tile toggle (D7) —
             one affordance on two screens, learned once. */}
-        <IconButton
-          icon={<PushPin size={20} weight={isPinned ? "fill" : "bold"} />}
-          onPress={handlePinPress}
-          tone="ghost"
-          selected={isPinned}
-          accessibilityLabel={t(
-            isPinned
-              ? "focusMode:header.unpinGoal"
-              : "focusMode:header.pinGoal",
-          )}
-          size="sm"
-          testID="focus-mode-pin"
-        />
+        {canPin ? (
+          <IconButton
+            icon={<PushPin size={20} weight={isPinned ? "fill" : "regular"} />}
+            onPress={handlePinPress}
+            tone="ghost"
+            selected={isPinned}
+            accessibilityLabel={t(
+              isPinned
+                ? "focusMode:header.unpinGoal"
+                : "focusMode:header.pinGoal",
+            )}
+            size="sm"
+            testID="focus-mode-pin"
+          />
+        ) : null}
         <IconButton
           icon={<Pencil size={20} weight="bold" />}
           onPress={handleEditPress}

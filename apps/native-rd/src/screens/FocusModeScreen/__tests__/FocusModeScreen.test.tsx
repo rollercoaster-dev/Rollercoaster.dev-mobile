@@ -92,6 +92,11 @@ jest.mock("../../../db", () => {
       completed: "completed",
       paused: "paused",
     },
+    // The header's pin toggle is gated on the goal's own status (#396).
+    GoalStatus: {
+      active: "active",
+      completed: "completed",
+    },
     EvidenceType: {
       photo: "photo",
       text: "text",
@@ -1300,6 +1305,36 @@ describe("FocusModeScreen", () => {
       fireEvent.press(screen.getByTestId("focus-mode-pin"));
       expect(mockPinGoal).not.toHaveBeenCalled();
       expect(mockUnpinGoal).not.toHaveBeenCalled();
+    });
+
+    it("toasts and reports when the pin write returns a failed Result", () => {
+      mockPinGoal.mockReturnValueOnce({
+        ok: false,
+        error: new Error("write rejected"),
+      } as never);
+      setupQueries({ settings: SETTINGS });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      fireEvent.press(screen.getByTestId("focus-mode-pin"));
+      expect(
+        screen.getByText(t("focusMode:errors.couldNotChangePin")),
+      ).toBeOnTheScreen();
+      expect(reportError).toHaveBeenCalledWith(expect.any(Error), {
+        area: "settings.pin",
+      });
+    });
+
+    // The cockpit resolves its hero from activeGoalsQuery, so a pin written
+    // against a completed goal could never take effect — the control must not
+    // be offered rather than confirming an action with no result.
+    it("hides the toggle once the goal is completed", () => {
+      setupQueries({
+        goal: { ...GOAL, status: "completed" },
+        settings: SETTINGS,
+      });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      expect(screen.queryByTestId("focus-mode-pin")).toBeNull();
     });
   });
 
