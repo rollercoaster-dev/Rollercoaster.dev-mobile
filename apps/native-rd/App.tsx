@@ -80,8 +80,15 @@ function ThemedApp() {
       <View style={{ flex: 1, backgroundColor: theme.colors.background }} />
     );
   } else if (isFirstLaunch) {
-    // First launch — show WelcomeScreen above NavigationContainer
-    body = <WelcomeScreen onGetStarted={markSeen} />;
+    // First launch — show WelcomeScreen above NavigationContainer.
+    // Its own ToastProvider: the else-branch's lives inside NavigationContainer
+    // and is out of scope here, but the welcome theme picker needs `useToast`
+    // to report a failed persist (#503), and `useToast` throws without one.
+    body = (
+      <ToastProvider>
+        <WelcomeScreen onGetStarted={markSeen} />
+      </ToastProvider>
+    );
   } else {
     // Outer view paints the device top-inset strip; the inner view offsets the
     // navigator by that inset and paints the regular background. The exposed

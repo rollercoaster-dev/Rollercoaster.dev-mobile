@@ -1,6 +1,7 @@
 import React from "react";
 import { UnistylesRuntime } from "react-native-unistyles";
 import { ThemeProvider, useTheme } from "../../hooks/useTheme";
+import { ToastProvider } from "../../components/Toast";
 import { WelcomeScreen } from "./WelcomeScreen";
 
 export default {
@@ -10,10 +11,13 @@ export default {
 
 /**
  * WelcomeScreen consumes `useThemeContext()` (for the current theme + a
- * persisting setTheme), which throws outside a ThemeProvider. The app supplies
- * one at the root; Storybook does not, so wire a working provider whose
- * setTheme applies via Unistyles. Persistence to Evolu is a no-op here.
- * Mirrors ThemeSwitcher.stories.tsx.
+ * persisting setTheme) and `useToast()` (to report a failed persist); both
+ * throw outside their provider. The app supplies both — the ThemeProvider at
+ * the root, the ToastProvider around the first-launch branch — but Storybook
+ * has neither, so wire a working ThemeProvider whose setTheme applies via
+ * Unistyles plus a ToastProvider. Persistence to Evolu is a no-op here:
+ * setTheme returns true, so no error toast fires. Mirrors
+ * ThemeSwitcher.stories.tsx.
  */
 function StoryProviders({ children }: { children: React.ReactNode }) {
   const base = useTheme();
@@ -24,7 +28,11 @@ function StoryProviders({ children }: { children: React.ReactNode }) {
       return true;
     },
   };
-  return <ThemeProvider value={value}>{children}</ThemeProvider>;
+  return (
+    <ThemeProvider value={value}>
+      <ToastProvider>{children}</ToastProvider>
+    </ThemeProvider>
+  );
 }
 
 export function Default() {

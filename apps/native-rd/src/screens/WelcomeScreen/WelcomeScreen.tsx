@@ -9,7 +9,9 @@ import { BrandMark } from "../../components/BrandMark";
 import { HeaderBand } from "../../components/ScreenHeader/HeaderBand";
 import { ThemeSwatchRail } from "../../components/ThemeSwatchRail";
 import { ThemeSampleCard } from "../../components/ThemeSampleCard";
+import { useToast } from "../../components/Toast";
 import { useThemeContext } from "../../hooks/useTheme";
+import type { ThemeName } from "../../themes/compose";
 import { styles } from "./WelcomeScreen.styles";
 
 export interface WelcomeScreenProps {
@@ -19,8 +21,19 @@ export interface WelcomeScreenProps {
 export function WelcomeScreen({ onGetStarted }: WelcomeScreenProps) {
   const { theme } = useUnistyles();
   const { themeName, setTheme } = useThemeContext();
+  const { showToast } = useToast();
   const insets = useSafeAreaInsets();
-  const { t } = useTranslation(["welcome", "common"]);
+  const { t } = useTranslation(["welcome", "common", "settings"]);
+
+  // setTheme applies the theme in-session immediately and returns false only
+  // when persisting it failed. The swatch still reads as selected (the theme
+  // did change); the toast tells the user it won't survive a restart. Mirrors
+  // ThemeSwitcher — without it, a first-run pick silently reverts on relaunch.
+  const handleSelectTheme = (id: ThemeName) => {
+    if (!setTheme(id)) {
+      showToast({ message: t("settings:errors.themeSaveFailed") });
+    }
+  };
 
   return (
     <View
@@ -57,7 +70,10 @@ export function WelcomeScreen({ onGetStarted }: WelcomeScreenProps) {
         <Text variant="label" style={styles.pickerLabel}>
           {t("welcome:themePicker.label")}
         </Text>
-        <ThemeSwatchRail selectedThemeId={themeName} onSelect={setTheme} />
+        <ThemeSwatchRail
+          selectedThemeId={themeName}
+          onSelect={handleSelectTheme}
+        />
       </ScrollView>
 
       <View

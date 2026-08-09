@@ -13,7 +13,9 @@ import { WelcomeScreen } from "../WelcomeScreen";
 const themeLabelOf = (id: (typeof themeOptions)[number]["id"]) =>
   themeA11yLabel(i18n.t.bind(i18n), id);
 
-const mockSetTheme = jest.fn();
+// Defaults to a successful persist. Tests that exercise the failure path
+// override it with `mockReturnValue(false)` — see "surfaces a toast".
+const mockSetTheme = jest.fn<boolean, [string]>();
 
 jest.mock("../../../hooks/useTheme", () => {
   const actual = jest.requireActual("../../../hooks/useTheme");
@@ -31,6 +33,7 @@ jest.mock("../../../hooks/useTheme", () => {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockSetTheme.mockReturnValue(true);
 });
 
 describe("WelcomeScreen", () => {
@@ -108,6 +111,27 @@ describe("WelcomeScreen", () => {
       renderWithProviders(<WelcomeScreen onGetStarted={jest.fn()} />);
       fireEvent.press(screen.getByLabelText(themeLabelOf("dark-default")));
       expect(mockSetTheme).toHaveBeenCalledWith("dark-default");
+    });
+
+    // #503 contract: setTheme returns false only when the Evolu write failed.
+    // The theme still applied in-session, so the only signal that the pick
+    // won't survive a restart is this toast. Without it the loss is silent —
+    // and first launch is where an ND user picks the variant they need.
+    it("surfaces a toast when persisting the theme fails", () => {
+      mockSetTheme.mockReturnValue(false);
+      renderWithProviders(<WelcomeScreen onGetStarted={jest.fn()} />);
+      fireEvent.press(screen.getByLabelText(themeLabelOf("dark-default")));
+      expect(
+        screen.getByText(i18n.t("settings:errors.themeSaveFailed")),
+      ).toBeOnTheScreen();
+    });
+
+    it("shows no toast when persisting the theme succeeds", () => {
+      renderWithProviders(<WelcomeScreen onGetStarted={jest.fn()} />);
+      fireEvent.press(screen.getByLabelText(themeLabelOf("dark-default")));
+      expect(
+        screen.queryByText(i18n.t("settings:errors.themeSaveFailed")),
+      ).toBeNull();
     });
   });
 
