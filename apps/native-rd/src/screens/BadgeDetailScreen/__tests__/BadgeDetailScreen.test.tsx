@@ -323,7 +323,7 @@ describe("BadgeDetailScreen", () => {
 
       expect(
         screen.getByText(
-          "This will permanently remove this badge. This cannot be undone.",
+          "The badge will be removed. Your goal and its evidence stay in the timeline — only the credential artifact is deleted.",
         ),
       ).toBeOnTheScreen();
       expect(mockDeleteBadge).not.toHaveBeenCalled();
@@ -331,18 +331,34 @@ describe("BadgeDetailScreen", () => {
   });
 
   describe("delete badge", () => {
+    // Delete is demoted to the overflow menu — there is no standalone
+    // destructive button on the page beside Share any more.
+    const openDeleteConfirm = () => {
+      fireEvent.press(screen.getByTestId("celebration-hero-overflow"));
+      fireEvent.press(screen.getByTestId("overflow-row-delete"));
+    };
+
+    it("is not reachable from a standalone button on the page", () => {
+      mockUseQuery.mockReturnValue([makeRow()]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      expect(screen.queryByRole("button", { name: "Delete Badge" })).toBeNull();
+    });
+
     it("opens the confirm-delete modal instead of deleting immediately", () => {
       mockUseQuery.mockReturnValue([makeRow()]);
 
       renderWithProviders(
         <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
       );
-      fireEvent.press(screen.getByRole("button", { name: "Delete Badge" }));
+      openDeleteConfirm();
 
       // Modal copy is visible; nothing has been deleted yet.
       expect(
         screen.getByText(
-          "This will permanently remove this badge. This cannot be undone.",
+          "The badge will be removed. Your goal and its evidence stay in the timeline — only the credential artifact is deleted.",
         ),
       ).toBeOnTheScreen();
       expect(mockDeleteBadge).not.toHaveBeenCalled();
@@ -354,7 +370,7 @@ describe("BadgeDetailScreen", () => {
       renderWithProviders(
         <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
       );
-      fireEvent.press(screen.getByRole("button", { name: "Delete Badge" }));
+      openDeleteConfirm();
       fireEvent.press(screen.getByRole("button", { name: "Delete" }));
 
       expect(mockDeleteBadge).toHaveBeenCalledWith("badge-1");
@@ -367,8 +383,8 @@ describe("BadgeDetailScreen", () => {
       renderWithProviders(
         <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
       );
-      fireEvent.press(screen.getByRole("button", { name: "Delete Badge" }));
-      fireEvent.press(screen.getByRole("button", { name: "Cancel" }));
+      openDeleteConfirm();
+      fireEvent.press(screen.getByRole("button", { name: "Keep it" }));
 
       expect(mockDeleteBadge).not.toHaveBeenCalled();
       expect(mockGoBack).not.toHaveBeenCalled();
@@ -384,7 +400,7 @@ describe("BadgeDetailScreen", () => {
       renderWithProviders(
         <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
       );
-      fireEvent.press(screen.getByRole("button", { name: "Delete Badge" }));
+      openDeleteConfirm();
       fireEvent.press(screen.getByRole("button", { name: "Delete" }));
 
       // Failure is surfaced and reported; the user is NOT navigated away and
@@ -411,7 +427,7 @@ describe("BadgeDetailScreen", () => {
       renderWithProviders(
         <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
       );
-      fireEvent.press(screen.getByRole("button", { name: "Delete Badge" }));
+      openDeleteConfirm();
       fireEvent.press(screen.getByRole("button", { name: "Delete" }));
 
       expect(mockReportError).toHaveBeenCalled();

@@ -37,8 +37,7 @@
     }
   },
   "actions": {
-    "viewTimeline": "View timeline",
-    "delete": "Delete Badge"
+    "viewTimeline": "View timeline"
   },
   "share": {
     "cta": "Share badge",
@@ -64,9 +63,9 @@
     }
   },
   "deleteConfirm": {
-    "title": "Delete Badge",
-    "message": "This will permanently remove this badge. This cannot be undone.",
-    "cancel": "Cancel",
+    "title": "Delete this badge?",
+    "message": "The badge will be removed. Your goal and its evidence stay in the timeline — only the credential artifact is deleted.",
+    "cancel": "Keep it",
     "delete": "Delete"
   },
   "deleteError": {

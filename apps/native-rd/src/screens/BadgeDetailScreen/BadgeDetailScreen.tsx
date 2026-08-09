@@ -412,12 +412,6 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
               onPress={() => handleViewTimeline(goalId)}
             />
           ) : null}
-
-          <Button
-            label={t("badgeDetail:actions.delete")}
-            variant="destructive"
-            onPress={handleDelete}
-          />
         </View>
       </ScrollView>
 
