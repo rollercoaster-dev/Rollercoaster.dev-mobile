@@ -81,12 +81,20 @@ function buildDateDepChips(
 
   if (band.waitingOnLabel) {
     chips.push({
+      // Still the "waiting" tone once the date has passed (#571): the wait is
+      // ongoing, only the date reads as behind us. A past expected date gets no
+      // tone of its own — that would be the urgency ADR-0012 rules out.
       tone: "waiting",
       text: band.waitingOnExpectedAt
-        ? t("editGoal:stepList.dateDepChips.waitingOnExpected", {
-            who: band.waitingOnLabel,
-            date: formatDate(band.waitingOnExpectedAt, language),
-          })
+        ? t(
+            band.waitingOnExpectedIsPast
+              ? "editGoal:stepList.dateDepChips.wasExpected"
+              : "editGoal:stepList.dateDepChips.waitingOnExpected",
+            {
+              who: band.waitingOnLabel,
+              date: formatDate(band.waitingOnExpectedAt, language),
+            },
+          )
         : t("editGoal:stepList.dateDepChips.waitingOn", {
             who: band.waitingOnLabel,
           }),
