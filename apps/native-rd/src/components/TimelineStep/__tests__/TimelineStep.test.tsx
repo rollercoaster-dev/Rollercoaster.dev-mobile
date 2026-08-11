@@ -197,6 +197,49 @@ describe("TimelineStep", () => {
       expect(screen.queryByText(/blocked by/i)).toBeNull();
     });
 
+    it("reads a passed expected date in the past tense, never as overdue (#571)", () => {
+      renderWithProviders(
+        <TimelineStep
+          {...baseProps}
+          step={{
+            ...baseStep,
+            waitingOn: {
+              who: "city inspector",
+              expected: "Jun 24",
+              isPast: true,
+            },
+          }}
+        />,
+      );
+      expect(
+        screen.getByText("waiting on city inspector · was expected Jun 24"),
+      ).toBeOnTheScreen();
+      // The present-tense line is gone, and nothing urgent replaced it.
+      expect(
+        screen.queryByText("waiting on city inspector · expected Jun 24"),
+      ).toBeNull();
+      expect(screen.queryByText(/overdue|late/i)).toBeNull();
+    });
+
+    it.each([{ isPast: false }, { isPast: undefined }])(
+      "keeps the present tense when isPast is $isPast (#571)",
+      ({ isPast }) => {
+        renderWithProviders(
+          <TimelineStep
+            {...baseProps}
+            step={{
+              ...baseStep,
+              waitingOn: { who: "city inspector", expected: "Jun 24", isPast },
+            }}
+          />,
+        );
+        expect(
+          screen.getByText("waiting on city inspector · expected Jun 24"),
+        ).toBeOnTheScreen();
+        expect(screen.queryByText(/was expected/)).toBeNull();
+      },
+    );
+
     it("omits the C line when no dependency prop is set", () => {
       renderWithProviders(
         <TimelineStep
@@ -295,6 +338,18 @@ describe("TimelineStep", () => {
           line: "waitingOnExpected",
           step: { waitingOn: { who: "city inspector", expected: "Jun 24" } },
           key: "timelineJourney:step.metadata.waitingOnExpected",
+          values: { who: "city inspector", date: "Jun 24" },
+        },
+        {
+          line: "wasExpected",
+          step: {
+            waitingOn: {
+              who: "city inspector",
+              expected: "Jun 24",
+              isPast: true,
+            },
+          },
+          key: "timelineJourney:step.metadata.wasExpected",
           values: { who: "city inspector", date: "Jun 24" },
         },
         {

@@ -126,7 +126,11 @@ jest.mock("../../../db", () => ({
     }
     return roots;
   },
-  resolveStepDependencyBand: (step: StepRow, goalSteps: StepRow[]) => ({
+  resolveStepDependencyBand: (
+    step: StepRow,
+    goalSteps: StepRow[],
+    now: Date,
+  ) => ({
     // Self-references are invalid and resolve to null, same as the real helper.
     afterStepTitle:
       step.afterStepId && step.afterStepId !== step.id
@@ -137,6 +141,11 @@ jest.mock("../../../db", () => ({
     waitingOnLabel: step.waitingOnLabel ?? null,
     waitingOnExpectedAt: step.waitingOnExpectedAt ?? null,
     dueAt: step.dueAt ?? null,
+    // Strict <, same boundary as the real helper (#571 D4). The row type here is
+    // index-signature loose, so the ISO string needs narrowing.
+    waitingOnExpectedIsPast:
+      typeof step.waitingOnExpectedAt === "string" &&
+      new Date(step.waitingOnExpectedAt).getTime() < now.getTime(),
   }),
 }));
 
@@ -461,6 +470,51 @@ describe("EditModeScreen", () => {
         setupQueries(GOAL, [{ ...STEPS[0], ...row }, STEPS[1]]);
         renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
         expect(screen.getByText(expected())).toBeOnTheScreen();
+      },
+    );
+
+    // The screen reads the real clock, so these two dates are far enough either
+    // side of it that the assertion can't drift with the calendar (#571).
+    it.each([
+      {
+        tense: "past",
+        waitingOnExpectedAt: "2020-03-06T00:00:00.000Z",
+        key: "wasExpected" as const,
+        gone: "waitingOnExpected" as const,
+        date: "Mar 6, 2020",
+      },
+      {
+        tense: "future",
+        waitingOnExpectedAt: "2099-03-06T00:00:00.000Z",
+        key: "waitingOnExpected" as const,
+        gone: "wasExpected" as const,
+        date: "Mar 6, 2099",
+      },
+    ])(
+      "reads a $tense expected date with the matching tense",
+      ({ waitingOnExpectedAt, key, gone, date }) => {
+        setupQueries(GOAL, [
+          { ...STEPS[0], waitingOnLabel: "Alex", waitingOnExpectedAt },
+          STEPS[1],
+        ]);
+        renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+
+        expect(
+          screen.getByText(
+            i18n.t(`editGoal:stepList.dateDepChips.${key}`, {
+              who: "Alex",
+              date,
+            }),
+          ),
+        ).toBeOnTheScreen();
+        expect(
+          screen.queryByText(
+            i18n.t(`editGoal:stepList.dateDepChips.${gone}`, {
+              who: "Alex",
+              date,
+            }),
+          ),
+        ).toBeNull();
       },
     );
 

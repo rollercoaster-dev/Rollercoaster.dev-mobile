@@ -51,7 +51,7 @@ interface TestOverrides {
   onChangeEvidencePlan?: () => void;
   onAddEvidence?: (type?: string) => void;
   afterStep?: string;
-  waitingOn?: { who: string; expected?: string };
+  waitingOn?: { who: string; expected?: string; isPast?: boolean };
   dueDate?: string;
 }
 
@@ -361,6 +361,30 @@ describe("FocusCurrentTaskCard", () => {
       expect(metaFlat.fontFamily).toBe("DM Mono");
     });
 
+    it("reads a passed expected date in the past tense, leaving the lead text alone (#571)", () => {
+      renderCard({
+        status: "in-progress",
+        waitingOn: { who: "the clinic", expected: "Tue", isPast: true },
+      });
+      // Only the date clause changes tense — the clinic is still being waited on.
+      expect(screen.getByText("waiting on the clinic")).toBeTruthy();
+      expect(screen.getByText("· was expected Tue")).toBeTruthy();
+      expect(screen.queryByText("· expected Tue")).toBeNull();
+      expect(screen.queryByText(/overdue|late/i)).toBeNull();
+    });
+
+    it.each([{ isPast: false }, { isPast: undefined }])(
+      "keeps the present-tense meta suffix when isPast is $isPast (#571)",
+      ({ isPast }) => {
+        renderCard({
+          status: "in-progress",
+          waitingOn: { who: "the clinic", expected: "Tue", isPast },
+        });
+        expect(screen.getByText("· expected Tue")).toBeTruthy();
+        expect(screen.queryByText(/was expected/)).toBeNull();
+      },
+    );
+
     it("renders both dependency lines at once (waiting on AND after — not exclusive)", () => {
       renderCard({
         status: "in-progress",
@@ -408,6 +432,14 @@ describe("FocusCurrentTaskCard", () => {
           line: "waitingOnExpectedMeta",
           props: { waitingOn: { who: "the clinic", expected: "Tue" } },
           key: "focusMode:currentTask.metadata.waitingOnExpectedMeta",
+          values: { date: "Tue" },
+        },
+        {
+          line: "wasExpectedMeta",
+          props: {
+            waitingOn: { who: "the clinic", expected: "Tue", isPast: true },
+          },
+          key: "focusMode:currentTask.metadata.wasExpectedMeta",
           values: { date: "Tue" },
         },
         {
