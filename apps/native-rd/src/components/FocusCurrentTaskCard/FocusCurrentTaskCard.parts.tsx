@@ -80,6 +80,12 @@ interface MetaLine {
  * renders one flat line, uses two whole-sentence keys instead and stays
  * reorderable. Interpolated values arrive final: titles are user content, and
  * the caller formats dates for the active locale.
+ *
+ * A passed expected date swaps that meta clause for `wasExpectedMeta`, "· was
+ * expected Y" (#571) — the same two-key split as the present tense, so the pair
+ * stays consistent within the namespace. The waiting-on `text` above it is
+ * untouched: the person is still being waited on; only the date reads as behind
+ * us. Past tense, never overdue (ADR-0012).
  */
 export function MetadataBand({
   afterStep,
@@ -87,7 +93,7 @@ export function MetadataBand({
   dueDate,
 }: {
   afterStep?: string;
-  waitingOn?: { who: string; expected?: string };
+  waitingOn?: { who: string; expected?: string; isPast?: boolean };
   dueDate?: string;
 }) {
   const { t } = useTranslation(["focusMode"]);
@@ -102,9 +108,12 @@ export function MetadataBand({
         who: waitingOn.who,
       }),
       meta: waitingOn.expected
-        ? t("focusMode:currentTask.metadata.waitingOnExpectedMeta", {
-            date: waitingOn.expected,
-          })
+        ? t(
+            waitingOn.isPast
+              ? "focusMode:currentTask.metadata.wasExpectedMeta"
+              : "focusMode:currentTask.metadata.waitingOnExpectedMeta",
+            { date: waitingOn.expected },
+          )
         : null,
     });
   }

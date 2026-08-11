@@ -292,6 +292,7 @@ function FocusContent({
             expected: resolved.waitingOnExpectedAt
               ? formatDate(resolved.waitingOnExpectedAt, i18n.language)
               : undefined,
+            isPast: resolved.waitingOnExpectedIsPast,
           }
         : undefined,
       dueDate: resolved.dueAt

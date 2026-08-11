@@ -65,9 +65,12 @@ export interface FocusInProgressCardProps extends FocusCardBase {
   /**
    * C (dependency), external wait: "waiting on [who] · expected [date]".
    * `expected` is a display date the caller has already formatted for the active
-   * locale — the band only wraps it in localized copy.
+   * locale — the band only wraps it in localized copy. `isPast` flips the date
+   * clause to the past tense "· was expected [date]" (#571): a neutral note that
+   * the date has gone by, never an overdue cue (ADR-0012). The caller decides
+   * it, from the resolver's `waitingOnExpectedIsPast`.
    */
-  waitingOn?: { who: string; expected?: string };
+  waitingOn?: { who: string; expected?: string; isPast?: boolean };
   /**
    * B (date): factual "due [date]" — no urgency / "overdue" framing.
    * Caller-formatted display date, as with `waitingOn.expected`.
