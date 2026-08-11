@@ -134,6 +134,7 @@ function TimelineContent({
             expected: band.waitingOnExpectedAt
               ? formatDate(band.waitingOnExpectedAt, i18n.language)
               : undefined,
+            isPast: band.waitingOnExpectedIsPast,
           }
         : undefined,
       dueDate: band.dueAt ? formatDate(band.dueAt, i18n.language) : undefined,
