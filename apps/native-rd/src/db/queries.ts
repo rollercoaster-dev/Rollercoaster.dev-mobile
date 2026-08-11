@@ -558,9 +558,12 @@ export function resolveStepDependencyBand(
     waitingOnLabel: step.waitingOnLabel,
     waitingOnExpectedAt: step.waitingOnExpectedAt,
     dueAt: step.dueAt,
+    // Date.parse, not `new Date(…)`: this function must contain no Date
+    // construction at all, so "does it read the clock?" stays a one-line grep
+    // rather than a judgement about which constructor argument was passed.
     waitingOnExpectedIsPast:
       step.waitingOnExpectedAt !== null &&
-      new Date(step.waitingOnExpectedAt).getTime() < now.getTime(),
+      Date.parse(step.waitingOnExpectedAt) < now.getTime(),
   };
 }
 
