@@ -2,7 +2,7 @@
 
 ## Issue Summary
 
-**Title**: [Foundation] Store a soft "sometime" intent + neutral past-tense expected date
+**Title**: [Foundation] Neutral past-tense expected date (`was expected`)
 **Type**: feature (foundation, no UI)
 **Complexity**: SMALL
 **Estimated Lines**: ~70–90 lines
@@ -18,9 +18,11 @@ The issue asks for a way to store "soft intent with no day attached", citing **B
 from `docs/plans/phase-b-feature-shapes.md` §B: Planning. Three problems with that
 justification, in increasing order of severity:
 
-1. **The cited section does not exist.** `phase-b-feature-shapes.md` contains only
-   `## A: Substeps` (:34), `## E: Step states` (:194), and `## C: Dependencies` (:312).
-   §B: Planning is marked `Stage 3 | Not started` (:23).
+1. **The cited section did not exist.** At the time the issue was written,
+   `phase-b-feature-shapes.md` contained only `## A: Substeps`, `## E: Step states`,
+   and `## C: Dependencies`; §B: Planning was marked `Stage 3 | Not started`. It now
+   exists — written in this branch to record the decision below — so the citation
+   resolves, but to the opposite conclusion.
 
 2. **"Sometime" is not what B-soft means.** The research defines B-soft as soft
    scheduling — _"for Tuesday", not "due Tuesday"_ — and its entire ND payoff depends
