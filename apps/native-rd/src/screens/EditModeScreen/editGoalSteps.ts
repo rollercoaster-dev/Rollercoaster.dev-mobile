@@ -33,17 +33,22 @@ function toPlannedEvidenceTypes(raw: string | null): EvidenceTypeValue[] {
  * No status/completed field (D3): the redesigned editor is pure
  * structure-editing, not a progress view — `EditGoalStep` carries no such
  * field to map onto.
+ *
+ * `now` is supplied by the caller (#571), keeping this module clock-free: every
+ * step in one build judges "has this expected date passed?" against the same
+ * instant.
  */
 export function buildEditGoalSteps(
   stepRows: readonly StepRow[],
   t: TFunction<["editGoal", "common"]>,
   language: string,
+  now: Date,
 ): EditGoalStep[] {
   return groupStepsByParent(stepRows).map((root) => ({
     id: root.id,
     title: root.title ?? "",
     plannedEvidenceTypes: toPlannedEvidenceTypes(root.plannedEvidenceTypes),
-    dateDepChips: buildDateDepChips(root, stepRows, t, language),
+    dateDepChips: buildDateDepChips(root, stepRows, t, language, now),
     // Sub-steps carry no C/B band (#407 OQ-2) — EditGoalSubStep has no
     // dateDepChips field at all.
     subSteps: root.children.map((child) => ({
@@ -69,8 +74,9 @@ function buildDateDepChips(
   stepRows: readonly StepRow[],
   t: TFunction<["editGoal", "common"]>,
   language: string,
+  now: Date,
 ): EditGoalDateDepChip[] | undefined {
-  const band = resolveStepDependencyBand(step, stepRows);
+  const band = resolveStepDependencyBand(step, stepRows, now);
   const chips: EditGoalDateDepChip[] = [];
 
   if (band.waitingOnLabel) {

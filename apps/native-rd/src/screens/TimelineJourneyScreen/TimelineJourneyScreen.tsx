@@ -108,6 +108,11 @@ function TimelineContent({
           ? "paused"
           : "pending";
 
+  // One clock for the whole render pass (#571) — every step's "was expected"
+  // reading is judged against the same instant, so two steps a millisecond
+  // apart can't disagree about whether the same date has passed.
+  const now = new Date();
+
   const stepsWithChildren = groupedSteps.map((root) => {
     const evidence = evidenceByStepId.get(root.id) ?? [];
     // C·B band (#454): the resolver hands back raw fields, so this caller owns
@@ -115,7 +120,7 @@ function TimelineContent({
     // prop undefined when its column is unset — MetadataBand then renders
     // nothing rather than a placeholder line. Roots only: sub-steps carry no
     // C/B band (#407 OQ-2), so `children` below deliberately omits these props.
-    const band = resolveStepDependencyBand(root, stepRows);
+    const band = resolveStepDependencyBand(root, stepRows, now);
     return {
       id: root.id,
       title: root.title ?? "",

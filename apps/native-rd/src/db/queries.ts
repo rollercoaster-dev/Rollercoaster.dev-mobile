@@ -511,12 +511,23 @@ export interface StepDependencyRowLike {
  * straight through. Callers (#377/#378) format dates and assemble the
  * "waiting on X · expected Y" / "due Z" text — no date-formatting utility
  * lives in this layer by design (D3).
+ *
+ * The one exception is `waitingOnExpectedIsPast` (#571): a *fact* about the
+ * date, not a formatting of it, so it belongs here rather than being
+ * re-derived by each of the three read surfaces.
  */
 export interface StepDependencyBand {
   afterStepTitle: string | null;
   waitingOnLabel: string | null;
   waitingOnExpectedAt: string | null;
   dueAt: string | null;
+  /**
+   * `waitingOnExpectedAt` lies strictly before the caller's `now` (#571) — the
+   * cue for the neutral past-tense "was expected …" reading. `false` whenever
+   * `waitingOnExpectedAt` is null. Past tense only: no urgency, no "overdue"
+   * framing anywhere downstream (ADR-0012).
+   */
+  waitingOnExpectedIsPast: boolean;
 }
 
 /**
@@ -528,10 +539,15 @@ export interface StepDependencyBand {
  * step comes after, not this step — so it is treated as unresolved
  * (`afterStepTitle: null`) rather than resolving `afterStepTitle` to this
  * step's own title.
+ *
+ * `now` is a required parameter, never read from the clock in here (#571) — the
+ * function stays pure and testable against a fixed instant. An expected date
+ * exactly equal to `now` is *not* past (strict `<`, D4): it hasn't happened yet.
  */
 export function resolveStepDependencyBand(
   step: StepDependencyRowLike,
   goalSteps: readonly StepDependencyRowLike[],
+  now: Date,
 ): StepDependencyBand {
   const afterStep =
     step.afterStepId === null || step.afterStepId === step.id
@@ -542,6 +558,9 @@ export function resolveStepDependencyBand(
     waitingOnLabel: step.waitingOnLabel,
     waitingOnExpectedAt: step.waitingOnExpectedAt,
     dueAt: step.dueAt,
+    waitingOnExpectedIsPast:
+      step.waitingOnExpectedAt !== null &&
+      new Date(step.waitingOnExpectedAt).getTime() < now.getTime(),
   };
 }
 

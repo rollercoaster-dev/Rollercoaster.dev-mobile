@@ -738,6 +738,10 @@ describe("Step CRUD Operations", () => {
       row("sibling_a", null, { title: "Draft the outline" }),
       row("other", null),
     ];
+    // A fixed clock, never the real one (#571) — every date literal below is
+    // deliberately after it, so the pre-existing cases keep asserting the
+    // untouched present-tense reading.
+    const NOW = new Date("2026-06-01T00:00:00.000Z");
 
     test.each([
       [
@@ -748,6 +752,7 @@ describe("Step CRUD Operations", () => {
           waitingOnLabel: null,
           waitingOnExpectedAt: null,
           dueAt: null,
+          waitingOnExpectedIsPast: false,
         },
       ],
       [
@@ -758,6 +763,7 @@ describe("Step CRUD Operations", () => {
           waitingOnLabel: null,
           waitingOnExpectedAt: null,
           dueAt: null,
+          waitingOnExpectedIsPast: false,
         },
       ],
       [
@@ -768,6 +774,7 @@ describe("Step CRUD Operations", () => {
           waitingOnLabel: null,
           waitingOnExpectedAt: null,
           dueAt: null,
+          waitingOnExpectedIsPast: false,
         },
       ],
       [
@@ -784,6 +791,7 @@ describe("Step CRUD Operations", () => {
           waitingOnLabel: null,
           waitingOnExpectedAt: null,
           dueAt: null,
+          waitingOnExpectedIsPast: false,
         },
       ],
       [
@@ -794,6 +802,7 @@ describe("Step CRUD Operations", () => {
           waitingOnLabel: "Vendor quote",
           waitingOnExpectedAt: null,
           dueAt: null,
+          waitingOnExpectedIsPast: false,
         },
       ],
       [
@@ -807,6 +816,7 @@ describe("Step CRUD Operations", () => {
           waitingOnLabel: "Manager sign-off",
           waitingOnExpectedAt: "2026-06-24T00:00:00.000Z",
           dueAt: null,
+          waitingOnExpectedIsPast: false,
         },
       ],
       [
@@ -817,10 +827,11 @@ describe("Step CRUD Operations", () => {
           waitingOnLabel: null,
           waitingOnExpectedAt: null,
           dueAt: "2026-06-12T00:00:00.000Z",
+          waitingOnExpectedIsPast: false,
         },
       ],
     ])("%s", (_label, step, expected) => {
-      expect(resolveStepDependencyBand(step, goalSteps)).toEqual(expected);
+      expect(resolveStepDependencyBand(step, goalSteps, NOW)).toEqual(expected);
     });
   });
 

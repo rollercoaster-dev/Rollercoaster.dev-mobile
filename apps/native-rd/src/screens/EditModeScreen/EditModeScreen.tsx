@@ -190,8 +190,11 @@ function EditContent({ goalId }: { goalId: string }) {
     [goalId, t],
   );
 
+  // The clock is an input, not a dependency (#571): a passed expected date
+  // reads as "was" from the next rebuild on, which any row edit or language
+  // change already triggers. Nothing here needs to re-render on a tick.
   const steps = useMemo(
-    () => buildEditGoalSteps(stepRows, t, i18n.language),
+    () => buildEditGoalSteps(stepRows, t, i18n.language, new Date()),
     [stepRows, t, i18n.language],
   );
 

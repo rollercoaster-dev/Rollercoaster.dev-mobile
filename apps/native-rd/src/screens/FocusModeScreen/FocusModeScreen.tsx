@@ -277,7 +277,13 @@ function FocusContent({
   // builds, so the two surfaces read a step's dependencies identically.
   const band = useMemo(() => {
     if (!currentStep) return null;
-    const resolved = resolveStepDependencyBand(currentStep, stepRows);
+    // One clock per band recomputation (#571) — the resolver never reads it
+    // itself, so the "was expected" reading is pinned to this pass.
+    const resolved = resolveStepDependencyBand(
+      currentStep,
+      stepRows,
+      new Date(),
+    );
     return {
       afterStep: resolved.afterStepTitle ?? undefined,
       waitingOn: resolved.waitingOnLabel
