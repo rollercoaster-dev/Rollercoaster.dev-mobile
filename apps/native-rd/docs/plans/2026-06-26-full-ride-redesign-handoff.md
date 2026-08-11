@@ -128,8 +128,10 @@ unblocks a `dep:blocked` set, closed out by a verification issue. Labels drawn f
   _net-new feature_ bound by ADR-0010 / ADR-0012, not a visual port. File as its own feature epic when
   ready; the prototype + `Set B & C - Handoff Prompt.md` are the brief.
   **Filed 2026-08-11 as epic #570** (milestone `native-rd: Set B & C authoring`). #454 shipped the
-  columns and #377/#378 shipped the read side, so the C·B band renders but stays permanently empty
-  until #570 lands an authoring surface.
+  columns and #377/#378 shipped the read side, so the C·B band is **wired but dormant**: it renders
+  only the facts a step actually carries (callers leave each prop `undefined` when its column is
+  unset, so an unpopulated band draws nothing at all), and no surface can populate those columns
+  until #570 lands an authoring UI.
 - **App Shell / Theme Eval / TokenScreen / token-backed shell** — diagnostic/demo artifacts. Keep as
   reference (their value, the findings, is already captured in the Prep Spec + this doc). Do not port.
 
