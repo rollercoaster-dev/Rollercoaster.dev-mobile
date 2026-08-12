@@ -66,26 +66,19 @@ interface MetaLine {
  * independently — a "waiting on…" external wait AND an internal "after…"
  * prerequisite can both show (never "blocked by"). Each line is glyph + text +
  * an optional mono meta suffix; the "due …" date is plain text, with mono only
- * on the trailing meta — pure prototype fidelity (no ADR governs date
- * typography). Renders nothing when no C/B prop is set.
+ * on the trailing meta — prototype fidelity (no ADR governs date typography).
+ * Renders nothing when no C/B prop is set.
  *
  * Connective copy lives in `focusMode:currentTask.metadata.*`, mirroring
- * `timelineJourney:step.metadata.*` on the Timeline's own band. The one shape
- * difference: waiting-on's date is a *separate* key
- * (`waitingOnExpectedMeta`) rather than a second full sentence, because this
- * band renders it as its own mono `Text` node. That split is typographic, not
- * grammatical — the whole clause including its "·" separator is the
- * translator's to rewrite, so it is not the fragment-concatenation docs/i18n.md
- * forbids, but it does fix the date clause as trailing. The Timeline band, which
- * renders one flat line, uses two whole-sentence keys instead and stays
- * reorderable. Interpolated values arrive final: titles are user content, and
- * the caller formats dates for the active locale.
- *
- * A passed expected date swaps that meta clause for `wasExpectedMeta`, "· was
- * expected Y" (#571) — the same two-key split as the present tense, so the pair
- * stays consistent within the namespace. The waiting-on `text` above it is
- * untouched: the person is still being waited on; only the date reads as behind
- * us. Past tense, never overdue (ADR-0012).
+ * `timelineJourney:step.metadata.*`. One shape difference: waiting-on's date is
+ * a *separate* key (`waitingOnExpectedMeta`), not a second full sentence,
+ * because this band renders it as its own mono `Text` node — a typographic
+ * split, not a grammatical one. The whole clause including its "·" separator
+ * stays the translator's to rewrite, so it is not the fragment concatenation
+ * docs/i18n.md forbids, though it does fix the date clause as trailing. Values
+ * arrive final — titles are user content, dates caller-formatted. A passed
+ * expected date swaps that clause for `wasExpectedMeta` (#571): only the date
+ * reads as behind us, past tense and never overdue (ADR-0012).
  */
 export function MetadataBand({
   afterStep,
