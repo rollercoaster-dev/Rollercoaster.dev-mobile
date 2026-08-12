@@ -475,46 +475,43 @@ describe("EditModeScreen", () => {
 
     // The screen reads the real clock, so these two dates are far enough either
     // side of it that the assertion can't drift with the calendar (#571).
+    //
+    // Asserted as English literals, not via i18n.t with the key the component
+    // itself calls: that would pass against any copy at all, including copy
+    // that dropped "waiting on" or "expected" and left the chip unable to say
+    // what its date is. The literals are the contract.
     it.each([
       {
         tense: "past",
         waitingOnExpectedAt: "2020-03-06T00:00:00.000Z",
-        key: "wasExpected" as const,
-        gone: "waitingOnExpected" as const,
-        date: "Mar 6, 2020",
+        text: "waiting on Alex · was expected Mar 6, 2020",
+        gone: /· expected/,
       },
       {
         tense: "future",
         waitingOnExpectedAt: "2099-03-06T00:00:00.000Z",
-        key: "waitingOnExpected" as const,
-        gone: "wasExpected" as const,
-        date: "Mar 6, 2099",
+        text: "waiting on Alex · expected Mar 6, 2099",
+        gone: /was expected/,
       },
     ])(
       "reads a $tense expected date with the matching tense",
-      ({ waitingOnExpectedAt, key, gone, date }) => {
+      ({ waitingOnExpectedAt, text, gone }) => {
         setupQueries(GOAL, [
           { ...STEPS[0], waitingOnLabel: "Alex", waitingOnExpectedAt },
           STEPS[1],
         ]);
         renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
 
-        expect(
-          screen.getByText(
-            i18n.t(`editGoal:stepList.dateDepChips.${key}`, {
-              who: "Alex",
-              date,
-            }),
-          ),
-        ).toBeOnTheScreen();
-        expect(
-          screen.queryByText(
-            i18n.t(`editGoal:stepList.dateDepChips.${gone}`, {
-              who: "Alex",
-              date,
-            }),
-          ),
-        ).toBeNull();
+        expect(screen.getByText(text)).toBeOnTheScreen();
+        expect(screen.queryByText(gone)).toBeNull();
+        // Tone stays "waiting" either side of the date (ADR-0012): a passed
+        // date gets no tone of its own, so the chip keeps the waiting glyph
+        // rather than picking up the "due" one. The glyph is decorative —
+        // accessibilityElementsHidden — hence includeHiddenElements on both
+        // queries, so the negative one isn't vacuously true.
+        const hidden = { includeHiddenElements: true };
+        expect(screen.getByText("⏳", hidden)).toBeOnTheScreen();
+        expect(screen.queryByText("▦", hidden)).toBeNull();
       },
     );
 
