@@ -22,9 +22,11 @@ notes:
     over "Bist du sicher, dass du dein wunderbares Ziel löschen
     möchtest?".
   - The word "step" stays as "Schritt" (de/common.json convention).
-  - stepList.dateDepChips.* are compact chips on a step row, so they run
-    shorter than the same lines on the Timeline. wasExpected replaces
-    waitingOnExpected once that date has passed — past tense stating a
-    fact, never "überfällig", "verspätet" or any urgency cue (ADR-0012).
-    Keep it as terse as the English "{{who}} · was {{date}}"; a chip has
-    no room for the full "wartet auf …" sentence.
+  - stepList.dateDepChips.* are word-for-word the same lines as
+    timelineJourney.step.metadata.* — keep the two files in step, and
+    translate a chip exactly as you would the Timeline line.
+    wasExpected replaces waitingOnExpected once that date has passed —
+    past tense stating a fact, "wartet auf … · war für … erwartet",
+    never "überfällig", "verspätet" or any urgency cue (ADR-0012). Keep
+    the "wartet auf …" clause; the chip still names who is being waited
+    on, and only the date reads as behind us.
