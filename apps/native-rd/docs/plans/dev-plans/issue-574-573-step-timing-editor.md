@@ -409,7 +409,7 @@ sub-line's quoted `“late.”`), `deadline` (outside the sub-line's `not a dead
       `accessibilityState={{ selected: isSelected }}`, `minHeight: 44`,
       `fontVariant: ["tabular-nums"]`. **Never** `disabled`.
 - [ ] `accessibilityLabel` = full date via `Intl.DateTimeFormat(locale, { weekday:
-  "long", day: "numeric", month: "long", year: "numeric" })`, plus
+"long", day: "numeric", month: "long", year: "numeric" })`, plus
       `marksA11ySuffix(count)` when marks exist.
 - [ ] `onPress` → `onChange(key === value ? null : key)`.
 - [ ] Marks: first two labels as badges, third+ collapses to one overflow badge (`+`).
@@ -482,7 +482,7 @@ sub-line's quoted `“late.”`), `deadline` (outside the sub-line's `not a dead
       `minHeight: 44`, `accessibilityRole="button"`.
 - [ ] Empty `candidates` → `noCandidatesLabel` instead of an empty box.
 - [ ] `OrderingNote` part: renders **only** when `draft.dueDate && draft.afterStepId &&
-  target.dueDate && draft.dueDate < target.dueDate`. Plain `Text`, body weight,
+target.dueDate && draft.dueDate < target.dueDate`. Plain `Text`, body weight,
       `colors.textSecondary`, a quiet left rule. **No** icon, **no** `error`/`danger`
       token, **no** `accessibilityRole="alert"`, **no** `disabled` anywhere.
 - [ ] Footer: `Clear` (quiet, fixed width) + `Done` (primary, `flex: 1`), both
@@ -588,6 +588,22 @@ sub-line's quoted `“late.”`), `deadline` (outside the sub-line's `not a dead
 | i18n resource keys                                                | D7 — copy is caller-supplied with English defaults                  | #576                                                                        |
 | Expand/collapse animation                                         | D9 — needs `animationPref` threaded as a prop                       | Follow-up issue; note in the component doc comment                          |
 | Rebasing onto PR #582 (`AnimatedSheet` lift)                      | No sheet in this design                                             | none                                                                        |
+
+## Follow-ups from review
+
+Raised by the reuse / simplification / efficiency / altitude review pass on this
+branch, deliberately **not** fixed here. Recorded so they are not chat-only.
+
+| #   | Finding                                                                                                                                                                                                                                                                                                                              | Why deferred                                                                                                                                                                                               |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| F-1 | **One shared `MetadataBand`** across `TimelineStep`, `FocusCurrentTaskCard` and this editor. There are now three renderings of `↩ after …` / `▦ due …` and four copy sources (two i18n namespaces with duplicate keys, plus this component's defaults). Sharing it would make parity structural and retire `readOutParity.test.tsx`. | Pre-existing debt this PR extends rather than creates. Touching Focus and Timeline is out of scope for a Storybook-only PR, and `readOutParity` + the new resource-pinning tests hold the line until then. |
+| F-2 | **Move the forbidden-copy check to `src/__tests__/structure/`**, covering every component and screen rather than these two directories plus three namespaces.                                                                                                                                                                        | The repo already has that shape of test there. Widening it will surface hits in surfaces this PR does not own.                                                                                             |
+| F-3 | **`useParkRowAtTop(scrollRef, contentRef)` hook** so #575 inherits the `measureLayout` → `scrollTo` wiring instead of retyping it from `InsideAScrollingList`.                                                                                                                                                                       | The story proves the contract today; the hook is worth extracting when #575 actually consumes it.                                                                                                          |
+| F-4 | **Move `monthGrid.ts` → `src/utils/localDay.ts`.** `toDayKey` / `dayKey` are exactly what #576 needs for the `YYYY-MM-DD` → local-midnight `DateIso` conversion, and a screen should not import date maths from a component directory.                                                                                               | A file move belongs with the issue that consumes it (#576).                                                                                                                                                |
+| F-5 | **One shared 44pt touch-target constant.** ~25 style files hardcode a bare `minHeight: 44`; this PR added two names for it (now file-local, unexported).                                                                                                                                                                             | Repo-wide sweep, not this PR.                                                                                                                                                                              |
+| F-6 | **Shared Storybook theme-matrix scaffolding.** `MOOD_NAMES` is copy-pasted in 13 story files, `AllThemesMatrix` in 17, `PhoneWidth` in 5 — this PR follows the house style and adds two more. A shared helper would delete several hundred lines repo-wide.                                                                          | Established convention; diverging in two files would be inconsistent, not cleaner.                                                                                                                         |
+| F-7 | **`local/no-shared-component-reimplementation` only fires under `/screens/`** (`src/eslint-rules/no-shared-component-reimplementation.js:24`), which is why it stayed silent while this PR hand-rolled a footer and month-nav buttons. Widening it to `src/components/` would have caught both.                                      | A lint-rule change needs its own PR and a pass over the hits it surfaces.                                                                                                                                  |
+| F-8 | **Expand/collapse animation** (D9) — needs `animationPref` threaded as a prop, since `useAnimationPref` reads Evolu.                                                                                                                                                                                                                 | Un-animated is the accessible default; the prototype gates its unfold behind `prefers-reduced-motion` anyway.                                                                                              |
 
 ## Open Questions
 
