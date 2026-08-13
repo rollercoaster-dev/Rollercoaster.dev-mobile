@@ -103,7 +103,6 @@ export function StepTimingEditor({
   const isControlled = expanded !== undefined;
   const isExpanded = isControlled ? expanded : uncontrolledExpanded;
 
-  // Seeded on every expand, so a discarded draft never leaks into the next open.
   const [draft, setDraft] = useState<StepTimingValue>(value);
   const [pickerOpen, setPickerOpen] = useState(false);
 
@@ -114,6 +113,19 @@ export function StepTimingEditor({
     },
     [isControlled, onExpandedChange],
   );
+
+  // Reseed the draft from `value` on every open, so a discarded draft never
+  // leaks into the next one. Keyed on the transition rather than on the timing
+  // line's press handler, because a controlled host can open this row without a
+  // tap ever reaching us.
+  const [seededFor, setSeededFor] = useState(isExpanded);
+  if (isExpanded !== seededFor) {
+    setSeededFor(isExpanded);
+    if (isExpanded) {
+      setDraft(value);
+      setPickerOpen(false);
+    }
+  }
 
   // Move accessibility focus into the editor on expand and back to the timing
   // line on collapse, so a screen-reader user is never left where the content
@@ -132,13 +144,11 @@ export function StepTimingEditor({
       setExpanded(false);
       return;
     }
-    setDraft(value);
-    setPickerOpen(false);
     setExpanded(true);
     // The host parks the row at the top of the list; an editor that unfolds
     // below the fold reads as having done nothing.
     onExpand?.(rowRef);
-  }, [isExpanded, onExpand, setExpanded, value]);
+  }, [isExpanded, onExpand, setExpanded]);
 
   const handleDone = useCallback(() => {
     onCommit(draft);
