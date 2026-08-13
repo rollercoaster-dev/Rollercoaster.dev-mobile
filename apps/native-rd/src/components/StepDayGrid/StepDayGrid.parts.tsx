@@ -63,6 +63,7 @@ export function DayCell({
               key={`${key}-mark-${index}`}
               label={label}
               onSelectedDay={isSelected}
+              testID={`${testID}-mark-${index}`}
             />
           ))}
           {/* Third and beyond collapse into one badge — the cell is 44pt wide,
