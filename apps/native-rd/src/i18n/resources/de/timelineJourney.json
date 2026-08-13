@@ -25,6 +25,7 @@
       "after": "nach {{title}}",
       "waitingOn": "wartet auf {{who}}",
       "waitingOnExpected": "wartet auf {{who}} · voraussichtlich {{date}}",
+      "wasExpected": "wartet auf {{who}} · war für {{date}} erwartet",
       "due": "fällig am {{date}}"
     }
   },

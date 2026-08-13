@@ -126,7 +126,11 @@ jest.mock("../../../db", () => ({
     }
     return roots;
   },
-  resolveStepDependencyBand: (step: StepRow, goalSteps: StepRow[]) => ({
+  resolveStepDependencyBand: (
+    step: StepRow,
+    goalSteps: StepRow[],
+    now: Date,
+  ) => ({
     // Self-references are invalid and resolve to null, same as the real helper.
     afterStepTitle:
       step.afterStepId && step.afterStepId !== step.id
@@ -137,6 +141,11 @@ jest.mock("../../../db", () => ({
     waitingOnLabel: step.waitingOnLabel ?? null,
     waitingOnExpectedAt: step.waitingOnExpectedAt ?? null,
     dueAt: step.dueAt ?? null,
+    // Strict <, same boundary as the real helper (#571 D4). The row type here is
+    // index-signature loose, so the ISO string needs narrowing.
+    waitingOnExpectedIsPast:
+      typeof step.waitingOnExpectedAt === "string" &&
+      new Date(step.waitingOnExpectedAt).getTime() < now.getTime(),
   }),
 }));
 
@@ -461,6 +470,51 @@ describe("EditModeScreen", () => {
         setupQueries(GOAL, [{ ...STEPS[0], ...row }, STEPS[1]]);
         renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
         expect(screen.getByText(expected())).toBeOnTheScreen();
+      },
+    );
+
+    // The screen reads the real clock, so these two dates are far enough either
+    // side of it that the assertion can't drift with the calendar (#571). Local
+    // noon, no trailing Z: formatDate goes through toLocaleDateString, so a
+    // UTC-midnight ISO would format as the previous day west of Greenwich and
+    // the expected literals below would fail on a US runner.
+    //
+    // Asserted as English literals, not via i18n.t with the key the component
+    // itself calls: that would pass against any copy at all, including copy
+    // that dropped "waiting on" or "expected" and left the chip unable to say
+    // what its date is. The literals are the contract.
+    it.each([
+      {
+        tense: "past",
+        waitingOnExpectedAt: "2020-03-06T12:00:00",
+        text: "waiting on Alex · was expected Mar 6, 2020",
+        gone: /· expected/,
+      },
+      {
+        tense: "future",
+        waitingOnExpectedAt: "2099-03-06T12:00:00",
+        text: "waiting on Alex · expected Mar 6, 2099",
+        gone: /was expected/,
+      },
+    ])(
+      "reads a $tense expected date with the matching tense",
+      ({ waitingOnExpectedAt, text, gone }) => {
+        setupQueries(GOAL, [
+          { ...STEPS[0], waitingOnLabel: "Alex", waitingOnExpectedAt },
+          STEPS[1],
+        ]);
+        renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+
+        expect(screen.getByText(text)).toBeOnTheScreen();
+        expect(screen.queryByText(gone)).toBeNull();
+        // Tone stays "waiting" either side of the date (ADR-0012): a passed
+        // date gets no tone of its own, so the chip keeps the waiting glyph
+        // rather than picking up the "due" one. The glyph is decorative —
+        // accessibilityElementsHidden — hence includeHiddenElements on both
+        // queries, so the negative one isn't vacuously true.
+        const hidden = { includeHiddenElements: true };
+        expect(screen.getByText("⏳", hidden)).toBeOnTheScreen();
+        expect(screen.queryByText("▦", hidden)).toBeNull();
       },
     );
 

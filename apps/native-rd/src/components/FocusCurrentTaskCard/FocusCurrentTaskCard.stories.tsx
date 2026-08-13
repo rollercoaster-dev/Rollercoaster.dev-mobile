@@ -143,6 +143,31 @@ export const InProgressWithECBBand: Story = {
   ),
 };
 
+// #571: the same band either side of the expected date, stacked so the ONLY
+// difference is legible. The lead "waiting on …" text is untouched — the wait is
+// still on — and only the trailing mono clause changes tense to "· was expected".
+// No urgency colour, no "overdue" word: nothing went wrong, the date has passed.
+export const InProgressWithWasExpected: Story = {
+  render: () => (
+    <PhoneWidth>
+      <FocusCurrentTaskCard
+        status="in-progress"
+        title="Inspection & labels"
+        plannedEvidenceTypes={["text"]}
+        waitingOn={{ who: "city inspector", expected: "Jun 24" }}
+        {...handlers}
+      />
+      <FocusCurrentTaskCard
+        status="in-progress"
+        title="Inspection & labels"
+        plannedEvidenceTypes={["text"]}
+        waitingOn={{ who: "city inspector", expected: "Jun 24", isPast: true }}
+        {...handlers}
+      />
+    </PhoneWidth>
+  ),
+};
+
 export const Paused: Story = {
   render: () => (
     <PhoneWidth>

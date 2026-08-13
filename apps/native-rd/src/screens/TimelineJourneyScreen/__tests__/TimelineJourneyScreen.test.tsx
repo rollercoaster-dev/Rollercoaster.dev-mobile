@@ -99,6 +99,7 @@ jest.mock("../../../db", () => ({
       dueAt: string | null;
     },
     goalSteps: readonly { id: string; title: string | null }[],
+    now: Date,
   ) => {
     const afterStep =
       step.afterStepId === null || step.afterStepId === step.id
@@ -109,6 +110,10 @@ jest.mock("../../../db", () => ({
       waitingOnLabel: step.waitingOnLabel,
       waitingOnExpectedAt: step.waitingOnExpectedAt,
       dueAt: step.dueAt,
+      // Strict <, same boundary as the real helper (#571 D4).
+      waitingOnExpectedIsPast:
+        step.waitingOnExpectedAt !== null &&
+        new Date(step.waitingOnExpectedAt).getTime() < now.getTime(),
     };
   },
   // Faithful copy of the real resolver (queries.ts) so the screen's accent runs
@@ -258,6 +263,13 @@ const STEPS_WITH_PAUSED = [
 // guard in utils/__tests__/format.test.ts.
 const BAND_ISO = "2026-01-28T12:00:00";
 const BAND_ISO_FORMATTED = "Jan 28, 2026";
+// The screen reads the real clock to decide the expected date's tense (#571), so
+// the two waiting-on fixtures sit far enough either side of it that no calendar
+// day can flip an assertion. Same local-noon guard as BAND_ISO.
+const PAST_ISO = "2020-01-28T12:00:00";
+const PAST_ISO_FORMATTED = "Jan 28, 2020";
+const FUTURE_ISO = "2099-01-28T12:00:00";
+const FUTURE_ISO_FORMATTED = "Jan 28, 2099";
 
 /** A step row with every #454 dependency/due column explicitly unset. */
 const bandStep = (over: Record<string, unknown>) => ({
@@ -582,9 +594,16 @@ describe("TimelineJourneyScreen", () => {
     test.each([
       ["after (internal dependency)", { afterStepId: "step-a" }, "after Groundwork"], // prettier-ignore
       [
-        "waiting on + expected",
-        { waitingOnLabel: "Alex", waitingOnExpectedAt: BAND_ISO },
-        `waiting on Alex · expected ${BAND_ISO_FORMATTED}`,
+        "waiting on + expected (still ahead)",
+        { waitingOnLabel: "Alex", waitingOnExpectedAt: FUTURE_ISO },
+        `waiting on Alex · expected ${FUTURE_ISO_FORMATTED}`,
+      ],
+      [
+        // #571: the same columns, a date already behind us — past tense, no
+        // urgency word anywhere in the line.
+        "waiting on + was expected (date has passed)",
+        { waitingOnLabel: "Alex", waitingOnExpectedAt: PAST_ISO },
+        `waiting on Alex · was expected ${PAST_ISO_FORMATTED}`,
       ],
       ["due date", { dueAt: BAND_ISO }, `due ${BAND_ISO_FORMATTED}`],
     ])("renders the %s line from real columns", (_name, columns, expected) => {

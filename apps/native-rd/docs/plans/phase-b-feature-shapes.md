@@ -14,15 +14,15 @@ Scenario, Evidence To Collect, Exit Criteria, Dependencies.
 
 ## Status
 
-| Feature                                                 | Stage   | Status                         |
-| ------------------------------------------------------- | ------- | ------------------------------ |
-| **A: Substeps** (formerly Granularity / Substructure)   | Stage 1 | Drafted 2026-06-11 — in review |
-| **E: Step states** (formerly Richer state vocabulary)   | Stage 1 | Drafted 2026-06-14             |
-| **Scratchpad** (absorbs D + F)                          | Stage 2 | Not started                    |
-| **C: Dependencies** (merges C-order + C-waiting)        | Stage 2 | Drafted 2026-06-16             |
-| **B: Planning** (merges B-soft, B-deadlines, repeating) | Stage 3 | Not started                    |
-| **H: Learnings** (formerly Misfire as learning)         | Stage 4 | Not started                    |
-| **G: Review**                                           | Stage 4 | Not started                    |
+| Feature                                                 | Stage   | Status                                                         |
+| ------------------------------------------------------- | ------- | -------------------------------------------------------------- |
+| **A: Substeps** (formerly Granularity / Substructure)   | Stage 1 | Drafted 2026-06-11 — in review                                 |
+| **E: Step states** (formerly Richer state vocabulary)   | Stage 1 | Drafted 2026-06-14                                             |
+| **Scratchpad** (absorbs D + F)                          | Stage 2 | Not started                                                    |
+| **C: Dependencies** (merges C-order + C-waiting)        | Stage 2 | Drafted 2026-06-16                                             |
+| **B: Planning** (merges B-soft, B-deadlines, repeating) | Stage 3 | Not started — **but its prototype already ran** (see §B below) |
+| **H: Learnings** (formerly Misfire as learning)         | Stage 4 | Not started                                                    |
+| **G: Review**                                           | Stage 4 | Not started                                                    |
 
 Sections are appended below as each stage starts.
 
@@ -469,25 +469,86 @@ time, no calendar integration, no counting or scoring.
 
 ## B: Planning (merges B-soft, B-deadlines, repeating)
 
-**Shape not written yet — Stage 3.** This heading exists ahead of its stage so
-that the `§B: Planning` pointers in the `native-rd: Set B & C authoring`
-milestone and in epic #570 resolve. It holds only decisions taken before the
-shape is written; the User Need / Smallest Useful Shape / … template is filled
-in when Stage 3 starts.
+> **Partial section — decisions only.** The full nine-part template (User Need,
+> Smallest Useful Shape, Later Integrated Shape, Must Not Do, Prototype
+> Questions, Scenario, Evidence To Collect, Exit Criteria, Dependencies) is
+> Stage 3 work and is **not** written yet. What follows records two settled
+> points so that the gap in this section stops being filled in by guesswork —
+> see Ordering Violation below for why that is a live risk, not a hypothetical.
 
-### Decisions recorded ahead of the shape
+### Ordering violation (recorded 2026-08-11)
 
-- **Dateless is `dueAt: null`** (2026-08-11, #570). The Direction B prototype's
-  date-sheet `Sometime` / `On a date` mode toggle is retired: a step either has
-  a due date or it does not, and the sheet's `Clear` already expresses the
-  latter. The toggle came from a gloss of B-soft as "a loose sometime"; B-soft
-  means _soft placement_ ("for Tuesday", not "due Tuesday") and needs a day to
-  be present. ADR-0013 commits B to three time shapes — a date, a deadline,
-  repeating — and "sometime" is not among them. Soft-vs-firm _on a date_ stays
-  open for Stage 3.
-- **Authoring surface — edit time only** (2026-08-13, #572). A planning date is
-  set in Edit Goal (`EditModeScreen`), not in the New Goal wizard. Same
-  reasoning as §C: the wizard's build list is the highest-pressure screen in the
-  app, and a per-row `+ date` chip there is where "Setting must not feel
-  required" fails first. The wizard's copy promises nothing about dates, so
-  nothing there contradicts this. Revisit after real use.
+This document's own rule (top of file): _"A prototype does not start until its
+own section exists here."_ For B, that rule was not followed. `Set BC B
+Prototype.dc.html` — the design of record for milestone #6 — was built while
+this section read `Not started`, so nothing here constrained it.
+
+The consequence is traceable. The Set B & C handoff prompt restated B-soft as
+_"a loose 'sometime'"_ (`prototypes/screen-redesign/Set B & C - Handoff
+Prompt.md:33`). That is not what B-soft means: the research defines it as soft
+scheduling — _"for Tuesday", not "due Tuesday"_ — whose entire ND payoff is that
+_"soft placement creates a Tuesday that wouldn't otherwise exist — a foothold in
+time itself"_ (`../research/step-model-gap.md:52`, restated at `:173`). The
+foothold **is** the day. A "sometime" with no day is the case B-soft is
+contrasted against, not an instance of it.
+
+The prototype built that gloss into a `Sometime` / `On a date` segmented control
+(`Set BC B Prototype.dc.html:166-167`). Issue #571 then proposed a schema column
+to store it, citing "§B: Planning" of this file — a section that did not exist.
+
+### Decided: no dateless "sometime" mode
+
+**A step either has a due date or it does not.** "Sometime" is the second of
+those, and `dueAt: null` already expresses it. No column, flag, or mode
+discriminator encodes dateless intent.
+
+- Consistent with the standing position — ADR-0013 commits B: Planning to
+  **three** time shapes, "a date ('for Tuesday'), a deadline, repeating"
+  ([ADR-0013](../decisions/ADR-0013-phase-b-consolidated-position.md), Step-model
+  features table). "Sometime" is not among them and never was.
+- A `dueIsSoft` flag beside `dueAt` would encode one three-state field across two
+  columns with a legal-but-invalid combination (both set), requiring a resolver
+  precedence rule and a write-path invariant — all to distinguish two states that
+  are the same state.
+- **Consequence for the date sheet**: the `Sometime` / `On a date` toggle
+  collapses. The sheet is a day picker plus `Clear`; `Clear` _is_ "sometime".
+  The B1/B2/B3 authoring issues under epic #570 need updating to match.
+
+Note this decides only the **dateless** case. Soft-vs-firm _on a date_ — the real
+B-soft ("for Tuesday" vs "due Tuesday") — is untouched and remains open for
+Stage 3.
+
+### Decided: a passed expected date reads in neutral past tense
+
+The handoff prompt carried this as an explicit open sub-question from the C
+record: _"whether a past expected date earns a neutral past-tense like 'was
+expected Jun 12' or whether any past-tense leans toward blame — decide in this
+prototype"_ (`Set B & C - Handoff Prompt.md:28`). The prototype decided it:
+`waiting on city inspector · was expected Jun 12`.
+
+**"was expected" is the only past tense permitted.** It states a fact and stops
+there. No "overdue", no "late", no "behind", no red, no urgency, no counting —
+per [ADR-0012](../decisions/ADR-0012-no-auto-judgment.md), time passing never
+changes a step's state and absence is never interpreted. Implemented for the
+`waitingOnExpectedAt` read path in issue #571.
+
+### Decided: authoring is edit time only
+
+**A planning date is set in Edit Goal (`EditModeScreen`), not in the New Goal
+wizard** (2026-08-13, #572). Same reasoning as §C: the wizard's build list is the
+highest-pressure screen in the app, and a per-row `+ date` chip there is where
+"Setting must not feel required" fails first. The wizard's copy promises nothing
+about dates, so nothing there contradicts this. Epic #570 ships Edit Goal only;
+revisit after real use.
+
+### Must Not Do
+
+- **No dateless "sometime" mode**, per the decision above. Dateless is `dueAt:
+null`.
+- **No date authoring in the New Goal wizard** — the create flow stays title +
+  evidence, and "quick add" (bare title) stays the fast path (#572).
+- **No overdue status, missed-deadline ledger, absence count, or re-ping**; no
+  app-icon badge count, ever (ADR-0011, ADR-0013).
+- **A passed date never changes state** and never authors "late" (ADR-0012).
+- **Never read the calendar back** — calendar push is one-way; reminders fire
+  once at the time the user set (ADR-0011).

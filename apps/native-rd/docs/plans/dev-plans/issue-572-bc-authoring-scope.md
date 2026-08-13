@@ -158,7 +158,14 @@ below as each stage starts."_ B is Stage 3; appending after §C keeps that order
 The Status table row at `:23` stays **"Not started"** — the stub does not claim
 the shape is written.
 
-Proposed text:
+> **Superseded on merge (2026-08-13).** #579 landed a fuller §B on `main` first —
+> partial-section blockquote, the ordering-violation record, the dateless decision
+> in prose, and the "was expected" decision. The stub below (and with it D2/D3,
+> which existed only because §B was missing) is therefore dropped; the merge keeps
+> #579's section and grafts in only what is #572's own: a `### Decided: authoring
+is edit time only` subsection plus a Must-Not-Do bullet.
+
+Proposed text (superseded — kept for the record):
 
 ```markdown
 ## B: Planning (merges B-soft, B-deadlines, repeating)

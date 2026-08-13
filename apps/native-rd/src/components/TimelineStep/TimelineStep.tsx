@@ -24,9 +24,12 @@ export interface TimelineStepData {
   /**
    * C (dependency), external wait: "waiting on [who] · expected [date]".
    * `expected` is a display date the caller has already formatted for the active
-   * locale; the band only wraps it in localized copy.
+   * locale; the band only wraps it in localized copy. `isPast` flips that copy
+   * to the past tense "was expected [date]" (#571) — a neutral statement that
+   * the date has gone by, never an overdue cue (ADR-0012). The caller decides
+   * it, from the resolver's `waitingOnExpectedIsPast`.
    */
-  waitingOn?: { who: string; expected?: string };
+  waitingOn?: { who: string; expected?: string; isPast?: boolean };
   /**
    * B (date): factual "due [date]" — no urgency, no "overdue" framing regardless
    * of whether the date is past (ADR-0012). Caller-formatted display date, as

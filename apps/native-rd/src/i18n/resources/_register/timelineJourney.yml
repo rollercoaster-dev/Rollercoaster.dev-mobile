@@ -38,6 +38,10 @@ notes:
     "· voraussichtlich …" tail need not trail the name. The date
     placeholder arrives already formatted for the locale — pass it
     through, never re-word or re-order the date itself.
+  - step.metadata.wasExpected replaces waitingOnExpected once that date
+    has passed. Past tense only, stating a fact — "war für … erwartet" —
+    never "überfällig", "verspätet", "immer noch offen" or any urgency
+    cue (ADR-0012). Nothing went wrong; the date is simply behind us.
   - Finish-line copy is matter-of-fact, not victorious. The "Finish &
     design badge" CTA stays a plain action phrase (e.g. "Abschließen &
     Abzeichen gestalten"), never "Beweise deines Erfolgs"-style victory

@@ -39,6 +39,7 @@
       "after": "nach {{title}}",
       "waitingOn": "wartet auf {{who}}",
       "waitingOnExpectedMeta": "· voraussichtlich {{date}}",
+      "wasExpectedMeta": "· war erwartet {{date}}",
       "due": "fällig am {{date}}"
     },
     "paused": {

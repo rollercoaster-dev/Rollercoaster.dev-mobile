@@ -1,5 +1,28 @@
 # Handoff prompt — design **setting B (Planning) & C (Dependencies)** on a step (Rollercoaster.dev goal app)
 
+> **⚠️ Correction (2026-08-11) — one line of this prompt was wrong.** The prompt
+> is preserved unedited below as the record of what was actually briefed, but do
+> **not** reuse the B-soft gloss in the Hard-constraints section (`:33`,
+> _"B-soft (a loose 'sometime')"_).
+>
+> B-soft does not mean "sometime". It means soft scheduling — _"for Tuesday",
+> not "due Tuesday"_ — and its whole ND payoff depends on a day being present:
+> _"soft placement creates a Tuesday that wouldn't otherwise exist — a foothold
+> in time itself"_ (`../../docs/research/step-model-gap.md:52`). A dateless
+> "sometime" is the case B-soft is contrasted against.
+>
+> The prototype built the wrong gloss into a `Sometime` / `On a date` toggle
+> (`Set BC B Prototype.dc.html:166-167`). **That toggle is retired** — dateless
+> is `dueAt: null`, and `Clear` already expresses it. Standing position:
+> [ADR-0013](../../docs/decisions/ADR-0013-phase-b-consolidated-position.md)
+> commits B to three time shapes (a date, a deadline, repeating); the full
+> reasoning is in
+> [phase-b-feature-shapes.md § B: Planning](../../docs/plans/phase-b-feature-shapes.md).
+>
+> The prompt's other B/C content — including the past-expected-date question at
+> `:28`, which the prototype answered with the neutral `was expected <date>` —
+> stands.
+
 Paste everything below into a new conversation. Re-attach the **Design System** project and the local repo folder **`Rollercoaster.dev-mobile`** first. Also attach the prior artifacts for continuity (see bottom).
 
 ---

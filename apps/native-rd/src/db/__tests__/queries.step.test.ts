@@ -738,6 +738,10 @@ describe("Step CRUD Operations", () => {
       row("sibling_a", null, { title: "Draft the outline" }),
       row("other", null),
     ];
+    // A fixed clock, never the real one (#571) — every date literal below is
+    // deliberately after it, so the pre-existing cases keep asserting the
+    // untouched present-tense reading.
+    const NOW = new Date("2026-06-01T00:00:00.000Z");
 
     test.each([
       [
@@ -748,6 +752,7 @@ describe("Step CRUD Operations", () => {
           waitingOnLabel: null,
           waitingOnExpectedAt: null,
           dueAt: null,
+          waitingOnExpectedIsPast: false,
         },
       ],
       [
@@ -758,6 +763,7 @@ describe("Step CRUD Operations", () => {
           waitingOnLabel: null,
           waitingOnExpectedAt: null,
           dueAt: null,
+          waitingOnExpectedIsPast: false,
         },
       ],
       [
@@ -768,6 +774,7 @@ describe("Step CRUD Operations", () => {
           waitingOnLabel: null,
           waitingOnExpectedAt: null,
           dueAt: null,
+          waitingOnExpectedIsPast: false,
         },
       ],
       [
@@ -784,6 +791,7 @@ describe("Step CRUD Operations", () => {
           waitingOnLabel: null,
           waitingOnExpectedAt: null,
           dueAt: null,
+          waitingOnExpectedIsPast: false,
         },
       ],
       [
@@ -794,6 +802,7 @@ describe("Step CRUD Operations", () => {
           waitingOnLabel: "Vendor quote",
           waitingOnExpectedAt: null,
           dueAt: null,
+          waitingOnExpectedIsPast: false,
         },
       ],
       [
@@ -807,6 +816,7 @@ describe("Step CRUD Operations", () => {
           waitingOnLabel: "Manager sign-off",
           waitingOnExpectedAt: "2026-06-24T00:00:00.000Z",
           dueAt: null,
+          waitingOnExpectedIsPast: false,
         },
       ],
       [
@@ -817,10 +827,44 @@ describe("Step CRUD Operations", () => {
           waitingOnLabel: null,
           waitingOnExpectedAt: null,
           dueAt: "2026-06-12T00:00:00.000Z",
+          waitingOnExpectedIsPast: false,
         },
       ],
     ])("%s", (_label, step, expected) => {
-      expect(resolveStepDependencyBand(step, goalSteps)).toEqual(expected);
+      expect(resolveStepDependencyBand(step, goalSteps, NOW)).toEqual(expected);
+    });
+
+    // The past-tense reading (#571). `now` is always the fixed NOW above, so
+    // these assertions can never drift with the real calendar.
+    test.each([
+      ["a day before now → past", "2026-05-31T00:00:00.000Z", true],
+      ["a millisecond before now → past", "2026-05-31T23:59:59.999Z", true],
+      // D4: strict <, so the exact instant is not yet behind us.
+      ["exactly now → not past", "2026-06-01T00:00:00.000Z", false],
+      ["a millisecond after now → not past", "2026-06-01T00:00:00.001Z", false],
+      ["a day after now → not past", "2026-06-02T00:00:00.000Z", false],
+    ])(
+      "waitingOnExpectedAt %s",
+      (_label, waitingOnExpectedAt, waitingOnExpectedIsPast) => {
+        const band = resolveStepDependencyBand(
+          row("s", null, {
+            waitingOnLabel: "Manager sign-off",
+            waitingOnExpectedAt,
+          }),
+          goalSteps,
+          NOW,
+        );
+        expect(band.waitingOnExpectedIsPast).toBe(waitingOnExpectedIsPast);
+      },
+    );
+
+    test("a null waitingOnExpectedAt is never past, however late `now` is", () => {
+      const band = resolveStepDependencyBand(
+        row("s", null, { waitingOnLabel: "Vendor quote" }),
+        goalSteps,
+        new Date("2099-01-01T00:00:00.000Z"),
+      );
+      expect(band.waitingOnExpectedIsPast).toBe(false);
     });
   });
 
