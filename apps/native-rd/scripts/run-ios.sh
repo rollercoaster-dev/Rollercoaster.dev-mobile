@@ -12,7 +12,8 @@ IOS_DIR="${APP_DIR}/ios"
 cd "${APP_DIR}"
 
 # Source .env.local if present — picks up IOS_DEVICE_ID and similar developer-local overrides.
-# Existing shell exports take precedence (we don't clobber).
+# Existing shell exports take precedence (we don't clobber) — including an
+# explicitly empty one, which is how `emulator:ios` forces the simulator path.
 if [ -f "${APP_DIR}/.env.local" ]; then
   while IFS= read -r line || [ -n "${line}" ]; do
     case "${line}" in
@@ -20,7 +21,7 @@ if [ -f "${APP_DIR}/.env.local" ]; then
     esac
     key="${line%%=*}"
     value="${line#*=}"
-    if [ -z "${!key:-}" ]; then
+    if [ -z "${!key+x}" ]; then
       export "${key}=${value}"
     fi
   done < "${APP_DIR}/.env.local"

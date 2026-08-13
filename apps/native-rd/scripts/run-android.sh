@@ -14,7 +14,8 @@ ANDROID_DIR="${APP_DIR}/android"
 cd "${APP_DIR}"
 
 # Source .env.local — picks up ANDROID_DEVICE_ID / IOS_DEVICE_ID / similar.
-# Existing shell exports take precedence.
+# Existing shell exports take precedence — including an explicitly empty one,
+# which is how `emulator:android` forces the emulator path.
 if [ -f "${APP_DIR}/.env.local" ]; then
   while IFS= read -r line || [ -n "${line}" ]; do
     case "${line}" in
@@ -22,7 +23,7 @@ if [ -f "${APP_DIR}/.env.local" ]; then
     esac
     key="${line%%=*}"
     value="${line#*=}"
-    if [ -z "${!key:-}" ]; then
+    if [ -z "${!key+x}" ]; then
       export "${key}=${value}"
     fi
   done < "${APP_DIR}/.env.local"
