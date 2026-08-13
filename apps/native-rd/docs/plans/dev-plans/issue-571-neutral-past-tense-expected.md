@@ -46,7 +46,7 @@ need updating to match; that is not this PR's work.
 
 ## Intent Verification
 
-- [x] A step with `waitingOnExpectedAt` before the resolver's injected `now` renders "waiting on {{who}} · was expected {{date}}" in Timeline, the Focus meta suffix form, and "{{who}} · was {{date}}" in the Edit Goal chip.
+- [x] A step with `waitingOnExpectedAt` before the resolver's injected `now` renders "waiting on {{who}} · was expected {{date}}" in Timeline, the Focus meta suffix form, and the Edit Goal chip. (The chip's copy was the issue's terser "{{who}} · was {{date}}" until the 15:30 log entry below; it now matches the Timeline line byte for byte, as its four sibling chip keys already did.)
 - [x] The same step with `waitingOnExpectedAt` after `now` renders unchanged ("waiting on {{who}} · expected {{date}}").
 - [x] `resolveStepDependencyBand`'s pure function signature takes `now: Date` as an explicit parameter — grep confirms no `Date.now()` / `new Date()` call inside the function body itself.
 - [x] A step with every date field null still renders no band/chip row anywhere (regression check on existing #454 behavior).
@@ -130,7 +130,7 @@ authoring UI (that's B1/B2/B3/C1 per the issue's "must not do").
 **Changes**:
 
 - [x] `buildDateDepChips` takes/threads a `now: Date` param from its caller (`buildEditGoalSteps`).
-- [x] Waiting-on chip branch: when `band.waitingOnExpectedIsPast`, use `editGoal:stepList.dateDepChips.wasExpected` ("{{who}} · was {{date}}", per the issue's literal copy) instead of `waitingOnExpected`.
+- [x] Waiting-on chip branch: when `band.waitingOnExpectedIsPast`, use `editGoal:stepList.dateDepChips.wasExpected` instead of `waitingOnExpected`. (Shipped as "waiting on {{who}} · was expected {{date}}", not the issue's terser literal — see the 15:30 log entry.)
 
 ### Step 5: i18n keys
 
@@ -211,6 +211,14 @@ in the phone's calendar rather than in a column at all.
   "waiting on" lead. Kept as the issue and this plan both specify that literal
   string; flagged because a reviewer will read it as an oversight. The register note
   tells the translator the terseness is deliberate (chips have no room).
+- [2026-08-11 15:30] **The Edit Goal chip's terse copy was reverted.** The 14:50
+  entry flagged `"{{who}} · was {{date}}"` as deliberate-but-odd; it was wrong.
+  "Alex · was Mar 6, 2020" drops both "waiting on" and "expected", so the chip
+  stops saying what its date is, and screen readers announce chip text verbatim.
+  The register note's justification — chips run shorter than Timeline lines — is
+  false: all four pre-existing `dateDepChips` keys are byte-identical to their
+  `timelineJourney` counterparts, and `wasExpected` was the only one that
+  diverged. Now `"waiting on {{who}} · was expected {{date}}"`, matching them.
 - [2026-08-11 15:00] **The resolver uses `Date.parse`, not `new Date(…)`.** The
   Intent Verification criterion asks for a grep proving no `new Date()` sits in the
   function body. Parsing a stored ISO string is not a clock read, but keeping the
