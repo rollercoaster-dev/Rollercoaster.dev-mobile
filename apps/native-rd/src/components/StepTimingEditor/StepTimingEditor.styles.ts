@@ -166,10 +166,12 @@ export const styles = StyleSheet.create((theme) => ({
   },
 
   // The ordinal badge, shared by the picker button and every candidate row.
+  // No horizontal padding: `minWidth === height` makes a one- or two-character
+  // ordinal an exact circle, and a longer one still grows into a pill rather
+  // than clipping. Padding would push every single-character badge into an oval.
   ordinal: {
     minWidth: theme.space[5],
     height: theme.space[5],
-    paddingHorizontal: theme.space[1],
     borderRadius: theme.radius.full,
     borderWidth: theme.borderWidth.thick,
     borderColor: theme.colors.border,

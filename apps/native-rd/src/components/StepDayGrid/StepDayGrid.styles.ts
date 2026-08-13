@@ -92,9 +92,11 @@ export const styles = StyleSheet.create((theme) => ({
     gap: theme.space[1],
     marginTop: theme.space[1],
   },
+  // Same circle rule as the editor's ordinal badge: minWidth === height, no
+  // horizontal padding, so a single ordinal is round rather than oval.
   mark: {
     minWidth: theme.space[4],
-    paddingHorizontal: theme.space[1],
+    height: theme.space[4],
     borderWidth: theme.borderWidth.thin,
     borderColor: theme.colors.border,
     borderRadius: theme.radius.full,
