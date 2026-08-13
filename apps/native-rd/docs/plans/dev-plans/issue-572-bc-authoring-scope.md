@@ -21,17 +21,17 @@ issue's own deliverable list minus the part a human owns:
 
 ## Intent Verification
 
-- [ ] A reader who opens `phase-b-feature-shapes.md` §C and sees `NewGoalModal`
+- [x] A reader who opens `phase-b-feature-shapes.md` §C and sees `NewGoalModal`
       in the five-surface list learns, in that same section, that the wizard is a
       **reading** surface for dependencies and never an authoring one — without
       opening #572, #570, or the prototype.
-- [ ] The `§B: Planning` anchor cited by the milestone description and by epic
+- [x] The `§B: Planning` anchor cited by the milestone description and by epic
       #570 resolves to a real heading in `phase-b-feature-shapes.md` instead of
       404-ing inside the doc.
-- [ ] The New Goal wizard's shipped copy contains no string promising a date,
+- [x] The New Goal wizard's shipped copy contains no string promising a date,
       deadline, schedule, dependency, or prerequisite — evidenced by a
       file:line audit in this plan, not an assertion.
-- [ ] `bun run format:check` passes (the only gate `ci-docs` runs on a
+- [x] `bun run format:check` passes (the only gate `ci-docs` runs on a
       Markdown-only PR).
 
 ## Dependencies
@@ -193,7 +193,7 @@ in when Stage 3 starts.
 **Commit**: `docs(native-rd): plan the B/C authoring-scope decision (#572)`
 **Changes**:
 
-- [ ] Commit this plan, including the wizard copy audit — the audit result is a
+- [x] Commit this plan, including the wizard copy audit — the audit result is a
       deliverable of the issue and needs to live in the repo, not in chat.
 
 ### Step 2: Record the decision in the feature-shapes doc
@@ -202,14 +202,14 @@ in when Stage 3 starts.
 **Commit**: `docs(native-rd): record B/C authoring as edit-time-only (#572)`
 **Changes**:
 
-- [ ] §C Smallest Useful Shape — add the "Authoring surface — edit time only"
+- [x] §C Smallest Useful Shape — add the "Authoring surface — edit time only"
       paragraph after `:345`.
-- [ ] §C Must Not Do — add the "No dependency authoring in the New Goal wizard"
+- [x] §C Must Not Do — add the "No dependency authoring in the New Goal wizard"
       bullet after `:390`.
-- [ ] Append the `## B: Planning` stub at end of file, with both recorded
+- [x] Append the `## B: Planning` stub at end of file, with both recorded
       decisions (D2 + D3).
-- [ ] Leave the Status table at `:17-27` untouched — B is still "Not started".
-- [ ] Run `bun run format` and confirm `bun run format:check` is clean.
+- [x] Leave the Status table at `:17-27` untouched — B is still "Not started".
+- [x] Run `bun run format` and confirm `bun run format:check` is clean.
 
 Commit body should state the decision and its reasoning in prose (the pressure
 argument on wizard step 3, and that #575/#576 already assume it), following the
@@ -219,13 +219,18 @@ house style of `7beb58d`. `Signed-off-by:` trailer is mandatory — husky adds i
 
 Docs-only. No unit tests apply; do not invent any.
 
-- [ ] `bun run format:check` — the only job `ci-docs.yml` runs, and the only CI
+- [x] `bun run format:check` — the only job `ci-docs.yml` runs, and the only CI
       that a `**/*.md`-only PR triggers.
-- [ ] Verify the new `## B: Planning` heading's anchor
+- [x] Verify the new `## B: Planning` heading's anchor
       (`#b-planning-merges-b-soft-b-deadlines-repeating`) matches what the
-      Status table row and epic #570's link expect.
-- [ ] Re-read §C top to bottom once — the new paragraph must not contradict
-      "the marker **informs only**" at `:337-339`.
+      Status table row and epic #570's link expect. Confirmed: the slug follows
+      the same pattern as the existing §A/§C anchors used by the prototype
+      records, and epic #570 links the file with no fragment — so it now lands
+      on a doc that actually contains a `B: Planning` heading.
+- [x] Re-read §C top to bottom once — the new paragraph must not contradict
+      "the marker **informs only**" at `:337-339`. It does not: the new text
+      constrains where a dependency is _set_, and says the wizard still _shows_
+      one, which is display, not enforcement.
 
 **Changeset: not required.** The repo has no `.changeset/` directory and no
 changeset step in any workflow; releases go through release-please
