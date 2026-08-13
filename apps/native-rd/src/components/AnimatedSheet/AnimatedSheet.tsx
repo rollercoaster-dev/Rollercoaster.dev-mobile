@@ -12,11 +12,11 @@ import Animated, {
   withTiming,
   runOnJS,
 } from "react-native-reanimated";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAnimationPref } from "../../hooks/useAnimationPref";
 import { getTimingConfig } from "../../utils/animation";
 import { focusAccessibilityRef } from "../../utils/accessibilityFocus";
-import { styles } from "./EvidenceTypePicker.styles";
+import { sheetStyles } from "./AnimatedSheet.styles";
+import { SheetSurface } from "./SheetSurface";
 
 export interface AnimatedSheetProps {
   /** Whether the sheet is open (drives the slide-up/scrim animation). */
@@ -60,12 +60,12 @@ export interface AnimatedSheetProps {
  * Android hardware back dismisses while open (the job the Modal's
  * `onRequestClose` used to do).
  *
- * Owns everything the issue calls "chrome" — overlay, scrim, backdrop, slide,
- * BackHandler, mount/rendered-while-animating-out lifecycle, plus the handle,
- * header row (title + ×) and optional sub-line (D1). The grid is `children`.
- * Takes already-resolved copy strings and has no `react-i18next` dependency of
- * its own (D7). Not exported from the barrel — imported directly by consumers
- * (D2). Reuses `EvidenceTypePicker.styles.ts`'s existing keys as-is.
+ * Owns the animated half of the chrome — overlay, scrim, backdrop, slide,
+ * BackHandler, and the mount/rendered-while-animating-out lifecycle. The
+ * static half (handle, header row, sub-line, surface) is {@link SheetSurface},
+ * which the theme-matrix stories render on its own (#573, D2). The body is
+ * `children`. Takes already-resolved copy strings and has no `react-i18next`
+ * dependency of its own (D7).
  */
 export function AnimatedSheet({
   visible,
@@ -80,7 +80,6 @@ export function AnimatedSheet({
 }: AnimatedSheetProps) {
   const { animationPref } = useAnimationPref();
   const { height: windowHeight } = useWindowDimensions();
-  const insets = useSafeAreaInsets();
   // Mounted while visible OR still sliding out; unmounts when the exit
   // animation completes so nothing lingers in the a11y tree.
   const [rendered, setRendered] = useState(visible);
@@ -151,45 +150,31 @@ export function AnimatedSheet({
   return (
     <View
       testID="animated-sheet-overlay"
-      style={styles.overlay}
+      style={sheetStyles.overlay}
       pointerEvents={visible ? "auto" : "none"}
       accessibilityViewIsModal
     >
       {/* Backdrop — tapping the exposed scrim dismisses the sheet. */}
-      <Animated.View style={[styles.scrim, scrimAnimStyle]}>
+      <Animated.View style={[sheetStyles.scrim, scrimAnimStyle]}>
         <Pressable
           testID={backdropTestID}
-          style={styles.backdrop}
+          style={sheetStyles.backdrop}
           onPress={onClose}
           accessibilityRole="button"
           accessibilityLabel={closeLabel}
         />
       </Animated.View>
       <Animated.View style={sheetAnimStyle}>
-        <View style={styles.sheet(insets.bottom)}>
-          <View style={styles.handle} />
-          <View style={styles.sheetHeader}>
-            <RNText
-              ref={titleRef}
-              style={styles.sheetTitle}
-              accessibilityRole="header"
-            >
-              {title}
-            </RNText>
-            <Pressable
-              style={styles.closeButton}
-              onPress={onClose}
-              accessibilityRole="button"
-              accessibilityLabel={closeLabel}
-              hitSlop={8}
-              testID={closeTestID}
-            >
-              <RNText style={styles.closeIcon}>{"✕"}</RNText>
-            </Pressable>
-          </View>
-          {subLine ? <RNText style={styles.subLine}>{subLine}</RNText> : null}
+        <SheetSurface
+          title={title}
+          subLine={subLine}
+          closeLabel={closeLabel}
+          onClose={onClose}
+          closeTestID={closeTestID}
+          titleRef={titleRef}
+        >
           {children}
-        </View>
+        </SheetSurface>
       </Animated.View>
     </View>
   );

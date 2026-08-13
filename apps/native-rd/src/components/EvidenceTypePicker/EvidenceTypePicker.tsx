@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { EVIDENCE_OPTIONS, type EvidenceTypeValue } from "../../types/evidence";
 import { EvidenceType } from "../../db";
 import { evidenceLabel } from "../../i18n/labels";
-import { AnimatedSheet } from "./AnimatedSheet";
+import { AnimatedSheet, sheetStyles } from "../AnimatedSheet";
 import { styles } from "./EvidenceTypePicker.styles";
 
 /**
@@ -271,12 +271,13 @@ export interface CaptureSheetBodyProps {
  * background at all. Not exported from the barrel, so it stays an internal
  * helper rather than a second public picker (D7).
  *
- * Deliberately duplicates {@link AnimatedSheet}'s chrome markup (handle +
- * header + sub-line) rather than delegating to it, so it can render standalone
- * — without a scrim — for `AllThemesMatrix` (seven live scrims would stack
- * over the canvas) (D3). The grid itself is *not* duplicated: both this body
- * and the live {@link AnimatedSheet} path render the same {@link CaptureGrid}
- * (D4).
+ * Duplicates the chrome markup (handle + header + sub-line) rather than
+ * delegating to {@link AnimatedSheet}, so it can render standalone — without a
+ * scrim — for `AllThemesMatrix` (seven live scrims would stack over the
+ * canvas) (D3). `SheetSurface` (#573) now covers that case without
+ * duplication; converting this body to it was out of scope for that issue.
+ * The grid itself is *not* duplicated: both this body and the live
+ * {@link AnimatedSheet} path render the same {@link CaptureGrid} (D4).
  */
 export function CaptureSheetBody({
   headerTitle,
@@ -289,24 +290,24 @@ export function CaptureSheetBody({
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={styles.sheet(insets.bottom)}>
-      <View style={styles.handle} />
-      <View style={styles.sheetHeader}>
-        <RNText style={styles.sheetTitle} accessibilityRole="header">
+    <View style={sheetStyles.sheet(insets.bottom)}>
+      <View style={sheetStyles.handle} />
+      <View style={sheetStyles.sheetHeader}>
+        <RNText style={sheetStyles.sheetTitle} accessibilityRole="header">
           {headerTitle ?? t("common:evidenceTypePicker.addEvidence")}
         </RNText>
         <Pressable
-          style={styles.closeButton}
+          style={sheetStyles.closeButton}
           onPress={onClose}
           accessibilityRole="button"
           accessibilityLabel={t("common:actions.close")}
           hitSlop={8}
         >
-          <RNText style={styles.closeIcon}>{"✕"}</RNText>
+          <RNText style={sheetStyles.closeIcon}>{"✕"}</RNText>
         </Pressable>
       </View>
       {activeStepTitle ? (
-        <RNText style={styles.subLine}>
+        <RNText style={sheetStyles.subLine}>
           {t("common:evidenceTypePicker.savingToActiveStep", {
             title: activeStepTitle,
           })}
