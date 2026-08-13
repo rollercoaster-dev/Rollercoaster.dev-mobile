@@ -344,6 +344,15 @@ FocusModeScreen + MiniTimeline, TimelineJourneyScreen), with 2–3 candidate
 treatments (inline note, chip, connector) as side-by-side variants in the app's
 token language.
 
+**Authoring surface — edit time only** (settled 2026-08-13, #572). That list is
+where a dependency is _read_. It is **set** in exactly one place: Edit Goal
+(`EditModeScreen`). The New Goal wizard (`src/screens/NewGoalScreen/`) shows a
+dependency if a step has one and offers no way to add one. Wizard step 3 is the
+build list — the moment a user is already naming steps in a row — and per-row
+`+ depends` chips there are the clearest way to make "Setting must not feel
+required" fail. Authoring is a deliberate second visit. Epic #570 ships Edit
+Goal only; revisit only if real use shows the second trip is friction.
+
 Two **task-view behaviors** are built as switchable variants (the register
 leaves the fork open):
 
@@ -388,6 +397,8 @@ time, no calendar integration, no counting or scoring.
   per goal.
 - **Setting a dependency must not feel required** — a step with none stays
   first-class; the affordance can't pressure every step toward a graph.
+- **No dependency authoring in the New Goal wizard** — the create flow stays
+  title + evidence, and "quick add" (bare title) stays the fast path (#572).
 
 ### Prototype Questions
 
@@ -453,3 +464,28 @@ time, no calendar integration, no counting or scoring.
 - **E: Step states** — "waiting" is a relation (ADR-0011), not a state.
 - **Data layer** — an additive relation, consistent with the
   [Evolu spike](../research/evolu-step-model-feasibility-spike.md); schema deferred.
+
+## B: Planning (merges B-soft, B-deadlines, repeating)
+
+**Shape not written yet — Stage 3.** This heading exists ahead of its stage so
+that the `§B: Planning` pointers in the `native-rd: Set B & C authoring`
+milestone and in epic #570 resolve. It holds only decisions taken before the
+shape is written; the User Need / Smallest Useful Shape / … template is filled
+in when Stage 3 starts.
+
+### Decisions recorded ahead of the shape
+
+- **Dateless is `dueAt: null`** (2026-08-11, #570). The Direction B prototype's
+  date-sheet `Sometime` / `On a date` mode toggle is retired: a step either has
+  a due date or it does not, and the sheet's `Clear` already expresses the
+  latter. The toggle came from a gloss of B-soft as "a loose sometime"; B-soft
+  means _soft placement_ ("for Tuesday", not "due Tuesday") and needs a day to
+  be present. ADR-0013 commits B to three time shapes — a date, a deadline,
+  repeating — and "sometime" is not among them. Soft-vs-firm _on a date_ stays
+  open for Stage 3.
+- **Authoring surface — edit time only** (2026-08-13, #572). A planning date is
+  set in Edit Goal (`EditModeScreen`), not in the New Goal wizard. Same
+  reasoning as §C: the wizard's build list is the highest-pressure screen in the
+  app, and a per-row `+ date` chip there is where "Setting must not feel
+  required" fails first. The wizard's copy promises nothing about dates, so
+  nothing there contradicts this. Revisit after real use.
