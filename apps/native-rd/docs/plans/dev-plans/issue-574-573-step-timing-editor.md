@@ -409,7 +409,7 @@ sub-line's quoted `“late.”`), `deadline` (outside the sub-line's `not a dead
       `accessibilityState={{ selected: isSelected }}`, `minHeight: 44`,
       `fontVariant: ["tabular-nums"]`. **Never** `disabled`.
 - [ ] `accessibilityLabel` = full date via `Intl.DateTimeFormat(locale, { weekday:
-    "long", day: "numeric", month: "long", year: "numeric" })`, plus
+  "long", day: "numeric", month: "long", year: "numeric" })`, plus
       `marksA11ySuffix(count)` when marks exist.
 - [ ] `onPress` → `onChange(key === value ? null : key)`.
 - [ ] Marks: first two labels as badges, third+ collapses to one overflow badge (`+`).
@@ -482,7 +482,7 @@ sub-line's quoted `“late.”`), `deadline` (outside the sub-line's `not a dead
       `minHeight: 44`, `accessibilityRole="button"`.
 - [ ] Empty `candidates` → `noCandidatesLabel` instead of an empty box.
 - [ ] `OrderingNote` part: renders **only** when `draft.dueDate && draft.afterStepId &&
-    target.dueDate && draft.dueDate < target.dueDate`. Plain `Text`, body weight,
+  target.dueDate && draft.dueDate < target.dueDate`. Plain `Text`, body weight,
       `colors.textSecondary`, a quiet left rule. **No** icon, **no** `error`/`danger`
       token, **no** `accessibilityRole="alert"`, **no** `disabled` anywhere.
 - [ ] Footer: `Clear` (quiet, fixed width) + `Done` (primary, `flex: 1`), both
@@ -658,3 +658,46 @@ story shows the controlled wiring, and #575 must adopt it.
   PR #582 is genuinely independent. Confirmed `Set B & C/` is a **new** Storybook
   section — existing titles are `Iteration B/<Area>/<Component>`, `Design System/…`,
   `Badges/…`, `Screens/…`.
+
+### Implementation deviations
+
+- **OQ-1 resolved as planned, and now verified.** `readOutParity.test.tsx` renders
+  `TimelineStep`'s band and the editor's timing line from the same `formatDate`
+  output and asserts the strings are identical. They are. `afterStepIsCompleted`
+  defaults to `false`, so the default render carries no `· done ✓`. Making the
+  suffix canonical remains a change to Focus, Timeline and the resolver together.
+- **OQ-2 resolved differently.** The planned `composeTheme("light", "largeText")`
+  story is not buildable: `ScopedTheme` accepts only _registered_ theme names
+  (`keyof UnistylesThemes`), and `largeText` is a composable variant. The
+  `LargeTextDensity` story therefore renders under `light-lowVision`, which carries
+  the identical `size: sizeL` scale (`src/themes/variants.ts:128` vs `:96`). The
+  first draft of this story passed a `largeText` background colour to a
+  `light-default` subtree — it would have _looked_ like a density check while
+  rendering at normal scale. Replaced before commit.
+- **Draft seeding moved off the press handler.** Seeding on `handleTimingLinePress`
+  meant a controlled host that opens a row programmatically (no tap reaches the
+  component) would edit a stale draft. Seeding now keys on the expand transition
+  itself, via React's render-time state-adjustment pattern rather than an effect —
+  an effect would paint one frame of the wrong state and trips
+  `react-hooks/set-state-in-effect`. The same pattern re-anchors `StepDayGrid`'s
+  displayed month on a `value` change.
+- **Focus target is the heading `View`, not the question `Text`.** The shared `Text`
+  component does not forward refs. The block is the better target anyway: it
+  announces the question and the intent sub-line together.
+- **Two files split beyond the plan.** `StepDayGrid.parts.tsx` (the day cell) keeps
+  `StepDayGrid.tsx` inside the repo's 300-line lint budget; `types.ts` holds the
+  editor's exported types so the component file stays under it too.
+- **`theme.lineHeight.relaxed` does not exist** — the scale is size-keyed
+  (`xs…3xl`). Used `md`.
+- **`forbiddenCopy.test.ts` is its own file** rather than a block inside the editor
+  test. It greps string literals in _both_ components, with comments stripped first
+  (comments are where the ban is explained). Verified to fail on a planted
+  `"this step is blocked"` before being restored.
+- **Barrel required before the first commit.** `local/require-barrel-export` fires on
+  any file in a component directory without an `index.ts`, so commit 1 ships the
+  barrel exporting the helpers, widened in commit 2. Note: `expo lint` caches
+  results under `.expo/cache/eslint`, so adding a barrel does not clear the error
+  for unchanged files until that cache is dropped.
+- **Scope.** 18 new files, **zero existing files modified** — `queries.ts`,
+  `format.ts` and the i18n resources stayed read-only references as planned. ~1.5k
+  lines of component code, ~1.6k of stories and tests.
