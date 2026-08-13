@@ -140,7 +140,7 @@ authoring UI (that's B1/B2/B3/C1 per the issue's "must not do").
 
 - [x] `en/timelineJourney.json` → `step.metadata.wasExpected: "waiting on {{who}} · was expected {{date}}"`.
 - [x] `en/focusMode.json` → `currentTask.metadata.wasExpectedMeta: "· was expected {{date}}"`.
-- [x] `en/editGoal.json` → `stepList.dateDepChips.wasExpected: "{{who}} · was {{date}}"`.
+- [x] `en/editGoal.json` → `stepList.dateDepChips.wasExpected: "waiting on {{who}} · was expected {{date}}"` — the full line, matching Timeline. (Corrected: an earlier draft of this step said `"{{who}} · was {{date}}"`; see the 14:50 entry in the decision log.)
 - [x] Append a short note to each `_register/*.yml` for the de translator: "was expected" states a fact, never "overdue" / urgency (ADR-0012).
 - [x] Run `bun run gen:pseudo` to regenerate all three `pseudo/*.json` files. Do not touch `de/*.json`.
 
@@ -152,7 +152,7 @@ authoring UI (that's B1/B2/B3/C1 per the issue's "must not do").
 
 - [x] Update the existing `resolveStepDependencyBand` `test.each` expectations (`queries.step.test.ts:735-825`) to include `waitingOnExpectedIsPast: false`.
 - [x] Add cases: `waitingOnExpectedAt` before a fixed `now` → `true`; equal to `now` → `false` (D4 boundary); after `now` → `false`; null → `false`.
-- [x] One render-level test per surface (Timeline, Focus, Edit Goal) asserting the "was expected" / "· was expected" / "{{who}} · was {{date}}" text appears under a fixed clock, and that the future case is unchanged.
+- [x] One render-level test per surface (Timeline, Focus, Edit Goal) asserting the "waiting on … · was expected …" / "· was expected …" / "waiting on … · was expected …" text appears, and that the future case is unchanged. Fixtures use dates far either side of the real clock at local noon (no trailing `Z`) rather than a faked clock.
 
 ## Testing Strategy
 
