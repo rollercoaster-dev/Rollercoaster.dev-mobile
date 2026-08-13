@@ -76,6 +76,7 @@
       "after": "nach {{title}}",
       "waitingOn": "wartet auf {{who}}",
       "waitingOnExpected": "wartet auf {{who}} · erwartet {{date}}",
+      "wasExpected": "wartet auf {{who}} · war für {{date}} erwartet",
       "due": "fällig {{date}}"
     },
     "a11y": {
