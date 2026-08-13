@@ -193,6 +193,14 @@ export const styles = StyleSheet.create((theme) => ({
     lineHeight: theme.size.xs,
     textAlign: "center",
     includeFontPadding: false,
+    // Centring the line box is not the same as centring the *glyph*: the box
+    // reserves descender space that a digit or an ordinal letter never uses, so
+    // the ink lands above centre. Nudge back down by (cap - ascent + descent)/2,
+    // which measures at 0.049em for the headline family (Anybody) — cap 8.17,
+    // ascent 10, descent 3 at 12px. Sub-pixel, but visible on a 2x screen, and
+    // it is why these badges read high while the grid's marks (body family,
+    // which needs no correction) do not.
+    transform: [{ translateY: theme.size.xs * 0.05 }],
   },
 
   /**
