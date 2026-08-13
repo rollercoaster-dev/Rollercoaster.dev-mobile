@@ -474,7 +474,10 @@ describe("EditModeScreen", () => {
     );
 
     // The screen reads the real clock, so these two dates are far enough either
-    // side of it that the assertion can't drift with the calendar (#571).
+    // side of it that the assertion can't drift with the calendar (#571). Local
+    // noon, no trailing Z: formatDate goes through toLocaleDateString, so a
+    // UTC-midnight ISO would format as the previous day west of Greenwich and
+    // the expected literals below would fail on a US runner.
     //
     // Asserted as English literals, not via i18n.t with the key the component
     // itself calls: that would pass against any copy at all, including copy
@@ -483,13 +486,13 @@ describe("EditModeScreen", () => {
     it.each([
       {
         tense: "past",
-        waitingOnExpectedAt: "2020-03-06T00:00:00.000Z",
+        waitingOnExpectedAt: "2020-03-06T12:00:00",
         text: "waiting on Alex · was expected Mar 6, 2020",
         gone: /· expected/,
       },
       {
         tense: "future",
-        waitingOnExpectedAt: "2099-03-06T00:00:00.000Z",
+        waitingOnExpectedAt: "2099-03-06T12:00:00",
         text: "waiting on Alex · expected Mar 6, 2099",
         gone: /was expected/,
       },
