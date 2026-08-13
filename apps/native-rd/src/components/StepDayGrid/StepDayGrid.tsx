@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from "react";
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
+import { CaretLeft, CaretRight } from "phosphor-react-native";
 import { Text } from "../Text";
+import { IconButton } from "../IconButton";
 import { DayCell } from "./StepDayGrid.parts";
 import { styles } from "./StepDayGrid.styles";
 import {
@@ -52,9 +54,6 @@ export interface StepDayGridProps {
   testID?: string;
 }
 
-/** A Monday, used to generate localised weekday headers in the right order. */
-const A_KNOWN_MONDAY = new Date(2026, 5, 22);
-
 const defaultMarksA11ySuffix = (count: number) =>
   count === 1 ? "1 other step here" : `${count} other steps here`;
 
@@ -91,8 +90,13 @@ function sameMonth(a: GridMonth, b: GridMonth): boolean {
  * of the plan on the calendar you pick from — the reason in-list dating beats a
  * sheet — is impossible; (4) Storybook web is one of our review surfaces and its
  * web support is untested here.
+ *
+ * Exported memoised: inside `StepTimingEditor` this re-renders whenever the
+ * dependency picker moves, which changes nothing the grid reads. Callers must
+ * keep `onChange` stable (`useCallback`) and must not pass `now={new Date()}`
+ * inline, or the memo misses every time.
  */
-export function StepDayGrid({
+function StepDayGridComponent({
   value,
   now,
   marks,
@@ -138,14 +142,9 @@ export function StepDayGrid({
   // grid in every locale — never a hand-written weekday array (#574).
   const weekdayLabels = useMemo(() => {
     const format = new Intl.DateTimeFormat(locale, { weekday: "narrow" });
+    // 22 June 2026 is a Monday; Date rolls the month over past the 30th.
     return Array.from({ length: 7 }, (_, i) =>
-      format.format(
-        new Date(
-          A_KNOWN_MONDAY.getFullYear(),
-          A_KNOWN_MONDAY.getMonth(),
-          A_KNOWN_MONDAY.getDate() + i,
-        ),
-      ),
+      format.format(new Date(2026, 5, 22 + i)),
     );
   }, [locale]);
 
@@ -166,35 +165,27 @@ export function StepDayGrid({
   return (
     <View style={styles.container} testID={testID}>
       <View style={styles.monthRow}>
-        <Pressable
-          accessibilityRole="button"
+        {/* IconButton, not bespoke Pressables: it is already 44pt at `md` and
+            tones the Phosphor icon per theme via resolveIconColor. */}
+        <IconButton
+          icon={<CaretLeft weight="bold" />}
+          tone="surface"
           accessibilityLabel={previousMonthLabel}
           testID={`${testID}-prev`}
           onPress={() => setView((current) => shiftMonth(current, -1))}
-          style={({ pressed }) => [
-            styles.navButton,
-            pressed && styles.navButtonPressed,
-          ]}
-        >
-          <Text style={styles.navGlyph}>‹</Text>
-        </Pressable>
+        />
 
         <Text style={styles.monthLabel} testID={`${testID}-month-label`}>
           {monthLabel}
         </Text>
 
-        <Pressable
-          accessibilityRole="button"
+        <IconButton
+          icon={<CaretRight weight="bold" />}
+          tone="surface"
           accessibilityLabel={nextMonthLabel}
           testID={`${testID}-next`}
           onPress={() => setView((current) => shiftMonth(current, 1))}
-          style={({ pressed }) => [
-            styles.navButton,
-            pressed && styles.navButtonPressed,
-          ]}
-        >
-          <Text style={styles.navGlyph}>›</Text>
-        </Pressable>
+        />
       </View>
 
       <View style={styles.week}>
@@ -234,7 +225,6 @@ export function StepDayGrid({
             <View key={key} style={styles.cell}>
               <DayCell
                 day={day}
-                dayKey={key}
                 a11yLabel={
                   dayA11yFormat.format(new Date(view.year, view.month, day)) +
                   a11ySuffix
@@ -257,3 +247,5 @@ export function StepDayGrid({
     </View>
   );
 }
+
+export const StepDayGrid = React.memo(StepDayGridComponent);

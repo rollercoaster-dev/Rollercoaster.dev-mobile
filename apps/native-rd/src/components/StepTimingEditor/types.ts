@@ -1,6 +1,6 @@
 import type { View } from "react-native";
 import type { RefObject } from "react";
-import type { StepDayMark } from "../StepDayGrid";
+import type { StepDayGridProps, StepDayMark } from "../StepDayGrid";
 
 /** A step (or sub-step) this one may depend on. */
 export interface StepTimingCandidate {
@@ -105,10 +105,14 @@ export interface StepTimingEditorProps {
   orderingNote?: (dependencyTitle: string, dependencyDate: string) => string;
   /** a11y label on the timing line. */
   timingLineA11yLabel?: string;
-  /** Copy forwarded to the embedded grid. */
-  previousMonthLabel?: string;
-  nextMonthLabel?: string;
-  legendLabel?: string;
-  marksA11ySuffix?: (count: number) => string;
+  /**
+   * Copy forwarded verbatim to the embedded `StepDayGrid`. Grouped rather than
+   * flattened so the grid's copy surface stays the grid's — adding one there
+   * does not mean editing this file too.
+   */
+  gridCopy?: Pick<
+    StepDayGridProps,
+    "previousMonthLabel" | "nextMonthLabel" | "legendLabel" | "marksA11ySuffix"
+  >;
   testID?: string;
 }

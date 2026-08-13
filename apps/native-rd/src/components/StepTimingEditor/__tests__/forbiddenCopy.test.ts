@@ -11,8 +11,7 @@ import { join } from "path";
  * would make the label lie.
  *
  * The rest come from ADR-0012's no-auto-judgment rule — no "overdue"/"late"
- * framing on a passed date, and no "missing"/"needed"/"required" framing on an
- * unset one.
+ * framing on a passed date, and no "missing"/"needed" framing on an unset one.
  */
 const FORBIDDEN = [
   "blocked",
@@ -30,40 +29,95 @@ const FORBIDDEN = [
  */
 const SANCTIONED = ["not a deadline", "reads as “late.”"];
 
+const isSanctioned = (text: string) =>
+  SANCTIONED.some((ok) => text.includes(ok));
+
 const COMPONENT_DIRS = ["StepTimingEditor", "StepDayGrid"];
 
-function sourceFiles(dir: string): string[] {
+/**
+ * String literals that can reach a user, per source file. Comments are stripped
+ * first: doc comments are where the ban is *explained*, and a rule that bans
+ * its own explanation would be undocumentable.
+ */
+function userFacingLiterals(dir: string): string[] {
   const base = join(__dirname, "..", "..", dir);
-  return readdirSync(base)
+  const files = readdirSync(base)
     .filter((f) => /\.(ts|tsx)$/.test(f) && !f.includes(".stories."))
     .map((f) => join(base, f));
+
+  expect(files.length).toBeGreaterThan(0);
+
+  return files.flatMap((file) => {
+    const source = readFileSync(file, "utf8")
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/\/\/[^\n]*/g, "");
+    return source.match(/"[^"\n]*"|'[^'\n]*'|`[^`\n]*`/g) ?? [];
+  });
 }
 
 describe.each(COMPONENT_DIRS)("%s forbidden copy", (dir) => {
-  const files = sourceFiles(dir);
-
-  it("has source files to check", () => {
-    expect(files.length).toBeGreaterThan(0);
-  });
+  // Read and strip once per directory, not once per forbidden word.
+  const literals = userFacingLiterals(dir).filter((l) => !isSanctioned(l));
 
   test.each(FORBIDDEN)(
     "never ships the word %p in a string literal",
     (word) => {
-      for (const file of files) {
-        // Strip comments first: prose in doc comments is where we explain *why*
-        // these words are banned, and a rule that bans its own explanation would
-        // be undocumentable. Only what can reach a user is checked.
-        const source = readFileSync(file, "utf8")
-          .replace(/\/\*[\s\S]*?\*\//g, "")
-          .replace(/\/\/[^\n]*/g, "");
-
-        const literals = source.match(/"[^"\n]*"|'[^'\n]*'|`[^`\n]*`/g) ?? [];
-
-        for (const literal of literals) {
-          if (SANCTIONED.some((ok) => literal.includes(ok))) continue;
-          expect(literal.toLowerCase()).not.toContain(word);
-        }
+      for (const literal of literals) {
+        expect(literal.toLowerCase()).not.toContain(word);
       }
     },
   );
+});
+
+/**
+ * The half of this guard that survives #576.
+ *
+ * These components deliberately carry English copy defaults today (the D7
+ * convention), but #576 moves that copy into the i18n resources — at which
+ * point a scan of component sources alone would protect nothing and would pass
+ * silently forever. So scan the resources the copy is headed for too.
+ *
+ * Scoped to the namespaces that carry step-planning copy — the surfaces
+ * ADR-0010/0012 actually govern — and deliberately **not** every namespace. The
+ * ban is on planning *framing*, not on the English words: `evidenceViewer`
+ * legitimately says a photo file "is missing" (it is), and `permissions` says
+ * "Camera Access Needed" (it is). Policing those would be a false positive that
+ * teaches people to weaken the guard.
+ *
+ * Widening this to every component and screen, in `src/__tests__/structure/`,
+ * is tracked as a follow-up.
+ */
+const PLANNING_NAMESPACES = ["editGoal", "timelineJourney", "focusMode"];
+
+describe("planning-copy i18n resources", () => {
+  const enDir = join(__dirname, "..", "..", "..", "i18n", "resources", "en");
+
+  /** Every string value in a namespace bundle, flattened depth-first. */
+  function stringValues(node: unknown): string[] {
+    if (typeof node === "string") return [node];
+    if (node && typeof node === "object") {
+      return Object.values(node).flatMap(stringValues);
+    }
+    return [];
+  }
+
+  const copy = PLANNING_NAMESPACES.flatMap((namespace) => {
+    const bundle = JSON.parse(
+      readFileSync(join(enDir, `${namespace}.json`), "utf8"),
+    );
+    return stringValues(bundle)
+      .filter((value) => !isSanctioned(value))
+      .map((value) => ({ namespace, value }));
+  });
+
+  it("has planning copy to check", () => {
+    expect(copy.length).toBeGreaterThan(0);
+  });
+
+  test.each(FORBIDDEN)("no planning copy ships the word %p", (word) => {
+    const offenders = copy.filter((entry) =>
+      entry.value.toLowerCase().includes(word),
+    );
+    expect(offenders).toEqual([]);
+  });
 });

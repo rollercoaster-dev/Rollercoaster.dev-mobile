@@ -26,23 +26,6 @@ export const styles = StyleSheet.create((theme) => ({
     fontSize: theme.size.sm,
     color: theme.colors.text,
   },
-  navButton: {
-    minWidth: DAY_CELL_MIN_SIZE,
-    minHeight: DAY_CELL_MIN_SIZE,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: theme.borderWidth.thick,
-    borderColor: theme.colors.border,
-    borderRadius: theme.radius.sm,
-    backgroundColor: theme.colors.backgroundSecondary,
-  },
-  navButtonPressed: {
-    backgroundColor: theme.colors.accentMint,
-  },
-  navGlyph: {
-    fontSize: theme.size.md,
-    color: theme.colors.text,
-  },
   // Seven equal columns, shared by the weekday header and the day grid.
   week: {
     flexDirection: "row",
@@ -89,6 +72,11 @@ export const styles = StyleSheet.create((theme) => ({
     color: theme.colors.text,
     // Keeps the digit columns from jittering between 1 and 11 (#574).
     fontVariant: ["tabular-nums"],
+    // The inherited body lineHeight (26) would eat most of the 44pt cell and
+    // shove the mark badges down. Tighten it to the digits.
+    lineHeight: theme.size.md,
+    textAlign: "center",
+    includeFontPadding: false,
   },
   // A past day reads *quieter*. It is never disabled and never refused (#574).
   dayNumberPast: {
@@ -122,6 +110,11 @@ export const styles = StyleSheet.create((theme) => ({
     fontSize: theme.size.xs,
     fontWeight: theme.fontWeight.bold,
     color: theme.colors.accentMintFg,
+    // See StepTimingEditor's ordinalLabel: the inherited body lineHeight (26)
+    // overflows a badge this small and pushes the glyph off centre.
+    lineHeight: theme.size.xs,
+    textAlign: "center",
+    includeFontPadding: false,
   },
   markLabelOnSelected: {
     color: theme.colors.text,

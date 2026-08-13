@@ -1,6 +1,7 @@
 import React from "react";
 import { renderWithProviders, screen } from "../../../__tests__/test-utils";
 import { formatDate } from "../../../utils/format";
+import { i18n } from "../../../i18n";
 import { TimelineStep } from "../../TimelineStep";
 import { StepTimingEditor } from "../StepTimingEditor";
 
@@ -106,5 +107,44 @@ describe("read-out parity with Timeline", () => {
     expect(textOf(editor.after)).toBe(`after ${AFTER_TITLE}`);
     expect(textOf(editor.after)).not.toContain("done");
     expect(textOf(editor.after)).not.toContain("✓");
+  });
+});
+
+/**
+ * The tests above compare two *rendered* surfaces, which is the parity that
+ * matters today. But #576 replaces these components' English defaults with
+ * `t()` output, and at that point the default path stops being rendered at all
+ * — so a test that only exercises the defaults would keep passing while the
+ * surfaces silently diverged.
+ *
+ * These pin the defaults to the resources that will replace them. A change to
+ * either JSON now breaks this file, which is the drift actually worth catching.
+ */
+describe("copy defaults match the i18n resources that will replace them", () => {
+  const title = "Inspection & labels";
+  const date = "Jun 30, 2026";
+
+  it("Timeline's `after` resource matches the default", () => {
+    expect(i18n.t("timelineJourney:step.metadata.after", { title })).toBe(
+      `after ${title}`,
+    );
+  });
+
+  it("Focus's `after` resource matches the default", () => {
+    expect(i18n.t("focusMode:currentTask.metadata.after", { title })).toBe(
+      `after ${title}`,
+    );
+  });
+
+  it("Timeline's `due` resource matches the default", () => {
+    expect(i18n.t("timelineJourney:step.metadata.due", { date })).toBe(
+      `due ${date}`,
+    );
+  });
+
+  it("Focus's `due` resource matches the default", () => {
+    expect(i18n.t("focusMode:currentTask.metadata.due", { date })).toBe(
+      `due ${date}`,
+    );
   });
 });

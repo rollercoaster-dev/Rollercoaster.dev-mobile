@@ -185,6 +185,12 @@ export const styles = StyleSheet.create((theme) => ({
     fontWeight: theme.fontWeight.bold,
     fontSize: theme.size.xs,
     color: theme.colors.text,
+    // `Text` defaults to the body variant, whose lineHeight is 1.6x the *body*
+    // size (26) — inside a 20pt circle that line box overflows and the glyph
+    // rides high. Pin the line box to the glyph and centre it explicitly.
+    lineHeight: theme.size.xs,
+    textAlign: "center",
+    includeFontPadding: false,
   },
 
   /**
@@ -206,39 +212,17 @@ export const styles = StyleSheet.create((theme) => ({
   },
 
   // --- Footer ---
+  // Layout only: the buttons themselves are the shared `Button`, so the
+  // neo-brutalist fill, border, shadow and pressed-translate all come from
+  // there rather than being restated here.
   footer: {
     flexDirection: "row",
     gap: theme.space[3],
   },
-  footerButton: {
-    minHeight: TOUCH_TARGET_MIN,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: theme.space[4],
-    borderWidth: theme.borderWidth.thick,
-    borderColor: theme.colors.border,
-    borderRadius: theme.radius.sm,
-    ...shadowStyle(theme, "cardElevation"),
-  },
-  clearButton: {
+  clearSlot: {
     flexGrow: 0,
-    backgroundColor: theme.colors.backgroundSecondary,
   },
-  clearLabel: {
-    fontWeight: theme.fontWeight.bold,
-    fontSize: theme.size.sm,
-    color: theme.colors.textSecondary,
-  },
-  doneButton: {
+  doneSlot: {
     flex: 1,
-    backgroundColor: theme.colors.accentPrimary,
-  },
-  doneLabel: {
-    fontWeight: theme.fontWeight.bold,
-    fontSize: theme.size.sm,
-    color: theme.colors.background,
-  },
-  buttonPressed: {
-    opacity: 0.9,
   },
 }));

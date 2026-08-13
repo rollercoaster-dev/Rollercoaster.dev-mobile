@@ -9,7 +9,6 @@ import { styles } from "./StepDayGrid.styles";
  */
 export function DayCell({
   day,
-  dayKey: key,
   a11yLabel,
   isSelected,
   isToday,
@@ -19,7 +18,6 @@ export function DayCell({
   testID,
 }: {
   day: number;
-  dayKey: string;
   a11yLabel: string;
   isSelected: boolean;
   isToday: boolean;
@@ -60,7 +58,7 @@ export function DayCell({
         <View style={styles.marksRow}>
           {visibleMarks.map((label, index) => (
             <MarkBadge
-              key={`${key}-mark-${index}`}
+              key={index}
               label={label}
               onSelectedDay={isSelected}
               testID={`${testID}-mark-${index}`}

@@ -300,8 +300,15 @@ describe("StepTimingEditor candidate list", () => {
     const completed = screen.getByTestId(
       "step-timing-editor-depends-on-option-s2",
     );
-    // The ordinal slot reads as a check; the candidate stays pickable.
-    expect(within(completed).getByText("✓")).toBeOnTheScreen();
+    const pending = screen.getByTestId(
+      "step-timing-editor-depends-on-option-s3",
+    );
+
+    // A completed candidate drops its ordinal for a check mark; a pending one
+    // keeps its ordinal. Either way the candidate stays pickable — completed
+    // is a fact about it, not a refusal.
+    expect(within(completed).queryByText("2")).toBeNull();
+    expect(within(pending).getByText("3")).toBeOnTheScreen();
     expect(completed.props.accessibilityState?.disabled).toBeFalsy();
   });
 

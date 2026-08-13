@@ -4,11 +4,11 @@ import { Text } from "../Text";
 import { StepDayGrid } from "../StepDayGrid";
 import { focusAccessibilityRef } from "../../utils/accessibilityFocus";
 import {
-  DependencyPicker,
   EditorFooter,
   OrderingNote,
   TruthLines,
 } from "./StepTimingEditor.parts";
+import { DependencyPicker } from "./StepTimingEditor.picker";
 import { styles } from "./StepTimingEditor.styles";
 import type { StepTimingEditorProps, StepTimingValue } from "./types";
 
@@ -86,10 +86,7 @@ export function StepTimingEditor({
   doneSuffixLabel = " · done ✓",
   orderingNote = defaultOrderingNote,
   timingLineA11yLabel = "Timing for this step",
-  previousMonthLabel,
-  nextMonthLabel,
-  legendLabel,
-  marksA11ySuffix,
+  gridCopy,
   testID = "step-timing-editor",
 }: StepTimingEditorProps) {
   const rowRef = useRef<View | null>(null);
@@ -130,6 +127,11 @@ export function StepTimingEditor({
   // Move accessibility focus into the editor on expand and back to the timing
   // line on collapse, so a screen-reader user is never left where the content
   // they just summoned is not.
+  //
+  // The ref exists to suppress the *mount* run — without it, a controlled host
+  // that mounts already-expanded would steal accessibility focus into the
+  // editor on first paint. The dep array alone cannot express that; do not
+  // remove it as redundant.
   const wasExpanded = useRef(isExpanded);
   useEffect(() => {
     if (wasExpanded.current === isExpanded) return;
@@ -137,40 +139,54 @@ export function StepTimingEditor({
     return focusAccessibilityRef(isExpanded ? questionRef : timingLineRef);
   }, [isExpanded]);
 
+  // Collapsing always closes the picker too. A controlled host that ignores
+  // `onExpandedChange` never re-runs the seed block, so this cannot be dropped
+  // as redundant with it.
+  const closeEditor = useCallback(() => {
+    setPickerOpen(false);
+    setExpanded(false);
+  }, [setExpanded]);
+
   const handleTimingLinePress = useCallback(() => {
     if (isExpanded) {
       // Collapse discards the draft — `onCommit` is not called.
-      setPickerOpen(false);
-      setExpanded(false);
+      closeEditor();
       return;
     }
     setExpanded(true);
     // The host parks the row at the top of the list; an editor that unfolds
     // below the fold reads as having done nothing.
     onExpand?.(rowRef);
-  }, [isExpanded, onExpand, setExpanded]);
+  }, [closeEditor, isExpanded, onExpand, setExpanded]);
 
   const handleDone = useCallback(() => {
     onCommit(draft);
-    setPickerOpen(false);
-    setExpanded(false);
-  }, [draft, onCommit, setExpanded]);
+    closeEditor();
+  }, [closeEditor, draft, onCommit]);
 
   const handleClear = useCallback(() => {
     onClear();
-    setPickerOpen(false);
-    setExpanded(false);
-  }, [onClear, setExpanded]);
+    closeEditor();
+  }, [closeEditor, onClear]);
+
+  // Stable identity so the memoised grid actually skips re-rendering its 31
+  // cells when only the dependency picker moved.
+  const handleDayChange = useCallback((next: string | null) => {
+    setDraft((current) => ({ ...current, dueDate: next }));
+  }, []);
 
   const hasTiming = Boolean(afterStepTitle) || Boolean(dueDateLabel);
   // Nothing is left to plan on a finished step, so it carries no placeholder —
   // only the timing it already has, if any.
   const showTimingLine = hasTiming || !isCompleted;
 
+  // The dependency whose day this step's draft day falls before, or null when
+  // there is nothing to inform about. One condition, one narrowing.
   const dependency = candidates.find((c) => c.id === draft.afterStepId) ?? null;
-  const showOrderingNote = Boolean(
-    draft.dueDate && dependency?.dueDate && draft.dueDate < dependency.dueDate,
-  );
+  const orderingConflict =
+    dependency?.dueDate && draft.dueDate && draft.dueDate < dependency.dueDate
+      ? dependency
+      : null;
 
   return (
     <View ref={rowRef} style={styles.root} testID={testID}>
@@ -189,12 +205,13 @@ export function StepTimingEditor({
         >
           {hasTiming ? (
             <TruthLines
-              afterStepTitle={afterStepTitle}
-              afterStepIsCompleted={afterStepIsCompleted}
-              dueDateLabel={dueDateLabel}
-              afterLineText={afterLineLabel(afterStepTitle ?? "")}
-              dueLineText={dueLineLabel(dueDateLabel ?? "")}
-              doneSuffix={doneSuffixLabel}
+              afterLineText={
+                afterStepTitle ? afterLineLabel(afterStepTitle) : null
+              }
+              dueLineText={dueDateLabel ? dueLineLabel(dueDateLabel) : null}
+              doneSuffix={
+                afterStepTitle && afterStepIsCompleted ? doneSuffixLabel : null
+              }
               testID={testID}
             />
           ) : (
@@ -221,13 +238,8 @@ export function StepTimingEditor({
             now={now}
             marks={marks}
             locale={locale}
-            onChange={(next) =>
-              setDraft((current) => ({ ...current, dueDate: next }))
-            }
-            previousMonthLabel={previousMonthLabel}
-            nextMonthLabel={nextMonthLabel}
-            legendLabel={legendLabel}
-            marksA11ySuffix={marksA11ySuffix}
+            onChange={handleDayChange}
+            {...gridCopy}
             testID={`${testID}-grid`}
           />
 
@@ -246,11 +258,11 @@ export function StepTimingEditor({
             testID={`${testID}-depends-on`}
           />
 
-          {showOrderingNote && dependency ? (
+          {orderingConflict ? (
             <OrderingNote
               text={orderingNote(
-                dependency.title,
-                dependency.dueDateLabel ?? dependency.dueDate ?? "",
+                orderingConflict.title,
+                orderingConflict.dueDateLabel ?? orderingConflict.dueDate ?? "",
               )}
               testID={`${testID}-ordering-note`}
             />
