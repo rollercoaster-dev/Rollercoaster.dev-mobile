@@ -127,8 +127,10 @@ Proposed text:
 ```markdown
 **Authoring surface — edit time only** (settled 2026-08-13, #572). That list is
 where a dependency is _read_. It is **set** in exactly one place: Edit Goal
-(`EditModeScreen`). The New Goal wizard (`src/screens/NewGoalScreen/`) shows a
-dependency if a step has one and offers no way to add one. Wizard step 3 is the
+(`EditModeScreen`). The New Goal wizard (`src/screens/NewGoalScreen/`) gets no
+authoring affordance — and nothing to read either, since a freshly created step
+has no dependency yet (wizard steps are local state carrying only title +
+planned evidence; the marker doesn't exist in code today). Wizard step 3 is the
 build list — the moment a user is already naming steps in a row — and per-row
 `+ depends` chips there are the clearest way to make "Setting must not feel
 required" fail. Authoring is a deliberate second visit. Epic #570 ships Edit
