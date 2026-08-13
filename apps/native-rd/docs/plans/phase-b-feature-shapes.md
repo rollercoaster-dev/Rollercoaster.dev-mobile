@@ -344,6 +344,17 @@ FocusModeScreen + MiniTimeline, TimelineJourneyScreen), with 2–3 candidate
 treatments (inline note, chip, connector) as side-by-side variants in the app's
 token language.
 
+**Authoring surface — edit time only** (settled 2026-08-13, #572). That list is
+where a dependency is _read_. It is **set** in exactly one place: Edit Goal
+(`EditModeScreen`). The New Goal wizard (`src/screens/NewGoalScreen/`) gets no
+authoring affordance — and nothing to read either, since a freshly created step
+has no dependency yet (wizard steps are local state carrying only title +
+planned evidence; the marker doesn't exist in code today). Wizard step 3 is the
+build list — the moment a user is already naming steps in a row — and per-row
+`+ depends` chips there are the clearest way to make "Setting must not feel
+required" fail. Authoring is a deliberate second visit. Epic #570 ships Edit
+Goal only; revisit only if real use shows the second trip is friction.
+
 Two **task-view behaviors** are built as switchable variants (the register
 leaves the fork open):
 
@@ -388,6 +399,8 @@ time, no calendar integration, no counting or scoring.
   per goal.
 - **Setting a dependency must not feel required** — a step with none stays
   first-class; the affordance can't pressure every step toward a graph.
+- **No dependency authoring in the New Goal wizard** — the create flow stays
+  title + evidence, and "quick add" (bare title) stays the fast path (#572).
 
 ### Prototype Questions
 
@@ -519,10 +532,21 @@ per [ADR-0012](../decisions/ADR-0012-no-auto-judgment.md), time passing never
 changes a step's state and absence is never interpreted. Implemented for the
 `waitingOnExpectedAt` read path in issue #571.
 
+### Decided: authoring is edit time only
+
+**A planning date is set in Edit Goal (`EditModeScreen`), not in the New Goal
+wizard** (2026-08-13, #572). Same reasoning as §C: the wizard's build list is the
+highest-pressure screen in the app, and a per-row `+ date` chip there is where
+"Setting must not feel required" fails first. The wizard's copy promises nothing
+about dates, so nothing there contradicts this. Epic #570 ships Edit Goal only;
+revisit after real use.
+
 ### Must Not Do
 
 - **No dateless "sometime" mode**, per the decision above. Dateless is `dueAt:
 null`.
+- **No date authoring in the New Goal wizard** — the create flow stays title +
+  evidence, and "quick add" (bare title) stays the fast path (#572).
 - **No overdue status, missed-deadline ledger, absence count, or re-ping**; no
   app-icon badge count, ever (ADR-0011, ADR-0013).
 - **A passed date never changes state** and never authors "late" (ADR-0012).
