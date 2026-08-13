@@ -24,3 +24,8 @@ notes:
     a separate short clause (keep a leading separator like "·") rather
     than folding into waitingOn. Same wording as
     timelineJourney.step.metadata.* — keep the two in step.
+  - currentTask.metadata.wasExpectedMeta replaces
+    waitingOnExpectedMeta once that date has passed. Past tense only,
+    stating a fact — never "überfällig", "verspätet" or any urgency cue
+    (ADR-0012). Keep the leading separator and the mono-clause shape, and
+    keep it in step with timelineJourney.step.metadata.wasExpected.

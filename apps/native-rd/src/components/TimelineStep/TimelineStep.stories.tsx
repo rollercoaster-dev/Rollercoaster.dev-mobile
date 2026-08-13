@@ -100,6 +100,47 @@ export const BandFull: Story = {
   ),
 };
 
+// #571: the same waiting-on columns either side of the expected date. Both rows
+// render together so the ONLY difference is legible — the date clause reads "was
+// expected" once that date is behind us. Same textSecondary, same glyph, no
+// urgency colour or "overdue" word: nothing went wrong, the date simply passed.
+export const BandWasExpected: Story = {
+  render: () => (
+    <View style={storyStyles.container}>
+      <TimelineStep
+        step={{
+          id: "band-expected",
+          title: "Walk the inspector through",
+          status: "in-progress",
+          evidenceCount: 0,
+          waitingOn: { who: "city inspector", expected: "Jun 24" },
+        }}
+        stepIndex={2}
+        evidence={[]}
+        onNodePress={noop}
+        onEvidencePress={noop}
+      />
+      <TimelineStep
+        step={{
+          id: "band-was-expected",
+          title: "Walk the inspector through",
+          status: "in-progress",
+          evidenceCount: 0,
+          waitingOn: {
+            who: "city inspector",
+            expected: "Jun 24",
+            isPast: true,
+          },
+        }}
+        stepIndex={2}
+        evidence={[]}
+        onNodePress={noop}
+        onEvidencePress={noop}
+      />
+    </View>
+  ),
+};
+
 // C (internal dependency) shape: "after [step]" plus a due date. Never "blocked by".
 export const BandAfter: Story = {
   render: () => (

@@ -19,6 +19,11 @@ import { styles } from "./TimelineStep.styles";
  * inheriting the English "… · expected …" tail. The interpolated values arrive
  * final: titles are user content, and dates come pre-formatted for the active
  * locale from the caller (TimelineJourneyScreen's `formatDate(…, i18n.language)`).
+ *
+ * A passed expected date reads in the past tense — `wasExpected`, "waiting on X
+ * · was expected Y" (#571). It is a third whole sentence for the same reason the
+ * first two are whole: the tense change is the translator's, not a swapped word.
+ * Past-tense, never overdue: nothing is late, the date is simply behind us.
  */
 export function MetadataBand({
   afterStep,
@@ -26,17 +31,19 @@ export function MetadataBand({
   dueDate,
 }: {
   afterStep?: string;
-  waitingOn?: { who: string; expected?: string };
+  waitingOn?: { who: string; expected?: string; isPast?: boolean };
   dueDate?: string;
 }) {
   const { t } = useTranslation(["timelineJourney"]);
 
   const cLine = waitingOn
     ? waitingOn.expected
-      ? t("timelineJourney:step.metadata.waitingOnExpected", {
-          who: waitingOn.who,
-          date: waitingOn.expected,
-        })
+      ? t(
+          waitingOn.isPast
+            ? "timelineJourney:step.metadata.wasExpected"
+            : "timelineJourney:step.metadata.waitingOnExpected",
+          { who: waitingOn.who, date: waitingOn.expected },
+        )
       : t("timelineJourney:step.metadata.waitingOn", { who: waitingOn.who })
     : afterStep
       ? t("timelineJourney:step.metadata.after", { title: afterStep })

@@ -137,6 +137,7 @@ jest.mock("../../../db", () => {
         dueAt: string | null;
       },
       goalSteps: readonly { id: string; title: string | null }[],
+      now: Date,
     ) => ({
       afterStepTitle:
         step.afterStepId && step.afterStepId !== step.id
@@ -145,6 +146,10 @@ jest.mock("../../../db", () => {
       waitingOnLabel: step.waitingOnLabel ?? null,
       waitingOnExpectedAt: step.waitingOnExpectedAt ?? null,
       dueAt: step.dueAt ?? null,
+      // Strict <, same boundary as the real helper (#571 D4).
+      waitingOnExpectedIsPast:
+        step.waitingOnExpectedAt != null &&
+        new Date(step.waitingOnExpectedAt).getTime() < now.getTime(),
     }),
     // Faithful copies of the real helpers (orphan/grandchild promotion + flatten)
     // so the screen's parent-then-children reordering is exercised, not stubbed.
@@ -1150,6 +1155,59 @@ describe("FocusModeScreen", () => {
         ),
       ).toBeOnTheScreen();
     });
+
+    // The screen reads the real clock to decide the tense (#571), so these two
+    // fixtures sit far enough either side of it that no calendar day can flip an
+    // assertion. Local noon, no trailing `Z`, so the timezone can't either.
+    it.each([
+      {
+        tense: "past",
+        waitingOnExpectedAt: "2020-01-28T12:00:00",
+        key: "wasExpectedMeta" as const,
+        gone: "waitingOnExpectedMeta" as const,
+        date: "Jan 28, 2020",
+      },
+      {
+        tense: "future",
+        waitingOnExpectedAt: "2099-01-28T12:00:00",
+        key: "waitingOnExpectedMeta" as const,
+        gone: "wasExpectedMeta" as const,
+        date: "Jan 28, 2099",
+      },
+    ])(
+      "reads a $tense expected date with the matching tense",
+      ({ waitingOnExpectedAt, key, gone, date }) => {
+        setupQueries({
+          steps: [
+            step("step-1", {
+              title: "Practice",
+              waitingOnLabel: "Manager sign-off",
+              waitingOnExpectedAt,
+            }),
+          ],
+        });
+        renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+        // The lead text is tense-agnostic — only the mono meta clause changes.
+        expect(
+          screen.getByText(
+            t("focusMode:currentTask.metadata.waitingOn", {
+              who: "Manager sign-off",
+            }),
+          ),
+        ).toBeOnTheScreen();
+        expect(
+          screen.getByText(
+            t(`focusMode:currentTask.metadata.${key}`, { date }),
+          ),
+        ).toBeOnTheScreen();
+        expect(
+          screen.queryByText(
+            t(`focusMode:currentTask.metadata.${gone}`, { date }),
+          ),
+        ).toBeNull();
+      },
+    );
 
     it("omits the band entirely when no dependency fields are set", () => {
       setupQueries();

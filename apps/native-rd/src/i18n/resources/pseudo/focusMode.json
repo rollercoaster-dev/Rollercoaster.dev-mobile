@@ -39,6 +39,7 @@
       "after": "[àƒţêŕ {{title}}······]",
       "waitingOn": "[ŵàïţïñğ øñ {{who}}·······]",
       "waitingOnExpectedMeta": "[· êẋþêçţêđ {{date}}········]",
+      "wasExpectedMeta": "[· ŵàš êẋþêçţêđ {{date}}·········]",
       "due": "[đüê {{date}}·····]"
     },
     "paused": {
