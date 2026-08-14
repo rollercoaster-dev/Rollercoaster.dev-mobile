@@ -10,7 +10,11 @@ import {
 } from "./StepTimingEditor.parts";
 import { DependencyPicker } from "./StepTimingEditor.picker";
 import { styles } from "./StepTimingEditor.styles";
-import type { StepTimingEditorProps, StepTimingValue } from "./types";
+import type {
+  StepTimingEditorProps,
+  StepTimingValue,
+  TimingLineA11yParts,
+} from "./types";
 
 const DEFAULT_INTENT_SUB =
   "Your intent, not a deadline. A passed date never reads as “late.”";
@@ -18,6 +22,21 @@ const DEFAULT_INTENT_SUB =
 const defaultOrderingNote = (title: string, date: string) =>
   `${title} needs to be done first, and it sits on ${date}. ` +
   `This one lands before it — that's allowed, it just won't read in order.`;
+
+// Reads the truth lines back rather than naming the control, so set and unset
+// announce differently. The `· done ✓` suffix becomes the word "done": a
+// screen reader given the glyph reads punctuation, or nothing.
+const defaultTimingLineA11yLabel = ({
+  afterLine,
+  dueLine,
+  afterStepIsCompleted,
+}: TimingLineA11yParts) => {
+  const lines = [
+    afterLine && afterStepIsCompleted ? `${afterLine}, done` : afterLine,
+    dueLine,
+  ].filter(Boolean);
+  return lines.length ? lines.join(", ") : "Set timing for this step";
+};
 
 /**
  * The in-row editor for a step's **B** (date) and **C** (`depends on`) lines.
@@ -85,7 +104,7 @@ export function StepTimingEditor({
   dueLineLabel = (date) => `due ${date}`,
   doneSuffixLabel = " · done ✓",
   orderingNote = defaultOrderingNote,
-  timingLineA11yLabel = "Timing for this step",
+  timingLineA11yLabel = defaultTimingLineA11yLabel,
   gridCopy,
   testID = "step-timing-editor",
 }: StepTimingEditorProps) {
@@ -175,6 +194,11 @@ export function StepTimingEditor({
     setDraft((current) => ({ ...current, dueDate: next }));
   }, []);
 
+  // Rendered once here rather than inline in the JSX: the timing line's a11y
+  // label is built from the same two strings the line displays.
+  const afterLineText = afterStepTitle ? afterLineLabel(afterStepTitle) : null;
+  const dueLineText = dueDateLabel ? dueLineLabel(dueDateLabel) : null;
+
   const hasTiming = Boolean(afterStepTitle) || Boolean(dueDateLabel);
   // Nothing is left to plan on a finished step, so it carries no placeholder —
   // only the timing it already has, if any.
@@ -194,7 +218,12 @@ export function StepTimingEditor({
         <Pressable
           ref={timingLineRef}
           accessibilityRole="button"
-          accessibilityLabel={timingLineA11yLabel}
+          accessibilityLabel={timingLineA11yLabel({
+            afterLine: afterLineText,
+            dueLine: dueLineText,
+            afterStepIsCompleted:
+              Boolean(afterStepTitle) && afterStepIsCompleted,
+          })}
           accessibilityState={{ expanded: isExpanded }}
           testID={`${testID}-timing-line`}
           onPress={handleTimingLinePress}
@@ -205,10 +234,8 @@ export function StepTimingEditor({
         >
           {hasTiming ? (
             <TruthLines
-              afterLineText={
-                afterStepTitle ? afterLineLabel(afterStepTitle) : null
-              }
-              dueLineText={dueDateLabel ? dueLineLabel(dueDateLabel) : null}
+              afterLineText={afterLineText}
+              dueLineText={dueLineText}
               doneSuffix={
                 afterStepTitle && afterStepIsCompleted ? doneSuffixLabel : null
               }

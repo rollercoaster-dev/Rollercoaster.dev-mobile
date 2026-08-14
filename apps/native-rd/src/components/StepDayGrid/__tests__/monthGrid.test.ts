@@ -4,6 +4,7 @@ import {
   groupMarksByDay,
   isPastDay,
   leadingBlanks,
+  localDate,
   shiftMonth,
   toDayKey,
 } from "../monthGrid";
@@ -23,6 +24,29 @@ describe("dayKey / toDayKey", () => {
     expect(toDayKey(new Date(2026, 5, 24))).toBe("2026-06-24");
     // Late-evening local time must still report the same day.
     expect(toDayKey(new Date(2026, 5, 24, 23, 30))).toBe("2026-06-24");
+  });
+});
+
+describe("localDate", () => {
+  it("takes a year literally — 0–99 is not 1900–1999", () => {
+    // `new Date(50, 0, 1)` is 1950. Month navigation is unbounded, so a
+    // two-digit year is reachable and must stay itself.
+    expect(localDate(50, 0, 1).getFullYear()).toBe(50);
+    expect(localDate(99, 11, 31).getFullYear()).toBe(99);
+  });
+
+  it("is local midnight, not UTC", () => {
+    const date = localDate(2026, 5, 24);
+    expect(toDayKey(date)).toBe("2026-06-24");
+    expect(date.getHours()).toBe(0);
+    expect(date.getMinutes()).toBe(0);
+  });
+
+  it("rolls an out-of-range month or day over, as Date does", () => {
+    expect(toDayKey(localDate(2026, 12, 1))).toBe("2027-01-01");
+    expect(toDayKey(localDate(2026, -1, 1))).toBe("2025-12-01");
+    // Day 0 is the last day of the previous month — what daysInMonth relies on.
+    expect(toDayKey(localDate(2026, 6, 0))).toBe("2026-06-30");
   });
 });
 
@@ -63,6 +87,13 @@ describe("shiftMonth", () => {
   it("wraps January → December, carrying the year back", () => {
     expect(shiftMonth({ year: 2026, month: 0 }, -1)).toEqual({
       year: 2025,
+      month: 11,
+    });
+  });
+
+  it("keeps a two-digit year in its own century", () => {
+    expect(shiftMonth({ year: 99, month: 0 }, -1)).toEqual({
+      year: 98,
       month: 11,
     });
   });

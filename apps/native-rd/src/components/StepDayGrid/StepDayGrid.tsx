@@ -11,6 +11,7 @@ import {
   groupMarksByDay,
   isPastDay,
   leadingBlanks,
+  localDate,
   shiftMonth,
   toDayKey,
   type GridMonth,
@@ -134,7 +135,7 @@ function StepDayGridComponent({
       new Intl.DateTimeFormat(locale, {
         month: "long",
         year: "numeric",
-      }).format(new Date(view.year, view.month, 1)),
+      }).format(localDate(view.year, view.month, 1)),
     [locale, view.year, view.month],
   );
 
@@ -142,9 +143,9 @@ function StepDayGridComponent({
   // grid in every locale — never a hand-written weekday array (#574).
   const weekdayLabels = useMemo(() => {
     const format = new Intl.DateTimeFormat(locale, { weekday: "narrow" });
-    // 22 June 2026 is a Monday; Date rolls the month over past the 30th.
+    // 22 June 2026 is a Monday; the day rolls the month over past the 30th.
     return Array.from({ length: 7 }, (_, i) =>
-      format.format(new Date(2026, 5, 22 + i)),
+      format.format(localDate(2026, 5, 22 + i)),
     );
   }, [locale]);
 
@@ -226,7 +227,7 @@ function StepDayGridComponent({
               <DayCell
                 day={day}
                 a11yLabel={
-                  dayA11yFormat.format(new Date(view.year, view.month, day)) +
+                  dayA11yFormat.format(localDate(view.year, view.month, day)) +
                   a11ySuffix
                 }
                 isSelected={isSelected}

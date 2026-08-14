@@ -18,6 +18,16 @@ export interface StepTimingCandidate {
   dueDateLabel?: string;
 }
 
+/** What the timing line currently renders, handed to `timingLineA11yLabel`. */
+export interface TimingLineA11yParts {
+  /** The rendered `after …` line, or null when there is no dependency. */
+  afterLine: string | null;
+  /** The rendered `due …` line, or null when there is no date. */
+  dueLine: string | null;
+  /** Whether the dependency is completed (the `· done ✓` suffix's state). */
+  afterStepIsCompleted: boolean;
+}
+
 /** The draft values handed back on commit. */
 export interface StepTimingValue {
   /** `YYYY-MM-DD` or null. Conversion to a branded `DateIso` is #576's job. */
@@ -103,8 +113,13 @@ export interface StepTimingEditorProps {
   doneSuffixLabel?: string;
   /** The neutral ordering note. */
   orderingNote?: (dependencyTitle: string, dependencyDate: string) => string;
-  /** a11y label on the timing line. */
-  timingLineA11yLabel?: string;
+  /**
+   * a11y label on the timing line, built from what the line renders. A constant
+   * string here would override the children's text and announce the same thing
+   * whether timing is set or not, so this takes the current lines instead —
+   * defaults to reading them back, or to a "set timing" prompt when unset.
+   */
+  timingLineA11yLabel?: (parts: TimingLineA11yParts) => string;
   /**
    * Copy forwarded verbatim to the embedded `StepDayGrid`. Grouped rather than
    * flattened so the grid's copy surface stays the grid's — adding one there

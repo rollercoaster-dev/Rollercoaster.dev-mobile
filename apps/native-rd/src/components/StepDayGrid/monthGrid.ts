@@ -33,22 +33,38 @@ export function toDayKey(date: Date): string {
 }
 
 /**
+ * Local midnight on a calendar day (`month` 0-indexed, both `month` and `day`
+ * may be out of range and roll over as `Date` does).
+ *
+ * Never `new Date(year, month, day)`: that constructor maps years 0–99 to
+ * 1900–1999, so navigation into a two-digit year would silently jump nineteen
+ * centuries — and month navigation here is unbounded, so that year is
+ * reachable. `setFullYear` takes the year literally.
+ */
+export function localDate(year: number, month: number, day = 1): Date {
+  const date = new Date(0);
+  date.setFullYear(year, month, day);
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+/**
  * Blank cells before the 1st in a **Monday-first** week.
  * `getDay()` is Sunday-0, so `(d + 6) % 7` rotates Monday to 0 — a month whose
  * 1st is a Sunday yields 6, a Monday-1st month yields 0.
  */
 export function leadingBlanks(year: number, month: number): number {
-  return (new Date(year, month, 1).getDay() + 6) % 7;
+  return (localDate(year, month, 1).getDay() + 6) % 7;
 }
 
 /** Day count in a month. Day 0 of the next month is the last of this one. */
 export function daysInMonth(year: number, month: number): number {
-  return new Date(year, month + 1, 0).getDate();
+  return localDate(year, month + 1, 0).getDate();
 }
 
 /** Step the displayed month by `delta`. Unbounded — wraps the year both ways. */
 export function shiftMonth(current: GridMonth, delta: number): GridMonth {
-  const next = new Date(current.year, current.month + delta, 1);
+  const next = localDate(current.year, current.month + delta, 1);
   return { year: next.getFullYear(), month: next.getMonth() };
 }
 

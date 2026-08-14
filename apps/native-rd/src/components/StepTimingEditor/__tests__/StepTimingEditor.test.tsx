@@ -383,11 +383,32 @@ describe("StepTimingEditor ordering note", () => {
 describe("StepTimingEditor a11y", () => {
   beforeEach(() => jest.clearAllMocks());
 
-  it("gives the timing line a role and a label", () => {
+  // The label overrides the children's text, so a constant would announce the
+  // same thing set or unset — it has to carry the state instead.
+  it("labels the unset timing line as a prompt", () => {
     renderWithProviders(<StepTimingEditor {...baseProps} />);
 
     expect(timingLine().props.accessibilityRole).toBe("button");
-    expect(timingLine().props.accessibilityLabel).toBe("Timing for this step");
+    expect(timingLine().props.accessibilityLabel).toBe(
+      "Set timing for this step",
+    );
+  });
+
+  it("reads the truth lines back once timing is set", () => {
+    renderWithProviders(
+      <StepTimingEditor
+        {...baseProps}
+        value={{ dueDate: "2026-07-02", afterStepId: "s2" }}
+        afterStepTitle="Wire the circuits"
+        afterStepIsCompleted
+        dueDateLabel="Jul 2, 2026"
+      />,
+    );
+
+    // "done" as a word: a screen reader given `· done ✓` reads punctuation.
+    expect(timingLine().props.accessibilityLabel).toBe(
+      "after Wire the circuits, done, due Jul 2, 2026",
+    );
   });
 
   test.each([
