@@ -72,7 +72,7 @@
   },
   "dependencies": {
     "@rollercoaster-dev/rd-logger": "^0.4.0",
-    "jose": "6.2.3",
+    "jose": "6.2.8",
     "openbadges-types": "^4.0.0",
     "png-chunks-encode": "^1.0.0",
     "png-chunks-extract": "^1.0.0"
