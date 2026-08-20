@@ -1,5 +1,14 @@
 # native-rd
 
+## [0.1.19](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/compare/v0.1.18...v0.1.19) (2026-08-20)
+
+
+### Features
+
+* **native-rd:** Edit Goal step rows — one pressable timing line ([#575](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/575)) ([#587](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/587)) ([6470448](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/647044883da0bebe2444cef6254be15e597046c8))
+* **native-rd:** neutral past-tense expected date ("was expected") ([#571](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/571)) ([#579](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/579)) ([742f6bb](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/742f6bb79b2ebda5a4d6810042864d4986d86eae))
+* **native-rd:** StepDayGrid + StepTimingEditor — in-row B/C authoring ([#574](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/574), [#573](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/573)) ([#585](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/585)) ([be0c404](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/be0c404570693809ccadc613771612d3d016653a))
+
 ## [0.1.18](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/compare/v0.1.17...v0.1.18) (2026-08-09)
 
 
