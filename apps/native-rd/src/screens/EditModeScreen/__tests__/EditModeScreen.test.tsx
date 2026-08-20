@@ -790,11 +790,11 @@ describe("EditModeScreen", () => {
         );
         fireEvent.press(screen.getByTestId(`${timingLine("step-1")}-done`));
 
-        // No waiting-column keys on a date-only commit: dating a step must not
-        // wipe a wait some other surface recorded.
+        // Only the field that moved. No waiting columns (dating a step must
+        // not wipe a wait another surface recorded) and no `afterStepId`
+        // either, which would be a write the user never asked for.
         expect(mockUpdateStep).toHaveBeenCalledWith("step-1", {
           dueAt: DAY_30_ISO,
-          afterStepId: null,
         });
         expect(screen.queryByTestId(editor("step-1"))).toBeNull();
       });
@@ -809,7 +809,6 @@ describe("EditModeScreen", () => {
         fireEvent.press(screen.getByTestId(`${timingLine("step-1")}-done`));
 
         expect(mockUpdateStep).toHaveBeenCalledWith("step-1", {
-          dueAt: null,
           afterStepId: "step-2",
           waitingOnLabel: null,
           waitingOnExpectedAt: null,
@@ -836,6 +835,74 @@ describe("EditModeScreen", () => {
         expect(screen.queryByTestId(editor("step-1"))).toBeNull();
       });
 
+      it("writes nothing when Done is pressed on an untouched draft", () => {
+        setupQueries();
+        renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+
+        expand("step-1");
+        fireEvent.press(screen.getByTestId(`${timingLine("step-1")}-done`));
+
+        expect(mockUpdateStep).not.toHaveBeenCalled();
+        expect(screen.queryByTestId(editor("step-1"))).toBeNull();
+      });
+
+      // The editor commits a diff against the draft it opened with, so a field
+      // it never showed cannot be cleared by a commit that never touched it.
+      // Both fixtures below hide step-1's dependency from step-1's own picker:
+      // a mutual cycle (step-2 is omitted as the cycle's far side) and a
+      // dangling target (step-9 does not exist).
+      it.each([
+        {
+          shape: "the far side of a mutual two-step cycle",
+          rows: () => [
+            { ...STEPS[0], afterStepId: "step-2" },
+            { ...STEPS[1], afterStepId: "step-1" },
+            STEPS[2],
+          ],
+        },
+        {
+          shape: "a dangling dependency",
+          rows: () => [{ ...STEPS[0], afterStepId: "step-9" }, STEPS[1]],
+        },
+      ])("dating a step leaves $shape alone", ({ rows }) => {
+        setupQueries(GOAL, rows());
+        renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+
+        expand("step-1");
+        fireEvent.press(
+          screen.getByTestId(`${timingLine("step-1")}-grid-day-2026-06-30`),
+        );
+        fireEvent.press(screen.getByTestId(`${timingLine("step-1")}-done`));
+
+        expect(mockUpdateStep).toHaveBeenCalledWith("step-1", {
+          dueAt: DAY_30_ISO,
+        });
+      });
+
+      it("clears the dependency when the user picks nothing", () => {
+        setupQueries(GOAL, [
+          { ...STEPS[0], afterStepId: "step-2" },
+          STEPS[1],
+          STEPS[2],
+        ]);
+        renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+
+        expand("step-1");
+        openPicker("step-1");
+        fireEvent.press(
+          screen.getByTestId(
+            `${timingLine("step-1")}-depends-on-option-nothing`,
+          ),
+        );
+        fireEvent.press(screen.getByTestId(`${timingLine("step-1")}-done`));
+
+        // Asked for, so written — and the waiting columns stay untouched,
+        // since nothing is being set that could contradict a wait.
+        expect(mockUpdateStep).toHaveBeenCalledWith("step-1", {
+          afterStepId: null,
+        });
+      });
+
       it("writes a sub-step's timing through the same mutation", () => {
         setupQueries(GOAL, STEPS_TREE);
         renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
@@ -852,7 +919,6 @@ describe("EditModeScreen", () => {
 
         expect(mockUpdateStep).toHaveBeenCalledWith("p1c1", {
           dueAt: DAY_30_ISO,
-          afterStepId: null,
         });
       });
 
@@ -914,6 +980,11 @@ describe("EditModeScreen", () => {
         renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
 
         expand("step-1");
+        // An untouched draft writes nothing at all, so the day has to move for
+        // there to be a write to reject.
+        fireEvent.press(
+          screen.getByTestId(`${timingLine("step-1")}-grid-day-2026-06-30`),
+        );
         fireEvent.press(screen.getByTestId(`${timingLine("step-1")}-done`));
         expect(screen.getByTestId(editor("step-1"))).toBeOnTheScreen();
 

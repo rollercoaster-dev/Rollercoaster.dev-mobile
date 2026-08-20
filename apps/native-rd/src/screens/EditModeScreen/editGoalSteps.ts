@@ -73,7 +73,7 @@ export function buildEditGoalSteps(
     plannedEvidenceTypes: toPlannedEvidenceTypes(root.plannedEvidenceTypes),
     dateDepChips: buildDateDepChips(root, stepRows, t, language, now),
     isCompleted: root.status === StepStatus.completed,
-    timing: buildTiming(root, population, language),
+    timing: buildTiming(root, population),
     // Sub-steps are full timing participants (#575/D4), so everything the
     // parent row gets, a sub-row gets too — including the chips and status
     // #575 added to the shape but left for this issue to populate.
@@ -86,7 +86,7 @@ export function buildEditGoalSteps(
         ),
         dateDepChips: buildDateDepChips(child, stepRows, t, language, now),
         isCompleted: child.status === StepStatus.completed,
-        timing: buildTiming(child, population, language),
+        timing: buildTiming(child, population),
       }),
     ),
   }));
@@ -163,12 +163,17 @@ function toTimingEntry(
 function buildTiming(
   row: StepRow,
   population: readonly TimingEntry[],
-  language: string,
 ): EditGoalTiming {
   const candidates: StepTimingCandidate[] = [];
   const marks: StepDayMark[] = [];
+  // The row's own entry, picked out of the same pass: its day and formatted
+  // label are already computed there, so nothing here re-derives them.
+  let own: TimingEntry | undefined;
   for (const entry of population) {
-    if (entry.candidate.id === row.id) continue;
+    if (entry.candidate.id === row.id) {
+      own = entry;
+      continue;
+    }
     if (entry.afterStepId === row.id) continue;
     candidates.push(entry.candidate);
     // Same pass as the candidate list (D9) — the badges on the grid are the
@@ -186,13 +191,13 @@ function buildTiming(
 
   return {
     value: {
-      dueDate: row.dueAt ? dateIsoToLocalDayKey(row.dueAt) : null,
+      dueDate: own?.candidate.dueDate ?? null,
       afterStepId: selected?.id ?? null,
     },
     candidates,
     afterStepTitle: selected?.title ?? null,
     afterStepIsCompleted: selected?.isCompleted ?? false,
-    dueDateLabel: row.dueAt ? formatDate(row.dueAt, language) : null,
+    dueDateLabel: own?.candidate.dueDateLabel ?? null,
     marks,
   };
 }

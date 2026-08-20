@@ -50,7 +50,6 @@ import type { StepTimingValue } from "../../components/StepTimingEditor";
 import { reportError } from "../../services/sentry-report";
 import { runEvoluMutation } from "../../utils/evoluMutation";
 import { localDayKeyToDateIso } from "../../utils/localDay";
-import type { EvidenceTypeValue } from "../../types/evidence";
 import type {
   EditModeScreenProps,
   GoalsStackParamList,
@@ -236,60 +235,64 @@ function EditContent({ goalId }: { goalId: string }) {
     debouncedUpdateDescription(text);
   }
 
-  // Title and evidence arrive as separate callbacks from the editor, so both
-  // route through one updateStep wrapper rather than a combined handler.
+  /**
+   * Every `updateStep` call this screen makes, with its one error channel.
+   *
+   * Both of Evolu's failure modes reach `onFailure` (a thrown validation guard
+   * and a returned `{ ok: false }`), and `log` names the write so the console
+   * and Sentry breadcrumb say which one lost.
+   */
   function updateStepFields(
     stepId: string,
-    fields: { title?: string; plannedEvidenceTypes?: EvidenceTypeValue[] },
-  ) {
-    runEvoluMutation(
+    fields: Parameters<typeof updateStep>[1],
+    log = "Failed to update step",
+  ): boolean {
+    return runEvoluMutation(
       () => updateStep(stepId as StepId, fields),
       (error) => {
-        console.error("[EditModeScreen] Failed to update step", {
-          stepId,
-          fields,
-          error,
-        });
-        reportError(error, { area: "step.mutate", kind: "update" });
-        Alert.alert(
-          t("editGoal:errors.alertErrorTitle"),
-          t("editGoal:errors.updateStepMessage"),
-        );
+        console.error(`[EditModeScreen] ${log}`, { stepId, fields, error });
+        reportStepUpdateFailure(error);
       },
     );
   }
 
-  /**
-   * One `updateStep` call for a timing write, with the alert-and-keep-open
-   * behaviour both entry points need.
-   *
-   * Returns nothing: the editor collapses on its own next callback, which
-   * `handleCollapseTiming` lets through only when this did not fail.
-   */
+  /** Sentry + the one alert the editor has no error slot of its own for. */
+  function reportStepUpdateFailure(error: unknown) {
+    reportError(error, { area: "step.mutate", kind: "update" });
+    Alert.alert(
+      t("editGoal:errors.alertErrorTitle"),
+      t("editGoal:errors.updateStepMessage"),
+    );
+  }
+
+  /** The timing this row's editor opened with — the draft's own baseline. */
+  function seededTiming(id: string): StepTimingValue | undefined {
+    for (const step of steps) {
+      if (step.id === id) return step.timing?.value;
+      const sub = step.subSteps?.find((s) => s.id === id);
+      if (sub) return sub.timing?.value;
+    }
+    return undefined;
+  }
+
   function writeTiming(
     stepId: string,
     fields: Parameters<typeof updateStep>[1],
   ) {
-    const ok = runEvoluMutation(
-      () => updateStep(stepId as StepId, fields),
-      (error) => {
-        console.error("[EditModeScreen] Failed to update step timing", {
-          stepId,
-          fields,
-          error,
-        });
-        reportError(error, { area: "step.mutate", kind: "update" });
-        Alert.alert(
-          t("editGoal:errors.alertErrorTitle"),
-          t("editGoal:errors.updateStepMessage"),
-        );
-      },
-    );
+    const ok = updateStepFields(stepId, fields, "Failed to update step timing");
     if (!ok) justFailedTimingWriteRef.current = true;
   }
 
   /**
    * `Done` inside the expanded editor.
+   *
+   * Written as a **diff against the draft the editor opened with**, not as the
+   * draft wholesale: `undefined` is `updateStep`'s "don't touch". Committing the
+   * whole draft would let a row destroy a dependency the editor never showed —
+   * a dangling `afterStepId`, or the far side of a mutual two-step cycle, both
+   * of which seed the draft as `nothing` because that is how they render. Dating
+   * such a step would silently clear it. The issue asks for a quiet absence from
+   * the candidate list, not a quiet delete.
    *
    * A due date arrives as the grid's plain local `YYYY-MM-DD` and is written as
    * a `DateIso` at local midnight — checked, not assumed, like every other
@@ -297,36 +300,42 @@ function EditContent({ goalId }: { goalId: string }) {
    *
    * Setting a dependency also clears the external wait: `waiting on` is a fact
    * about the world recorded in Focus, and the two cannot both be the reason a
-   * step is not moving. A date-only commit leaves those columns alone, so
-   * dating a step never silently wipes a wait some other surface recorded.
+   * step is not moving. Every other commit leaves those columns alone, so dating
+   * a step never wipes a wait another surface recorded.
    */
   function handleCommitTiming(stepId: string, next: StepTimingValue) {
-    let dueAt = null;
-    if (next.dueDate !== null) {
-      const converted = localDayKeyToDateIso(next.dueDate);
-      if (!converted.ok) {
-        console.error("[EditModeScreen] Failed to convert due date", {
-          stepId,
-          dueDate: next.dueDate,
-        });
-        reportError(converted.error, { area: "step.mutate", kind: "update" });
-        Alert.alert(
-          t("editGoal:errors.alertErrorTitle"),
-          t("editGoal:errors.updateStepMessage"),
-        );
-        justFailedTimingWriteRef.current = true;
-        return;
+    const seed = seededTiming(stepId);
+    const fields: Parameters<typeof updateStep>[1] = {};
+
+    if (next.dueDate !== seed?.dueDate) {
+      if (next.dueDate === null) {
+        fields.dueAt = null;
+      } else {
+        const converted = localDayKeyToDateIso(next.dueDate);
+        if (!converted.ok) {
+          console.error("[EditModeScreen] Failed to convert due date", {
+            stepId,
+            dueDate: next.dueDate,
+          });
+          reportStepUpdateFailure(converted.error);
+          justFailedTimingWriteRef.current = true;
+          return;
+        }
+        fields.dueAt = converted.value;
       }
-      dueAt = converted.value;
     }
 
-    writeTiming(stepId, {
-      dueAt,
-      afterStepId: next.afterStepId as StepId | null,
-      ...(next.afterStepId !== null
-        ? { waitingOnLabel: null, waitingOnExpectedAt: null }
-        : {}),
-    });
+    if (next.afterStepId !== seed?.afterStepId) {
+      fields.afterStepId = next.afterStepId as StepId | null;
+      if (next.afterStepId !== null) {
+        fields.waitingOnLabel = null;
+        fields.waitingOnExpectedAt = null;
+      }
+    }
+
+    // Nothing moved — `Done` on an untouched draft is a close, not a write.
+    if (Object.keys(fields).length === 0) return;
+    writeTiming(stepId, fields);
   }
 
   /** `Clear` inside the expanded editor — the row goes back to unset. */
