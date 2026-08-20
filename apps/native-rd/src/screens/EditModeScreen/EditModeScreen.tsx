@@ -46,8 +46,10 @@ import {
   reorderSubSteps,
 } from "../../db";
 import type { GoalId, StepId } from "../../db";
+import type { StepTimingValue } from "../../components/StepTimingEditor";
 import { reportError } from "../../services/sentry-report";
 import { runEvoluMutation } from "../../utils/evoluMutation";
+import { localDayKeyToDateIso } from "../../utils/localDay";
 import type { EvidenceTypeValue } from "../../types/evidence";
 import type {
   EditModeScreenProps,
@@ -74,6 +76,16 @@ function EditContent({ goalId }: { goalId: string }) {
   const [description, setDescription] = useState(goal?.description ?? "");
   const [overflowOpen, setOverflowOpen] = useState(false);
   const [showDeleteGoalModal, setShowDeleteGoalModal] = useState(false);
+  // Which row has its timing editor open. One at a time: the editor unfolds in
+  // place with the list still on screen, which is the whole point of authoring
+  // in the row, and a second open editor would push that context off it.
+  const [expandedTimingId, setExpandedTimingId] = useState<string | null>(null);
+  // Set when a timing write has just failed, and consumed by the collapse that
+  // the editor fires immediately afterwards. StepTimingEditor's `Done` calls
+  // `onCommit` and closes in the same synchronous breath, with no way to veto
+  // the close from inside `onCommit` — so the veto has to happen one callback
+  // later, here, or a rejected write would alert and still lose the draft.
+  const justFailedTimingWriteRef = useRef(false);
 
   const titleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const descTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -193,10 +205,18 @@ function EditContent({ goalId }: { goalId: string }) {
   // The clock is an input, not a dependency (#571): a passed expected date
   // reads as "was" from the next rebuild on, which any row edit or language
   // change already triggers. Nothing here needs to re-render on a tick.
-  const steps = useMemo(
-    () => buildEditGoalSteps(stepRows, t, i18n.language, new Date()),
-    [stepRows, t, i18n.language],
-  );
+  //
+  // `now` comes back out of the memo rather than being read again below, so the
+  // open editor and the rows it sits between judge "today" against the same
+  // instant — and so the memoised StepDayGrid keeps its memo: a fresh `Date`
+  // every render would miss it on all 31 cells.
+  const { steps, now } = useMemo(() => {
+    const instant = new Date();
+    return {
+      steps: buildEditGoalSteps(stepRows, t, i18n.language, instant),
+      now: instant,
+    };
+  }, [stepRows, t, i18n.language]);
 
   if (!goal) {
     return (
@@ -237,6 +257,94 @@ function EditContent({ goalId }: { goalId: string }) {
         );
       },
     );
+  }
+
+  /**
+   * One `updateStep` call for a timing write, with the alert-and-keep-open
+   * behaviour both entry points need.
+   *
+   * Returns nothing: the editor collapses on its own next callback, which
+   * `handleCollapseTiming` lets through only when this did not fail.
+   */
+  function writeTiming(
+    stepId: string,
+    fields: Parameters<typeof updateStep>[1],
+  ) {
+    const ok = runEvoluMutation(
+      () => updateStep(stepId as StepId, fields),
+      (error) => {
+        console.error("[EditModeScreen] Failed to update step timing", {
+          stepId,
+          fields,
+          error,
+        });
+        reportError(error, { area: "step.mutate", kind: "update" });
+        Alert.alert(
+          t("editGoal:errors.alertErrorTitle"),
+          t("editGoal:errors.updateStepMessage"),
+        );
+      },
+    );
+    if (!ok) justFailedTimingWriteRef.current = true;
+  }
+
+  /**
+   * `Done` inside the expanded editor.
+   *
+   * A due date arrives as the grid's plain local `YYYY-MM-DD` and is written as
+   * a `DateIso` at local midnight — checked, not assumed, like every other
+   * `dateToDateIso` call site in this app.
+   *
+   * Setting a dependency also clears the external wait: `waiting on` is a fact
+   * about the world recorded in Focus, and the two cannot both be the reason a
+   * step is not moving. A date-only commit leaves those columns alone, so
+   * dating a step never silently wipes a wait some other surface recorded.
+   */
+  function handleCommitTiming(stepId: string, next: StepTimingValue) {
+    let dueAt = null;
+    if (next.dueDate !== null) {
+      const converted = localDayKeyToDateIso(next.dueDate);
+      if (!converted.ok) {
+        console.error("[EditModeScreen] Failed to convert due date", {
+          stepId,
+          dueDate: next.dueDate,
+        });
+        reportError(converted.error, { area: "step.mutate", kind: "update" });
+        Alert.alert(
+          t("editGoal:errors.alertErrorTitle"),
+          t("editGoal:errors.updateStepMessage"),
+        );
+        justFailedTimingWriteRef.current = true;
+        return;
+      }
+      dueAt = converted.value;
+    }
+
+    writeTiming(stepId, {
+      dueAt,
+      afterStepId: next.afterStepId as StepId | null,
+      ...(next.afterStepId !== null
+        ? { waitingOnLabel: null, waitingOnExpectedAt: null }
+        : {}),
+    });
+  }
+
+  /** `Clear` inside the expanded editor — the row goes back to unset. */
+  function handleClearTiming(stepId: string) {
+    writeTiming(stepId, {
+      dueAt: null,
+      afterStepId: null,
+      waitingOnLabel: null,
+      waitingOnExpectedAt: null,
+    });
+  }
+
+  function handleCollapseTiming() {
+    if (justFailedTimingWriteRef.current) {
+      justFailedTimingWriteRef.current = false;
+      return;
+    }
+    setExpandedTimingId(null);
   }
 
   // Unconditional (D9): the storied × has no min-count gate, and a goal with
@@ -460,6 +568,13 @@ function EditContent({ goalId }: { goalId: string }) {
         onDone={() => navigation.navigate("FocusMode", { goalId })}
         dragScrollController={dragScrollController}
         scrollInstrumentation={scrollInstrumentation}
+        onEditTiming={setExpandedTimingId}
+        expandedTimingId={expandedTimingId}
+        onCommitTiming={handleCommitTiming}
+        onClearTiming={handleClearTiming}
+        onCollapseTiming={handleCollapseTiming}
+        timingNow={now}
+        timingLocale={i18n.language}
         {...copy}
       />
 
