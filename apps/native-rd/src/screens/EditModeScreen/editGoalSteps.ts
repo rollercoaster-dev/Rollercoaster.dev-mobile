@@ -94,24 +94,32 @@ export function buildEditGoalSteps(
 
 /**
  * Every step and sub-step in the goal as a `depends on` candidate, in list
- * order, labelled the way the row itself is numbered: "1", "2", … for roots
- * (matching `EditGoalStepRow`'s `stepNumber = index + 1`) and "a", "b", … for
- * each parent's children (the same `toLetterOrdinal` the Timeline sub-spine
- * uses). Flat, not scoped to one parent's siblings — a step may depend on
- * anything else in the goal (D8).
+ * order, labelled "1", "2", … for roots — matching `EditGoalStepRow`'s
+ * `stepNumber = index + 1` — and "a", "b", … for sub-steps, via the same
+ * `toLetterOrdinal` the Timeline sub-spine uses. Flat, not scoped to one
+ * parent's siblings: a step may depend on anything else in the goal (D8).
+ *
+ * Sub-step letters run **goal-wide**, not per parent, so the first child of the
+ * second step is "b" rather than a second "a". A badge's whole job is to name
+ * one row: these labels are also the marks on the shared month grid, where two
+ * candidates wearing "a" on different days would be unreadable. Sub-rows show
+ * no ordinal of their own in this editor, so there is nothing for per-parent
+ * lettering to line up with.
  */
 function buildTimingPopulation(
   grouped: ReturnType<typeof groupStepsByParent>,
   language: string,
 ): TimingEntry[] {
   const entries: TimingEntry[] = [];
+  let subStepCount = 0;
   grouped.forEach((root, rootIndex) => {
     entries.push(toTimingEntry(root, String(rootIndex + 1), false, language));
-    root.children.forEach((child, childIndex) => {
+    for (const child of root.children) {
       entries.push(
-        toTimingEntry(child, toLetterOrdinal(childIndex), true, language),
+        toTimingEntry(child, toLetterOrdinal(subStepCount), true, language),
       );
-    });
+      subStepCount += 1;
+    }
   });
   return entries;
 }

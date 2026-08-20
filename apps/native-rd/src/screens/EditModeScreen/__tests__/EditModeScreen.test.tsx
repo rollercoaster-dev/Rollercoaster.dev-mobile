@@ -5,6 +5,7 @@ import {
   renderWithProviders,
   screen,
   fireEvent,
+  within,
 } from "../../../__tests__/test-utils";
 import { i18n } from "../../../i18n";
 import { EditModeScreen } from "../EditModeScreen";
@@ -562,6 +563,383 @@ describe("EditModeScreen", () => {
           screen.queryByText(glyph, { includeHiddenElements: true }),
         ).toBeNull();
       }
+    });
+
+    // #575 gave EditGoalSubStep its own dateDepChips/isCompleted; until #576
+    // the mapper left both unset, so a sub-step's band never rendered at all.
+    it.each([
+      {
+        tone: "after",
+        row: { afterStepId: "p2" },
+        expected: () =>
+          i18n.t("editGoal:stepList.dateDepChips.after", {
+            title: "Parent two",
+          }),
+      },
+      {
+        tone: "waiting",
+        row: { waitingOnLabel: "Alex" },
+        expected: () =>
+          i18n.t("editGoal:stepList.dateDepChips.waitingOn", { who: "Alex" }),
+      },
+      {
+        tone: "due",
+        row: { dueAt: "2026-03-06T12:00:00" },
+        expected: () =>
+          i18n.t("editGoal:stepList.dateDepChips.due", {
+            date: "Mar 6, 2026",
+          }),
+      },
+    ])(
+      "renders the $tone chip on a sub-step that carries it",
+      ({ row, expected }) => {
+        setupQueries(GOAL, [
+          STEPS_TREE[0],
+          { ...STEPS_TREE[1], ...row },
+          STEPS_TREE[2],
+        ]);
+        renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+        expect(screen.getByText(expected())).toBeOnTheScreen();
+      },
+    );
+
+    // A finished row has nothing left to plan, so it carries no placeholder.
+    // Before #576 every row read as not-completed and a done step still
+    // prompted for a date it would never get.
+    it("drops the unset prompt on a completed step but keeps set timing", () => {
+      setupQueries(GOAL, [
+        STEPS[0],
+        { ...STEPS[1], dueAt: "2026-03-06T12:00:00" },
+        { ...STEPS[2], status: "completed" },
+      ]);
+      renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+
+      // step-2 is completed *and* dated — the date still shows.
+      expect(
+        screen.getByText(
+          i18n.t("editGoal:stepList.dateDepChips.due", { date: "Mar 6, 2026" }),
+        ),
+      ).toBeOnTheScreen();
+      // step-3 is completed with nothing set — no prompt, no line.
+      expect(screen.queryByTestId("edit-goal-step-timing-step-3")).toBeNull();
+      // step-1 is pending with nothing set — it still offers the prompt.
+      expect(
+        screen.getByTestId("edit-goal-step-timing-step-1"),
+      ).toBeOnTheScreen();
+    });
+  });
+
+  // The banner pointed at a "full planner" that never existed; timing is
+  // authored in the row now (#576). Asserted on the English string rather than
+  // the retired key, which `i18n.t` would echo back verbatim.
+  describe("retired dates/deps banner", () => {
+    it("shows no dates-and-dependencies info banner", () => {
+      setupQueries();
+      renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+      expect(
+        screen.queryByText(/dates and dependencies live on each step/i),
+      ).toBeNull();
+      expect(screen.queryByText(/full planner/i)).toBeNull();
+    });
+  });
+
+  // --- In-row timing editor (#576) ---
+  //
+  // The screen reads the real clock, so the month grid would otherwise show
+  // whatever month the suite runs in and no fixed day testID would exist.
+  // Fake timers (already on) plus a pinned instant make June 2026 the open
+  // month, which is the prototype's own pinned week.
+  describe("in-row timing editor", () => {
+    const NOW = new Date(2026, 5, 24);
+    /** Local midnight on the day pressed below — what a DateIso write holds. */
+    const DAY_30_ISO = new Date(2026, 5, 30).toISOString();
+
+    const timingLine = (id: string) => `edit-goal-step-timing-${id}`;
+    const editor = (id: string) => `${timingLine(id)}-editor`;
+    const option = (id: string, candidateId: string) =>
+      `${timingLine(id)}-depends-on-option-${candidateId}`;
+
+    function expand(id: string) {
+      fireEvent.press(screen.getByTestId(timingLine(id)));
+    }
+
+    function openPicker(id: string) {
+      fireEvent.press(
+        screen.getByTestId(`${timingLine(id)}-depends-on-toggle`),
+      );
+    }
+
+    beforeEach(() => {
+      jest.setSystemTime(NOW);
+    });
+
+    it("expands the editor in place of the tapped row's timing line", () => {
+      setupQueries();
+      renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+
+      expect(screen.queryByTestId(editor("step-1"))).toBeNull();
+      expand("step-1");
+
+      expect(screen.getByTestId(editor("step-1"))).toBeOnTheScreen();
+      // One row at a time: tapping step-1 must not open step-3's editor.
+      expect(screen.queryByTestId(editor("step-3"))).toBeNull();
+    });
+
+    it("collapses again when the expanded row's line is tapped", () => {
+      setupQueries();
+      renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+
+      expand("step-1");
+      // Expanded, the row's prefix is the editor root and the pressable moves
+      // to `-timing-line`.
+      fireEvent.press(
+        screen.getByTestId(`${timingLine("step-1")}-timing-line`),
+      );
+
+      expect(screen.queryByTestId(editor("step-1"))).toBeNull();
+      expect(mockUpdateStep).not.toHaveBeenCalled();
+    });
+
+    describe("depends-on candidates", () => {
+      it("offers every other step and omits the step itself", () => {
+        setupQueries();
+        renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+
+        expand("step-1");
+        openPicker("step-1");
+
+        expect(
+          screen.getByTestId(option("step-1", "step-2")),
+        ).toBeOnTheScreen();
+        expect(
+          screen.getByTestId(option("step-1", "step-3")),
+        ).toBeOnTheScreen();
+        expect(screen.queryByTestId(option("step-1", "step-1"))).toBeNull();
+      });
+
+      // Quietly absent, not disabled with a refusal: guards inform (ADR-0010).
+      it("omits a step that already points at this one", () => {
+        setupQueries(GOAL, [
+          STEPS[0],
+          { ...STEPS[1], afterStepId: "step-1" },
+          STEPS[2],
+        ]);
+        renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+
+        expand("step-1");
+        openPicker("step-1");
+
+        expect(screen.queryByTestId(option("step-1", "step-2"))).toBeNull();
+        expect(
+          screen.getByTestId(option("step-1", "step-3")),
+        ).toBeOnTheScreen();
+      });
+
+      it("offers sub-steps and other parents' children alike", () => {
+        setupQueries(GOAL, STEPS_TREE);
+        renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+
+        expand("p1");
+        openPicker("p1");
+
+        for (const candidate of ["p1c1", "p2", "p2c1"]) {
+          expect(screen.getByTestId(option("p1", candidate))).toBeOnTheScreen();
+        }
+        expect(screen.queryByTestId(option("p1", "p1"))).toBeNull();
+      });
+
+      // Sub-step letters run goal-wide so no two badges in one goal collide —
+      // they are also the marks on the shared month grid.
+      it("labels roots 1..n and sub-steps a..n across the whole goal", () => {
+        setupQueries(GOAL, STEPS_TREE);
+        renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+
+        expand("p1");
+        openPicker("p1");
+
+        const ordinalOf = (candidateId: string) =>
+          within(screen.getByTestId(option("p1", candidateId))).getByText(
+            /^[0-9a-z]+$/,
+          ).props.children;
+        expect(ordinalOf("p1c1")).toBe("a");
+        expect(ordinalOf("p2")).toBe("2");
+        expect(ordinalOf("p2c1")).toBe("b");
+      });
+
+      it("says so plainly when a goal's only step has nothing to depend on", () => {
+        setupQueries(GOAL, SINGLE_STEP);
+        renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+
+        expand("step-1");
+        openPicker("step-1");
+
+        expect(
+          screen.getByText(i18n.t("editGoal:editor.timing.noCandidates")),
+        ).toBeOnTheScreen();
+      });
+    });
+
+    describe("writes", () => {
+      it("writes the picked day as a local-midnight DateIso and collapses", () => {
+        setupQueries();
+        renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+
+        expand("step-1");
+        fireEvent.press(
+          screen.getByTestId(`${timingLine("step-1")}-grid-day-2026-06-30`),
+        );
+        fireEvent.press(screen.getByTestId(`${timingLine("step-1")}-done`));
+
+        // No waiting-column keys on a date-only commit: dating a step must not
+        // wipe a wait some other surface recorded.
+        expect(mockUpdateStep).toHaveBeenCalledWith("step-1", {
+          dueAt: DAY_30_ISO,
+          afterStepId: null,
+        });
+        expect(screen.queryByTestId(editor("step-1"))).toBeNull();
+      });
+
+      it("clears the external wait when a dependency is set", () => {
+        setupQueries();
+        renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+
+        expand("step-1");
+        openPicker("step-1");
+        fireEvent.press(screen.getByTestId(option("step-1", "step-2")));
+        fireEvent.press(screen.getByTestId(`${timingLine("step-1")}-done`));
+
+        expect(mockUpdateStep).toHaveBeenCalledWith("step-1", {
+          dueAt: null,
+          afterStepId: "step-2",
+          waitingOnLabel: null,
+          waitingOnExpectedAt: null,
+        });
+      });
+
+      it("nulls all four columns on Clear", () => {
+        setupQueries(GOAL, [
+          { ...STEPS[0], afterStepId: "step-2", dueAt: "2026-06-30T12:00:00" },
+          STEPS[1],
+          STEPS[2],
+        ]);
+        renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+
+        expand("step-1");
+        fireEvent.press(screen.getByTestId(`${timingLine("step-1")}-clear`));
+
+        expect(mockUpdateStep).toHaveBeenCalledWith("step-1", {
+          dueAt: null,
+          afterStepId: null,
+          waitingOnLabel: null,
+          waitingOnExpectedAt: null,
+        });
+        expect(screen.queryByTestId(editor("step-1"))).toBeNull();
+      });
+
+      it("writes a sub-step's timing through the same mutation", () => {
+        setupQueries(GOAL, STEPS_TREE);
+        renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+
+        fireEvent.press(screen.getByTestId("edit-goal-substep-timing-p1c1"));
+        fireEvent.press(
+          screen.getByTestId(
+            "edit-goal-substep-timing-p1c1-grid-day-2026-06-30",
+          ),
+        );
+        fireEvent.press(
+          screen.getByTestId("edit-goal-substep-timing-p1c1-done"),
+        );
+
+        expect(mockUpdateStep).toHaveBeenCalledWith("p1c1", {
+          dueAt: DAY_30_ISO,
+          afterStepId: null,
+        });
+      });
+
+      // Both of Evolu's failure modes. A rejected write must not cost the user
+      // the draft they were looking at.
+      //
+      // `...Once`, not the sticky variants: jest.clearAllMocks() resets calls
+      // but keeps implementations, so a sticky throw here would leak into every
+      // later test in this file.
+      it.each([
+        {
+          mode: "a rejected Result",
+          arrange: () =>
+            mockUpdateStep.mockReturnValueOnce({
+              ok: false,
+              error: { type: "WriteFailed" },
+            }),
+        },
+        {
+          mode: "a thrown error",
+          arrange: () =>
+            mockUpdateStep.mockImplementationOnce(() => {
+              throw new Error("boom");
+            }),
+        },
+      ])("alerts and keeps the editor open on %s", ({ arrange }) => {
+        setupQueries();
+        arrange();
+        const alertSpy = jest.spyOn(Alert, "alert");
+        renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+
+        expand("step-1");
+        fireEvent.press(
+          screen.getByTestId(`${timingLine("step-1")}-grid-day-2026-06-30`),
+        );
+        fireEvent.press(screen.getByTestId(`${timingLine("step-1")}-done`));
+
+        expect(alertSpy).toHaveBeenCalledWith(
+          i18n.t("editGoal:errors.alertErrorTitle"),
+          i18n.t("editGoal:errors.updateStepMessage"),
+        );
+        // Still open, and the draft day is still selected.
+        expect(screen.getByTestId(editor("step-1"))).toBeOnTheScreen();
+        expect(
+          screen.getByTestId(`${timingLine("step-1")}-grid-day-2026-06-30`)
+            .props.accessibilityState.selected,
+        ).toBe(true);
+      });
+
+      // The veto is consumed exactly once — a failed write must not leave the
+      // row permanently un-collapsible.
+      it("collapses on the next attempt after a failed write", () => {
+        setupQueries();
+        mockUpdateStep.mockReturnValueOnce({
+          ok: false,
+          error: { type: "WriteFailed" },
+        });
+        jest.spyOn(Alert, "alert");
+        renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+
+        expand("step-1");
+        fireEvent.press(screen.getByTestId(`${timingLine("step-1")}-done`));
+        expect(screen.getByTestId(editor("step-1"))).toBeOnTheScreen();
+
+        fireEvent.press(screen.getByTestId(`${timingLine("step-1")}-done`));
+        expect(screen.queryByTestId(editor("step-1"))).toBeNull();
+      });
+    });
+
+    // The editor never authors "waiting on" (#573) — but the row it replaces
+    // must keep displaying one, and a wait must survive being looked at.
+    it("shows a waiting-on row's chip when collapsed and no wait control inside", () => {
+      setupQueries(GOAL, [
+        { ...STEPS[0], waitingOnLabel: "Alex" },
+        STEPS[1],
+        STEPS[2],
+      ]);
+      renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+
+      const chip = i18n.t("editGoal:stepList.dateDepChips.waitingOn", {
+        who: "Alex",
+      });
+      expect(screen.getByText(chip)).toBeOnTheScreen();
+
+      expand("step-1");
+      expect(screen.queryByText(chip)).toBeNull();
+      expect(screen.queryByText(/waiting on/i)).toBeNull();
     });
   });
 
