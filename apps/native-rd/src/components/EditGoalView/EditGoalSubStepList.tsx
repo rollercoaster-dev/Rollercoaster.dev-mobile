@@ -50,6 +50,14 @@ export interface EditGoalSubStepListProps {
   /** Whether the un-nest control should show (reparent enabled + onReparentStep). */
   canUnNest?: boolean;
   unNestA11yLabel?: string;
+  /**
+   * Opens timing authoring for a sub-step (#575). Omitted → each sub-row's
+   * timing line renders inert (D7).
+   */
+  onEditTiming?: (subStepId: string) => void;
+  whenPromptLabel?: string;
+  editTimingUnsetA11yLabel?: (subStepTitle: string) => string;
+  editTimingSetA11yLabel?: (subStepTitle: string, lines: string[]) => string;
 }
 
 export function EditGoalSubStepList({
@@ -75,6 +83,10 @@ export function EditGoalSubStepList({
   onUnNest,
   canUnNest = false,
   unNestA11yLabel,
+  onEditTiming,
+  whenPromptLabel,
+  editTimingUnsetA11yLabel,
+  editTimingSetA11yLabel,
 }: EditGoalSubStepListProps) {
   return (
     <>
@@ -108,6 +120,10 @@ export function EditGoalSubStepList({
             canUnNest={canUnNest}
             onUnNest={onUnNest ? () => onUnNest(sub.id) : undefined}
             unNestA11yLabel={unNestA11yLabel}
+            onEditTiming={onEditTiming ? () => onEditTiming(sub.id) : undefined}
+            whenPromptLabel={whenPromptLabel}
+            editTimingUnsetA11yLabel={editTimingUnsetA11yLabel}
+            editTimingSetA11yLabel={editTimingSetA11yLabel}
           />
         </View>
       ))}

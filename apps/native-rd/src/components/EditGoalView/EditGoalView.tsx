@@ -59,11 +59,19 @@ import type { DragScrollController } from "../StepList/dragAutoScroll";
 import { EditGoalStepList } from "./EditGoalStepList";
 import { styles } from "./EditGoalView.styles";
 
-/** Tone of a display-only date/dependency chip on a step row (D5). */
+/** Tone of one date/dependency truth-line on a step row's timing line (D5). */
 export type EditGoalChipTone = "after" | "waiting" | "due";
 
-/** A display-only date/dependency chip. Rendered only when present — never a
- * "missing" placeholder (ND rule: show what's there, not what's absent). */
+/**
+ * One date/dependency truth-line on a row's timing line.
+ *
+ * Read-only as data — #575 made the *line* pressable, but a tap only signals
+ * `onEditTiming`; nothing here is edited in place. The ND "show what's there,
+ * not what's absent" rule still holds wherever the row is inert: with no
+ * `onEditTiming`, absent chips render nothing. It is only the interactive path
+ * that deliberately offers a `＋ when?` prompt instead, and even then never on a
+ * completed row (D3/D7).
+ */
 export interface EditGoalDateDepChip {
   tone: EditGoalChipTone;
   /** Chip text, e.g. "after Draft outline", "Alex", "Fri". */
@@ -72,15 +80,28 @@ export interface EditGoalDateDepChip {
 
 /**
  * A sub-step nested under a parent step (D12) — the app's one-level
- * `parentStepId` model (`schema.ts`). It carries its own title and planned
- * evidence (every step, including a sub-step, requires evidence), but no
- * date/dep chips and no further nesting (depth is capped at one level).
+ * `parentStepId` model (`schema.ts`). It carries its own title, planned
+ * evidence (every step, including a sub-step, requires evidence) and — since
+ * #575 — its own timing, but no further nesting (depth is capped at one level).
  */
 export interface EditGoalSubStep {
   id: string;
   title: string;
   /** Planned evidence types (multi, D4). Non-empty — same invariant as a step. */
   plannedEvidenceTypes: EvidenceTypeValue[];
+  /**
+   * Optional date/dependency chips, same shape as a step's (#575/D4). Reverses
+   * "#407 OQ-2" ("sub-steps carry no C/B band"): StepTimingEditor (#573)
+   * already treats sub-steps as full timing participants, so the two
+   * step-shapes stay symmetric. Absent/empty → no timing to display.
+   */
+  dateDepChips?: EditGoalDateDepChip[];
+  /**
+   * Whether this sub-step is done (#575/D4). Only gates the *unset* timing
+   * placeholder: nothing is left to plan on a finished sub-step, so it carries
+   * no `＋ when?` prompt — timing it already has still shows.
+   */
+  isCompleted?: boolean;
 }
 
 export interface EditGoalStep {
@@ -92,8 +113,16 @@ export interface EditGoalStep {
    * invariant, so the evidence picker refuses to leave this empty.
    */
   plannedEvidenceTypes: EvidenceTypeValue[];
-  /** Optional date/dependency chips (D5). Absent/empty → no chip row. */
+  /** Optional date/dependency truth-lines (D5). Absent/empty → the unset state. */
   dateDepChips?: EditGoalDateDepChip[];
+  /**
+   * Whether this step is done (#575/D3), reversing #446's D3 ("no status field"
+   * — `docs/plans/dev-plans/issue-446-integrate-edit-goal.md`). Only gates the
+   * *unset* timing placeholder: a completed step with nothing set renders no
+   * timing line at all, while timing it already has still shows. Mirrors
+   * StepTimingEditor's own `isCompleted` prop (#573).
+   */
+  isCompleted?: boolean;
   /**
    * Optional one-level sub-steps (D12). Absent/empty → the row shows a
    * "break into sub-steps" prompt; non-empty → an indented block of
@@ -239,6 +268,19 @@ export interface EditGoalViewProps {
   unNestA11yLabel?: string;
   announcePromote?: (stepTitle: string) => string;
   announceNestedUnder?: (stepTitle: string, parentTitle: string) => string;
+  // --- Timing line (#575) ---
+  /**
+   * Fired when a step's or sub-step's timing line is tapped (#575). Ids are
+   * unique across both. Omitted → every timing line renders inert (D7). This
+   * view opens no editor — #576 wires the callback to StepTimingEditor.
+   */
+  onEditTiming?: (id: string) => void;
+  /** Unset-state timing prompt (#575). */
+  whenPromptLabel?: string;
+  /** a11y label for a timing line when nothing is set (#575). */
+  editTimingUnsetA11yLabel?: (title: string) => string;
+  /** a11y label for a timing line when timing is set (#575). */
+  editTimingSetA11yLabel?: (title: string, lines: string[]) => string;
 }
 
 export function EditGoalView({
@@ -301,6 +343,10 @@ export function EditGoalView({
   unNestA11yLabel,
   announcePromote,
   announceNestedUnder,
+  onEditTiming,
+  whenPromptLabel,
+  editTimingUnsetA11yLabel,
+  editTimingSetA11yLabel,
 }: EditGoalViewProps) {
   const { theme } = useUnistyles();
 
@@ -519,6 +565,10 @@ export function EditGoalView({
             unNestA11yLabel={unNestA11yLabel}
             announcePromote={announcePromote}
             announceNestedUnder={announceNestedUnder}
+            onEditTiming={onEditTiming}
+            whenPromptLabel={whenPromptLabel}
+            editTimingUnsetA11yLabel={editTimingUnsetA11yLabel}
+            editTimingSetA11yLabel={editTimingSetA11yLabel}
           />
 
           <View style={styles.infoBanner}>

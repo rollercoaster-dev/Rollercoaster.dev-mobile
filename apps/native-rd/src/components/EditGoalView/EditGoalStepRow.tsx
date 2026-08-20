@@ -3,8 +3,10 @@
  *
  * One parent step: drag handle + step number + tap-to-edit title (D10) + a
  * planned-evidence chip (reused EvidenceTypePicker `compact`, one pill per
- * planned type — D4) that opens the type picker on tap (D8), plus an optional
- * display-only date/dependency chip row (D5, rendered only when present).
+ * planned type — D4) that opens the type picker on tap (D8), plus one pressable
+ * timing line (#575) — the row's date/dependency truth-lines, or a quiet
+ * `＋ when?` prompt when nothing is set, or nothing at all on a completed step
+ * with no timing. Tapping it signals `onEditTiming`; no editor opens here.
  *
  * The optional `children` slot renders inside the card, below the row — the
  * parent (EditGoalView) passes the one-level sub-steps block there (D12)
@@ -41,18 +43,11 @@ import { getTimingConfig } from "../../utils/animation";
 import { Button } from "../Button";
 import { EvidenceTypePicker } from "../EvidenceTypePicker";
 import { styles } from "./EditGoalView.styles";
-import type { EditGoalChipTone, EditGoalStep } from "./EditGoalView";
+import type { EditGoalStep } from "./EditGoalView";
+import { EditGoalTimingLine } from "./EditGoalTimingLine";
 import { HierarchyActionRow } from "./HierarchyActionRow";
 import type { RowGeometry } from "./useEditGoalHierarchyDragTypes";
 import { useRowGeometryRegistration } from "./useRowGeometryRegistration";
-
-// Date/dependency chip glyphs, transcribed from the App Shell prototype's
-// `edit` route (subOf/editSteps): after ↩ / waiting ⏳ / due ▦.
-const CHIP_GLYPH: Record<EditGoalChipTone, string> = {
-  after: "↩",
-  waiting: "⏳",
-  due: "▦",
-};
 
 export interface EditGoalStepRowProps {
   step: EditGoalStep;
@@ -90,6 +85,17 @@ export interface EditGoalStepRowProps {
   canDrag: boolean;
   /** Signal intent to delete this step (D1) — opens the confirm modal in the view. */
   onDelete: () => void;
+  /**
+   * Opens timing authoring for this step (#575). Omitted → the timing line
+   * renders inert, exactly as the read-only chip row did before #575 (D7).
+   */
+  onEditTiming?: () => void;
+  /**
+   * Whether an external timing editor is open for this step (#575/D10). Only
+   * reflected as `accessibilityState.expanded` on the timing line — this row
+   * never embeds the editor itself.
+   */
+  isTimingExpanded?: boolean;
   /** Dwell-arm highlight on this root header (R12). */
   isArmedTarget?: boolean;
   /** Accessible nest-under control eligibility (R8). */
@@ -124,6 +130,12 @@ export interface EditGoalStepRowProps {
   nestUnderRowA11yLabel?: (targetTitle: string) => string;
   /** Visible label on the picker cancel button (R10 / review finding 4). */
   nestUnderCancelLabel?: string;
+  /** Unset-state timing prompt (#575). */
+  whenPromptLabel?: string;
+  /** a11y label for the timing line when nothing is set (#575). */
+  editTimingUnsetA11yLabel?: (stepTitle: string) => string;
+  /** a11y label for the timing line when timing is set (#575). */
+  editTimingSetA11yLabel?: (stepTitle: string, lines: string[]) => string;
 }
 
 export function EditGoalStepRow({
@@ -150,6 +162,8 @@ export function EditGoalStepRow({
   isLast,
   canDrag,
   onDelete,
+  onEditTiming,
+  isTimingExpanded = false,
   isArmedTarget = false,
   canNestUnder = false,
   nestTargets = [],
@@ -168,6 +182,9 @@ export function EditGoalStepRow({
   nestUnderRowA11yLabel = (targetTitle) =>
     `Nest this step under ${targetTitle}`,
   nestUnderCancelLabel = "Cancel",
+  whenPromptLabel,
+  editTimingUnsetA11yLabel,
+  editTimingSetA11yLabel,
 }: EditGoalStepRowProps) {
   const { theme } = useUnistyles();
   const translateY = useSharedValue(0);
@@ -183,12 +200,6 @@ export function EditGoalStepRow({
   const timingQuick = getTimingConfig(animationPref, "quick");
   const timingNormal = getTimingConfig(animationPref, "normal");
   const noAnimation = animationPref === "none";
-
-  const chipColor: Record<EditGoalChipTone, string> = {
-    after: theme.colors.success,
-    waiting: theme.colors.warning,
-    due: theme.colors.textSecondary,
-  };
 
   function resetDragState() {
     "worklet";
@@ -324,32 +335,21 @@ export function EditGoalStepRow({
           </Pressable>
         </View>
       </View>
-      {step.dateDepChips && step.dateDepChips.length > 0 && (
-        <View style={styles.chipRow}>
-          {step.dateDepChips.map((chip, i) => (
-            <View key={i} style={styles.dateDepChip}>
-              <RNText
-                style={[
-                  styles.dateDepChipGlyph,
-                  { color: chipColor[chip.tone] },
-                ]}
-                accessibilityElementsHidden
-                importantForAccessibility="no"
-              >
-                {CHIP_GLYPH[chip.tone]}
-              </RNText>
-              <RNText
-                style={[
-                  styles.dateDepChipText,
-                  { color: chipColor[chip.tone] },
-                ]}
-              >
-                {chip.text}
-              </RNText>
-            </View>
-          ))}
-        </View>
-      )}
+      {/* One pressable timing target, in the same slot the chip row occupied
+          (D12) — a quick tap never reaches the card's manual-activation Pan or
+          its 400ms LongPress, the same way this row's other Pressables already
+          coexist with the drag. */}
+      <EditGoalTimingLine
+        chips={step.dateDepChips}
+        isCompleted={step.isCompleted}
+        title={step.title}
+        onEditTiming={onEditTiming}
+        isTimingExpanded={isTimingExpanded}
+        testID={`edit-goal-step-timing-${step.id}`}
+        whenPromptLabel={whenPromptLabel}
+        editTimingUnsetA11yLabel={editTimingUnsetA11yLabel}
+        editTimingSetA11yLabel={editTimingSetA11yLabel}
+      />
     </>
   );
 

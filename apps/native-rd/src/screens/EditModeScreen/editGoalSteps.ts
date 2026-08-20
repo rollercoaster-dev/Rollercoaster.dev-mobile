@@ -30,9 +30,11 @@ function toPlannedEvidenceTypes(raw: string | null): EvidenceTypeValue[] {
 /**
  * DB rows → EditGoalView's one-level step tree.
  *
- * No status/completed field (D3): the redesigned editor is pure
- * structure-editing, not a progress view — `EditGoalStep` carries no such
- * field to map onto.
+ * Leaves `isCompleted` unset (#575 added the field to `EditGoalStep` and
+ * `EditGoalSubStep`; #576 populates it from DB status). Until then the editor
+ * stays pure structure-editing, not a progress view, so every row reads as
+ * not-completed — which only affects whether an *unset* timing line shows its
+ * `＋ when?` prompt.
  *
  * `now` is supplied by the caller (#571), keeping this module clock-free: every
  * step in one build judges "has this expected date passed?" against the same
@@ -49,8 +51,9 @@ export function buildEditGoalSteps(
     title: root.title ?? "",
     plannedEvidenceTypes: toPlannedEvidenceTypes(root.plannedEvidenceTypes),
     dateDepChips: buildDateDepChips(root, stepRows, t, language, now),
-    // Sub-steps carry no C/B band (#407 OQ-2) — EditGoalSubStep has no
-    // dateDepChips field at all.
+    // Sub-steps get no C/B band yet. #575 reversed "#407 OQ-2" and gave
+    // `EditGoalSubStep` its own `dateDepChips`/`isCompleted`, but populating
+    // them from the DB is #576's job — this mapper still leaves both unset.
     subSteps: root.children.map((child) => ({
       id: child.id,
       title: child.title ?? "",

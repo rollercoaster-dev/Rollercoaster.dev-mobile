@@ -2,6 +2,10 @@
  * Nested leaf row for EditGoalView. It shares the hierarchy drag coordinator
  * with root rows, while explicit ↑/↓ and Un-nest controls preserve equivalent
  * screen-reader and reduced-motion access.
+ *
+ * Since #575 it also carries the same single pressable timing line as a root
+ * row — sub-steps are full timing participants (D4), so the two row shapes stay
+ * symmetric here too.
  */
 import React from "react";
 import {
@@ -26,6 +30,7 @@ import { getTimingConfig } from "../../utils/animation";
 import { EvidenceTypePicker } from "../EvidenceTypePicker";
 import { styles } from "./EditGoalView.styles";
 import type { EditGoalSubStep } from "./EditGoalView";
+import { EditGoalTimingLine } from "./EditGoalTimingLine";
 import { HierarchyActionRow } from "./HierarchyActionRow";
 import type { RowGeometry } from "./useEditGoalHierarchyDragTypes";
 import { useRowGeometryRegistration } from "./useRowGeometryRegistration";
@@ -64,6 +69,13 @@ export interface EditGoalSubStepRowProps {
   /** Accessible un-nest control (R8) — a sub-step can promote to root. */
   canUnNest?: boolean;
   onUnNest?: () => void;
+  /**
+   * Opens timing authoring for this sub-step (#575). Omitted → the timing line
+   * renders inert (chips when present, nothing otherwise — D7).
+   */
+  onEditTiming?: () => void;
+  /** Whether an external timing editor is open for this sub-step (#575/D10). */
+  isTimingExpanded?: boolean;
 
   // --- Copy (i18n-free per D9; English defaults; [Integrate] passes t()). ---
   /** a11y label for the inline title-edit field. */
@@ -82,6 +94,12 @@ export interface EditGoalSubStepRowProps {
   moveSubStepDownLabel?: (subStepTitle: string) => string;
   /** a11y label for the un-nest button (R8). */
   unNestA11yLabel?: string;
+  /** Unset-state timing prompt (#575). */
+  whenPromptLabel?: string;
+  /** a11y label for the timing line when nothing is set (#575). */
+  editTimingUnsetA11yLabel?: (subStepTitle: string) => string;
+  /** a11y label for the timing line when timing is set (#575). */
+  editTimingSetA11yLabel?: (subStepTitle: string, lines: string[]) => string;
 }
 
 export function EditGoalSubStepRow({
@@ -109,6 +127,8 @@ export function EditGoalSubStepRow({
   canDrag,
   canUnNest = false,
   onUnNest,
+  onEditTiming,
+  isTimingExpanded = false,
   editSubStepA11yLabel = (subStepTitle) => `Edit sub-step: ${subStepTitle}`,
   tapToEditHint = "Tap to edit sub-step title",
   editEvidenceLabel = "Edit planned evidence",
@@ -117,6 +137,9 @@ export function EditGoalSubStepRow({
   moveSubStepUpLabel = (subStepTitle) => `Move "${subStepTitle}" up`,
   moveSubStepDownLabel = (subStepTitle) => `Move "${subStepTitle}" down`,
   unNestA11yLabel = "Promote this step to top level",
+  whenPromptLabel,
+  editTimingUnsetA11yLabel,
+  editTimingSetA11yLabel,
 }: EditGoalSubStepRowProps) {
   const { theme } = useUnistyles();
   const translateY = useSharedValue(0);
@@ -302,10 +325,28 @@ export function EditGoalSubStepRow({
     </View>
   );
 
+  // One pressable timing target, between the row body and the accessible
+  // hierarchy actions (D12) — a quick tap never reaches the row's
+  // manual-activation Pan or its 400ms LongPress.
+  const timingLine = (
+    <EditGoalTimingLine
+      chips={subStep.dateDepChips}
+      isCompleted={subStep.isCompleted}
+      title={subStep.title}
+      onEditTiming={onEditTiming}
+      isTimingExpanded={isTimingExpanded}
+      testID={`edit-goal-substep-timing-${subStep.id}`}
+      whenPromptLabel={whenPromptLabel}
+      editTimingUnsetA11yLabel={editTimingUnsetA11yLabel}
+      editTimingSetA11yLabel={editTimingSetA11yLabel}
+    />
+  );
+
   if (!canDrag) {
     return (
       <View>
         {primaryRow}
+        {timingLine}
         {accessibleActions}
       </View>
     );
@@ -320,6 +361,7 @@ export function EditGoalSubStepRow({
     <GestureDetector gesture={composed}>
       <Animated.View style={animatedStyle}>
         {primaryRow}
+        {timingLine}
         {accessibleActions}
       </Animated.View>
     </GestureDetector>

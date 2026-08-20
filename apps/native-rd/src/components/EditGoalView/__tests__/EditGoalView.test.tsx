@@ -5,10 +5,12 @@ import {
   screen,
   fireEvent,
   act,
+  within,
 } from "../../../__tests__/test-utils";
 import {
   EditGoalView,
   type EditGoalStep,
+  type EditGoalSubStep,
   type EditGoalViewProps,
 } from "../EditGoalView";
 import { EditGoalOverflowMenu } from "../EditGoalOverflowMenu";
@@ -281,6 +283,240 @@ describe("EditGoalView", () => {
         screen.getByTestId("edit-goal-step-hierarchy-actions-s2"),
       ).toBeOnTheScreen();
       expect(screen.getByLabelText('Move "Second step" up')).toBeOnTheScreen();
+    });
+  });
+
+  describe("timing line (#575)", () => {
+    const CHIPS: EditGoalStep["dateDepChips"] = [
+      { tone: "after", text: "after Draft" },
+      { tone: "due", text: "Fri" },
+    ];
+
+    const stepWith = (overrides: Partial<EditGoalStep>): EditGoalStep[] => [
+      {
+        id: "s1",
+        title: "Review with mentor",
+        plannedEvidenceTypes: [EvidenceType.text],
+        ...overrides,
+      },
+    ];
+
+    const subStepWith = (
+      overrides: Partial<EditGoalSubStep>,
+    ): EditGoalStep[] => [
+      {
+        id: "s1",
+        title: "Parent step",
+        plannedEvidenceTypes: [EvidenceType.text],
+        subSteps: [
+          {
+            id: "sub1",
+            title: "Sub-step",
+            plannedEvidenceTypes: [EvidenceType.text],
+            ...overrides,
+          },
+        ],
+      },
+    ];
+
+    it("fires onEditTiming once with the step id when the line is pressed", () => {
+      const onEditTiming = jest.fn();
+      renderWithProviders(
+        <EditGoalView
+          {...makeProps({
+            steps: stepWith({ dateDepChips: CHIPS }),
+            onEditTiming,
+          })}
+        />,
+      );
+      fireEvent.press(screen.getByTestId("edit-goal-step-timing-s1"));
+      expect(onEditTiming).toHaveBeenCalledTimes(1);
+      expect(onEditTiming).toHaveBeenCalledWith("s1");
+    });
+
+    it("fires onEditTiming with the sub-step id from a sub-row's line", () => {
+      const onEditTiming = jest.fn();
+      renderWithProviders(
+        <EditGoalView
+          {...makeProps({
+            steps: subStepWith({ dateDepChips: CHIPS }),
+            onEditTiming,
+          })}
+        />,
+      );
+      fireEvent.press(screen.getByTestId("edit-goal-substep-timing-sub1"));
+      expect(onEditTiming).toHaveBeenCalledTimes(1);
+      expect(onEditTiming).toHaveBeenCalledWith("sub1");
+    });
+
+    // The line shows unless a *completed* row has nothing set: nothing is left
+    // to plan there, so it carries no placeholder — timing it already has still
+    // shows.
+    test.each([
+      ["chips set", { dateDepChips: CHIPS }, true],
+      ["nothing set", {}, true],
+      ["completed with nothing set", { isCompleted: true }, false],
+      [
+        "completed with chips set",
+        { dateDepChips: CHIPS, isCompleted: true },
+        true,
+      ],
+    ] as const)("renders the line %s: %s", (_name, overrides, shown) => {
+      renderWithProviders(
+        <EditGoalView
+          {...makeProps({
+            steps: stepWith(overrides),
+            onEditTiming: jest.fn(),
+          })}
+        />,
+      );
+      const line = screen.queryByTestId("edit-goal-step-timing-s1");
+      if (shown) expect(line).not.toBeNull();
+      else expect(line).toBeNull();
+    });
+
+    test.each([
+      ["chips set", { dateDepChips: CHIPS }, true],
+      ["nothing set", {}, true],
+      ["completed with nothing set", { isCompleted: true }, false],
+      [
+        "completed with chips set",
+        { dateDepChips: CHIPS, isCompleted: true },
+        true,
+      ],
+    ] as const)(
+      "renders a sub-step's line %s: %s",
+      (_name, overrides, shown) => {
+        renderWithProviders(
+          <EditGoalView
+            {...makeProps({
+              steps: subStepWith(overrides),
+              onEditTiming: jest.fn(),
+            })}
+          />,
+        );
+        const line = screen.queryByTestId("edit-goal-substep-timing-sub1");
+        if (shown) expect(line).not.toBeNull();
+        else expect(line).toBeNull();
+      },
+    );
+
+    it("shows the ghost prompt on an unset row, as one pressable target", () => {
+      const onEditTiming = jest.fn();
+      renderWithProviders(
+        <EditGoalView {...makeProps({ steps: stepWith({}), onEditTiming })} />,
+      );
+      expect(screen.getByText("＋ when?")).toBeOnTheScreen();
+      fireEvent.press(screen.getByTestId("edit-goal-step-timing-s1"));
+      expect(onEditTiming).toHaveBeenCalledTimes(1);
+      expect(onEditTiming).toHaveBeenCalledWith("s1");
+    });
+
+    // The feature exists to collapse two ghost chips into one affordance, so a
+    // row that somehow showed both the lines and the prompt would defeat it.
+    it.each([
+      ["a step", stepWith, "edit-goal-step-timing-s1"],
+      ["a sub-step", subStepWith, "edit-goal-substep-timing-sub1"],
+    ])("shows lines without the prompt on %s that is set", (_n, build, id) => {
+      renderWithProviders(
+        <EditGoalView
+          {...makeProps({
+            steps: build({ dateDepChips: CHIPS, isCompleted: true }),
+            onEditTiming: jest.fn(),
+          })}
+        />,
+      );
+      // Scoped to this row: in the sub-step fixture the parent is legitimately
+      // unset, so it carries a prompt of its own.
+      const line = within(screen.getByTestId(id));
+      expect(line.getByText("after Draft")).toBeOnTheScreen();
+      expect(line.getByText("Fri")).toBeOnTheScreen();
+      expect(line.queryByText("＋ when?")).toBeNull();
+    });
+
+    it("announces set and unset differently, naming the step", () => {
+      const setLine = renderWithProviders(
+        <EditGoalView
+          {...makeProps({
+            steps: stepWith({ dateDepChips: CHIPS }),
+            onEditTiming: jest.fn(),
+          })}
+        />,
+      );
+      const setLabel = screen.getByTestId("edit-goal-step-timing-s1").props
+        .accessibilityLabel;
+      setLine.unmount();
+
+      renderWithProviders(
+        <EditGoalView
+          {...makeProps({ steps: stepWith({}), onEditTiming: jest.fn() })}
+        />,
+      );
+      const unsetLabel = screen.getByTestId("edit-goal-step-timing-s1").props
+        .accessibilityLabel;
+
+      expect(setLabel).toBe(
+        'Edit timing for "Review with mentor": after Draft, Fri',
+      );
+      expect(unsetLabel).toBe('Set when "Review with mentor" is due');
+      // Never just the line text read back at the user.
+      expect(unsetLabel).not.toContain("＋ when?");
+    });
+
+    it("carries expanded state for an external editor (#576, D10)", () => {
+      renderWithProviders(
+        <EditGoalView
+          {...makeProps({ steps: stepWith({}), onEditTiming: jest.fn() })}
+        />,
+      );
+      expect(
+        screen.getByTestId("edit-goal-step-timing-s1").props.accessibilityState,
+      ).toEqual({ expanded: false });
+    });
+
+    it("names the sub-step, not its parent, in the timing label", () => {
+      renderWithProviders(
+        <EditGoalView
+          {...makeProps({
+            steps: subStepWith({ dateDepChips: CHIPS }),
+            onEditTiming: jest.fn(),
+          })}
+        />,
+      );
+      expect(
+        screen.getByTestId("edit-goal-substep-timing-sub1").props
+          .accessibilityLabel,
+      ).toBe('Edit timing for "Sub-step": after Draft, Fri');
+    });
+
+    // Both row shapes must fall back to the pre-#575 read-only behaviour, or a
+    // screen reader offers a button that does nothing.
+    it.each([
+      ["a step", stepWith, "edit-goal-step-timing-s1"],
+      ["a sub-step", subStepWith, "edit-goal-substep-timing-sub1"],
+    ])("keeps %s inert when onEditTiming is omitted", (_n, build, id) => {
+      renderWithProviders(
+        <EditGoalView
+          {...makeProps({ steps: build({ dateDepChips: CHIPS }) })}
+        />,
+      );
+      const line = screen.getByTestId(id);
+      expect(line.props.accessibilityRole).toBeUndefined();
+      expect(line.props.accessibilityLabel).toBeUndefined();
+      const inside = within(line);
+      expect(inside.getByText("after Draft")).toBeOnTheScreen();
+      expect(inside.getByText("Fri")).toBeOnTheScreen();
+    });
+
+    it.each([
+      ["a step", stepWith, "edit-goal-step-timing-s1"],
+      ["a sub-step", subStepWith, "edit-goal-substep-timing-sub1"],
+    ])("shows no ghost prompt on unset %s when inert", (_n, build, id) => {
+      renderWithProviders(
+        <EditGoalView {...makeProps({ steps: build({}) })} />,
+      );
+      expect(screen.queryByTestId(id)).toBeNull();
+      expect(screen.queryByText("＋ when?")).toBeNull();
     });
   });
 
