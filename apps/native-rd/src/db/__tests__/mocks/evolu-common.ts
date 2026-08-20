@@ -37,6 +37,10 @@ export const Int = {
   },
 };
 
+/** Evolu's `Result` constructors — same shape as the real `Result.js`. */
+export const ok = <T>(value: T) => ({ ok: true as const, value });
+export const err = <E>(error: E) => ({ ok: false as const, error });
+
 export const dateToDateIso = (date: Date) => {
   try {
     return { ok: true, value: date.toISOString() };

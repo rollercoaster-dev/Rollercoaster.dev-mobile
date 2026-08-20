@@ -15,7 +15,7 @@ import {
   shiftMonth,
   toDayKey,
   type GridMonth,
-} from "./monthGrid";
+} from "../../utils/localDay";
 
 /** A day another step already sits on, with its list ordinal ("1", "2", "a"). */
 export interface StepDayMark {
