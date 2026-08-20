@@ -72,15 +72,28 @@ export interface EditGoalDateDepChip {
 
 /**
  * A sub-step nested under a parent step (D12) — the app's one-level
- * `parentStepId` model (`schema.ts`). It carries its own title and planned
- * evidence (every step, including a sub-step, requires evidence), but no
- * date/dep chips and no further nesting (depth is capped at one level).
+ * `parentStepId` model (`schema.ts`). It carries its own title, planned
+ * evidence (every step, including a sub-step, requires evidence) and — since
+ * #575 — its own timing, but no further nesting (depth is capped at one level).
  */
 export interface EditGoalSubStep {
   id: string;
   title: string;
   /** Planned evidence types (multi, D4). Non-empty — same invariant as a step. */
   plannedEvidenceTypes: EvidenceTypeValue[];
+  /**
+   * Optional date/dependency chips, same shape as a step's (#575/D4). Reverses
+   * "#407 OQ-2" ("sub-steps carry no C/B band"): StepTimingEditor (#573)
+   * already treats sub-steps as full timing participants, so the two
+   * step-shapes stay symmetric. Absent/empty → no timing to display.
+   */
+  dateDepChips?: EditGoalDateDepChip[];
+  /**
+   * Whether this sub-step is done (#575/D4). Only gates the *unset* timing
+   * placeholder: nothing is left to plan on a finished sub-step, so it carries
+   * no `＋ when?` prompt — timing it already has still shows.
+   */
+  isCompleted?: boolean;
 }
 
 export interface EditGoalStep {
@@ -94,6 +107,14 @@ export interface EditGoalStep {
   plannedEvidenceTypes: EvidenceTypeValue[];
   /** Optional date/dependency chips (D5). Absent/empty → no chip row. */
   dateDepChips?: EditGoalDateDepChip[];
+  /**
+   * Whether this step is done (#575/D3), reversing #446's D3 ("no status field"
+   * — `docs/plans/dev-plans/issue-446-integrate-edit-goal.md`). Only gates the
+   * *unset* timing placeholder: a completed step with nothing set renders no
+   * timing line at all, while timing it already has still shows. Mirrors
+   * StepTimingEditor's own `isCompleted` prop (#573).
+   */
+  isCompleted?: boolean;
   /**
    * Optional one-level sub-steps (D12). Absent/empty → the row shows a
    * "break into sub-steps" prompt; non-empty → an indented block of
