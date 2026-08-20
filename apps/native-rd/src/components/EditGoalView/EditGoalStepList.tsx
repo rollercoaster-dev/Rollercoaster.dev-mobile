@@ -137,6 +137,20 @@ export interface EditGoalStepListProps {
   unNestA11yLabel?: string;
   announcePromote?: (stepTitle: string) => string;
   announceNestedUnder?: (stepTitle: string, parentTitle: string) => string;
+  // --- Timing line (#575) ---
+  /**
+   * Opens timing authoring for a step or sub-step (#575). Ids are unique across
+   * both. Omitted → every row's timing line renders inert, exactly as the
+   * read-only chip row did before #575 (D7). No editor opens here: #576 wires
+   * this to StepTimingEditor.
+   */
+  onEditTiming?: (id: string) => void;
+  /** Unset-state timing prompt (#575). */
+  whenPromptLabel?: string;
+  /** a11y label for a timing line when nothing is set (#575). */
+  editTimingUnsetA11yLabel?: (title: string) => string;
+  /** a11y label for a timing line when timing is set (#575). */
+  editTimingSetA11yLabel?: (title: string, lines: string[]) => string;
 }
 
 const defaultStepCountLabel = (count: number) =>
@@ -182,6 +196,10 @@ export function EditGoalStepList({
   unNestA11yLabel = "Promote this step to top level",
   announcePromote,
   announceNestedUnder,
+  onEditTiming,
+  whenPromptLabel,
+  editTimingUnsetA11yLabel,
+  editTimingSetA11yLabel,
 }: EditGoalStepListProps) {
   const { theme } = useUnistyles();
   const { animationPref } = useAnimationPref();
@@ -365,6 +383,10 @@ export function EditGoalStepList({
               : undefined
           }
           unNestA11yLabel={unNestA11yLabel}
+          onEditTiming={onEditTiming}
+          whenPromptLabel={whenPromptLabel}
+          editTimingUnsetA11yLabel={editTimingUnsetA11yLabel}
+          editTimingSetA11yLabel={editTimingSetA11yLabel}
         />
         <Pressable
           style={styles.addSubStepRow}
@@ -475,6 +497,12 @@ export function EditGoalStepList({
                 nestUnderRowLabel={nestUnderRowLabel}
                 nestUnderRowA11yLabel={nestUnderRowA11yLabel}
                 nestUnderCancelLabel={nestUnderCancelLabel}
+                onEditTiming={
+                  onEditTiming ? () => onEditTiming(step.id) : undefined
+                }
+                whenPromptLabel={whenPromptLabel}
+                editTimingUnsetA11yLabel={editTimingUnsetA11yLabel}
+                editTimingSetA11yLabel={editTimingSetA11yLabel}
               >
                 {/* Sub-steps block (D12), rendered inside the parent card so
                     it drags with the parent. See renderSubStepBlock. */}

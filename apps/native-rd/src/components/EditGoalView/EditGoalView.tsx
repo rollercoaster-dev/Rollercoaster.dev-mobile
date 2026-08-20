@@ -260,6 +260,19 @@ export interface EditGoalViewProps {
   unNestA11yLabel?: string;
   announcePromote?: (stepTitle: string) => string;
   announceNestedUnder?: (stepTitle: string, parentTitle: string) => string;
+  // --- Timing line (#575) ---
+  /**
+   * Fired when a step's or sub-step's timing line is tapped (#575). Ids are
+   * unique across both. Omitted → every timing line renders inert (D7). This
+   * view opens no editor — #576 wires the callback to StepTimingEditor.
+   */
+  onEditTiming?: (id: string) => void;
+  /** Unset-state timing prompt (#575). */
+  whenPromptLabel?: string;
+  /** a11y label for a timing line when nothing is set (#575). */
+  editTimingUnsetA11yLabel?: (title: string) => string;
+  /** a11y label for a timing line when timing is set (#575). */
+  editTimingSetA11yLabel?: (title: string, lines: string[]) => string;
 }
 
 export function EditGoalView({
@@ -322,6 +335,10 @@ export function EditGoalView({
   unNestA11yLabel,
   announcePromote,
   announceNestedUnder,
+  onEditTiming,
+  whenPromptLabel,
+  editTimingUnsetA11yLabel,
+  editTimingSetA11yLabel,
 }: EditGoalViewProps) {
   const { theme } = useUnistyles();
 
@@ -540,6 +557,10 @@ export function EditGoalView({
             unNestA11yLabel={unNestA11yLabel}
             announcePromote={announcePromote}
             announceNestedUnder={announceNestedUnder}
+            onEditTiming={onEditTiming}
+            whenPromptLabel={whenPromptLabel}
+            editTimingUnsetA11yLabel={editTimingUnsetA11yLabel}
+            editTimingSetA11yLabel={editTimingSetA11yLabel}
           />
 
           <View style={styles.infoBanner}>
