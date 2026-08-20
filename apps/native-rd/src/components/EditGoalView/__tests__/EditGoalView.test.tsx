@@ -157,7 +157,7 @@ afterEach(() => {
 });
 
 describe("EditGoalView", () => {
-  it("renders the header, title, steps, count, add-row, banner, and Done", () => {
+  it("renders the header, title, steps, count, add-row, and Done", () => {
     renderWithProviders(<EditGoalView {...makeProps()} />);
     expect(screen.getByText("Edit goal")).toBeOnTheScreen();
     expect(screen.getByDisplayValue("My goal")).toBeOnTheScreen();
@@ -165,9 +165,11 @@ describe("EditGoalView", () => {
     expect(screen.getByText("Second step")).toBeOnTheScreen();
     expect(screen.getByText("2 steps")).toBeOnTheScreen();
     expect(screen.getByTestId("edit-goal-add-step-input")).toBeOnTheScreen();
+    // No dates/deps info banner: it pointed at a "full planner" that never
+    // existed, and timing is authored in the row itself now (#576).
     expect(
-      screen.getByText(/Dates & dependencies live on each step/),
-    ).toBeOnTheScreen();
+      screen.queryByText(/dates & dependencies live on each step/i),
+    ).toBeNull();
     expect(screen.getByTestId("edit-goal-done-button")).toBeOnTheScreen();
   });
 

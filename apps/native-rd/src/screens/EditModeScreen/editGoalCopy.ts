@@ -20,7 +20,6 @@ export type EditGoalCopyProps = Pick<
   | "stepCountLabel"
   | "addStepPlaceholder"
   | "addStepButtonLabel"
-  | "datesInfoText"
   | "doneLabel"
   | "overflowAccessibilityLabel"
   | "evidencePickerTitle"
@@ -57,7 +56,6 @@ export function buildEditGoalCopy(
     stepCountLabel: (count) => t("editGoal:stepList.count", { count }),
     addStepPlaceholder: t("editGoal:stepList.addPlaceholder"),
     addStepButtonLabel: t("editGoal:stepList.addButtonA11y"),
-    datesInfoText: t("editGoal:editor.datesInfo"),
     doneLabel: t("editGoal:actions.done"),
     overflowAccessibilityLabel: t("editGoal:editor.overflowA11yLabel"),
     evidencePickerTitle: t("editGoal:editor.evidencePickerTitle"),

@@ -20,12 +20,31 @@
   },
   "editor": {
     "goalSectionLabel": "Goal",
-    "datesInfo": "Dates and dependencies live on each step — open a step in the full planner to set \"after\" or \"waiting on\".",
     "overflowA11yLabel": "More options",
     "evidencePickerTitle": "Planned evidence",
     "breakIntoSubStepsLabel": "break into sub-steps",
     "breakIntoSubStepsA11yLabel": "Break \"{{title}}\" into sub-steps",
-    "newSubStepTitle": "New sub-step"
+    "newSubStepTitle": "New sub-step",
+    "timing": {
+      "whenPrompt": "＋ when?",
+      "question": "When do you want this done?",
+      "intentSub": "Your intent, not a deadline. A passed date never reads as “late.”",
+      "dependsOn": "Depends on",
+      "nothing": "nothing",
+      "noCandidates": "No other steps in this goal yet.",
+      "clear": "Clear",
+      "doneSuffix": " · done ✓",
+      "doneSuffixA11y": "done",
+      "orderingNote": "{{title}} needs to be done first, and it sits on {{date}}. This one lands before it — that's allowed, it just won't read in order.",
+      "rowUnsetA11yLabel": "Set when \"{{title}}\" is due",
+      "rowSetA11yLabel": "Edit timing for \"{{title}}\": {{lines}}",
+      "editorUnsetA11yLabel": "Set timing for this step",
+      "previousMonth": "Previous month",
+      "nextMonth": "Next month",
+      "legend": "badges mark days your other steps sit on",
+      "marksA11ySuffix_one": "{{count}} other step here",
+      "marksA11ySuffix_other": "{{count}} other steps here"
+    }
   },
   "confirmDelete": {
     "title": "Delete this goal?",

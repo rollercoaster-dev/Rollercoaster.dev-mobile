@@ -3,8 +3,8 @@
  * Epic #384). Implements the App Shell prototype's `edit` route: an editable
  * goal-title card, a "Steps" section with drag-reorderable rows (title +
  * planned-evidence chip + optional date/dependency chips), an inline "Add
- * step..." row, a dates/deps info banner, and a "Done" footer — with "Delete
- * goal" demoted into a ⋯ overflow menu (see EditGoalOverflowMenu).
+ * step..." row, and a "Done" footer — with "Delete goal" demoted into a ⋯
+ * overflow menu (see EditGoalOverflowMenu).
  *
  * Per-row deletion (#460): each step and sub-step carries a × that opens the
  * shared ConfirmDeleteModal; onDeleteStep / onDeleteSubStep fire only on Confirm
@@ -19,7 +19,7 @@
  *
  * This component is the screen host: a flex:1 column (header, an internal
  * ScrollView wrapping the goal-title card / optional description /
- * EditGoalStepList / dates info banner, then a pinned Done footer) with the
+ * EditGoalStepList, then a pinned Done footer) with the
  * shared evidence-picker AnimatedSheet as a root-level sibling of that
  * ScrollView. The sheet's in-tree absolute overlay therefore fills the
  * viewport, not the scroll content (#493/D8) — so it rises from the bottom of
@@ -259,7 +259,6 @@ export interface EditGoalViewProps {
    * title inputs don't announce identically to screen readers (D3 defer path).
    */
   descriptionSectionLabel?: string;
-  datesInfoText?: string;
   doneLabel?: string;
   overflowAccessibilityLabel?: string;
   evidencePickerTitle?: string;
@@ -348,7 +347,6 @@ export function EditGoalView({
   goalSectionLabel = "Goal",
   descriptionPlaceholder,
   descriptionSectionLabel = "Goal description",
-  datesInfoText = 'Dates & dependencies live on each step — tap a step in the full planner to set "after" / "waiting on".',
   doneLabel = "Done",
   overflowAccessibilityLabel = "More options",
   // Evidence-picker copy is consumed here now — the sheet + its state were
@@ -609,17 +607,6 @@ export function EditGoalView({
             editTimingUnsetA11yLabel={editTimingUnsetA11yLabel}
             editTimingSetA11yLabel={editTimingSetA11yLabel}
           />
-
-          <View style={styles.infoBanner}>
-            <RNText
-              style={styles.infoBannerIcon}
-              accessibilityElementsHidden
-              importantForAccessibility="no"
-            >
-              📅
-            </RNText>
-            <RNText style={styles.infoBannerText}>{datesInfoText}</RNText>
-          </View>
         </ScrollView>
 
         <View style={styles.footer}>

@@ -20,12 +20,31 @@
   },
   "editor": {
     "goalSectionLabel": "Ziel",
-    "datesInfo": "Termine und Abhängigkeiten gehören zu den einzelnen Schritten — öffne einen Schritt in der vollständigen Planung, um \"danach\" oder \"wartet auf\" zu setzen.",
     "overflowA11yLabel": "Weitere Optionen",
     "evidencePickerTitle": "Geplante Evidenz",
     "breakIntoSubStepsLabel": "in Unterschritte aufteilen",
     "breakIntoSubStepsA11yLabel": "\"{{title}}\" in Unterschritte aufteilen",
-    "newSubStepTitle": "Neuer Unterschritt"
+    "newSubStepTitle": "Neuer Unterschritt",
+    "timing": {
+      "whenPrompt": "＋ wann?",
+      "question": "Wann willst du das erledigt haben?",
+      "intentSub": "Deine Absicht, keine Frist. Ein vergangenes Datum liest sich nie als Verzug.",
+      "dependsOn": "Hängt ab von",
+      "nothing": "nichts",
+      "noCandidates": "Noch keine anderen Schritte in diesem Ziel.",
+      "clear": "Löschen",
+      "doneSuffix": " · fertig ✓",
+      "doneSuffixA11y": "fertig",
+      "orderingNote": "{{title}} muss zuerst erledigt werden und liegt auf {{date}}. Dieser Schritt landet davor — das ist erlaubt, es liest sich nur nicht in Reihenfolge.",
+      "rowUnsetA11yLabel": "Festlegen, wann \"{{title}}\" fällig ist",
+      "rowSetA11yLabel": "Termine für \"{{title}}\" bearbeiten: {{lines}}",
+      "editorUnsetA11yLabel": "Termine für diesen Schritt festlegen",
+      "previousMonth": "Vorheriger Monat",
+      "nextMonth": "Nächster Monat",
+      "legend": "Abzeichen markieren Tage, auf denen deine anderen Schritte liegen",
+      "marksA11ySuffix_one": "{{count}} weiterer Schritt hier",
+      "marksA11ySuffix_other": "{{count}} weitere Schritte hier"
+    }
   },
   "confirmDelete": {
     "title": "Ziel löschen?",
