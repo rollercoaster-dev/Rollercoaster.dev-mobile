@@ -217,30 +217,41 @@ export const styles = StyleSheet.create((theme) => ({
     fontSize: theme.size.lg,
     color: theme.colors.textMuted,
   },
-  // Date/dependency chip row (D5) — rendered only when chips are present.
-  chipRow: {
-    flexDirection: "row" as const,
-    flexWrap: "wrap" as const,
-    gap: theme.space[2],
-    marginTop: theme.space[2],
+  // The row's one timing target (#575/D1): stacked borderless truth-lines, the
+  // same read-out shape StepTimingEditor renders for the same data — not the
+  // pre-#575 bordered pills. Full-width and 44pt tall so a line of text is a
+  // real touch target without hitSlop (D11), and so a set row and an unset row
+  // occupy equal vertical space.
+  timingLine: {
+    minHeight: 44,
+    alignSelf: "stretch" as const,
+    justifyContent: "center" as const,
+    paddingVertical: theme.space[1],
+    borderRadius: theme.radius.sm,
+    gap: theme.space[1],
+    marginTop: theme.space[1],
   },
-  dateDepChip: {
+  timingLinePressed: {
+    backgroundColor: theme.colors.backgroundTertiary,
+  },
+  truthLine: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
-    gap: 5,
-    backgroundColor: theme.colors.background,
-    borderWidth: theme.borderWidth.medium,
-    borderColor: theme.colors.border,
-    borderRadius: theme.radius.pill,
-    paddingHorizontal: theme.space[2],
-    paddingVertical: 2,
+    gap: theme.space[2],
   },
-  dateDepChipGlyph: {
-    fontSize: 10,
-  },
-  dateDepChipText: {
+  truthGlyph: {
     fontFamily: theme.fontFamily.mono,
-    fontSize: 10,
+    fontSize: theme.size.sm,
+  },
+  truthText: {
+    flex: 1,
+    fontFamily: theme.fontFamily.mono,
+    fontSize: theme.size.sm,
+  },
+  // The unset state: quiet, singular, and absent entirely on a completed row.
+  whenPrompt: {
+    fontSize: theme.size.sm,
+    color: theme.colors.textMuted,
   },
   // Reorder insertion indicator, drawn at the real landing slot mid-drag.
   dropLine: {
