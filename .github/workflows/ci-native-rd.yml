@@ -11,6 +11,8 @@ on:
       - "packages/design-tokens/**"
       - "packages/openbadges-core/**"
       - "bun.lock"
+      - "patches/**"
+      - "scripts/**"
       - "bunfig.toml"
       - "turbo.json"
       - "package.json"
@@ -62,6 +64,9 @@ jobs:
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
+
+      - name: Verify patched dependencies
+        run: bun run check:patches
 
       - name: Format check
         run: bun run format:check
