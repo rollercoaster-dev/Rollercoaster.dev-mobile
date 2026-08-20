@@ -261,6 +261,43 @@ for sub-steps (currently unpopulated — left for this issue by #575's own doc),
   collapse-after-failure assertion. All failure mocks in the new block use the
   `...Once` variants. Worth knowing before the next failure test is written here.
 
+### Review pass (2026-08-20)
+
+Two-axis review (`/code-review since 6470448`). Everything actionable was fixed
+in-branch; nothing was deferred silently.
+
+- **Spec, real bug — a date-only commit deleted an unshown dependency.** Seeding
+  the draft through the candidate list (see the D10 entry above) meant a
+  dependency the editor cannot offer seeded as `nothing`; committing the draft
+  wholesale then wrote `afterStepId: null` over a live dependency the row's chip
+  was still showing. `Done` now commits a **diff against the seed** —
+  `undefined` is `updateStep`'s "don't touch" — so an untouched draft is a close
+  rather than a write, dating a step never touches its dependency, and the
+  deleted-target case does the cleanup write the issue says it doesn't need:
+  none. Picking `nothing` still clears, because that was asked for.
+- **Standards, a11y regression — the swap dropped accessibility focus.** Both
+  directions unmount the element the user just activated, and pre-#576 the line
+  never unmounted, so this was ours. Fixed with an opt-in `focusOnMount` on
+  `StepTimingEditor` and `EditGoalTimingLine`, armed by `EditGoalRowTiming` only
+  after the row has actually toggled. Two tests pin it (both fail without it).
+- **Standards, data clumps + duplicated code.** The seven timing props became
+  one `EditGoalTimingHost`; `bindRowTiming` replaced the identical
+  three-ternary id-binding in both list layers; `writeTiming` folded back into
+  `updateStepFields`; `buildTiming` stopped re-deriving the day and label its own
+  `TimingEntry` already held.
+- **Standards, missing test file.** `EditGoalRowTiming` now has one (AGENTS.md §
+  Architectural Rules #3) plus its barrel export.
+- **Noted, not changed:** `dateIsoToLocalDayKey` returns `string | null`, not
+  D5's `string` — a corrupt row degrades to "no day set" rather than to
+  `"NaN-NaN-NaN"`.
+- **Noted, spec-sanctioned, worth a second look:** `Clear` nulls
+  `waitingOnLabel` / `waitingOnExpectedAt` on a row whose wait the expanded
+  editor deliberately hides (the issue's own Writes table: "Clear dep:
+  `afterStepId: null`, `waitingOnLabel: null`, `waitingOnExpectedAt: null`").
+  It is an explicit destructive action on the row's whole timing, so it was left
+  as specified — but it is the one remaining path that can remove something the
+  editor never displayed.
+
 ## Follow-ups
 
 | Item                                                       | Where it goes                                             |
