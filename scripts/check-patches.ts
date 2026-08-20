@@ -1,8 +1,7 @@
 #!/usr/bin/env bun
 
 import { existsSync, readFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join, resolve } from "node:path";
 
 type RootManifest = {
   patchedDependencies?: Record<string, string>;
@@ -13,10 +12,7 @@ type BunLock = {
   packages?: Record<string, unknown[]>;
 };
 
-const repoRoot = resolve(
-  process.env.CHECK_PATCHES_ROOT ??
-    resolve(dirname(fileURLToPath(import.meta.url)), ".."),
-);
+const repoRoot = resolve(import.meta.dir, "..");
 
 /**
  * bun.lock is JSONC-ish: trailing commas before `}`/`]` are legal there but
@@ -69,32 +65,40 @@ const lock = readBunLock(lockPath);
 const patched = manifest.patchedDependencies ?? {};
 const lockPatched = lock.patchedDependencies ?? {};
 const errors: string[] = [];
+const reportedNames = new Set<string>();
+
+function report(name: string | null, message: string): void {
+  if (name) reportedNames.add(name);
+  errors.push(message);
+}
 
 for (const [key, patchPath] of Object.entries(patched)) {
   const split = splitPatchKey(key);
 
   if (!split) {
-    errors.push(`- "${key}" is not a valid "name@version" patch key.`);
+    report(null, `- "${key}" is not a valid "name@version" patch key.`);
     continue;
   }
 
   const { name, version } = split;
 
   if (!existsSync(join(repoRoot, patchPath))) {
-    errors.push(`- ${key}: patch file "${patchPath}" does not exist.`);
+    report(name, `- ${key}: patch file "${patchPath}" does not exist.`);
   }
 
   const versions = resolvedVersions(lock, name);
 
   if (versions.length === 0) {
-    errors.push(
+    report(
+      name,
       `- ${key}: "${name}" is not in bun.lock at all. Drop the patch entry or add the dependency back.`,
     );
     continue;
   }
 
   if (!versions.includes(version)) {
-    errors.push(
+    report(
+      name,
       `- ${key}: bun.lock resolves "${name}" to ${versions.join(", ")}, so this patch is SILENTLY SKIPPED.\n` +
         `  Fix: bun patch ${name} && (re-apply ${patchPath}) && bun patch --commit ${name}`,
     );
@@ -104,20 +108,27 @@ for (const [key, patchPath] of Object.entries(patched)) {
   // bun drops unresolvable patchedDependencies keys from the lockfile without
   // warning — that silence is what hid issue #588 for three weeks.
   if (!(key in lockPatched)) {
-    errors.push(
+    report(
+      name,
       `- ${key}: missing from bun.lock's own patchedDependencies block.\n` +
         `  Fix: run \`bun install\` and commit the updated bun.lock.`,
     );
   }
 }
 
+// Reverse drift: a key bun.lock still carries that package.json has dropped.
+// Skip names the forward pass already reported — a stale lock key alongside a
+// re-keyed manifest entry is one desync, and the forward pass names the right fix.
 for (const key of Object.keys(lockPatched)) {
-  if (!(key in patched)) {
-    errors.push(
-      `- ${key}: present in bun.lock but not in package.json's patchedDependencies.\n` +
-        `  Fix: run \`bun install\` and commit the updated bun.lock.`,
-    );
-  }
+  if (key in patched) continue;
+
+  const name = splitPatchKey(key)?.name;
+  if (name && reportedNames.has(name)) continue;
+
+  errors.push(
+    `- ${key}: present in bun.lock but not in package.json's patchedDependencies.\n` +
+      `  Fix: run \`bun install\` and commit the updated bun.lock.`,
+  );
 }
 
 if (errors.length > 0) {
