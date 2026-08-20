@@ -64,6 +64,6 @@
   },
   "patchedDependencies": {
     "ajv-formats@3.0.1": "patches/ajv-formats@3.0.1.patch",
-    "react-native-unistyles@3.2.5": "patches/react-native-unistyles@3.2.5.patch"
+    "react-native-unistyles@3.3.0": "patches/react-native-unistyles@3.3.0.patch"
   }
 }
