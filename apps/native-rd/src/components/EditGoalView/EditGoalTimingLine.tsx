@@ -102,7 +102,7 @@ export function EditGoalTimingLine({
 
   if (!onEditTiming) {
     return (
-      <View style={styles.timingLine} testID={testID}>
+      <View style={[styles.timingLine, styles.timingLineInert]} testID={testID}>
         {content}
       </View>
     );

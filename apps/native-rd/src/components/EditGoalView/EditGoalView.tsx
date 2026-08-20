@@ -59,11 +59,19 @@ import type { DragScrollController } from "../StepList/dragAutoScroll";
 import { EditGoalStepList } from "./EditGoalStepList";
 import { styles } from "./EditGoalView.styles";
 
-/** Tone of a display-only date/dependency chip on a step row (D5). */
+/** Tone of one date/dependency truth-line on a step row's timing line (D5). */
 export type EditGoalChipTone = "after" | "waiting" | "due";
 
-/** A display-only date/dependency chip. Rendered only when present — never a
- * "missing" placeholder (ND rule: show what's there, not what's absent). */
+/**
+ * One date/dependency truth-line on a row's timing line.
+ *
+ * Read-only as data — #575 made the *line* pressable, but a tap only signals
+ * `onEditTiming`; nothing here is edited in place. The ND "show what's there,
+ * not what's absent" rule still holds wherever the row is inert: with no
+ * `onEditTiming`, absent chips render nothing. It is only the interactive path
+ * that deliberately offers a `＋ when?` prompt instead, and even then never on a
+ * completed row (D3/D7).
+ */
 export interface EditGoalDateDepChip {
   tone: EditGoalChipTone;
   /** Chip text, e.g. "after Draft outline", "Alex", "Fri". */
@@ -105,7 +113,7 @@ export interface EditGoalStep {
    * invariant, so the evidence picker refuses to leave this empty.
    */
   plannedEvidenceTypes: EvidenceTypeValue[];
-  /** Optional date/dependency chips (D5). Absent/empty → no chip row. */
+  /** Optional date/dependency truth-lines (D5). Absent/empty → the unset state. */
   dateDepChips?: EditGoalDateDepChip[];
   /**
    * Whether this step is done (#575/D3), reversing #446's D3 ("no status field"

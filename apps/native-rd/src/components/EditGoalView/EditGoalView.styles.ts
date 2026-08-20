@@ -231,6 +231,13 @@ export const styles = StyleSheet.create((theme) => ({
     gap: theme.space[1],
     marginTop: theme.space[1],
   },
+  // Both of D11's reasons for the 44pt band are about the tap target: there is
+  // none on the read-only path (D7), and no prompt there to line up with. Left
+  // at 44 it would pad every displayed chip row in the one shipping consumer
+  // (EditModeScreen passes no `onEditTiming` until #576) for no affordance.
+  timingLineInert: {
+    minHeight: 0,
+  },
   timingLinePressed: {
     backgroundColor: theme.colors.backgroundTertiary,
   },
