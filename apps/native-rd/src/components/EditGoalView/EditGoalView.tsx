@@ -55,6 +55,8 @@ import { ScreenSubHeader } from "../ScreenHeader/ScreenSubHeader";
 import { EvidenceTypePicker } from "../EvidenceTypePicker";
 import { AnimatedSheet } from "../EvidenceTypePicker/AnimatedSheet";
 import type { EvidenceTypeValue } from "../../types/evidence";
+import type { StepDayMark } from "../StepDayGrid";
+import type { StepTimingCandidate, StepTimingValue } from "../StepTimingEditor";
 import type { DragScrollController } from "../StepList/dragAutoScroll";
 import { EditGoalStepList } from "./EditGoalStepList";
 import { styles } from "./EditGoalView.styles";
@@ -76,6 +78,39 @@ export interface EditGoalDateDepChip {
   tone: EditGoalChipTone;
   /** Chip text, e.g. "after Draft outline", "Alex", "Fri". */
   text: string;
+}
+
+/**
+ * Everything the in-row `StepTimingEditor` needs for one row, pre-resolved by
+ * the host (#576) — the candidate population, the current draft seed, and the
+ * two display strings the editor cannot derive itself.
+ *
+ * Grouped into one field rather than six loose props because it rides the step
+ * object through three component layers, and because the whole bundle is
+ * computed in one pass per goal (`editGoalSteps.ts`): either a row has an
+ * editable timing surface or it has none. Absent → the row keeps rendering the
+ * read-only {@link EditGoalTimingLine} and nothing expands, which is what every
+ * Storybook story and the New Goal wizard get.
+ *
+ * `value.afterStepId` is seeded **from `candidates`**, never straight from the
+ * DB column: the draft the editor commits has to match what its picker shows,
+ * so a dependency that resolves to no offered candidate (deleted target, or the
+ * far side of a mutual two-step cycle) seeds as `null` rather than as an id the
+ * user was never shown.
+ */
+export interface EditGoalTiming {
+  /** The committed timing this row opens with. */
+  value: StepTimingValue;
+  /** Every other step and sub-step in the goal this one may depend on. */
+  candidates: readonly StepTimingCandidate[];
+  /** The selected candidate's title, or null when nothing is selected. */
+  afterStepTitle: string | null;
+  /** Whether that candidate is completed — drives the opt-in `done` suffix. */
+  afterStepIsCompleted: boolean;
+  /** `value.dueDate` formatted for the active locale. */
+  dueDateLabel: string | null;
+  /** Days the other steps sit on, for the embedded grid's badges. */
+  marks: readonly StepDayMark[];
 }
 
 /**
@@ -102,6 +137,8 @@ export interface EditGoalSubStep {
    * no `＋ when?` prompt — timing it already has still shows.
    */
   isCompleted?: boolean;
+  /** Pre-resolved in-row timing editor data (#576). Absent → read-only line. */
+  timing?: EditGoalTiming;
 }
 
 export interface EditGoalStep {
@@ -123,6 +160,8 @@ export interface EditGoalStep {
    * StepTimingEditor's own `isCompleted` prop (#573).
    */
   isCompleted?: boolean;
+  /** Pre-resolved in-row timing editor data (#576). Absent → read-only line. */
+  timing?: EditGoalTiming;
   /**
    * Optional one-level sub-steps (D12). Absent/empty → the row shows a
    * "break into sub-steps" prompt; non-empty → an indented block of

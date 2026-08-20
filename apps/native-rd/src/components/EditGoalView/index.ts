@@ -4,6 +4,7 @@ export type {
   EditGoalStep,
   EditGoalSubStep,
   EditGoalDateDepChip,
+  EditGoalTiming,
   EditGoalChipTone,
 } from "./EditGoalView";
 export { EditGoalStepList } from "./EditGoalStepList";
