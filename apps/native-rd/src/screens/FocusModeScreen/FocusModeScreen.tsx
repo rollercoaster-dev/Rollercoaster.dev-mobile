@@ -26,7 +26,7 @@ import {
   type FocusParkedRow,
 } from "../../components/FocusParkedState";
 import { EvidenceTypePicker } from "../../components/EvidenceTypePicker";
-import { AnimatedSheet } from "../../components/EvidenceTypePicker/AnimatedSheet";
+import { AnimatedSheet } from "../../components/AnimatedSheet";
 import { resolvePlannedEvidenceTypes } from "../../utils/parsePlannedEvidenceTypes";
 import {
   goalsQuery,

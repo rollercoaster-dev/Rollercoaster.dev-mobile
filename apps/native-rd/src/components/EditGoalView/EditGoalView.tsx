@@ -53,7 +53,7 @@ import { IconButton } from "../IconButton";
 import { Button } from "../Button";
 import { ScreenSubHeader } from "../ScreenHeader/ScreenSubHeader";
 import { EvidenceTypePicker } from "../EvidenceTypePicker";
-import { AnimatedSheet } from "../EvidenceTypePicker/AnimatedSheet";
+import { AnimatedSheet } from "../AnimatedSheet";
 import type { EvidenceTypeValue } from "../../types/evidence";
 import type { DragScrollController } from "../StepList/dragAutoScroll";
 import { EditGoalStepList } from "./EditGoalStepList";
