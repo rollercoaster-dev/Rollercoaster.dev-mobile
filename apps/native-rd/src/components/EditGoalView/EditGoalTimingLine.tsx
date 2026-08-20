@@ -5,7 +5,8 @@
  * One affordance per row, never two ghost chips: the row's date/dependency
  * truth-lines and the unset `＋ when?` prompt share a single tap target, which
  * signals outward via `onEditTiming`. No editor opens here — StepTimingEditor
- * (#573) owns that, and #576 wires this callback to it.
+ * (#573) owns that, and {@link EditGoalRowTiming} swaps this line out for it
+ * once the host names this row as expanded (#576).
  *
  * Presentation matches StepTimingEditor's own read-out (stacked borderless
  * lines, glyph + text, D1) rather than the pre-#575 bordered pills, so a step's
@@ -43,7 +44,7 @@ export interface EditGoalTimingLineProps {
    * D7).
    */
   onEditTiming?: () => void;
-  /** Reflects an *external* editor's open state on this line (#576, D10). */
+  /** Reflects the swapped-in editor's open state on this line (#576, D10). */
   isTimingExpanded?: boolean;
   testID: string;
 

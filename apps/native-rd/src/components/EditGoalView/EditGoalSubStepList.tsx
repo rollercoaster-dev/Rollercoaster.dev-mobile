@@ -16,7 +16,8 @@ import { View, type GestureResponderEvent } from "react-native";
 import type { AnimationPref } from "../../hooks/useAnimationPref";
 import type { SharedValue } from "react-native-reanimated";
 import { EditGoalSubStepRow } from "./EditGoalSubStepRow";
-import type { EditGoalSubStep } from "./EditGoalView";
+import type { EditGoalSubStep, EditGoalTimingCopy } from "./EditGoalView";
+import type { StepTimingValue } from "../StepTimingEditor";
 import type { RowGeometry } from "./useEditGoalHierarchyDrag";
 
 export interface EditGoalSubStepListProps {
@@ -58,6 +59,14 @@ export interface EditGoalSubStepListProps {
   whenPromptLabel?: string;
   editTimingUnsetA11yLabel?: (subStepTitle: string) => string;
   editTimingSetA11yLabel?: (subStepTitle: string, lines: string[]) => string;
+  // --- In-row timing editor (#576), forwarded to whichever sub-row owns it. ---
+  expandedTimingId?: string | null;
+  onCommitTiming?: (id: string, next: StepTimingValue) => void;
+  onClearTiming?: (id: string) => void;
+  onCollapseTiming?: (id: string) => void;
+  timingNow?: Date;
+  timingLocale?: string;
+  timingCopy?: EditGoalTimingCopy;
 }
 
 export function EditGoalSubStepList({
@@ -87,6 +96,13 @@ export function EditGoalSubStepList({
   whenPromptLabel,
   editTimingUnsetA11yLabel,
   editTimingSetA11yLabel,
+  expandedTimingId,
+  onCommitTiming,
+  onClearTiming,
+  onCollapseTiming,
+  timingNow,
+  timingLocale,
+  timingCopy,
 }: EditGoalSubStepListProps) {
   return (
     <>
@@ -124,6 +140,21 @@ export function EditGoalSubStepList({
             whenPromptLabel={whenPromptLabel}
             editTimingUnsetA11yLabel={editTimingUnsetA11yLabel}
             editTimingSetA11yLabel={editTimingSetA11yLabel}
+            isTimingExpanded={expandedTimingId === sub.id}
+            onCommitTiming={
+              onCommitTiming
+                ? (next) => onCommitTiming(sub.id, next)
+                : undefined
+            }
+            onClearTiming={
+              onClearTiming ? () => onClearTiming(sub.id) : undefined
+            }
+            onCollapseTiming={
+              onCollapseTiming ? () => onCollapseTiming(sub.id) : undefined
+            }
+            timingNow={timingNow}
+            timingLocale={timingLocale}
+            timingCopy={timingCopy}
           />
         </View>
       ))}

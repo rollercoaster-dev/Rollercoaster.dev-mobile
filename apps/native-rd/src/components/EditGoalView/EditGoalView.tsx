@@ -56,7 +56,11 @@ import { EvidenceTypePicker } from "../EvidenceTypePicker";
 import { AnimatedSheet } from "../EvidenceTypePicker/AnimatedSheet";
 import type { EvidenceTypeValue } from "../../types/evidence";
 import type { StepDayMark } from "../StepDayGrid";
-import type { StepTimingCandidate, StepTimingValue } from "../StepTimingEditor";
+import type {
+  StepTimingCandidate,
+  StepTimingEditorProps,
+  StepTimingValue,
+} from "../StepTimingEditor";
 import type { DragScrollController } from "../StepList/dragAutoScroll";
 import { EditGoalStepList } from "./EditGoalStepList";
 import { styles } from "./EditGoalView.styles";
@@ -79,6 +83,37 @@ export interface EditGoalDateDepChip {
   /** Chip text, e.g. "after Draft outline", "Alex", "Fri". */
   text: string;
 }
+
+/**
+ * Copy for the in-row timing editor (#576), forwarded verbatim to
+ * `StepTimingEditor` and, through it, to the embedded `StepDayGrid`.
+ *
+ * Grouped rather than flattened for the same reason `StepTimingEditor` groups
+ * its own `gridCopy`: the editor's copy surface stays the editor's, so adding a
+ * string there does not mean editing three list layers here. `whenPromptLabel`
+ * is deliberately **not** in the group — the unset prompt is shared with the
+ * read-only {@link EditGoalTimingLine}, and one prompt means one prop.
+ *
+ * `afterLineLabel` / `dueLineLabel` / `doneLabel` belong here too: the screen
+ * fills them from the same `t()` keys the row's chips use, which is what keeps
+ * the editor's read-out identical to Timeline's and Focus's.
+ */
+export type EditGoalTimingCopy = Pick<
+  StepTimingEditorProps,
+  | "questionLabel"
+  | "intentSubLabel"
+  | "dependsOnLabel"
+  | "nothingLabel"
+  | "noCandidatesLabel"
+  | "clearLabel"
+  | "doneLabel"
+  | "afterLineLabel"
+  | "dueLineLabel"
+  | "doneSuffixLabel"
+  | "orderingNote"
+  | "timingLineA11yLabel"
+  | "gridCopy"
+>;
 
 /**
  * Everything the in-row `StepTimingEditor` needs for one row, pre-resolved by
@@ -319,6 +354,32 @@ export interface EditGoalViewProps {
   editTimingUnsetA11yLabel?: (title: string) => string;
   /** a11y label for a timing line when timing is set (#575). */
   editTimingSetA11yLabel?: (title: string, lines: string[]) => string;
+  // --- In-row timing editor (#576) ---
+  /**
+   * Which step or sub-step has its `StepTimingEditor` open. One id at a time:
+   * the editor unfolds inside the row with the list still on screen, so two
+   * open at once would push the second one's context off it.
+   */
+  expandedTimingId?: string | null;
+  /** `Done` inside the expanded editor. The host writes and then collapses. */
+  onCommitTiming?: (id: string, next: StepTimingValue) => void;
+  /** `Clear` inside the expanded editor — drops the date and the dependency. */
+  onClearTiming?: (id: string) => void;
+  /**
+   * The editor asked to close without committing (`Done`/`Clear` also route
+   * here, after their own callback). Separate from `onEditTiming` so a failed
+   * write can keep the row open — the editor cannot veto its own collapse.
+   */
+  onCollapseTiming?: (id: string) => void;
+  /**
+   * The instant the editor and its grid judge "today" against. Required for an
+   * editor to mount at all: neither component reads the clock itself.
+   */
+  timingNow?: Date;
+  /** BCP-47 tag for the grid's month and weekday names. */
+  timingLocale?: string;
+  /** Translated copy for the expanded editor (English defaults inside it). */
+  timingCopy?: EditGoalTimingCopy;
 }
 
 export function EditGoalView({
@@ -384,6 +445,13 @@ export function EditGoalView({
   whenPromptLabel,
   editTimingUnsetA11yLabel,
   editTimingSetA11yLabel,
+  expandedTimingId,
+  onCommitTiming,
+  onClearTiming,
+  onCollapseTiming,
+  timingNow,
+  timingLocale,
+  timingCopy,
 }: EditGoalViewProps) {
   const { theme } = useUnistyles();
 
@@ -606,6 +674,13 @@ export function EditGoalView({
             whenPromptLabel={whenPromptLabel}
             editTimingUnsetA11yLabel={editTimingUnsetA11yLabel}
             editTimingSetA11yLabel={editTimingSetA11yLabel}
+            expandedTimingId={expandedTimingId}
+            onCommitTiming={onCommitTiming}
+            onClearTiming={onClearTiming}
+            onCollapseTiming={onCollapseTiming}
+            timingNow={timingNow}
+            timingLocale={timingLocale}
+            timingCopy={timingCopy}
           />
         </ScrollView>
 

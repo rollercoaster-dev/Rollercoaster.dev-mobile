@@ -5,7 +5,7 @@
  *
  * Since #575 it also carries the same single pressable timing line as a root
  * row — sub-steps are full timing participants (D4), so the two row shapes stay
- * symmetric here too.
+ * symmetric here too, in-row editor included (#576).
  */
 import React from "react";
 import {
@@ -29,8 +29,9 @@ import type { AnimationPref } from "../../hooks/useAnimationPref";
 import { getTimingConfig } from "../../utils/animation";
 import { EvidenceTypePicker } from "../EvidenceTypePicker";
 import { styles } from "./EditGoalView.styles";
-import type { EditGoalSubStep } from "./EditGoalView";
-import { EditGoalTimingLine } from "./EditGoalTimingLine";
+import type { EditGoalSubStep, EditGoalTimingCopy } from "./EditGoalView";
+import type { StepTimingValue } from "../StepTimingEditor";
+import { EditGoalRowTiming } from "./EditGoalRowTiming";
 import { HierarchyActionRow } from "./HierarchyActionRow";
 import type { RowGeometry } from "./useEditGoalHierarchyDragTypes";
 import { useRowGeometryRegistration } from "./useRowGeometryRegistration";
@@ -74,7 +75,7 @@ export interface EditGoalSubStepRowProps {
    * renders inert (chips when present, nothing otherwise — D7).
    */
   onEditTiming?: () => void;
-  /** Whether an external timing editor is open for this sub-step (#575/D10). */
+  /** Whether this sub-step's timing editor is open (#575/D10, #576). */
   isTimingExpanded?: boolean;
 
   // --- Copy (i18n-free per D9; English defaults; [Integrate] passes t()). ---
@@ -100,6 +101,14 @@ export interface EditGoalSubStepRowProps {
   editTimingUnsetA11yLabel?: (subStepTitle: string) => string;
   /** a11y label for the timing line when timing is set (#575). */
   editTimingSetA11yLabel?: (subStepTitle: string, lines: string[]) => string;
+  // --- In-row timing editor (#576), all id-bound by the list layer. ---
+  onCommitTiming?: (next: StepTimingValue) => void;
+  onClearTiming?: () => void;
+  onCollapseTiming?: () => void;
+  /** The instant the editor judges "today" against. Required to mount it. */
+  timingNow?: Date;
+  timingLocale?: string;
+  timingCopy?: EditGoalTimingCopy;
 }
 
 export function EditGoalSubStepRow({
@@ -140,6 +149,12 @@ export function EditGoalSubStepRow({
   whenPromptLabel,
   editTimingUnsetA11yLabel,
   editTimingSetA11yLabel,
+  onCommitTiming,
+  onClearTiming,
+  onCollapseTiming,
+  timingNow,
+  timingLocale,
+  timingCopy,
 }: EditGoalSubStepRowProps) {
   const { theme } = useUnistyles();
   const translateY = useSharedValue(0);
@@ -329,12 +344,19 @@ export function EditGoalSubStepRow({
   // hierarchy actions (D12) — a quick tap never reaches the row's
   // manual-activation Pan or its 400ms LongPress.
   const timingLine = (
-    <EditGoalTimingLine
+    <EditGoalRowTiming
       chips={subStep.dateDepChips}
       isCompleted={subStep.isCompleted}
       title={subStep.title}
+      timing={subStep.timing}
       onEditTiming={onEditTiming}
       isTimingExpanded={isTimingExpanded}
+      onCommitTiming={onCommitTiming}
+      onClearTiming={onClearTiming}
+      onCollapseTiming={onCollapseTiming}
+      now={timingNow}
+      locale={timingLocale}
+      copy={timingCopy}
       testID={`edit-goal-substep-timing-${subStep.id}`}
       whenPromptLabel={whenPromptLabel}
       editTimingUnsetA11yLabel={editTimingUnsetA11yLabel}
