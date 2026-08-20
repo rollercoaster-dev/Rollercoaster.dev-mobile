@@ -5,6 +5,7 @@ import {
   screen,
   fireEvent,
   act,
+  within,
 } from "../../../__tests__/test-utils";
 import {
   EditGoalView,
@@ -407,7 +408,30 @@ describe("EditGoalView", () => {
       );
       expect(screen.getByText("＋ when?")).toBeOnTheScreen();
       fireEvent.press(screen.getByTestId("edit-goal-step-timing-s1"));
+      expect(onEditTiming).toHaveBeenCalledTimes(1);
       expect(onEditTiming).toHaveBeenCalledWith("s1");
+    });
+
+    // The feature exists to collapse two ghost chips into one affordance, so a
+    // row that somehow showed both the lines and the prompt would defeat it.
+    it.each([
+      ["a step", stepWith, "edit-goal-step-timing-s1"],
+      ["a sub-step", subStepWith, "edit-goal-substep-timing-sub1"],
+    ])("shows lines without the prompt on %s that is set", (_n, build, id) => {
+      renderWithProviders(
+        <EditGoalView
+          {...makeProps({
+            steps: build({ dateDepChips: CHIPS, isCompleted: true }),
+            onEditTiming: jest.fn(),
+          })}
+        />,
+      );
+      // Scoped to this row: in the sub-step fixture the parent is legitimately
+      // unset, so it carries a prompt of its own.
+      const line = within(screen.getByTestId(id));
+      expect(line.getByText("after Draft")).toBeOnTheScreen();
+      expect(line.getByText("Fri")).toBeOnTheScreen();
+      expect(line.queryByText("＋ when?")).toBeNull();
     });
 
     it("announces set and unset differently, naming the step", () => {
@@ -450,23 +474,48 @@ describe("EditGoalView", () => {
       ).toEqual({ expanded: false });
     });
 
-    it("stays inert with no accessibilityRole when onEditTiming is omitted", () => {
+    it("names the sub-step, not its parent, in the timing label", () => {
       renderWithProviders(
         <EditGoalView
-          {...makeProps({ steps: stepWith({ dateDepChips: CHIPS }) })}
+          {...makeProps({
+            steps: subStepWith({ dateDepChips: CHIPS }),
+            onEditTiming: jest.fn(),
+          })}
         />,
       );
-      const line = screen.getByTestId("edit-goal-step-timing-s1");
-      expect(line.props.accessibilityRole).toBeUndefined();
-      expect(screen.getByText("after Draft")).toBeOnTheScreen();
-      expect(screen.getByText("Fri")).toBeOnTheScreen();
+      expect(
+        screen.getByTestId("edit-goal-substep-timing-sub1").props
+          .accessibilityLabel,
+      ).toBe('Edit timing for "Sub-step": after Draft, Fri');
     });
 
-    it("shows no ghost prompt on an unset row when onEditTiming is omitted", () => {
+    // Both row shapes must fall back to the pre-#575 read-only behaviour, or a
+    // screen reader offers a button that does nothing.
+    it.each([
+      ["a step", stepWith, "edit-goal-step-timing-s1"],
+      ["a sub-step", subStepWith, "edit-goal-substep-timing-sub1"],
+    ])("keeps %s inert when onEditTiming is omitted", (_n, build, id) => {
       renderWithProviders(
-        <EditGoalView {...makeProps({ steps: stepWith({}) })} />,
+        <EditGoalView
+          {...makeProps({ steps: build({ dateDepChips: CHIPS }) })}
+        />,
       );
-      expect(screen.queryByTestId("edit-goal-step-timing-s1")).toBeNull();
+      const line = screen.getByTestId(id);
+      expect(line.props.accessibilityRole).toBeUndefined();
+      expect(line.props.accessibilityLabel).toBeUndefined();
+      const inside = within(line);
+      expect(inside.getByText("after Draft")).toBeOnTheScreen();
+      expect(inside.getByText("Fri")).toBeOnTheScreen();
+    });
+
+    it.each([
+      ["a step", stepWith, "edit-goal-step-timing-s1"],
+      ["a sub-step", subStepWith, "edit-goal-substep-timing-sub1"],
+    ])("shows no ghost prompt on unset %s when inert", (_n, build, id) => {
+      renderWithProviders(
+        <EditGoalView {...makeProps({ steps: build({}) })} />,
+      );
+      expect(screen.queryByTestId(id)).toBeNull();
       expect(screen.queryByText("＋ when?")).toBeNull();
     });
   });
