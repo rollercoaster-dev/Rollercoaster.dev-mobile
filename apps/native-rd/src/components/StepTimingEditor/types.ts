@@ -89,6 +89,17 @@ export interface StepTimingEditorProps {
    * as having done nothing — a verified failure in the prototype.
    */
   onExpand?: (rowRef: RefObject<View | null>) => void;
+  /**
+   * Move accessibility focus into the editor when it mounts **already**
+   * expanded.
+   *
+   * Off by default, and the default is the safe one: a host that keeps this row
+   * mounted and merely toggles `expanded` must not steal focus on first paint.
+   * A host that mounts the editor *in response to a tap* has the opposite need
+   * — the pressable the user just activated is gone with the render that
+   * replaced it, so focus has nowhere to be (see `EditGoalRowTiming`, #576).
+   */
+  focusOnMount?: boolean;
 
   // --- Copy: caller-supplied with English defaults (the D7 convention). ---
   /** The single unset affordance. */

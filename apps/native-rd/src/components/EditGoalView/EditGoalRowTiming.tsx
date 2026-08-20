@@ -21,12 +21,20 @@
  * caller to veto from inside `onCommit`, so a host whose write just failed has
  * to be the one that decides the row stays open.
  *
+ * **Accessibility focus follows the swap.** The element the user activated is
+ * unmounted by the render that answers the tap, so neither side can be left to
+ * the platform: opening hands focus to the editor's heading, closing hands it
+ * back to the line that replaced it. Both are opt-in flags on the children
+ * (`focusOnMount`), because the same components also mount in states no one
+ * asked for — the whole list paints its lines on first render, and every row
+ * grabbing focus at once would be worse than none.
+ *
  * testIDs share the row's timing prefix in both states: collapsed, the prefix
  * *is* the pressable; expanded, it is the editor's root and the pressable
  * becomes `<prefix>-timing-line`, alongside `-editor`, `-done`, `-clear`,
  * `-depends-on-toggle` and `-grid-day-<YYYY-MM-DD>`.
  */
-import React from "react";
+import React, { useState } from "react";
 import { StepTimingEditor } from "../StepTimingEditor";
 import type { StepTimingValue } from "../StepTimingEditor";
 import { EditGoalTimingLine } from "./EditGoalTimingLine";
@@ -108,6 +116,18 @@ export function EditGoalRowTiming({
   editTimingUnsetA11yLabel,
   editTimingSetA11yLabel,
 }: EditGoalRowTimingProps) {
+  // Has this row's editor ever been opened or closed while mounted? That is the
+  // difference between a swap the user asked for — where focus must follow the
+  // content — and the state this row simply first painted in. Adjusted during
+  // render (React's sanctioned "store info from a previous render" pattern),
+  // not in a ref, which a double-render would desynchronise.
+  const [seenExpanded, setSeenExpanded] = useState(isTimingExpanded);
+  const [hasSwapped, setHasSwapped] = useState(false);
+  if (seenExpanded !== isTimingExpanded) {
+    setSeenExpanded(isTimingExpanded);
+    setHasSwapped(true);
+  }
+
   // Every input the editor cannot work without, checked in one place: a row
   // missing any of them (Storybook, the New Goal wizard) keeps the read-only
   // line rather than mounting a half-wired editor.
@@ -133,6 +153,7 @@ export function EditGoalRowTiming({
         onCommit={onCommitTiming}
         onClear={onClearTiming}
         expanded
+        focusOnMount={hasSwapped}
         onExpandedChange={(next) => {
           if (!next) onCollapseTiming?.();
         }}
@@ -153,6 +174,7 @@ export function EditGoalRowTiming({
       title={title}
       onEditTiming={onEditTiming}
       isTimingExpanded={isTimingExpanded}
+      focusOnMount={hasSwapped}
       testID={testID}
       whenPromptLabel={whenPromptLabel}
       editTimingUnsetA11yLabel={editTimingUnsetA11yLabel}

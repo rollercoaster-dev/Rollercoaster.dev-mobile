@@ -17,9 +17,10 @@
  * Both rows share this renderer, so the glyph/tone map and the three-state gate
  * (set / unset / completed-with-nothing) exist once.
  */
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { View, Text as RNText, Pressable } from "react-native";
 import { useUnistyles } from "react-native-unistyles";
+import { focusAccessibilityRef } from "../../utils/accessibilityFocus";
 import { styles } from "./EditGoalView.styles";
 import type { EditGoalChipTone, EditGoalDateDepChip } from "./EditGoalView";
 
@@ -46,6 +47,13 @@ export interface EditGoalTimingLineProps {
   onEditTiming?: () => void;
   /** Reflects the swapped-in editor's open state on this line (#576, D10). */
   isTimingExpanded?: boolean;
+  /**
+   * Move accessibility focus onto this line when it mounts, because it just
+   * replaced the editor the user closed (#576). Off by default: the whole list
+   * mounts its lines on first paint, and every row demanding focus at once
+   * would be worse than none of them doing it.
+   */
+  focusOnMount?: boolean;
   testID: string;
 
   // --- Copy (i18n-free per D9; English defaults; [Integrate] passes t()). ---
@@ -60,6 +68,7 @@ export function EditGoalTimingLine({
   title,
   onEditTiming,
   isTimingExpanded = false,
+  focusOnMount = false,
   testID,
   whenPromptLabel = "＋ when?",
   editTimingUnsetA11yLabel = (stepTitle) => `Set when "${stepTitle}" is due`,
@@ -67,6 +76,15 @@ export function EditGoalTimingLine({
     `Edit timing for "${stepTitle}": ${lines.join(", ")}`,
 }: EditGoalTimingLineProps) {
   const { theme } = useUnistyles();
+  const lineRef = useRef<View | null>(null);
+
+  // Runs on the mount where `focusOnMount` is already true — the host only
+  // turns it on once this row has actually been opened and closed, and never
+  // back off, so this fires exactly on the mounts that replaced an editor.
+  useEffect(() => {
+    if (!focusOnMount) return;
+    return focusAccessibilityRef(lineRef);
+  }, [focusOnMount]);
 
   const chipColor: Record<EditGoalChipTone, string> = {
     after: theme.colors.success,
@@ -111,6 +129,7 @@ export function EditGoalTimingLine({
 
   return (
     <Pressable
+      ref={lineRef}
       onPress={onEditTiming}
       accessibilityRole="button"
       // Reads the lines back rather than naming the control, so set and unset

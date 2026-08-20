@@ -92,6 +92,7 @@ export function StepTimingEditor({
   expanded,
   onExpandedChange,
   onExpand,
+  focusOnMount = false,
   whenPromptLabel = "＋ when?",
   questionLabel = "When do you want this done?",
   intentSubLabel = DEFAULT_INTENT_SUB,
@@ -151,7 +152,11 @@ export function StepTimingEditor({
   // that mounts already-expanded would steal accessibility focus into the
   // editor on first paint. The dep array alone cannot express that; do not
   // remove it as redundant.
-  const wasExpanded = useRef(isExpanded);
+  //
+  // `focusOnMount` is the deliberate exception: a host that mounts this in
+  // answer to a tap seeds the ref as collapsed, so the effect fires once and
+  // focus follows the content the user just summoned.
+  const wasExpanded = useRef(focusOnMount && isExpanded ? false : isExpanded);
   useEffect(() => {
     if (wasExpanded.current === isExpanded) return;
     wasExpanded.current = isExpanded;
