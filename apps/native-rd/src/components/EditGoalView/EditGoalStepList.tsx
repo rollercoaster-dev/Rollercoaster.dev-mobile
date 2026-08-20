@@ -44,9 +44,9 @@ import { styles } from "./EditGoalView.styles";
 import type {
   EditGoalStep,
   EditGoalSubStep,
-  EditGoalTimingCopy,
+  EditGoalTimingHost,
 } from "./EditGoalView";
-import type { StepTimingValue } from "../StepTimingEditor";
+import { bindRowTiming } from "./EditGoalRowTiming";
 
 export interface EditGoalStepListProps {
   steps: EditGoalStep[];
@@ -156,14 +156,8 @@ export interface EditGoalStepListProps {
   editTimingUnsetA11yLabel?: (title: string) => string;
   /** a11y label for a timing line when timing is set (#575). */
   editTimingSetA11yLabel?: (title: string, lines: string[]) => string;
-  // --- In-row timing editor (#576), forwarded to whichever row owns the id. ---
-  expandedTimingId?: string | null;
-  onCommitTiming?: (id: string, next: StepTimingValue) => void;
-  onClearTiming?: (id: string) => void;
-  onCollapseTiming?: (id: string) => void;
-  timingNow?: Date;
-  timingLocale?: string;
-  timingCopy?: EditGoalTimingCopy;
+  /** In-row timing editor wiring (#576), id-bound per row on the way down. */
+  timingHost?: EditGoalTimingHost;
 }
 
 const defaultStepCountLabel = (count: number) =>
@@ -213,13 +207,7 @@ export function EditGoalStepList({
   whenPromptLabel,
   editTimingUnsetA11yLabel,
   editTimingSetA11yLabel,
-  expandedTimingId,
-  onCommitTiming,
-  onClearTiming,
-  onCollapseTiming,
-  timingNow,
-  timingLocale,
-  timingCopy,
+  timingHost,
 }: EditGoalStepListProps) {
   const { theme } = useUnistyles();
   const { animationPref } = useAnimationPref();
@@ -407,13 +395,7 @@ export function EditGoalStepList({
           whenPromptLabel={whenPromptLabel}
           editTimingUnsetA11yLabel={editTimingUnsetA11yLabel}
           editTimingSetA11yLabel={editTimingSetA11yLabel}
-          expandedTimingId={expandedTimingId}
-          onCommitTiming={onCommitTiming}
-          onClearTiming={onClearTiming}
-          onCollapseTiming={onCollapseTiming}
-          timingNow={timingNow}
-          timingLocale={timingLocale}
-          timingCopy={timingCopy}
+          timingHost={timingHost}
         />
         <Pressable
           style={styles.addSubStepRow}
@@ -530,21 +512,7 @@ export function EditGoalStepList({
                 whenPromptLabel={whenPromptLabel}
                 editTimingUnsetA11yLabel={editTimingUnsetA11yLabel}
                 editTimingSetA11yLabel={editTimingSetA11yLabel}
-                isTimingExpanded={expandedTimingId === step.id}
-                onCommitTiming={
-                  onCommitTiming
-                    ? (next) => onCommitTiming(step.id, next)
-                    : undefined
-                }
-                onClearTiming={
-                  onClearTiming ? () => onClearTiming(step.id) : undefined
-                }
-                onCollapseTiming={
-                  onCollapseTiming ? () => onCollapseTiming(step.id) : undefined
-                }
-                timingNow={timingNow}
-                timingLocale={timingLocale}
-                timingCopy={timingCopy}
+                {...bindRowTiming(timingHost, step.id)}
               >
                 {/* Sub-steps block (D12), rendered inside the parent card so
                     it drags with the parent. See renderSubStepBlock. */}

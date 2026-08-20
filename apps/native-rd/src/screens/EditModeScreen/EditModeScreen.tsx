@@ -54,7 +54,7 @@ import type {
   EditModeScreenProps,
   GoalsStackParamList,
 } from "../../navigation/types";
-import { buildEditGoalCopy } from "./editGoalCopy";
+import { buildEditGoalCopy, buildTimingCopy } from "./editGoalCopy";
 import { buildEditGoalSteps } from "./editGoalSteps";
 import { styles } from "./EditModeScreen.styles";
 
@@ -67,6 +67,9 @@ function EditContent({ goalId }: { goalId: string }) {
   // EditGoalView is i18n-free by design (#445/D9) — its ~30 copy props are
   // resolved in one place (editGoalCopy) and spread in below.
   const copy = useMemo(() => buildEditGoalCopy(t), [t]);
+  // Rides `timingHost.copy` rather than the view's prop surface, so it is
+  // resolved beside the copy bundle but handed over separately.
+  const timingCopy = useMemo(() => buildTimingCopy(t), [t]);
   const rows = useQuery(goalsQuery);
   const goal = rows.find((r) => r.id === goalId);
   const stepRows = useQuery(stepsByGoalQuery(goalId as GoalId));
@@ -578,12 +581,15 @@ function EditContent({ goalId }: { goalId: string }) {
         dragScrollController={dragScrollController}
         scrollInstrumentation={scrollInstrumentation}
         onEditTiming={setExpandedTimingId}
-        expandedTimingId={expandedTimingId}
-        onCommitTiming={handleCommitTiming}
-        onClearTiming={handleClearTiming}
-        onCollapseTiming={handleCollapseTiming}
-        timingNow={now}
-        timingLocale={i18n.language}
+        timingHost={{
+          expandedId: expandedTimingId,
+          onCommit: handleCommitTiming,
+          onClear: handleClearTiming,
+          onCollapse: handleCollapseTiming,
+          now,
+          locale: i18n.language,
+          copy: timingCopy,
+        }}
         {...copy}
       />
 

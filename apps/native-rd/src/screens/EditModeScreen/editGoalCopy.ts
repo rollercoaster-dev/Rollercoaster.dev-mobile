@@ -49,7 +49,6 @@ export type EditGoalCopyProps = Pick<
   | "whenPromptLabel"
   | "editTimingUnsetA11yLabel"
   | "editTimingSetA11yLabel"
-  | "timingCopy"
 >;
 
 export function buildEditGoalCopy(
@@ -103,19 +102,19 @@ export function buildEditGoalCopy(
         title,
         lines: lines.join(", "),
       }),
-    timingCopy: buildTimingCopy(t),
   };
 }
 
 /**
- * The expanded in-row editor's copy (#576).
+ * The expanded in-row editor's copy (#576). Separate from the bundle above
+ * because it rides `timingHost.copy`, not the view's own prop surface.
  *
  * `after`, `due` and `Done` deliberately reuse the row's own keys rather than
  * getting editor-local copies: the editor's read-out has to match Timeline's
  * and Focus's word for word, and sharing the literal `t()` key is the only way
  * that parity is structural instead of coincidental.
  */
-function buildTimingCopy(
+export function buildTimingCopy(
   t: TFunction<["editGoal", "common"]>,
 ): EditGoalTimingCopy {
   return {

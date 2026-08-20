@@ -34,7 +34,32 @@ import type {
   EditGoalDateDepChip,
   EditGoalTiming,
   EditGoalTimingCopy,
+  EditGoalTimingHost,
 } from "./EditGoalView";
+
+/**
+ * One row's slice of a host's timing wiring, id-bound and ready to spread onto
+ * `EditGoalStepRow` / `EditGoalSubStepRow`.
+ *
+ * Lives here rather than in each list layer because both lists did the same
+ * three-ternary binding verbatim, differing only in which id they closed over.
+ * No host → an empty object, so the row falls back to its read-only line.
+ */
+export function bindRowTiming(
+  host: EditGoalTimingHost | undefined,
+  id: string,
+) {
+  if (!host) return {};
+  return {
+    isTimingExpanded: host.expandedId === id,
+    onCommitTiming: (next: StepTimingValue) => host.onCommit(id, next),
+    onClearTiming: () => host.onClear(id),
+    onCollapseTiming: () => host.onCollapse(id),
+    timingNow: host.now,
+    timingLocale: host.locale,
+    timingCopy: host.copy,
+  };
+}
 
 export interface EditGoalRowTimingProps {
   /** Step or sub-step title, named in the collapsed line's a11y labels. */
