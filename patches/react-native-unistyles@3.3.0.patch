@@ -69,17 +69,17 @@ diff --git a/cxx/shadowTree/ShadowTreeManager.cpp b/cxx/shadowTree/ShadowTreeMan
 index 01026dc5751b00473ae878804cdae1b283fdbc57..2a3994b55ae053db4fe8040ba8293ce20538f651 100644
 --- a/cxx/shadowTree/ShadowTreeManager.cpp
 +++ b/cxx/shadowTree/ShadowTreeManager.cpp
-@@ -10,16 +10,39 @@
+@@ -10,7 +10,19 @@ void shadow::ShadowTreeManager::updateShadowTree(jsi::Runtime& rt) {
      auto& registry = core::UnistylesRegistry::get();
  
      registry.trafficController.withLock([&](){
 -        auto updates = registry.trafficController.getUpdates();
 +        auto updates = registry.trafficController.takeUpdates();
- 
-         if (updates.empty()) {
-             return;
-         }
- 
++
++        if (updates.empty()) {
++            return;
++        }
++
 +        for (auto it = updates.begin(); it != updates.end();) {
 +            if (!registry.isActiveUnistylesFamily(it->first)) {
 +                it = updates.erase(it);
@@ -87,12 +87,10 @@ index 01026dc5751b00473ae878804cdae1b283fdbc57..2a3994b55ae053db4fe8040ba8293ce2
 +                ++it;
 +            }
 +        }
-+
-+        if (updates.empty()) {
-+            return;
-+        }
-+
- #if REACT_NATIVE_VERSION_MINOR >= 81
+ 
+         if (updates.empty()) {
+             return;
+@@ -20,6 +32,17 @@ void shadow::ShadowTreeManager::updateShadowTree(jsi::Runtime& rt) {
          std::unordered_map<Tag, folly::dynamic> tagToProps;
  
          for (const auto& [family, props] : updates) {
@@ -110,7 +108,7 @@ index 01026dc5751b00473ae878804cdae1b283fdbc57..2a3994b55ae053db4fe8040ba8293ce2
              auto safeProps = props.isObject() ? props : folly::dynamic::object();
  
              tagToProps.insert({family->getTag(), safeProps});
-@@ -37,14 +60,24 @@
+@@ -37,14 +60,24 @@ void shadow::ShadowTreeManager::updateShadowTree(jsi::Runtime& rt) {
  #else
          const auto& shadowTreeRegistry = UIManagerBinding::getBinding(rt)->getUIManager().getShadowTreeRegistry();
  
