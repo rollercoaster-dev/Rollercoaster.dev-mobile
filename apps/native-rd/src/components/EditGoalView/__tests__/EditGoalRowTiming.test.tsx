@@ -82,6 +82,8 @@ describe("EditGoalRowTiming", () => {
     { missing: "now", override: { now: undefined } },
     { missing: "onCommitTiming", override: { onCommitTiming: undefined } },
     { missing: "onClearTiming", override: { onClearTiming: undefined } },
+    // Without this one the editor would mount with no way back to the line.
+    { missing: "onCollapseTiming", override: { onCollapseTiming: undefined } },
   ])("stays read-only when $missing is absent", ({ override }) => {
     renderWithProviders(
       <EditGoalRowTiming {...baseProps(override)} isTimingExpanded />,

@@ -19,7 +19,9 @@
  * as `onCollapseTiming` rather than acted on here: `StepTimingEditor.handleDone`
  * calls `onCommit` and closes in the same synchronous breath, with no way for a
  * caller to veto from inside `onCommit`, so a host whose write just failed has
- * to be the one that decides the row stays open.
+ * to be the one that decides the row stays open. Which makes `onCollapseTiming`
+ * a mount precondition and not an optional nicety: without it the editor is the
+ * only thing in the slot and nothing can close it again.
  *
  * **Accessibility focus follows the swap.** The element the user activated is
  * unmounted by the render that answers the tap, so neither side can be left to
@@ -84,6 +86,7 @@ export interface EditGoalRowTimingProps {
   onEditTiming?: () => void;
   onCommitTiming?: (next: StepTimingValue) => void;
   onClearTiming?: () => void;
+  /** How the editor's close request gets out. Required to mount it. */
   onCollapseTiming?: () => void;
   /** The instant the editor judges "today" against. Required to mount it. */
   now?: Date;
@@ -136,7 +139,8 @@ export function EditGoalRowTiming({
     timing !== undefined &&
     now !== undefined &&
     onCommitTiming !== undefined &&
-    onClearTiming !== undefined;
+    onClearTiming !== undefined &&
+    onCollapseTiming !== undefined;
 
   if (canEdit) {
     return (
@@ -155,7 +159,7 @@ export function EditGoalRowTiming({
         expanded
         focusOnMount={hasSwapped}
         onExpandedChange={(next) => {
-          if (!next) onCollapseTiming?.();
+          if (!next) onCollapseTiming();
         }}
         // `onExpand` (park-the-row-at-the-top) is deliberately unwired: it needs
         // a ref threaded through four layers for a scroll nicety the issue does
