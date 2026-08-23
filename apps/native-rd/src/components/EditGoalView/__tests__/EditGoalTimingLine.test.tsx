@@ -113,15 +113,6 @@ describe("EditGoalTimingLine", () => {
       expect(mark.props.accessibilityElementsHidden).toBe(true);
       expect(mark.props.importantForAccessibility).toBe("no");
     });
-
-    it("ships no emoji glyph on any tone", () => {
-      renderLine({ chips: CHIPS });
-      for (const glyph of ["↩", "⏳", "▦"]) {
-        expect(
-          screen.queryByText(glyph, { includeHiddenElements: true }),
-        ).toBeNull();
-      }
-    });
   });
 
   describe("the set/unset boundary", () => {

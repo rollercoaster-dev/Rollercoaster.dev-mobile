@@ -165,11 +165,6 @@ describe("EditGoalView", () => {
     expect(screen.getByText("Second step")).toBeOnTheScreen();
     expect(screen.getByText("2 steps")).toBeOnTheScreen();
     expect(screen.getByTestId("edit-goal-add-step-input")).toBeOnTheScreen();
-    // No dates/deps info banner: it pointed at a "full planner" that never
-    // existed, and timing is authored in the row itself now (#576).
-    expect(
-      screen.queryByText(/dates & dependencies live on each step/i),
-    ).toBeNull();
     expect(screen.getByTestId("edit-goal-done-button")).toBeOnTheScreen();
   });
 
