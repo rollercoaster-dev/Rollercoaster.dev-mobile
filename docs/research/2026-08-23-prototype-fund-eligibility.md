@@ -47,6 +47,14 @@ partly stale vs. the new three-line structure; the Förderlinien comparison page
 - On selection: Vorhabenbeschreibung, **De-minimis declaration**, bank statement showing
   at least the own-contribution balance; teams add GbR contract, tax number, addresses,
   possibly SCHUFA.
+- Legal basis is the BMBF/BMFTR **Richtlinie "Software Sprint"** of 7 Nov 2024 (§§ 23, 44 BHO;
+  AZA/AZK). It funds as a **Zuschuss auf Kostenbasis (AZK)** — a grant, not a loan. The
+  **Änderungsbekanntmachung of 25 Jun 2026** widened the subject matter to three areas —
+  Datensicherheit, Softwarebausteine für Innovationen, and **souveräne Software für
+  Endnutzer\*innen** — made the calls themenoffen, set submission dates of 30 Nov through
+  2029, and extended the Geltungsdauer to 30 Jun 2031. The Richtlinie also states applicants
+  are **"ausschließlich selbstständige Programmierinnen und Programmierer"**, so
+  self-employment sits in the legal basis, not only in the FAQ.
 - Application is a form: title, description, societal problem, technical approach, prior
   state + planned new work, similar approaches & differentiation, target group + how you
   reach it, milestones, team, past software projects + repo links, total hours, Second
@@ -54,19 +62,19 @@ partly stale vs. the new three-line structure; the Förderlinien comparison page
 
 ## Where Rollercoaster.dev stands
 
-| Requirement                                   | Status                                                                                                                                                                                                                                                                                                    |
-| --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Software project, public repo                 | ✅ `rollercoaster-dev/Rollercoaster.dev-mobile` is public                                                                                                                                                                                                                                                 |
-| FOSS licence                                  | ✅ AGPL-3.0 (app), Apache-2.0 (openbadges-core), MIT (design-tokens); trademark reservation and DCO/dual-licence intent are compatible — code stays open                                                                                                                                                  |
-| Natural person, 18+, sole copyright           | ✅ (apply personally, never as a Rollercoaster.dev entity)                                                                                                                                                                                                                                                |
-| Residence + tax in Germany                    | ⚠️ assumed yes — confirm                                                                                                                                                                                                                                                                                  |
-| Self-employed / freelance / employer release  | ❌ **biggest blocker.** 950 h in 6 months ≈ full time; you'd need partial Freistellung from fobizz for Jun–Nov 2027, or freelance status. Arbeitsschutz caps hours if you stay part-time employed                                                                                                         |
-| Fits a funding focus                          | ❌ as framed. A neurodiversity-first end-user goal tracker is neither Datensicherheit nor Software-Infrastruktur ("as a rule not aimed at end users but at programmers")                                                                                                                                  |
-| Delimited new increment                       | ⚠️ 595 commits of prior work; needs a carved-out module for the funding period                                                                                                                                                                                                                            |
-| Not a duplicate of existing OSS               | ⚠️ must survey badge tooling (Badgr/Open Badge Factory, openbadges-ui) and habit/goal trackers — and address your own predecessor repos (`openbadges-monorepo`, `openbadges-system`, `openbadges-modular-server`), which read as "similar OSS already exists" unless framed as prior art you're extending |
-| Community anchoring / users                   | ❌ 0 stars, solo, no user base or community evidence — fatal for Resilienz, weak for reach/impact scoring anywhere                                                                                                                                                                                        |
-| Dev competence evidence                       | ✅ repo history, but note the vibe-coding rule: a repo full of agent-authored commits invites the question. Be ready to own the architecture in the interview/application                                                                                                                                 |
-| 5 % own contribution (~€2.5k liquidity proof) | ⚠️ trivial but needs a bank statement                                                                                                                                                                                                                                                                     |
+| Requirement                                   | Status                                                                                                                                                                                                                                                                                                              |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Software project, public repo                 | ✅ `rollercoaster-dev/Rollercoaster.dev-mobile` is public                                                                                                                                                                                                                                                           |
+| FOSS licence                                  | ✅ AGPL-3.0 (app), Apache-2.0 (openbadges-core), MIT (design-tokens); trademark reservation and DCO/dual-licence intent are compatible — code stays open                                                                                                                                                            |
+| Natural person, 18+, sole copyright           | ✅ (apply personally, never as a Rollercoaster.dev entity)                                                                                                                                                                                                                                                          |
+| Residence + tax in Germany                    | ⚠️ assumed yes — confirm                                                                                                                                                                                                                                                                                            |
+| Self-employed / freelance / employer release  | ❌ **biggest blocker.** 950 h in 6 months ≈ full time; you'd need partial Freistellung from fobizz for Jun–Nov 2027, or freelance status. Arbeitsschutz caps hours if you stay part-time employed                                                                                                                   |
+| Fits a funding focus                          | ⚠️ **improved as of 25 Jun 2026.** The Richtlinie amendment added "souveräne Software für Endnutzer\*innen" as an explicit subject and made calls themenoffen, so an end-user app is no longer outside the legal basis. The Resilienz line is the vehicle. Innovation's two focus areas still read developer-facing |
+| Delimited new increment                       | ⚠️ 595 commits of prior work; needs a carved-out module for the funding period                                                                                                                                                                                                                                      |
+| Not a duplicate of existing OSS               | ⚠️ must survey badge tooling (Badgr/Open Badge Factory, openbadges-ui) and habit/goal trackers — and address your own predecessor repos (`openbadges-monorepo`, `openbadges-system`, `openbadges-modular-server`), which read as "similar OSS already exists" unless framed as prior art you're extending           |
+| Community anchoring / users                   | ❌ 0 stars, solo, no user base or community evidence — fatal for Resilienz, weak for reach/impact scoring anywhere                                                                                                                                                                                                  |
+| Dev competence evidence                       | ✅ repo history, but note the vibe-coding rule: a repo full of agent-authored commits invites the question. Be ready to own the architecture in the interview/application                                                                                                                                           |
+| 5 % own contribution (~€2.5k liquidity proof) | ⚠️ trivial but needs a bank statement                                                                                                                                                                                                                                                                               |
 
 ## Two plausible framings
 
@@ -166,3 +174,25 @@ model, offline verification, and the ND UX — not a new signing library.
 **To verify before submitting:** whether Learner Credential Wallet has shipped self-issuance
 since Jan 2025. If it has, the delta narrows to the tracking loop plus ND design, and the
 application needs to lead with those instead.
+
+---
+
+## Can it fail, and can it be clawed back?
+
+It is a Zuschuss, not a loan, and payment runs quarterly in arrears against hours actually
+worked. So the normal failure mode is income not arriving, not debt appearing: work fewer
+hours than planned and the sum shrinks, with a Schlussbescheid fixing the final figure.
+Not reaching the technical goal is not a repayment trigger — the duty is to run the project
+as described, report honestly, and publish the code and a final report.
+
+Repayment arises only if the Zuwendungsbescheid is revoked or withdrawn (§§ 48, 49 VwVfG),
+and then §49a VwVfG applies: repay plus interest at 5 percentage points over base rate,
+with the interest waivable if you were not at fault and pay on time. Realistic triggers:
+funds used for another purpose; Verwendungsnachweis missing or rejected; breach of the duty
+to report changed circumstances; hours claimed that were not worked; de-minimis ceiling
+exceeded. BMFTR Bescheide also designate facts as _subventionserheblich_ under § 264 StGB —
+hours are self-reported, so keep a contemporaneous time log rather than reconstructing one.
+
+Illness or a stalled project is a notification duty, not a default. The grant gets reduced
+or the period adjusted by Änderungsbescheid; unworked hours are simply unpaid. The exact
+rules live in the Nebenbestimmungen attached to the Bescheid (AZK) — read them on arrival.
