@@ -65,8 +65,11 @@ jobs:
       - name: Format check
         run: bun run format:check
 
+      # Call turbo directly (as ci-native-rd.yml / ci-packages.yml do) so the
+      # explicit `Verify patched dependencies` step above stays the only place
+      # check:patches runs; `bun run type-check` would re-run it.
       - name: Typecheck
-        run: bun run type-check
+        run: bun run turbo type-check
 
       - name: Lint
         run: bun run lint
