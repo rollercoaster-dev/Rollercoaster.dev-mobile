@@ -1,5 +1,11 @@
 /**
- * Pure date helpers behind `StepDayGrid` (#574).
+ * Pure **local**-calendar day helpers, plus the bridge between a plain
+ * `YYYY-MM-DD` day and Evolu's branded `DateIso` timestamp.
+ *
+ * Lived under `StepDayGrid` while the grid was the only consumer (#574); moved
+ * here for #576, where a screen has to convert the grid's day strings into
+ * `DateIso` before writing them — and a screen must not import date maths from
+ * a component directory.
  *
  * Every function here works on **local** calendar days and plain
  * `YYYY-MM-DD` strings. Nothing parses an ISO string with `new Date(str)` and
@@ -11,6 +17,8 @@
  * The month-shape maths is ported verbatim from the Direction D prototype
  * (`prototypes/screen-redesign/Set BC D Prototype.html`).
  */
+import { dateToDateIso, err } from "@evolu/common";
+import type { DateIso, DateIsoError, Result } from "@evolu/common";
 
 /** A month the grid can display. `month` is 0-indexed, as `Date` has it. */
 export interface GridMonth {
@@ -89,4 +97,53 @@ export function groupMarksByDay(
     (byDay[mark.date] ??= []).push(mark.label);
   }
   return byDay;
+}
+
+/** `YYYY-MM-DD`, zero-padded — the only shape the day helpers here emit. */
+const DAY_KEY = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * A grid day (`YYYY-MM-DD`) as a branded `DateIso` at **local** midnight.
+ *
+ * A due date is a *day*; `DateIso` is a timestamp — so the day has to be
+ * anchored to some instant, and local midnight is the one that reads back as
+ * the same day the user tapped (`Date.parse("2026-06-24")` is UTC midnight,
+ * which formats as the 23rd for anyone west of Greenwich).
+ *
+ * Returns a `Result` rather than throwing: the caller already unwraps
+ * `dateToDateIso` the same way for `completedAt` (`db/queries.ts`), and a
+ * malformed key is a caller bug worth surfacing, not a silent `null` write.
+ * A key that is not `YYYY-MM-DD` yields the same `DateIso` type error an
+ * out-of-range date would, so callers have one failure branch, not two.
+ */
+export function localDayKeyToDateIso(
+  key: string,
+): Result<DateIso, DateIsoError> {
+  if (!DAY_KEY.test(key)) {
+    // Hand-built rather than routed through `dateToDateIso(new Date(NaN))`:
+    // that call throws (`toISOString()` on an invalid Date is a RangeError)
+    // instead of returning the Err a `Result`-returning function promises.
+    return err({ type: "DateIso", value: key });
+  }
+  return dateToDateIso(
+    localDate(
+      Number(key.slice(0, 4)),
+      Number(key.slice(5, 7)) - 1,
+      Number(key.slice(8, 10)),
+    ),
+  );
+}
+
+/**
+ * The local calendar day a stored `DateIso` falls on, as `YYYY-MM-DD`.
+ *
+ * Safe to parse with `new Date(...)` here: a `DateIso` is a full timestamp
+ * (`2026-06-24T00:00:00.000Z`), not a date-only string, so there is no
+ * UTC-midnight trap to fall into — the value names an instant and this reads
+ * the local day containing it. Returns `null` for an unparseable value rather
+ * than `"NaN-NaN-NaN"`, so a corrupt row degrades to "no day set".
+ */
+export function dateIsoToLocalDayKey(iso: string): string | null {
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? null : toDayKey(date);
 }

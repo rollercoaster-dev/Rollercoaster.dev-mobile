@@ -16,7 +16,8 @@ import { View, type GestureResponderEvent } from "react-native";
 import type { AnimationPref } from "../../hooks/useAnimationPref";
 import type { SharedValue } from "react-native-reanimated";
 import { EditGoalSubStepRow } from "./EditGoalSubStepRow";
-import type { EditGoalSubStep } from "./EditGoalView";
+import type { EditGoalSubStep, EditGoalTimingHost } from "./EditGoalView";
+import { bindRowTiming } from "./EditGoalRowTiming";
 import type { RowGeometry } from "./useEditGoalHierarchyDrag";
 
 export interface EditGoalSubStepListProps {
@@ -58,6 +59,8 @@ export interface EditGoalSubStepListProps {
   whenPromptLabel?: string;
   editTimingUnsetA11yLabel?: (subStepTitle: string) => string;
   editTimingSetA11yLabel?: (subStepTitle: string, lines: string[]) => string;
+  /** In-row timing editor wiring (#576), id-bound per sub-row here. */
+  timingHost?: EditGoalTimingHost;
 }
 
 export function EditGoalSubStepList({
@@ -87,6 +90,7 @@ export function EditGoalSubStepList({
   whenPromptLabel,
   editTimingUnsetA11yLabel,
   editTimingSetA11yLabel,
+  timingHost,
 }: EditGoalSubStepListProps) {
   return (
     <>
@@ -124,6 +128,7 @@ export function EditGoalSubStepList({
             whenPromptLabel={whenPromptLabel}
             editTimingUnsetA11yLabel={editTimingUnsetA11yLabel}
             editTimingSetA11yLabel={editTimingSetA11yLabel}
+            {...bindRowTiming(timingHost, sub.id)}
           />
         </View>
       ))}

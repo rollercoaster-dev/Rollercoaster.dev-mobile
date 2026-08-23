@@ -41,7 +41,12 @@ import { EditGoalStepRow } from "./EditGoalStepRow";
 import { EditGoalSubStepList } from "./EditGoalSubStepList";
 import { useEditGoalHierarchyDrag } from "./useEditGoalHierarchyDrag";
 import { styles } from "./EditGoalView.styles";
-import type { EditGoalStep, EditGoalSubStep } from "./EditGoalView";
+import type {
+  EditGoalStep,
+  EditGoalSubStep,
+  EditGoalTimingHost,
+} from "./EditGoalView";
+import { bindRowTiming } from "./EditGoalRowTiming";
 
 export interface EditGoalStepListProps {
   steps: EditGoalStep[];
@@ -141,8 +146,8 @@ export interface EditGoalStepListProps {
   /**
    * Opens timing authoring for a step or sub-step (#575). Ids are unique across
    * both. Omitted → every row's timing line renders inert, exactly as the
-   * read-only chip row did before #575 (D7). No editor opens here: #576 wires
-   * this to StepTimingEditor.
+   * read-only chip row did before #575 (D7). The host answers by naming that id
+   * in `expandedTimingId`, which swaps that one row's line for the editor.
    */
   onEditTiming?: (id: string) => void;
   /** Unset-state timing prompt (#575). */
@@ -151,6 +156,8 @@ export interface EditGoalStepListProps {
   editTimingUnsetA11yLabel?: (title: string) => string;
   /** a11y label for a timing line when timing is set (#575). */
   editTimingSetA11yLabel?: (title: string, lines: string[]) => string;
+  /** In-row timing editor wiring (#576), id-bound per row on the way down. */
+  timingHost?: EditGoalTimingHost;
 }
 
 const defaultStepCountLabel = (count: number) =>
@@ -200,6 +207,7 @@ export function EditGoalStepList({
   whenPromptLabel,
   editTimingUnsetA11yLabel,
   editTimingSetA11yLabel,
+  timingHost,
 }: EditGoalStepListProps) {
   const { theme } = useUnistyles();
   const { animationPref } = useAnimationPref();
@@ -387,6 +395,7 @@ export function EditGoalStepList({
           whenPromptLabel={whenPromptLabel}
           editTimingUnsetA11yLabel={editTimingUnsetA11yLabel}
           editTimingSetA11yLabel={editTimingSetA11yLabel}
+          timingHost={timingHost}
         />
         <Pressable
           style={styles.addSubStepRow}
@@ -503,6 +512,7 @@ export function EditGoalStepList({
                 whenPromptLabel={whenPromptLabel}
                 editTimingUnsetA11yLabel={editTimingUnsetA11yLabel}
                 editTimingSetA11yLabel={editTimingSetA11yLabel}
+                {...bindRowTiming(timingHost, step.id)}
               >
                 {/* Sub-steps block (D12), rendered inside the parent card so
                     it drags with the parent. See renderSubStepBlock. */}

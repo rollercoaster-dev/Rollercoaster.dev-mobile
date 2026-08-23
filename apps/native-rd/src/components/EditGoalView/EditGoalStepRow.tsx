@@ -6,7 +6,9 @@
  * planned type — D4) that opens the type picker on tap (D8), plus one pressable
  * timing line (#575) — the row's date/dependency truth-lines, or a quiet
  * `＋ when?` prompt when nothing is set, or nothing at all on a completed step
- * with no timing. Tapping it signals `onEditTiming`; no editor opens here.
+ * with no timing. Tapping it signals `onEditTiming`; the host answers by
+ * setting `isTimingExpanded`, at which point the line is replaced in place by
+ * StepTimingEditor (#576 — see EditGoalRowTiming).
  *
  * The optional `children` slot renders inside the card, below the row — the
  * parent (EditGoalView) passes the one-level sub-steps block there (D12)
@@ -43,8 +45,9 @@ import { getTimingConfig } from "../../utils/animation";
 import { Button } from "../Button";
 import { EvidenceTypePicker } from "../EvidenceTypePicker";
 import { styles } from "./EditGoalView.styles";
-import type { EditGoalStep } from "./EditGoalView";
-import { EditGoalTimingLine } from "./EditGoalTimingLine";
+import type { EditGoalStep, EditGoalTimingCopy } from "./EditGoalView";
+import type { StepTimingValue } from "../StepTimingEditor";
+import { EditGoalRowTiming } from "./EditGoalRowTiming";
 import { HierarchyActionRow } from "./HierarchyActionRow";
 import type { RowGeometry } from "./useEditGoalHierarchyDragTypes";
 import { useRowGeometryRegistration } from "./useRowGeometryRegistration";
@@ -91,9 +94,10 @@ export interface EditGoalStepRowProps {
    */
   onEditTiming?: () => void;
   /**
-   * Whether an external timing editor is open for this step (#575/D10). Only
-   * reflected as `accessibilityState.expanded` on the timing line — this row
-   * never embeds the editor itself.
+   * Whether this step's timing editor is open (#575/D10, #576). Reflected as
+   * `accessibilityState.expanded` on the collapsed line, and — once the row
+   * also has `step.timing`, `timingNow` and the two write callbacks — swaps the
+   * line for the in-row editor.
    */
   isTimingExpanded?: boolean;
   /** Dwell-arm highlight on this root header (R12). */
@@ -136,6 +140,14 @@ export interface EditGoalStepRowProps {
   editTimingUnsetA11yLabel?: (stepTitle: string) => string;
   /** a11y label for the timing line when timing is set (#575). */
   editTimingSetA11yLabel?: (stepTitle: string, lines: string[]) => string;
+  // --- In-row timing editor (#576), all id-bound by the list layer. ---
+  onCommitTiming?: (next: StepTimingValue) => void;
+  onClearTiming?: () => void;
+  onCollapseTiming?: () => void;
+  /** The instant the editor judges "today" against. Required to mount it. */
+  timingNow?: Date;
+  timingLocale?: string;
+  timingCopy?: EditGoalTimingCopy;
 }
 
 export function EditGoalStepRow({
@@ -185,6 +197,12 @@ export function EditGoalStepRow({
   whenPromptLabel,
   editTimingUnsetA11yLabel,
   editTimingSetA11yLabel,
+  onCommitTiming,
+  onClearTiming,
+  onCollapseTiming,
+  timingNow,
+  timingLocale,
+  timingCopy,
 }: EditGoalStepRowProps) {
   const { theme } = useUnistyles();
   const translateY = useSharedValue(0);
@@ -339,12 +357,19 @@ export function EditGoalStepRow({
           (D12) — a quick tap never reaches the card's manual-activation Pan or
           its 400ms LongPress, the same way this row's other Pressables already
           coexist with the drag. */}
-      <EditGoalTimingLine
+      <EditGoalRowTiming
         chips={step.dateDepChips}
         isCompleted={step.isCompleted}
         title={step.title}
+        timing={step.timing}
         onEditTiming={onEditTiming}
         isTimingExpanded={isTimingExpanded}
+        onCommitTiming={onCommitTiming}
+        onClearTiming={onClearTiming}
+        onCollapseTiming={onCollapseTiming}
+        now={timingNow}
+        locale={timingLocale}
+        copy={timingCopy}
         testID={`edit-goal-step-timing-${step.id}`}
         whenPromptLabel={whenPromptLabel}
         editTimingUnsetA11yLabel={editTimingUnsetA11yLabel}

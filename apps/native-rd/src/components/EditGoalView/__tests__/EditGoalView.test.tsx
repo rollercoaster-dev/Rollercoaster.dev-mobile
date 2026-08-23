@@ -157,7 +157,7 @@ afterEach(() => {
 });
 
 describe("EditGoalView", () => {
-  it("renders the header, title, steps, count, add-row, banner, and Done", () => {
+  it("renders the header, title, steps, count, add-row, and Done", () => {
     renderWithProviders(<EditGoalView {...makeProps()} />);
     expect(screen.getByText("Edit goal")).toBeOnTheScreen();
     expect(screen.getByDisplayValue("My goal")).toBeOnTheScreen();
@@ -165,9 +165,6 @@ describe("EditGoalView", () => {
     expect(screen.getByText("Second step")).toBeOnTheScreen();
     expect(screen.getByText("2 steps")).toBeOnTheScreen();
     expect(screen.getByTestId("edit-goal-add-step-input")).toBeOnTheScreen();
-    expect(
-      screen.getByText(/Dates & dependencies live on each step/),
-    ).toBeOnTheScreen();
     expect(screen.getByTestId("edit-goal-done-button")).toBeOnTheScreen();
   });
 

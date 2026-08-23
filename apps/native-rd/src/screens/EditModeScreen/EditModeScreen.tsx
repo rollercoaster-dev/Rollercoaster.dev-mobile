@@ -46,14 +46,15 @@ import {
   reorderSubSteps,
 } from "../../db";
 import type { GoalId, StepId } from "../../db";
+import type { StepTimingValue } from "../../components/StepTimingEditor";
 import { reportError } from "../../services/sentry-report";
 import { runEvoluMutation } from "../../utils/evoluMutation";
-import type { EvidenceTypeValue } from "../../types/evidence";
+import { localDayKeyToDateIso } from "../../utils/localDay";
 import type {
   EditModeScreenProps,
   GoalsStackParamList,
 } from "../../navigation/types";
-import { buildEditGoalCopy } from "./editGoalCopy";
+import { buildEditGoalCopy, buildTimingCopy } from "./editGoalCopy";
 import { buildEditGoalSteps } from "./editGoalSteps";
 import { styles } from "./EditModeScreen.styles";
 
@@ -66,6 +67,9 @@ function EditContent({ goalId }: { goalId: string }) {
   // EditGoalView is i18n-free by design (#445/D9) — its ~30 copy props are
   // resolved in one place (editGoalCopy) and spread in below.
   const copy = useMemo(() => buildEditGoalCopy(t), [t]);
+  // Rides `timingHost.copy` rather than the view's prop surface, so it is
+  // resolved beside the copy bundle but handed over separately.
+  const timingCopy = useMemo(() => buildTimingCopy(t), [t]);
   const rows = useQuery(goalsQuery);
   const goal = rows.find((r) => r.id === goalId);
   const stepRows = useQuery(stepsByGoalQuery(goalId as GoalId));
@@ -74,6 +78,16 @@ function EditContent({ goalId }: { goalId: string }) {
   const [description, setDescription] = useState(goal?.description ?? "");
   const [overflowOpen, setOverflowOpen] = useState(false);
   const [showDeleteGoalModal, setShowDeleteGoalModal] = useState(false);
+  // Which row has its timing editor open. One at a time: the editor unfolds in
+  // place with the list still on screen, which is the whole point of authoring
+  // in the row, and a second open editor would push that context off it.
+  const [expandedTimingId, setExpandedTimingId] = useState<string | null>(null);
+  // Set when a timing write has just failed, and consumed by the collapse that
+  // the editor fires immediately afterwards. StepTimingEditor's `Done` calls
+  // `onCommit` and closes in the same synchronous breath, with no way to veto
+  // the close from inside `onCommit` — so the veto has to happen one callback
+  // later, here, or a rejected write would alert and still lose the draft.
+  const justFailedTimingWriteRef = useRef(false);
 
   const titleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const descTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -193,10 +207,18 @@ function EditContent({ goalId }: { goalId: string }) {
   // The clock is an input, not a dependency (#571): a passed expected date
   // reads as "was" from the next rebuild on, which any row edit or language
   // change already triggers. Nothing here needs to re-render on a tick.
-  const steps = useMemo(
-    () => buildEditGoalSteps(stepRows, t, i18n.language, new Date()),
-    [stepRows, t, i18n.language],
-  );
+  //
+  // `now` comes back out of the memo rather than being read again below, so the
+  // open editor and the rows it sits between judge "today" against the same
+  // instant — and so the memoised StepDayGrid keeps its memo: a fresh `Date`
+  // every render would miss it on all 31 cells.
+  const { steps, now } = useMemo(() => {
+    const instant = new Date();
+    return {
+      steps: buildEditGoalSteps(stepRows, t, i18n.language, instant),
+      now: instant,
+    };
+  }, [stepRows, t, i18n.language]);
 
   if (!goal) {
     return (
@@ -216,27 +238,125 @@ function EditContent({ goalId }: { goalId: string }) {
     debouncedUpdateDescription(text);
   }
 
-  // Title and evidence arrive as separate callbacks from the editor, so both
-  // route through one updateStep wrapper rather than a combined handler.
+  /**
+   * Every `updateStep` call this screen makes, with its one error channel.
+   *
+   * Both of Evolu's failure modes reach `onFailure` (a thrown validation guard
+   * and a returned `{ ok: false }`), and `log` names the write so the console
+   * and Sentry breadcrumb say which one lost.
+   */
   function updateStepFields(
     stepId: string,
-    fields: { title?: string; plannedEvidenceTypes?: EvidenceTypeValue[] },
-  ) {
-    runEvoluMutation(
+    fields: Parameters<typeof updateStep>[1],
+    log = "Failed to update step",
+  ): boolean {
+    return runEvoluMutation(
       () => updateStep(stepId as StepId, fields),
       (error) => {
-        console.error("[EditModeScreen] Failed to update step", {
-          stepId,
-          fields,
-          error,
-        });
-        reportError(error, { area: "step.mutate", kind: "update" });
-        Alert.alert(
-          t("editGoal:errors.alertErrorTitle"),
-          t("editGoal:errors.updateStepMessage"),
-        );
+        console.error(`[EditModeScreen] ${log}`, { stepId, fields, error });
+        reportStepUpdateFailure(error);
       },
     );
+  }
+
+  /** Sentry + the one alert the editor has no error slot of its own for. */
+  function reportStepUpdateFailure(error: unknown) {
+    reportError(error, { area: "step.mutate", kind: "update" });
+    Alert.alert(
+      t("editGoal:errors.alertErrorTitle"),
+      t("editGoal:errors.updateStepMessage"),
+    );
+  }
+
+  /** The timing this row's editor opened with — the draft's own baseline. */
+  function seededTiming(id: string): StepTimingValue | undefined {
+    for (const step of steps) {
+      if (step.id === id) return step.timing?.value;
+      const sub = step.subSteps?.find((s) => s.id === id);
+      if (sub) return sub.timing?.value;
+    }
+    return undefined;
+  }
+
+  function writeTiming(
+    stepId: string,
+    fields: Parameters<typeof updateStep>[1],
+  ) {
+    const ok = updateStepFields(stepId, fields, "Failed to update step timing");
+    if (!ok) justFailedTimingWriteRef.current = true;
+  }
+
+  /**
+   * `Done` inside the expanded editor.
+   *
+   * Written as a **diff against the draft the editor opened with**, not as the
+   * draft wholesale: `undefined` is `updateStep`'s "don't touch". Committing the
+   * whole draft would let a row destroy a dependency the editor never showed —
+   * a dangling `afterStepId`, or the far side of a mutual two-step cycle, both
+   * of which seed the draft as `nothing` because that is how they render. Dating
+   * such a step would silently clear it. The issue asks for a quiet absence from
+   * the candidate list, not a quiet delete.
+   *
+   * A due date arrives as the grid's plain local `YYYY-MM-DD` and is written as
+   * a `DateIso` at local midnight — checked, not assumed, like every other
+   * `dateToDateIso` call site in this app.
+   *
+   * Setting a dependency also clears the external wait: `waiting on` is a fact
+   * about the world recorded in Focus, and the two cannot both be the reason a
+   * step is not moving. Every other commit leaves those columns alone, so dating
+   * a step never wipes a wait another surface recorded.
+   */
+  function handleCommitTiming(stepId: string, next: StepTimingValue) {
+    const seed = seededTiming(stepId);
+    const fields: Parameters<typeof updateStep>[1] = {};
+
+    if (next.dueDate !== seed?.dueDate) {
+      if (next.dueDate === null) {
+        fields.dueAt = null;
+      } else {
+        const converted = localDayKeyToDateIso(next.dueDate);
+        if (!converted.ok) {
+          console.error("[EditModeScreen] Failed to convert due date", {
+            stepId,
+            dueDate: next.dueDate,
+          });
+          reportStepUpdateFailure(converted.error);
+          justFailedTimingWriteRef.current = true;
+          return;
+        }
+        fields.dueAt = converted.value;
+      }
+    }
+
+    if (next.afterStepId !== seed?.afterStepId) {
+      fields.afterStepId = next.afterStepId as StepId | null;
+      if (next.afterStepId !== null) {
+        fields.waitingOnLabel = null;
+        fields.waitingOnExpectedAt = null;
+      }
+    }
+
+    // Nothing moved — `Done` on an untouched draft is a close, not a write.
+    if (Object.keys(fields).length === 0) return;
+    writeTiming(stepId, fields);
+  }
+
+  /** `Clear` inside the expanded editor — the row goes back to unset. */
+  function handleClearTiming(stepId: string) {
+    writeTiming(stepId, {
+      dueAt: null,
+      afterStepId: null,
+      waitingOnLabel: null,
+      waitingOnExpectedAt: null,
+    });
+  }
+
+  function handleCollapseTiming() {
+    if (justFailedTimingWriteRef.current) {
+      justFailedTimingWriteRef.current = false;
+      return;
+    }
+    setExpandedTimingId(null);
   }
 
   // Unconditional (D9): the storied × has no min-count gate, and a goal with
@@ -460,6 +580,16 @@ function EditContent({ goalId }: { goalId: string }) {
         onDone={() => navigation.navigate("FocusMode", { goalId })}
         dragScrollController={dragScrollController}
         scrollInstrumentation={scrollInstrumentation}
+        onEditTiming={setExpandedTimingId}
+        timingHost={{
+          expandedId: expandedTimingId,
+          onCommit: handleCommitTiming,
+          onClear: handleClearTiming,
+          onCollapse: handleCollapseTiming,
+          now,
+          locale: i18n.language,
+          copy: timingCopy,
+        }}
         {...copy}
       />
 

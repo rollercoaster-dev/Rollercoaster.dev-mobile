@@ -1219,6 +1219,51 @@ describe("FocusModeScreen", () => {
         ),
       ).toBeNull();
     });
+
+    /**
+     * Nothing here gates anything (ADR-0010/0012, settled in #384): a wait or a
+     * dependency is a fact shown, never a lock. The complete action stays live,
+     * and completing a waited-on step *is* "the event happened" — so the write
+     * touches the step's status and evidence, and no dependency column.
+     *
+     * The single guardrail most likely to be broken by a later "helpful"
+     * change, which is why it is pinned rather than left to the band tests
+     * above (#576).
+     */
+    it.each([
+      { blocker: "an external wait", overrides: { waitingOnLabel: "Alex" } },
+      { blocker: "an open dependency", overrides: { afterStepId: "step-2" } },
+      {
+        blocker: "both at once",
+        overrides: { waitingOnLabel: "Alex", afterStepId: "step-2" },
+      },
+    ])(
+      "completes a step carrying $blocker, writing no dependency field",
+      ({ overrides }) => {
+        setupQueries({
+          steps: [
+            step("step-1", { plannedEvidenceTypes: '["photo"]', ...overrides }),
+            step("step-2", { title: "Not done yet", ordinal: 1 }),
+          ],
+          stepEvidence: [{ id: "ev-1", type: "photo", stepId: "step-1" }],
+        });
+        renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+        const complete = screen.getByLabelText(
+          t("focusMode:currentTask.inProgress.markCompleteA11y"),
+        );
+        expect(complete.props.accessibilityState?.disabled).toBeFalsy();
+        fireEvent.press(complete);
+
+        // Exactly the three arguments the unblocked path passes — a fourth, or a
+        // dependency field smuggled into one of them, would mean this surface had
+        // started treating a wait as state to clear.
+        expect(mockCompleteStep).toHaveBeenCalledWith("step-1", '["photo"]', [
+          { type: "photo" },
+        ]);
+        expect(mockCompleteStep.mock.calls[0]).toHaveLength(3);
+      },
+    );
   });
 
   // #292/#337: which step is "current" is decided by the shared resolver. The

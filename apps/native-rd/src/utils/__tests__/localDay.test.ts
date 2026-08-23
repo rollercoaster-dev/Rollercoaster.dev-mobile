@@ -1,13 +1,15 @@
 import {
+  dateIsoToLocalDayKey,
   dayKey,
   daysInMonth,
   groupMarksByDay,
   isPastDay,
   leadingBlanks,
   localDate,
+  localDayKeyToDateIso,
   shiftMonth,
   toDayKey,
-} from "../monthGrid";
+} from "../localDay";
 
 // The prototype's pinned instant — Wed 24 June 2026.
 const NOW_KEY = "2026-06-24";
@@ -135,4 +137,62 @@ describe("groupMarksByDay", () => {
   it("returns an empty map for no marks", () => {
     expect(groupMarksByDay([])).toEqual({});
   });
+});
+
+describe("localDayKeyToDateIso", () => {
+  it("anchors the day at local midnight, not UTC midnight", () => {
+    const result = localDayKeyToDateIso("2026-06-24");
+    expect(result.ok).toBe(true);
+    // Local midnight — the same instant `localDate` builds, so the value reads
+    // back as the 24th in the user's own zone rather than the 23rd west of it.
+    if (result.ok) {
+      expect(result.value).toBe(localDate(2026, 5, 24).toISOString());
+    }
+  });
+
+  test.each([
+    ["2026-1-05", "an unpadded month"],
+    ["26-01-05", "a two-digit year"],
+    ["2026-01-05T00:00:00.000Z", "a full timestamp"],
+    ["", "an empty string"],
+    ["not-a-day", "free text"],
+  ])("rejects %p (%s) without throwing", (key) => {
+    const result = localDayKeyToDateIso(key);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.value).toBe(key);
+  });
+
+  it("keeps a two-digit year in its own century", () => {
+    const result = localDayKeyToDateIso("0050-01-01");
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(new Date(result.value).getFullYear()).toBe(50);
+    }
+  });
+});
+
+describe("dateIsoToLocalDayKey", () => {
+  it("reads the local day off a stored timestamp", () => {
+    expect(dateIsoToLocalDayKey(localDate(2026, 5, 24).toISOString())).toBe(
+      "2026-06-24",
+    );
+    // Late-evening local time is still the same local day.
+    expect(
+      dateIsoToLocalDayKey(new Date(2026, 5, 24, 23, 30).toISOString()),
+    ).toBe("2026-06-24");
+  });
+
+  it("degrades an unparseable value to null, not a NaN key", () => {
+    expect(dateIsoToLocalDayKey("not-a-date")).toBeNull();
+    expect(dateIsoToLocalDayKey("")).toBeNull();
+  });
+
+  test.each(["2026-01-01", "2026-06-24", "2026-12-31", "2028-02-29"])(
+    "round-trips %s through DateIso and back",
+    (key) => {
+      const iso = localDayKeyToDateIso(key);
+      expect(iso.ok).toBe(true);
+      if (iso.ok) expect(dateIsoToLocalDayKey(iso.value)).toBe(key);
+    },
+  );
 });

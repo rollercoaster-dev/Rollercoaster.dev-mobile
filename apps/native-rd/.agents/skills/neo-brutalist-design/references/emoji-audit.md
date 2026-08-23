@@ -22,16 +22,25 @@ touch it.
 **All three migrated to Phosphor.** Kept here as the worked examples of what the
 rule catches and how each was resolved.
 
-| #   | Site                                               | Was     | What it encoded                            | Now                                                       |
-| --- | -------------------------------------------------- | ------- | ------------------------------------------ | --------------------------------------------------------- |
-| A1  | `src/components/TimelineNode/stepStateColorMap.ts` | `⏸`     | **state** — `paused` step node             | `nodeIcon: Pause`, weight `bold`, `stepStateNodeFg` color |
-| A2  | `src/components/AudioPlayer/AudioPlayer.tsx`       | `⏸` `▶` | **action** — play/pause transport control  | `Pause` / `Play`, weight `fill`, `colors.background`      |
-| A3  | `src/screens/GoalsScreen/GoalsCockpit.tsx`         | `▶`     | **action** — resume goal (`<Button icon>`) | `Play`, weight `fill`, `colors.background`                |
+| #   | Site                                                                             | Was          | What it encoded                                    | Now                                                                                           |
+| --- | -------------------------------------------------------------------------------- | ------------ | -------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| A1  | `src/components/TimelineNode/stepStateColorMap.ts`                               | `⏸`          | **state** — `paused` step node                     | `nodeIcon: Pause`, weight `bold`, `stepStateNodeFg` color                                     |
+| A2  | `src/components/AudioPlayer/AudioPlayer.tsx`                                     | `⏸` `▶`      | **action** — play/pause transport control          | `Pause` / `Play`, weight `fill`, `colors.background`                                          |
+| A3  | `src/screens/GoalsScreen/GoalsCockpit.tsx`                                       | `▶`          | **action** — resume goal (`<Button icon>`)         | `Play`, weight `fill`, `colors.background`                                                    |
+| A4  | Focus's metadata band, Edit Goal's timing line, `StepTimingEditor`'s truth lines | `↩` `⏳` `▦` | the three **C·B marks**, rendered stacked together | `TimingMarkIcon` — `ArrowUUpLeft` / `Hourglass` / `CalendarBlank`, weight `bold`, tone colors |
 
-What made these three different from the accent emoji in Tiers B and C: the glyph
-was the **only** thing communicating the action or state. No adjacent word did
-the work. A1 was a bare node interior, A2 toggled meaning between two glyphs with
-no label, A3 sat beside a "Resume" label but carried the play affordance itself.
+What made A1–A3 different from the accent emoji in Tiers B and C: the glyph was
+the **only** thing communicating the action or state. No adjacent word did the
+work. A1 was a bare node interior, A2 toggled meaning between two glyphs with no
+label, A3 sat beside a "Resume" label but carried the play affordance itself.
+
+**A4 is the one this audit got wrong, and it shipped.** Each of the three marks
+does sit beside a label that says it, so question 1 clears and Tier C looked
+right for `⏳` — but question **3** fires: all three render stacked in one band,
+to be compared. Three Unicode blocks, three bounding boxes, no shared baseline.
+On device (iOS) `↩` resolved to the color emoji font too, so the band shipped a
+blue-boxed arrow above a grey `▦`. The lesson is that "beside a visible label"
+answers question 1 only; a _set_ of marks has to clear question 3 as well.
 
 How each was resolved:
 
@@ -120,17 +129,20 @@ Confirmed in-scope-of-nothing. Leave as-is. Every one of these is already
 `accessibilityElementsHidden` / `importantForAccessibility="no"`, i.e. decoration
 by declaration.
 
-| Site                                                                    | Glyph     | Why allowed                     |
-| ----------------------------------------------------------------------- | --------- | ------------------------------- |
-| `src/components/EditGoalView/EditGoalStepRow.tsx:52`                    | `⏳`      | waiting — explicitly allowed    |
-| `src/components/FocusCurrentTaskCard/FocusCurrentTaskCard.parts.tsx:93` | `⏳`      | waiting — explicitly allowed    |
-| `src/screens/BadgeEarnedModal/BadgeEarnedModal.tsx:104`                 | `🏅`      | celebration moment              |
-| `src/screens/CompletionFlowScreen/CompletionFlowScreen.tsx:503,604`     | `🏆` `🎯` | celebration hero decoration     |
-| `src/components/FocusCurrentTaskCard/FocusCurrentTaskCard.tsx:360`      | `🏆`      | all-complete callout decoration |
-| `src/components/NewGoalWizard/NewGoalWizard.tsx:700`                    | `🏆`      | badge-note banner decoration    |
-| `src/components/EditGoalView/EditGoalView.tsx:493`                      | `📅`      | dates info-banner decoration    |
-| `src/components/FinishCelebrateStage/FinishCelebrateStage.tsx:119`      | `✍️`      | closing-note prompt accent      |
-| `src/i18n/resources/{en,de,pseudo}/welcome.json:3`                      | `👋`      | greeting copy, not UI chrome    |
+| Site                                                                | Glyph     | Why allowed                     |
+| ------------------------------------------------------------------- | --------- | ------------------------------- |
+| `src/screens/BadgeEarnedModal/BadgeEarnedModal.tsx:104`             | `🏅`      | celebration moment              |
+| `src/screens/CompletionFlowScreen/CompletionFlowScreen.tsx:503,604` | `🏆` `🎯` | celebration hero decoration     |
+| `src/components/FocusCurrentTaskCard/FocusCurrentTaskCard.tsx:360`  | `🏆`      | all-complete callout decoration |
+| `src/components/NewGoalWizard/NewGoalWizard.tsx:700`                | `🏆`      | badge-note banner decoration    |
+| `src/components/EditGoalView/EditGoalView.tsx:493`                  | `📅`      | dates info-banner decoration    |
+| `src/components/FinishCelebrateStage/FinishCelebrateStage.tsx:119`  | `✍️`      | closing-note prompt accent      |
+| `src/i18n/resources/{en,de,pseudo}/welcome.json:3`                  | `👋`      | greeting copy, not UI chrome    |
+
+**The waiting marker `⏳` is no longer on this list.** It was allowed here as
+decoration beside a visible label, and that reasoning held right up until three
+of these marks appeared on one line together — see A4 above, which is where both
+`⏳` sites went.
 
 Two borderline calls worth a second look if the rule ever tightens:
 `FinishCelebrateStage:119` sits inside a `Pressable` (so it decorates an
@@ -142,7 +154,7 @@ a Phosphor `CalendarBlank` / `Trophy` would render more consistently.
 Deliberately excluded from the scan. These are text-presentation codepoints that
 honor `color` and theme, so they are legitimate under the design system:
 
-`✓` `✔` `✕` `✗` `★` `☆` `→` `←` `↑` `↓` `↳` `↩` `↻` `⋯` `✦` `◆` `·` `▲` `▼` `●` `○` `■` `□` `↔`
+`✓` `✔` `✕` `✗` `★` `☆` `→` `←` `↑` `↓` `↳` `↻` `⋯` `✦` `◆` `·` `▲` `▼` `●` `○` `■` `□` `↔`
 
 Used at e.g. `stepStateColorMap.ts:101` (`nodeGlyph: "✓"`), `TimelineNode.tsx:81`
 (`★`), `Checkbox.tsx:46`, `SettingsDensityRows.tsx:65`, `ThemeSwitcher.tsx:198`,
@@ -152,6 +164,14 @@ Used at e.g. `stepStateColorMap.ts:101` (`nodeGlyph: "✓"`), `TimelineNode.tsx:
 this set but are `Extended_Pictographic` — platforms give them the color emoji
 font. That is why the Timeline pause reads blue-grey while the adjacent `✓`
 reads themed green. Do not add them to Tier D.
+
+**`↩` (U+21A9) was on this list and should not have been.** Its Unicode _default_
+presentation is text, which is what put it here, but it is
+`Extended_Pictographic` all the same — and iOS resolves it to the emoji font in
+practice. It shipped in the C·B band as a blue-boxed arrow (A4). Default
+presentation is not a guarantee; if a codepoint has an emoji presentation at all,
+verify it on device before filing it here. The rest of the set above is
+`Extended_Pictographic`-free.
 
 ## Tests and stories that pin emoji
 

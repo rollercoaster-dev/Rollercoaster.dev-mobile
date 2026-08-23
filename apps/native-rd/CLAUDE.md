@@ -33,6 +33,7 @@ This is the native rollercoaster.dev app — a personal learning/goal tracker fo
 - Test files live in `src/__tests__/` mirroring `src/` structure
 - Use `test.each` instead of duplicating tests that follow the same pattern
 - Don't write tests that assert nothing beyond "it renders"
+- **Never commit an assertion that cannot fail** — see [`.claude/rules/no-unfalsifiable-assertions.md`](../../.claude/rules/no-unfalsifiable-assertions.md). Sweep every negative assertion before committing: if no plausible regression makes it fail, delete it.
 - Before deleting a test, grep the codebase to confirm something else covers that behavior
 - Never delete a11y contract tests or regression tests tied to bug fixes
 

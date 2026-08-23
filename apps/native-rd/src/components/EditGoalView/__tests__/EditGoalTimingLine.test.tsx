@@ -15,7 +15,7 @@ import {
   screen,
   fireEvent,
 } from "../../../__tests__/test-utils";
-import { EditGoalTimingLine, CHIP_GLYPH } from "../EditGoalTimingLine";
+import { EditGoalTimingLine } from "../EditGoalTimingLine";
 import { styles } from "../EditGoalView.styles";
 import type { EditGoalDateDepChip } from "../EditGoalView";
 
@@ -91,23 +91,27 @@ describe("EditGoalTimingLine", () => {
       ["after", "after Draft"],
       ["waiting", "waiting on Alex"],
       ["due", "Fri"],
-    ] as const)("renders the %s glyph beside its text", (tone, text) => {
+    ] as const)("renders the %s mark beside its text", (tone, text) => {
       renderLine({ chips: [{ tone, text }] });
-      // The glyph is a11y-hidden by design, so it needs the hidden-inclusive
-      // query; its text label is the part a screen reader gets.
+      // The mark is a11y-hidden by design, so it needs the hidden-inclusive
+      // query; its text label is the part a screen reader gets. It is a Phosphor
+      // icon, not a glyph run, so it is asserted by testID — `↩` and `⏳` both
+      // resolve to the platform emoji font, which no theme can reach.
       expect(
-        screen.getByText(CHIP_GLYPH[tone], { includeHiddenElements: true }),
+        screen.getByTestId(`${TEST_ID}-mark-${tone}`, {
+          includeHiddenElements: true,
+        }),
       ).toBeOnTheScreen();
       expect(screen.getByText(text)).toBeOnTheScreen();
     });
 
-    it("hides every glyph from screen readers, leaving only the text", () => {
+    it("hides every mark from screen readers, leaving only the text", () => {
       renderLine({ chips: CHIPS });
-      const glyph = screen.getByText(CHIP_GLYPH.after, {
+      const mark = screen.getByTestId(`${TEST_ID}-mark-after`, {
         includeHiddenElements: true,
       });
-      expect(glyph.props.accessibilityElementsHidden).toBe(true);
-      expect(glyph.props.importantForAccessibility).toBe("no");
+      expect(mark.props.accessibilityElementsHidden).toBe(true);
+      expect(mark.props.importantForAccessibility).toBe("no");
     });
   });
 

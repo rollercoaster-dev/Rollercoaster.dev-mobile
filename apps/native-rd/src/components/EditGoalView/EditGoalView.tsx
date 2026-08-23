@@ -3,8 +3,8 @@
  * Epic #384). Implements the App Shell prototype's `edit` route: an editable
  * goal-title card, a "Steps" section with drag-reorderable rows (title +
  * planned-evidence chip + optional date/dependency chips), an inline "Add
- * step..." row, a dates/deps info banner, and a "Done" footer — with "Delete
- * goal" demoted into a ⋯ overflow menu (see EditGoalOverflowMenu).
+ * step..." row, and a "Done" footer — with "Delete goal" demoted into a ⋯
+ * overflow menu (see EditGoalOverflowMenu).
  *
  * Per-row deletion (#460): each step and sub-step carries a × that opens the
  * shared ConfirmDeleteModal; onDeleteStep / onDeleteSubStep fire only on Confirm
@@ -19,7 +19,7 @@
  *
  * This component is the screen host: a flex:1 column (header, an internal
  * ScrollView wrapping the goal-title card / optional description /
- * EditGoalStepList / dates info banner, then a pinned Done footer) with the
+ * EditGoalStepList, then a pinned Done footer) with the
  * shared evidence-picker AnimatedSheet as a root-level sibling of that
  * ScrollView. The sheet's in-tree absolute overlay therefore fills the
  * viewport, not the scroll content (#493/D8) — so it rises from the bottom of
@@ -55,6 +55,12 @@ import { ScreenSubHeader } from "../ScreenHeader/ScreenSubHeader";
 import { EvidenceTypePicker } from "../EvidenceTypePicker";
 import { AnimatedSheet } from "../EvidenceTypePicker/AnimatedSheet";
 import type { EvidenceTypeValue } from "../../types/evidence";
+import type { StepDayMark } from "../StepDayGrid";
+import type {
+  StepTimingCandidate,
+  StepTimingEditorProps,
+  StepTimingValue,
+} from "../StepTimingEditor";
 import type { DragScrollController } from "../StepList/dragAutoScroll";
 import { EditGoalStepList } from "./EditGoalStepList";
 import { styles } from "./EditGoalView.styles";
@@ -76,6 +82,107 @@ export interface EditGoalDateDepChip {
   tone: EditGoalChipTone;
   /** Chip text, e.g. "after Draft outline", "Alex", "Fri". */
   text: string;
+}
+
+/**
+ * Copy for the in-row timing editor (#576), forwarded verbatim to
+ * `StepTimingEditor` and, through it, to the embedded `StepDayGrid`.
+ *
+ * Grouped rather than flattened for the same reason `StepTimingEditor` groups
+ * its own `gridCopy`: the editor's copy surface stays the editor's, so adding a
+ * string there does not mean editing three list layers here. `whenPromptLabel`
+ * is deliberately **not** in the group — the unset prompt is shared with the
+ * read-only {@link EditGoalTimingLine}, and one prompt means one prop.
+ *
+ * `afterLineLabel` / `dueLineLabel` / `doneLabel` belong here too: the screen
+ * fills them from the same `t()` keys the row's chips use, which is what keeps
+ * the editor's read-out identical to Timeline's and Focus's.
+ */
+export type EditGoalTimingCopy = Pick<
+  StepTimingEditorProps,
+  | "questionLabel"
+  | "intentSubLabel"
+  | "dependsOnLabel"
+  | "nothingLabel"
+  | "noCandidatesLabel"
+  | "clearLabel"
+  | "doneLabel"
+  | "afterLineLabel"
+  | "dueLineLabel"
+  | "doneSuffixLabel"
+  | "orderingNote"
+  | "timingLineA11yLabel"
+  | "gridCopy"
+>;
+
+/**
+ * The host's half of the in-row timing editor (#576) — which row is open, the
+ * three write/close callbacks, and the two values neither the editor nor its
+ * grid will read for itself.
+ *
+ * One object rather than seven props, because all seven travel together through
+ * three component layers to reach one call site. {@link bindRowTiming} turns it
+ * into a single row's id-bound props.
+ */
+export interface EditGoalTimingHost {
+  /**
+   * Which step or sub-step has its editor open. One id at a time: the editor
+   * unfolds inside the row with the list still on screen, so a second one open
+   * would push the first's context off it.
+   */
+  expandedId: string | null;
+  /** `Done` inside the expanded editor. */
+  onCommit: (id: string, next: StepTimingValue) => void;
+  /** `Clear` inside the expanded editor — drops the date and the dependency. */
+  onClear: (id: string) => void;
+  /**
+   * The editor asked to close (`Done` and `Clear` route here too, right after
+   * their own callback). Separate from `onEditTiming` so a host whose write just
+   * failed can keep the row open — the editor cannot veto its own collapse.
+   */
+  onCollapse: (id: string) => void;
+  /**
+   * The instant the editor and its grid judge "today" against. Neither reads
+   * the clock itself, which is what lets tests and stories pin one.
+   */
+  now: Date;
+  /** BCP-47 tag for the grid's month and weekday names. */
+  locale?: string;
+  /** Translated copy for the expanded editor (English defaults inside it). */
+  copy?: EditGoalTimingCopy;
+}
+
+/**
+ * Everything the in-row `StepTimingEditor` needs for one row, pre-resolved by
+ * the host (#576) — the candidate population, the current draft seed, and the
+ * two display strings the editor cannot derive itself.
+ *
+ * Grouped into one field rather than six loose props because it rides the step
+ * object through three component layers, and because the whole bundle is
+ * computed in one pass per goal (`editGoalSteps.ts`): either a row has an
+ * editable timing surface or it has none. Absent → the row keeps rendering the
+ * read-only {@link EditGoalTimingLine} and nothing expands, which is what every
+ * Storybook story and the New Goal wizard get.
+ *
+ * `value.afterStepId` is seeded **from `candidates`**, never straight from the
+ * DB column: the draft the editor commits has to match what its picker shows,
+ * so a dependency that resolves to no offered candidate (deleted target, or the
+ * far side of a mutual two-step cycle) seeds as `null` rather than as an id the
+ * user was never shown.
+ */
+export interface EditGoalTiming {
+  /** The committed timing this row opens with. */
+  value: StepTimingValue;
+  /** Every other step and sub-step in the goal this one may depend on. */
+  candidates: readonly StepTimingCandidate[];
+  /** The selected candidate's title, or null when nothing is selected. */
+  afterStepTitle: string | null;
+  /** Whether that candidate is completed — drives the opt-in `done` suffix. */
+  afterStepIsCompleted: boolean;
+  /** `value.dueDate` formatted for the active locale. */
+  dueDateLabel: string | null;
+  /** Days the other steps sit on, for the embedded grid's badges. */
+  marks: readonly StepDayMark[];
 }
 
 /**
@@ -102,6 +209,8 @@ export interface EditGoalSubStep {
    * no `＋ when?` prompt — timing it already has still shows.
    */
   isCompleted?: boolean;
+  /** Pre-resolved in-row timing editor data (#576). Absent → read-only line. */
+  timing?: EditGoalTiming;
 }
 
 export interface EditGoalStep {
@@ -123,6 +232,8 @@ export interface EditGoalStep {
    * StepTimingEditor's own `isCompleted` prop (#573).
    */
   isCompleted?: boolean;
+  /** Pre-resolved in-row timing editor data (#576). Absent → read-only line. */
+  timing?: EditGoalTiming;
   /**
    * Optional one-level sub-steps (D12). Absent/empty → the row shows a
    * "break into sub-steps" prompt; non-empty → an indented block of
@@ -220,7 +331,6 @@ export interface EditGoalViewProps {
    * title inputs don't announce identically to screen readers (D3 defer path).
    */
   descriptionSectionLabel?: string;
-  datesInfoText?: string;
   doneLabel?: string;
   overflowAccessibilityLabel?: string;
   evidencePickerTitle?: string;
@@ -281,6 +391,11 @@ export interface EditGoalViewProps {
   editTimingUnsetA11yLabel?: (title: string) => string;
   /** a11y label for a timing line when timing is set (#575). */
   editTimingSetA11yLabel?: (title: string, lines: string[]) => string;
+  /**
+   * Everything the in-row timing editor needs from its host (#576). Omitted →
+   * no row can expand and every timing line stays read-only.
+   */
+  timingHost?: EditGoalTimingHost;
 }
 
 export function EditGoalView({
@@ -309,7 +424,6 @@ export function EditGoalView({
   goalSectionLabel = "Goal",
   descriptionPlaceholder,
   descriptionSectionLabel = "Goal description",
-  datesInfoText = 'Dates & dependencies live on each step — tap a step in the full planner to set "after" / "waiting on".',
   doneLabel = "Done",
   overflowAccessibilityLabel = "More options",
   // Evidence-picker copy is consumed here now — the sheet + its state were
@@ -347,6 +461,7 @@ export function EditGoalView({
   whenPromptLabel,
   editTimingUnsetA11yLabel,
   editTimingSetA11yLabel,
+  timingHost,
 }: EditGoalViewProps) {
   const { theme } = useUnistyles();
 
@@ -569,18 +684,8 @@ export function EditGoalView({
             whenPromptLabel={whenPromptLabel}
             editTimingUnsetA11yLabel={editTimingUnsetA11yLabel}
             editTimingSetA11yLabel={editTimingSetA11yLabel}
+            timingHost={timingHost}
           />
-
-          <View style={styles.infoBanner}>
-            <RNText
-              style={styles.infoBannerIcon}
-              accessibilityElementsHidden
-              importantForAccessibility="no"
-            >
-              📅
-            </RNText>
-            <RNText style={styles.infoBannerText}>{datesInfoText}</RNText>
-          </View>
         </ScrollView>
 
         <View style={styles.footer}>

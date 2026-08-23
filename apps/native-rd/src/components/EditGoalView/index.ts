@@ -4,8 +4,13 @@ export type {
   EditGoalStep,
   EditGoalSubStep,
   EditGoalDateDepChip,
+  EditGoalTiming,
+  EditGoalTimingCopy,
+  EditGoalTimingHost,
   EditGoalChipTone,
 } from "./EditGoalView";
+export { EditGoalRowTiming, bindRowTiming } from "./EditGoalRowTiming";
+export type { EditGoalRowTimingProps } from "./EditGoalRowTiming";
 export { EditGoalStepList } from "./EditGoalStepList";
 export type { EditGoalStepListProps } from "./EditGoalStepList";
 export { EditGoalStepRow } from "./EditGoalStepRow";

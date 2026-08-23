@@ -1,15 +1,24 @@
 import type { TFunction } from "i18next";
-import { groupStepsByParent, resolveStepDependencyBand } from "../../db";
+import {
+  StepStatus,
+  groupStepsByParent,
+  resolveStepDependencyBand,
+} from "../../db";
 import type {
   EditGoalStep,
+  EditGoalSubStep,
   EditGoalDateDepChip,
+  EditGoalTiming,
 } from "../../components/EditGoalView";
+import type { StepDayMark } from "../../components/StepDayGrid";
+import type { StepTimingCandidate } from "../../components/StepTimingEditor";
 import {
   validateEvidenceType,
   type EvidenceTypeValue,
 } from "../../types/evidence";
 import { resolvePlannedEvidenceTypes } from "../../utils/parsePlannedEvidenceTypes";
-import { formatDate } from "../../utils/format";
+import { formatDate, toLetterOrdinal } from "../../utils/format";
+import { dateIsoToLocalDayKey } from "../../utils/localDay";
 
 /** The `stepsByGoalQuery` rows this module reads. */
 type StepRow = Parameters<typeof groupStepsByParent>[0][number];
@@ -28,13 +37,20 @@ function toPlannedEvidenceTypes(raw: string | null): EvidenceTypeValue[] {
 }
 
 /**
- * DB rows → EditGoalView's one-level step tree.
+ * One entry in the goal-wide timing population: the candidate every *other*
+ * row may depend on, plus the one column the omission rule reads.
  *
- * Leaves `isCompleted` unset (#575 added the field to `EditGoalStep` and
- * `EditGoalSubStep`; #576 populates it from DB status). Until then the editor
- * stays pure structure-editing, not a progress view, so every row reads as
- * not-completed — which only affects whether an *unset* timing line shows its
- * `＋ when?` prompt.
+ * `afterStepId` is kept alongside rather than on the candidate because it is
+ * not the editor's business — it exists so a candidate that already points at
+ * the row being edited can be left out of that row's list (#576/D8).
+ */
+interface TimingEntry {
+  candidate: StepTimingCandidate;
+  afterStepId: string | null;
+}
+
+/**
+ * DB rows → EditGoalView's one-level step tree.
  *
  * `now` is supplied by the caller (#571), keeping this module clock-free: every
  * step in one build judges "has this expected date passed?" against the same
@@ -46,20 +62,144 @@ export function buildEditGoalSteps(
   language: string,
   now: Date,
 ): EditGoalStep[] {
-  return groupStepsByParent(stepRows).map((root) => ({
+  const grouped = groupStepsByParent(stepRows);
+  // One flat pass over the whole goal, ordinals and all, so each row's
+  // candidate list is a filter over this rather than its own traversal (D9).
+  const population = buildTimingPopulation(grouped, language);
+
+  return grouped.map((root) => ({
     id: root.id,
     title: root.title ?? "",
     plannedEvidenceTypes: toPlannedEvidenceTypes(root.plannedEvidenceTypes),
     dateDepChips: buildDateDepChips(root, stepRows, t, language, now),
-    // Sub-steps get no C/B band yet. #575 reversed "#407 OQ-2" and gave
-    // `EditGoalSubStep` its own `dateDepChips`/`isCompleted`, but populating
-    // them from the DB is #576's job — this mapper still leaves both unset.
-    subSteps: root.children.map((child) => ({
-      id: child.id,
-      title: child.title ?? "",
-      plannedEvidenceTypes: toPlannedEvidenceTypes(child.plannedEvidenceTypes),
-    })),
+    isCompleted: root.status === StepStatus.completed,
+    timing: buildTiming(root, population),
+    // Sub-steps are full timing participants (#575/D4), so everything the
+    // parent row gets, a sub-row gets too — including the chips and status
+    // #575 added to the shape but left for this issue to populate.
+    subSteps: root.children.map(
+      (child): EditGoalSubStep => ({
+        id: child.id,
+        title: child.title ?? "",
+        plannedEvidenceTypes: toPlannedEvidenceTypes(
+          child.plannedEvidenceTypes,
+        ),
+        dateDepChips: buildDateDepChips(child, stepRows, t, language, now),
+        isCompleted: child.status === StepStatus.completed,
+        timing: buildTiming(child, population),
+      }),
+    ),
   }));
+}
+
+/**
+ * Every step and sub-step in the goal as a `depends on` candidate, in list
+ * order, labelled "1", "2", … for roots — matching `EditGoalStepRow`'s
+ * `stepNumber = index + 1` — and "a", "b", … for sub-steps, via the same
+ * `toLetterOrdinal` the Timeline sub-spine uses. Flat, not scoped to one
+ * parent's siblings: a step may depend on anything else in the goal (D8).
+ *
+ * Sub-step letters run **goal-wide**, not per parent, so the first child of the
+ * second step is "b" rather than a second "a". A badge's whole job is to name
+ * one row: these labels are also the marks on the shared month grid, where two
+ * candidates wearing "a" on different days would be unreadable. Sub-rows show
+ * no ordinal of their own in this editor, so there is nothing for per-parent
+ * lettering to line up with.
+ */
+function buildTimingPopulation(
+  grouped: ReturnType<typeof groupStepsByParent>,
+  language: string,
+): TimingEntry[] {
+  const entries: TimingEntry[] = [];
+  let subStepCount = 0;
+  grouped.forEach((root, rootIndex) => {
+    entries.push(toTimingEntry(root, String(rootIndex + 1), false, language));
+    for (const child of root.children) {
+      entries.push(
+        toTimingEntry(child, toLetterOrdinal(subStepCount), true, language),
+      );
+      subStepCount += 1;
+    }
+  });
+  return entries;
+}
+
+function toTimingEntry(
+  row: StepRow,
+  label: string,
+  isSubStep: boolean,
+  language: string,
+): TimingEntry {
+  return {
+    candidate: {
+      id: row.id,
+      title: row.title ?? "",
+      label,
+      isSubStep,
+      isCompleted: row.status === StepStatus.completed,
+      // The editor and its grid speak plain local `YYYY-MM-DD`; the column is a
+      // DateIso timestamp. An unparseable value degrades to "no day".
+      dueDate: row.dueAt ? dateIsoToLocalDayKey(row.dueAt) : null,
+      dueDateLabel: row.dueAt ? formatDate(row.dueAt, language) : undefined,
+    },
+    afterStepId: row.afterStepId,
+  };
+}
+
+/**
+ * One row's editor bundle: the candidates it may depend on, the draft it opens
+ * with, and the strings the editor cannot derive.
+ *
+ * Two omissions from the candidate list, both quiet — no disabled row, no
+ * refusal copy (ADR-0010/0012): the row itself, and any candidate whose own
+ * `afterStepId` already points back at it. The second is the two-step-cycle
+ * case; deeper cycles are deliberately not detected (#576, Not in Scope).
+ *
+ * The draft's `afterStepId` is resolved **through the candidate list**, not
+ * read straight off the column, so what the picker shows and what `Done`
+ * commits can never disagree — a dangling dependency (deleted target) or the
+ * far side of a mutual cycle reads as `nothing`, exactly as it renders.
+ */
+function buildTiming(
+  row: StepRow,
+  population: readonly TimingEntry[],
+): EditGoalTiming {
+  const candidates: StepTimingCandidate[] = [];
+  const marks: StepDayMark[] = [];
+  // The row's own entry, picked out of the same pass: its day and formatted
+  // label are already computed there, so nothing here re-derives them.
+  let own: TimingEntry | undefined;
+  for (const entry of population) {
+    if (entry.candidate.id === row.id) {
+      own = entry;
+      continue;
+    }
+    if (entry.afterStepId === row.id) continue;
+    candidates.push(entry.candidate);
+    // Same pass as the candidate list (D9) — the badges on the grid are the
+    // days these very candidates sit on.
+    if (entry.candidate.dueDate !== null) {
+      marks.push({
+        date: entry.candidate.dueDate,
+        label: entry.candidate.label,
+      });
+    }
+  }
+
+  const selected =
+    candidates.find((candidate) => candidate.id === row.afterStepId) ?? null;
+
+  return {
+    value: {
+      dueDate: own?.candidate.dueDate ?? null,
+      afterStepId: selected?.id ?? null,
+    },
+    candidates,
+    afterStepTitle: selected?.title ?? null,
+    afterStepIsCompleted: selected?.isCompleted ?? false,
+    dueDateLabel: own?.candidate.dueDateLabel ?? null,
+    marks,
+  };
 }
 
 /**

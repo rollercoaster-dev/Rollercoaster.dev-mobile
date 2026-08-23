@@ -29,16 +29,6 @@ export const styles = StyleSheet.create((theme) => ({
     alignItems: "center",
     gap: theme.space[2],
   },
-  truthGlyph: {
-    fontFamily: theme.fontFamily.mono,
-    fontSize: theme.size.sm,
-  },
-  truthGlyphAfter: {
-    color: theme.colors.success,
-  },
-  truthGlyphDue: {
-    color: theme.colors.textSecondary,
-  },
   truthText: {
     flex: 1,
     fontSize: theme.size.sm,
