@@ -177,36 +177,78 @@ function installDirs(name: string, version: string): string[] {
   return dirs;
 }
 
+type Hunk = {
+  /** Context + added lines, i.e. what the file must look like after applying. */
+  postImage: string[];
+  /** Removed lines, used when a hunk only deletes. */
+  removed: string[];
+};
+
 /**
- * Non-blank added lines per patched file. Compared trimmed, because bun's
- * applied output is not always byte-identical to the patch's post-image (the
- * ajv-formats patch changes only whitespace-adjacent JSON), so hashing the
- * result would report a correctly-applied patch as broken.
+ * Per-hunk post-image line sequences, keyed by file.
+ *
+ * Comparing the post-image rather than only the added lines means deletion-only
+ * and modification-only hunks are verified too — checking `+` lines alone
+ * reports success for a patch that has none, which defeats the guard.
+ *
+ * Lines are compared trimmed, because bun's applied output is not always
+ * byte-identical to the patch's post-image (the ajv-formats patch changes only
+ * whitespace-adjacent JSON), so hashing the result would report a
+ * correctly-applied patch as broken.
  */
-function addedLinesByFile(patchText: string): Map<string, string[]> {
-  const byFile = new Map<string, string[]>();
-  let current: string[] | null = null;
+function hunksByFile(patchText: string): Map<string, Hunk[]> {
+  const byFile = new Map<string, Hunk[]>();
+  let hunks: Hunk[] | null = null;
+  let current: Hunk | null = null;
 
   for (const line of patchText.split("\n")) {
     const header = /^diff --git a\/.+? b\/(.+)$/.exec(line);
 
     if (header) {
-      current = [];
-      byFile.set(header[1], current);
+      hunks = [];
+      current = null;
+      byFile.set(header[1], hunks);
       continue;
     }
 
-    if (!current || line.startsWith("+++") || line.startsWith("---")) continue;
-    if (!line.startsWith("+")) continue;
+    if (!hunks) continue;
 
-    const added = line.slice(1).trim();
-    if (added) current.push(added);
+    if (line.startsWith("@@")) {
+      current = { postImage: [], removed: [] };
+      hunks.push(current);
+      continue;
+    }
+
+    // Everything before the first @@ is header noise (---, +++, index, mode).
+    if (!current) continue;
+    // "\ No newline at end of file" is a marker, not content.
+    if (line.startsWith("\\")) continue;
+
+    if (line.startsWith("+")) current.postImage.push(line.slice(1).trim());
+    else if (line.startsWith("-")) current.removed.push(line.slice(1).trim());
+    // Context lines start with a space; anything else (notably the trailing
+    // empty string from splitting on "\n") is not diff content.
+    else if (line.startsWith(" ")) current.postImage.push(line.slice(1).trim());
   }
 
   return byFile;
 }
 
-/** Verify the patch's additions are present in the installed package. */
+/** Whether `needle` appears as a contiguous run inside `haystack`. */
+function containsSequence(haystack: string[], needle: string[]): boolean {
+  if (needle.length === 0) return true;
+
+  outer: for (let i = 0; i <= haystack.length - needle.length; i++) {
+    for (let j = 0; j < needle.length; j++) {
+      if (haystack[i + j] !== needle[j]) continue outer;
+    }
+    return true;
+  }
+
+  return false;
+}
+
+/** Verify the patch's effect is present in the installed package. */
 function checkApplied(entry: PatchEntry, patchText: string): void {
   const dirs = installDirs(entry.name, entry.version);
 
@@ -218,7 +260,7 @@ function checkApplied(entry: PatchEntry, patchText: string): void {
     return;
   }
 
-  const byFile = addedLinesByFile(patchText);
+  const byFile = hunksByFile(patchText);
 
   if (byFile.size === 0) {
     errors.push(
@@ -229,7 +271,7 @@ function checkApplied(entry: PatchEntry, patchText: string): void {
   }
 
   for (const dir of dirs) {
-    for (const [file, added] of byFile) {
+    for (const [file, hunks] of byFile) {
       const target = join(dir, ...file.split("/"));
 
       if (!existsSync(target)) {
@@ -239,20 +281,39 @@ function checkApplied(entry: PatchEntry, patchText: string): void {
         continue;
       }
 
-      const present = new Set(
-        readFileSync(target, "utf8")
-          .split("\n")
-          .map((line) => line.trim()),
-      );
-      const absent = added.filter((line) => !present.has(line));
-
-      if (absent.length > 0) {
+      if (hunks.length === 0) {
         errors.push(
-          `- ${entry.key}: ${absent.length}/${added.length} patched lines are ABSENT from "${file}" — the patch is not (fully) applied.\n` +
-            `  first missing: ${absent[0].slice(0, 80)}\n` +
-            `  Fix: re-run \`bun install\`; if that does not restore them, regenerate with \`bun patch ${entry.name}\`.`,
+          `- ${entry.key}: "${file}" has no hunks in ${entry.patchPath}, so nothing about it can be verified.\n` +
+            `  Fix: regenerate with \`bun patch ${entry.name}\`.`,
         );
+        continue;
       }
+
+      const lines = readFileSync(target, "utf8")
+        .split("\n")
+        .map((line) => line.trim());
+      const present = new Set(lines);
+
+      hunks.forEach((hunk, index) => {
+        const applied =
+          hunk.postImage.length > 0
+            ? containsSequence(lines, hunk.postImage)
+            : // A hunk that only deletes leaves nothing to match, so absence of
+              // every removed line is the signal instead.
+              hunk.removed.every((line) => !present.has(line));
+
+        if (applied) return;
+
+        const sample = (hunk.postImage[0] ?? hunk.removed[0] ?? "").slice(
+          0,
+          80,
+        );
+        errors.push(
+          `- ${entry.key}: hunk ${index + 1}/${hunks.length} for "${file}" is NOT applied in ${dir}.\n` +
+            `  expected near: ${sample}\n` +
+            `  Fix: re-run \`bun install\`; if that does not restore it, regenerate with \`bun patch ${entry.name}\`.`,
+        );
+      });
     }
   }
 }
