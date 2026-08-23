@@ -247,10 +247,6 @@ export const styles = StyleSheet.create((theme) => ({
     alignItems: "center" as const,
     gap: theme.space[2],
   },
-  truthGlyph: {
-    fontFamily: theme.fontFamily.mono,
-    fontSize: theme.size.sm,
-  },
   truthText: {
     flex: 1,
     fontFamily: theme.fontFamily.mono,

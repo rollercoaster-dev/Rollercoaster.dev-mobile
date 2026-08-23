@@ -7,6 +7,7 @@ import {
 } from "../TimelineNode/stepStateColorMap";
 import { EVIDENCE_OPTIONS, validateEvidenceType } from "../../types/evidence";
 import { evidenceShortLabel } from "../../i18n/labels";
+import { TimingMarkIcon, type TimingMarkTone } from "../TimingMarkIcon";
 import { styles } from "./FocusCurrentTaskCard.styles";
 
 /**
@@ -49,14 +50,9 @@ export function StateWordPill({ status }: { status: StepStateMapKey }) {
   );
 }
 
-/** One C·B truth-line: a colored glyph, plain text, and an optional mono meta suffix. */
-// The three glyph styles share one shape ({ fontSize, color }), so the waiting
-// style's type stands in for all of them.
-type GlyphStyle = typeof styles.metadataGlyphWaiting;
+/** One C·B truth-line: a themed mark, plain text, and an optional mono meta suffix. */
 interface MetaLine {
-  key: string;
-  glyph: string;
-  glyphStyle: GlyphStyle;
+  key: TimingMarkTone;
   text: string;
   meta: string | null;
 }
@@ -64,7 +60,7 @@ interface MetaLine {
 /**
  * Quiet C·B truth-lines (prototype `Focus Mode A`). Every present line renders
  * independently — a "waiting on…" external wait AND an internal "after…"
- * prerequisite can both show (never "blocked by"). Each line is glyph + text +
+ * prerequisite can both show (never "blocked by"). Each line is mark + text +
  * an optional mono meta suffix; the "due …" date is plain text, with mono only
  * on the trailing meta — prototype fidelity (no ADR governs date typography).
  * Renders nothing when no C/B prop is set.
@@ -95,8 +91,6 @@ export function MetadataBand({
   if (waitingOn) {
     lines.push({
       key: "waiting",
-      glyph: "⏳",
-      glyphStyle: styles.metadataGlyphWaiting,
       text: t("focusMode:currentTask.metadata.waitingOn", {
         who: waitingOn.who,
       }),
@@ -113,8 +107,6 @@ export function MetadataBand({
   if (afterStep) {
     lines.push({
       key: "after",
-      glyph: "↩",
-      glyphStyle: styles.metadataGlyphAfter,
       text: t("focusMode:currentTask.metadata.after", { title: afterStep }),
       // No completion suffix: `afterStep` carries only the prerequisite's title,
       // not its done-state, so a hard-coded "✓ done" would assert a fact the
@@ -125,8 +117,6 @@ export function MetadataBand({
   if (dueDate) {
     lines.push({
       key: "due",
-      glyph: "▦",
-      glyphStyle: styles.metadataGlyphDue,
       text: t("focusMode:currentTask.metadata.due", { date: dueDate }),
       meta: null,
     });
@@ -140,9 +130,10 @@ export function MetadataBand({
     <View style={styles.metadataBand}>
       {lines.map((line) => (
         <View key={line.key} style={styles.metadataLine}>
-          <Text style={line.glyphStyle} importantForAccessibility="no">
-            {line.glyph}
-          </Text>
+          <TimingMarkIcon
+            tone={line.key}
+            testID={`focus-current-task-metadata-mark-${line.key}`}
+          />
           <Text style={styles.metadataText}>{line.text}</Text>
           {line.meta ? (
             <Text style={styles.metadataMeta}>{line.meta}</Text>

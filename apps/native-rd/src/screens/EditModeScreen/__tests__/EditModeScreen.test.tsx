@@ -208,6 +208,11 @@ function makeRouteProps() {
   };
 }
 
+/** A row's timing mark, as `EditGoalTimingLine` scopes it per tone (#576). */
+function MARK(stepId: string, tone: "after" | "waiting" | "due") {
+  return `edit-goal-step-timing-${stepId}-mark-${tone}`;
+}
+
 function setupQueries(goal: object | null = GOAL, steps: object[] = STEPS) {
   mockUseQuery.mockImplementation((query: unknown) => {
     if (query === "goalsQuery") {
@@ -509,13 +514,15 @@ describe("EditModeScreen", () => {
         expect(screen.getByText(text)).toBeOnTheScreen();
         expect(screen.queryByText(gone)).toBeNull();
         // Tone stays "waiting" either side of the date (ADR-0012): a passed
-        // date gets no tone of its own, so the chip keeps the waiting glyph
-        // rather than picking up the "due" one. The glyph is decorative —
+        // date gets no tone of its own, so the chip keeps the waiting mark
+        // rather than picking up the "due" one. The mark is decorative —
         // accessibilityElementsHidden — hence includeHiddenElements on both
         // queries, so the negative one isn't vacuously true.
         const hidden = { includeHiddenElements: true };
-        expect(screen.getByText("⏳", hidden)).toBeOnTheScreen();
-        expect(screen.queryByText("▦", hidden)).toBeNull();
+        expect(
+          screen.getByTestId(MARK("step-1", "waiting"), hidden),
+        ).toBeOnTheScreen();
+        expect(screen.queryByTestId(MARK("step-1", "due"), hidden)).toBeNull();
       },
     );
 
@@ -539,9 +546,10 @@ describe("EditModeScreen", () => {
     });
 
     // The chip row has no testID of its own, so absence is asserted through the
-    // per-tone glyphs EditGoalStepRow renders inside it — never a placeholder
+    // per-tone marks EditGoalStepRow renders inside it — never a placeholder
     // like "no due date" (ND rule: show what's there, not what's absent).
     it("renders no chip row at all when a step carries no band data", () => {
+      const hidden = { includeHiddenElements: true };
       setupQueries(GOAL, [
         { ...STEPS[0], dueAt: "2026-03-06T00:00:00.000Z" },
         STEPS[1],
@@ -549,19 +557,22 @@ describe("EditModeScreen", () => {
       const withBand = renderWithProviders(
         <EditModeScreen {...makeRouteProps()} />,
       );
-      // The glyphs are hidden from the a11y tree (the chip text carries the
+      // The marks are hidden from the a11y tree (the chip text carries the
       // meaning), so they only surface with includeHiddenElements.
       expect(
-        screen.getByText("▦", { includeHiddenElements: true }),
+        screen.getByTestId(MARK("step-1", "due"), hidden),
       ).toBeOnTheScreen();
       withBand.unmount();
 
       setupQueries(GOAL, STEPS);
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+      for (const tone of ["after", "waiting", "due"] as const) {
+        expect(screen.queryByTestId(MARK("step-1", tone), hidden)).toBeNull();
+      }
+      // And no emoji anywhere: `↩` and `⏳` resolve to the platform emoji font,
+      // which the seven accessibility variants cannot reach.
       for (const glyph of ["↩", "⏳", "▦"]) {
-        expect(
-          screen.queryByText(glyph, { includeHiddenElements: true }),
-        ).toBeNull();
+        expect(screen.queryByText(glyph, hidden)).toBeNull();
       }
     });
 

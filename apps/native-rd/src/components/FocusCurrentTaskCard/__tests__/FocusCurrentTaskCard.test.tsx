@@ -385,6 +385,33 @@ describe("FocusCurrentTaskCard", () => {
       },
     );
 
+    // The band shipped `↩ ⏳ ▦` as text runs, and on iOS the first two resolve
+    // to the platform's color emoji font: `↩` rendered as a blue-boxed arrow
+    // beside a grey `▦`, and no theme or accessibility variant could reach
+    // either. The marks are Phosphor icons now, asserted by testID because an
+    // SVG cannot be found with getByText.
+    it.each([
+      { tone: "waiting", props: { waitingOn: { who: "the clinic" } } },
+      { tone: "after", props: { afterStep: "Stock the pantry" } },
+      { tone: "due", props: { dueDate: "Fri 11 Jul" } },
+    ])(
+      "marks the $tone line with a themed icon, not an emoji",
+      ({ tone, props }) => {
+        renderCard({ status: "in-progress", ...props });
+
+        const hidden = { includeHiddenElements: true };
+        expect(
+          screen.getByTestId(
+            `focus-current-task-metadata-mark-${tone}`,
+            hidden,
+          ),
+        ).toBeOnTheScreen();
+        for (const glyph of ["↩", "⏳", "▦"]) {
+          expect(screen.queryByText(glyph, hidden)).toBeNull();
+        }
+      },
+    );
+
     it("renders both dependency lines at once (waiting on AND after — not exclusive)", () => {
       renderCard({
         status: "in-progress",

@@ -9,7 +9,7 @@
  * once the host names this row as expanded (#576).
  *
  * Presentation matches StepTimingEditor's own read-out (stacked borderless
- * lines, glyph + text, D1) rather than the pre-#575 bordered pills, so a step's
+ * lines, mark + text, D1) rather than the pre-#575 bordered pills, so a step's
  * timing reads identically in the row and in the editor. `TruthLines` itself is
  * not reused: it has no `waiting` case, because the editor deliberately never
  * authors "waiting on" (D2) — the read-only row still displays one.
@@ -21,16 +21,9 @@ import React, { useEffect, useRef } from "react";
 import { View, Text as RNText, Pressable } from "react-native";
 import { useUnistyles } from "react-native-unistyles";
 import { focusAccessibilityRef } from "../../utils/accessibilityFocus";
+import { TimingMarkIcon } from "../TimingMarkIcon";
 import { styles } from "./EditGoalView.styles";
 import type { EditGoalChipTone, EditGoalDateDepChip } from "./EditGoalView";
-
-// Date/dependency chip glyphs, transcribed from the App Shell prototype's
-// `edit` route (subOf/editSteps): after ↩ / waiting ⏳ / due ▦.
-export const CHIP_GLYPH: Record<EditGoalChipTone, string> = {
-  after: "↩",
-  waiting: "⏳",
-  due: "▦",
-};
 
 export interface EditGoalTimingLineProps {
   /** The row's date/dependency chips. Absent/empty → the unset state. */
@@ -102,13 +95,10 @@ export function EditGoalTimingLine({
   const content = hasTiming ? (
     chips?.map((chip, i) => (
       <View key={i} style={styles.truthLine}>
-        <RNText
-          style={[styles.truthGlyph, { color: chipColor[chip.tone] }]}
-          accessibilityElementsHidden
-          importantForAccessibility="no"
-        >
-          {CHIP_GLYPH[chip.tone]}
-        </RNText>
+        <TimingMarkIcon
+          tone={chip.tone}
+          testID={`${testID}-mark-${chip.tone}`}
+        />
         <RNText style={[styles.truthText, { color: chipColor[chip.tone] }]}>
           {chip.text}
         </RNText>

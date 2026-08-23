@@ -206,15 +206,23 @@ and silently cannot deliver it on an emoji. An emoji is an opt-out from the
 accessibility system — fine for one deliberate warm moment, never for chrome.
 
 **Emoji that are currently fine:** decorative accents in celebration and info
-banners (`🏅` badge earned, `🏆` completion hero, `📅` dates banner), accents
-paired with a visible label (the `ModeIndicator` mode glyphs), the waiting marker
-`⏳`, and emoji inside translated copy (`"Hey there 👋"`).
+banners (`🏅` badge earned, `🏆` completion hero), accents paired with a visible
+label (the `ModeIndicator` mode glyphs), and emoji inside translated copy
+(`"Hey there 👋"`).
 
-**Text-presentation glyphs are fine** — `✓ ✕ ★ → ↳ ↩ ⋯ ● ■` honor `color` and
-theme, so they are legitimate design-system marks.
+The waiting marker `⏳` used to be on that list. It came off with the C·B band
+(audit A4): it passed question 1 — a label always sits beside it — but the band
+renders three marks stacked to be compared, so question 3 decides, and `⏳` was
+never themeable anyway.
 
-**The trap:** `⏸` (U+23F8), `▶` (U+25B6), `⏳` (U+23F3), `⚙` (U+2699) look
-typographic but are `Extended_Pictographic` — they get the emoji font. When
+**Text-presentation glyphs are fine** — `✓ ✕ ★ → ↳ ⋯ ● ■` honor `color` and
+theme, so they are legitimate design-system marks. **Not `↩`**: its default
+presentation is text, which is why it sat in that list, but iOS gives it the
+emoji font in practice (audit A4). Verify on device before trusting a
+codepoint's default presentation.
+
+**The trap:** `⏸` (U+23F8), `▶` (U+25B6), `⏳` (U+23F3), `⚙` (U+2699), `↩`
+(U+21A9) look typographic but are `Extended_Pictographic` — they get the emoji font. When
 auditing, decode `\u{...}` escapes before matching, or the escaped emoji
 (`"\u{1F4F7}"`) slip past `grep`.
 

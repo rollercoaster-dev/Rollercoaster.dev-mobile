@@ -101,18 +101,6 @@ export const styles = StyleSheet.create((theme) => {
     },
     // Glyph hues mirror the prototype: amber wait (`warning` == #d97706), green
     // dependency (`success`), neutral date (`textSecondary`).
-    metadataGlyphWaiting: {
-      fontSize: theme.size.sm,
-      color: theme.colors.warning,
-    },
-    metadataGlyphAfter: {
-      fontSize: theme.size.sm,
-      color: theme.colors.success,
-    },
-    metadataGlyphDue: {
-      fontSize: theme.size.sm,
-      color: theme.colors.textSecondary,
-    },
     metadataText: {
       fontSize: theme.size.sm,
       color: theme.colors.text,

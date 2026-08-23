@@ -4,6 +4,7 @@ import { Check } from "phosphor-react-native";
 import { useUnistyles } from "react-native-unistyles";
 import { Text } from "../Text";
 import { Button } from "../Button";
+import { TimingMarkIcon } from "../TimingMarkIcon";
 import { styles } from "./StepTimingEditor.styles";
 
 /** The ordinal badge — "1", "a", or a check for a completed step. */
@@ -31,8 +32,9 @@ export function OrdinalBadge({
  * The row's truth lines — the same text Focus and Timeline render for the same
  * data, so a step authored here reads identically wherever it is opened.
  *
- * The glyph is a separate element, matching `FocusCurrentTaskCard`'s metadata
- * band; the *text* is what parity is asserted on.
+ * The mark is a separate element, matching `FocusCurrentTaskCard`'s metadata
+ * band — the same shared `TimingMarkIcon`, so the two surfaces cannot drift.
+ * The *text* is what parity is asserted on.
  */
 export function TruthLines({
   afterLineText,
@@ -52,11 +54,7 @@ export function TruthLines({
     <>
       {afterLineText ? (
         <View style={styles.truthLine}>
-          {/* `↩` and `▦` are text runs on purpose: FocusCurrentTaskCard's
-              metadata band ships them exactly this way, and read-out parity
-              beats the Phosphor-only rule for a mark the other surface
-              already renders as a glyph. */}
-          <Text style={[styles.truthGlyph, styles.truthGlyphAfter]}>↩</Text>
+          <TimingMarkIcon tone="after" testID={`${testID}-mark-after`} />
           <Text style={styles.truthText} testID={`${testID}-after-line`}>
             {afterLineText}
             {doneSuffix ? (
@@ -68,7 +66,7 @@ export function TruthLines({
 
       {dueLineText ? (
         <View style={styles.truthLine}>
-          <Text style={[styles.truthGlyph, styles.truthGlyphDue]}>▦</Text>
+          <TimingMarkIcon tone="due" testID={`${testID}-mark-due`} />
           <Text style={styles.truthText} testID={`${testID}-due-line`}>
             {dueLineText}
           </Text>
