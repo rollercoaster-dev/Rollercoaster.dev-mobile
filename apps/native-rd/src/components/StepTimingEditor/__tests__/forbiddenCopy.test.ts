@@ -32,7 +32,21 @@ const SANCTIONED = ["not a deadline", "reads as “late.”"];
 const isSanctioned = (text: string) =>
   SANCTIONED.some((ok) => text.includes(ok));
 
-const COMPONENT_DIRS = ["StepTimingEditor", "StepDayGrid"];
+/**
+ * Every component directory that carries B/C planning copy (#577).
+ *
+ * The two authoring surfaces — the in-row `StepTimingEditor` and its
+ * `StepDayGrid` — were the original scope. `EditGoalView` (the row chip tier,
+ * `EditGoalTimingLine`/`EditGoalRowTiming`) and the shared `TimingMarkIcon`
+ * carry the same copy on the read side and had no forbidden-word guard of
+ * their own: `TimelineStep` checks itself inline, these two checked nothing.
+ */
+const COMPONENT_DIRS = [
+  "StepTimingEditor",
+  "StepDayGrid",
+  "EditGoalView",
+  "TimingMarkIcon",
+];
 
 /**
  * String literals that can reach a user, per source file. Comments are stripped
