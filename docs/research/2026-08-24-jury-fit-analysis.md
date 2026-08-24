@@ -4,7 +4,9 @@ Researched 2026-08-24 against the live jury and application pages. Companion to
 [Prototype Fund eligibility](./2026-08-23-prototype-fund-eligibility.md) and
 [ADR-0015](../../apps/native-rd/docs/decisions/ADR-0015-funded-scope-prototype-fund.md):
 that pair settles _what we would build_, this one asks _who scores it and what they
-will push on_.
+will push on_. The applicant-side evidence is in
+[applicant background](./2026-08-24-applicant-background.md), added 2026-08-24 — it
+revises the profile line and the milestone-6 row below.
 
 **Two caveats up front.** The jury listed below is the sitting jury (Jahrgang 02
 selection). Jahrgang 03's may differ — but the composition tilt has been stable for
@@ -55,21 +57,28 @@ allies. That ratio is the finding.
 ## Where the skills question bites
 
 Applicant profile: strong mid-level TypeScript/React Native, three years in edtech, no
-prior atproto work, no shipped cryptography or standards work.
+prior atproto work, no shipped cryptography or standards work. Plus a documented
+non-code record the first version of this doc missed — concept, offline-first Raspberry Pi
+infrastructure and delivery for a Save the Children media-literacy programme, 170 children
+and their caregivers across three sites, handed over to local staff. See
+[applicant background](./2026-08-24-applicant-background.md). It moves Realisierbarkeit,
+Reichweite and milestone 6; it moves nothing on milestones 1, 4 and 5.
 
 Against ADR-0015's six milestones:
 
-| Milestone                                                                 | Domain                                                               | Demonstrated? |
-| ------------------------------------------------------------------------- | -------------------------------------------------------------------- | ------------- |
-| 1. OB3 external verification (6 validator errors, unresolvable `did:key`) | VC standards + cryptosuites                                          | No            |
-| 2. Export carries the signed credential                                   | app work on top of M1                                                | Yes           |
-| 3. Import Badge Opportunity                                               | app work, already researched                                         | Yes           |
-| 4. Public badges to the user's own atproto repo                           | atproto, PDS, DID/PLC                                                | No            |
-| 5. Goal templates                                                         | undesigned — ADR-0015 says format, provenance and abuse are all open | No            |
-| 6. ND user testing, community, docs                                       | non-code, ~50% of hours                                              | Partly        |
+| Milestone                                                                 | Domain                                                               | Demonstrated?                                                                                                                                                          |
+| ------------------------------------------------------------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. OB3 external verification (6 validator errors, unresolvable `did:key`) | VC standards + cryptosuites                                          | No                                                                                                                                                                     |
+| 2. Export carries the signed credential                                   | app work on top of M1                                                | Yes                                                                                                                                                                    |
+| 3. Import Badge Opportunity                                               | app work, already researched                                         | Yes                                                                                                                                                                    |
+| 4. Public badges to the user's own atproto repo                           | atproto, PDS, DID/PLC                                                | No                                                                                                                                                                     |
+| 5. Goal templates                                                         | undesigned — ADR-0015 says format, provenance and abuse are all open | No                                                                                                                                                                     |
+| 6. ND user testing, community, docs                                       | non-code, ~50% of hours                                              | **Yes** — see [applicant background](./2026-08-24-applicant-background.md): curriculum design, delivery to a vulnerable group, evaluation loops, caregiver-facing work |
 
 **Three of six milestones sit outside the demonstrated skillset, and the jury contains
-three people who have shipped exactly those things.** No one has to dig to see it: M1's
+three people who have shipped exactly those things.** All three are technical (M1, M4, M5),
+which is the sharper way to state it — the non-code half of the plan is now the evidenced
+half, and the code half is the exposed one. No one has to dig to see it: M1's
 defect list and M5's "undesigned" are in our own public docs.
 
 Second-order risk: the commit history is heavily agent-assisted, against a rule that
@@ -96,11 +105,16 @@ Ranked by score bought per hour spent.
    certify. A hand-wave here loses Robert, and probably Marx and Drenger with him.
 4. **Name two partners.** Any ND organisation, Verein, VHS, school or education contact
    who has agreed to test. Rogalla and Pintscher both score this, and the Resilienz line
-   makes community anchoring a hard bar we currently fail at zero.
-5. **Surface the ADRs.** They are the best counter-exhibit to the vibe-coding question:
+   makes community anchoring a hard bar we currently fail at zero. The Save the Children
+   record does **not** close this one: it evidences the capability to run target-group work,
+   not a partner who has agreed to test this app.
+5. **Put the Save the Children programme in the motivation section**, with the flyer linked.
+   Cheapest score on this list — the document already exists. Detail and the citation
+   discipline are in [applicant background](./2026-08-24-applicant-background.md).
+6. **Surface the ADRs.** They are the best counter-exhibit to the vibe-coding question:
    authored reasoning about tradeoffs is what a machine-outsourced project does not have.
    Link them from the README, not only the docs tree.
-6. **Rescope the store copy** (`launch/store-listing-copy.md:109`) before anyone compares
+7. **Rescope the store copy** (`launch/store-listing-copy.md:109`) before anyone compares
    it to milestone 4.
 
 ## The routing lever

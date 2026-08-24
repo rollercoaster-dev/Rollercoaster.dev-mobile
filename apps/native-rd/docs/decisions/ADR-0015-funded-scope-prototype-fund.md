@@ -4,7 +4,9 @@
 **Status:** Proposed — pending sign-off
 **Owner:** Joe
 **Relates to:** [ADR-0001](./ADR-0001-iteration-strategy.md), [ADR-0003](./ADR-0003-sync-layer-decision.md), [ADR-0013](./ADR-0013-phase-b-consolidated-position.md)
-**External context:** [Prototype Fund eligibility](../../../../docs/research/2026-08-23-prototype-fund-eligibility.md)
+**External context:** [Prototype Fund eligibility](../../../../docs/research/2026-08-23-prototype-fund-eligibility.md),
+[jury fit](../../../../docs/research/2026-08-24-jury-fit-analysis.md),
+[applicant background](../../../../docs/research/2026-08-24-applicant-background.md)
 
 ---
 
@@ -115,6 +117,52 @@ the app interoperable, and interoperability is what the Resilienz line funds.
 - Template format gets a spike before the application, so milestone 5 is not a guess.
 - Answer the atproto account and irrevocability questions in the application itself.
 - Milestones 1 and 2 are worth shipping unfunded. They stay on the roadmap either way.
+
+## Amendment 2026-08-24 — the line is reopened
+
+Status stays Proposed, and the funded slice above stands. What is no longer settled is
+**which line it is submitted to**. Recording the state so the reversal is not silent.
+
+**Why Resilienz is in trouble.** The line makes anchoring in a community a hard bar, and we
+are at zero. The window closes 30 November 2026, so there are roughly fourteen weeks to
+build real community ties — and a community cannot be listed as a milestone by a line that
+assumes you already have one. Resilienz also carries a mandatory Second Stage commitment.
+
+**Why Innovation is now the leading option**, despite being rejected below:
+
+- no community gate
+- ~80 % code matches the demonstrated skillset better than the ~50/50 split in this ADR
+- Second Stage optional rather than mandatory
+- up to 30 slots against 10
+
+**The rejection reason below no longer holds as written.** It says Innovation "strands our
+weakest area — users". Per [applicant background](../../../../docs/research/2026-08-24-applicant-background.md),
+users is the evidenced half of the record — a delivered media-literacy programme for 170
+children and their caregivers, with evaluation loops and a handover. The exposed half is
+technical: milestones 1, 4 and 5. Innovation asks for more of what is weak and less of what
+is documented, which is uncomfortable but is the honest reading.
+
+**What Innovation costs, and it is not small.** Resilienz says a project need not be
+innovative; Innovation says it must. That puts the **Learner Credential Wallet** overlap
+squarely in play — an MIT-licensed React Native wallet for W3C VCs including OB 3.0,
+identified in the eligibility research as the closest twin to this app — against a
+no-Doppelförderung rule that also asks that a similar open-source product not already
+exist. Resilienz was forgiving that; Innovation will not.
+
+**Preconditions before this becomes a decision.** Until both exist, Innovation is a plan
+and not a choice:
+
+1. The six milestones remixed from ~50/50 to roughly 80/20 dev share, with milestone 6 cut
+   to about 190 h. The Vorhabenbeschreibung derives from this ADR, so the numbers here have
+   to be the real ones.
+2. One paragraph stating the delta against Learner Credential Wallet. The unoccupied ground
+   the survey found is the tracker-plus-self-issued-credential fusion, not the wallet.
+
+**Unchanged either way.** Milestones 1 and 2 ship unfunded regardless, and the jury-fit doc
+calls verifybadge.org passing the strongest available Realisierbarkeit exhibit — under
+Innovation it also becomes the infrastructure substance the line is judged on. Line choice
+and sketch framing stay separate levers: sketches are routed by juror expertise, so an
+Innovation submission can still lead with digital participation.
 
 ## Alternatives Considered
 
