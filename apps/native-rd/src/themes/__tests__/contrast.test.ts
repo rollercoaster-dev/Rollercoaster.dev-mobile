@@ -172,3 +172,68 @@ describe("Sub-step indentation rail meets non-text contrast (#294)", () => {
     }
   });
 });
+
+/**
+ * `success` vs `warning` — the two tones the C·B timing band uses to tell an
+ * `after` dependency (green) from a `waiting on` external wait (amber), on the
+ * Timeline, in Focus, and on the Edit Goal row chip (#577).
+ *
+ * **Hue, not luminance.** These two are separated by colour, not lightness, by
+ * design, so no useful contrast floor exists between them: measured
+ * success-vs-warning ratios run `dark-default` 1.15, `light-highContrast` 1.18,
+ * `light-lowVision`/`light-lowInfo` 1.29, `light-autismFriendly` 1.49,
+ * `light-default` 1.72, `light-dyslexia` 1.96. A 1.3:1 floor fails three themes
+ * today and anything that passes all seven (≤1.15) is too slack to catch a
+ * regression. Hue separation, by contrast, runs 87-138 degrees with saturations
+ * 0.21-1.00, so the 60-degree / 0.15 floors below pass every theme with real
+ * margin while still failing the regression that matters: a variant recipe that
+ * desaturates both tones toward the same gray. `light-autismFriendly` (0.21
+ * saturation on both) is the one closest to that edge.
+ *
+ * Colour is never the sole channel — each band line also carries its own
+ * `TimingMarkIcon` glyph and its own words — so this is a "stays readable as
+ * two different things" gate, not an information-carrying-colour claim.
+ *
+ * `src/utils/accessibility.ts` exports no HSL conversion (only
+ * `getContrastRatio`/`meetsWCAG`), so the helper is local to this file.
+ */
+describe("Timing band tones stay distinguishable (#577)", () => {
+  const MIN_HUE_SEPARATION = 60;
+  const MIN_SATURATION = 0.15;
+
+  /** Hex → HSL, hue in degrees, saturation/lightness in 0-1. */
+  function hsl(hex: string): { h: number; s: number; l: number } {
+    const match = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    if (!match) throw new Error(`Invalid hex color: ${hex}`);
+    const [r, g, b] = [1, 2, 3].map((i) => parseInt(match[i], 16) / 255);
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const l = (max + min) / 2;
+    const delta = max - min;
+    if (delta === 0) return { h: 0, s: 0, l };
+    const s = l > 0.5 ? delta / (2 - max - min) : delta / (max + min);
+    const sector =
+      max === r ? ((g - b) / delta) % 6 : max === g ? (b - r) / delta + 2 : 4;
+    const h = (sector * 60 + 360) % 360;
+    return { h, s, l };
+  }
+
+  /** Shortest way round the wheel, so 350 vs 10 degrees reads as 20, not 340. */
+  function hueSeparation(a: number, b: number): number {
+    const raw = Math.abs(a - b);
+    return raw > 180 ? 360 - raw : raw;
+  }
+
+  test.each(themeNames)("%s · success and warning differ", (name) => {
+    const { success, warning } = themes[name].colors;
+    expect(success).not.toBe(warning);
+
+    const green = hsl(success);
+    const amber = hsl(warning);
+    expect(hueSeparation(green.h, amber.h)).toBeGreaterThanOrEqual(
+      MIN_HUE_SEPARATION,
+    );
+    expect(green.s).toBeGreaterThanOrEqual(MIN_SATURATION);
+    expect(amber.s).toBeGreaterThanOrEqual(MIN_SATURATION);
+  });
+});
