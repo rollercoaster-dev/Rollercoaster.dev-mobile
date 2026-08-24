@@ -12,25 +12,27 @@
 
 ## Context
 
-We plan to apply to the Prototype Fund (Jahrgang 03, Resilienz line). Applications
+We plan to apply to the Prototype Fund (Jahrgang 03). The funding line is not settled —
+this ADR was drafted for the Resilienz line and reopened that choice on 2026-08-24; see
+[Amendment 2026-08-24](#amendment-2026-08-24--the-line-is-reopened). Applications
 close 30 November 2026. The funded period is 1 June to 30 November 2027, six months,
 950 hours for one person. Roughly half those hours go to user testing and community
 work, not code.
 
 That budget buys one coherent slice, not a wishlist. Three facts decide which slice.
 
-Badges do not verify outside the app. `ob3-compliance-status.md` lists six validator
+Badges do not verify outside the app. [`ob3-compliance-status.md`](../architecture/ob3-compliance-status.md) lists six validator
 errors plus a `did:key` that does not resolve. Export is also broken:
-`research/badge-export.md` shows the export button re-rasterises the badge and never
+[`badge-export.md`](../research/badge-export.md) shows the export button re-rasterises the badge and never
 bakes the credential. Sharing anything on top of that ships a picture, not a credential.
 
-The sharing transport is already researched. `research/atproto-evaluation.md` recommends
+The sharing transport is already researched. [`atproto-evaluation.md`](../research/atproto-evaluation.md) recommends
 the user's own atproto repo for public badges only — an address the user owns, no
-hosting on our side. `research/pear-p2p-evaluation.md` parks peer-to-peer until after
+hosting on our side. [`pear-p2p-evaluation.md`](../research/pear-p2p-evaluation.md) parks peer-to-peer until after
 Iteration D. Evolu stays the sync layer (ADR-0003).
 
 Consuming external badges is already scoped as Import Badge Opportunity in
-`research/openbadges-external-earning-research.md`: import the unearned definition,
+[`openbadges-external-earning-research.md`](../research/openbadges-external-earning-research.md): import the unearned definition,
 the user writes their own steps, we issue our own badge with attribution.
 
 Sharing earned goals as templates has no prior doc. It is new work.
@@ -41,7 +43,7 @@ The funded slice is **interoperability**: make the credential real, then let it 
 
 Six milestones:
 
-1. **OB3 external verification.** Close gaps 1–7 in `ob3-compliance-status.md`. Two PRs:
+1. **OB3 external verification.** Close gaps 1–7 in [`ob3-compliance-status.md`](../architecture/ob3-compliance-status.md). Two PRs:
    schema shape, then cryptosuite plus resolvable DID. Done when verifybadge.org passes.
 2. **Export carries the credential.** Signed VC JSON-LD leads. Baked PNG stays as the
    convenience wrapper, not the canonical artefact.

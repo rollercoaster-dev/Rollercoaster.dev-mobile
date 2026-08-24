@@ -175,5 +175,6 @@ technical claim itself rides on the repo.
 
 Sources: Save the Children Deutschland e. V., _Media Literacy for Refugee Children and
 Youth in Germany_, https://www.savethechildren.de/fileadmin/user_upload/Bilder/Unterstützen/Fuer_Unternehmen/Ihre_Hilfe/Laufendes_Projekt_untestuetzen/Medienprojekt_Flyer_english.pdf
-(fetched 2026-08-24; copy retained in `sources/`, SHA-256 in `sources/README.md`); applicant
+(fetched 2026-08-24; not stored in-tree — publisher, checksum and citation rules in
+[`sources/README.md`](./sources/README.md)); applicant
 statement of role, 2026-08-24, pending the written confirmation in item 2.
