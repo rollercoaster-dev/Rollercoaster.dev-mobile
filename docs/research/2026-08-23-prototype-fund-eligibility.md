@@ -68,7 +68,7 @@ partly stale vs. the new three-line structure; the Förderlinien comparison page
 | FOSS licence                                  | ✅ AGPL-3.0 (app), Apache-2.0 (openbadges-core), MIT (design-tokens); trademark reservation and DCO/dual-licence intent are compatible — code stays open                                                                                                                                                            |
 | Natural person, 18+, sole copyright           | ✅ (apply personally, never as a Rollercoaster.dev entity)                                                                                                                                                                                                                                                          |
 | Residence + tax in Germany                    | ⚠️ assumed yes — confirm                                                                                                                                                                                                                                                                                            |
-| Self-employed / freelance / employer release  | ❌ **biggest blocker.** 950 h in 6 months ≈ full time; you'd need partial Freistellung from fobizz for Jun–Nov 2027, or freelance status. Arbeitsschutz caps hours if you stay part-time employed                                                                                                                   |
+| Self-employed / freelance / employer release  | ❌ **biggest blocker.** 950 h in 6 months ≈ full time; you'd need partial Freistellung from the current employer for Jun–Nov 2027, or freelance status. Arbeitsschutz caps hours if you stay part-time employed                                                                                                     |
 | Fits a funding focus                          | ⚠️ **improved as of 25 Jun 2026.** The Richtlinie amendment added "souveräne Software für Endnutzer\*innen" as an explicit subject and made calls themenoffen, so an end-user app is no longer outside the legal basis. The Resilienz line is the vehicle. Innovation's two focus areas still read developer-facing |
 | Delimited new increment                       | ⚠️ 595 commits of prior work; needs a carved-out module for the funding period                                                                                                                                                                                                                                      |
 | Not a duplicate of existing OSS               | ⚠️ must survey badge tooling (Badgr/Open Badge Factory, openbadges-ui) and habit/goal trackers — and address your own predecessor repos (`openbadges-monorepo`, `openbadges-system`, `openbadges-modular-server`), which read as "similar OSS already exists" unless framed as prior art you're extending           |
@@ -100,7 +100,10 @@ partly stale vs. the new three-line structure; the Förderlinien comparison page
    community ties (ND orgs, education/FOSS communities) started _now_.
 5. Public-facing project pitch a non-expert can read (the current README is dev-facing).
 6. GitHub account as the competence exhibit; confirm no proprietary component sits in the
-   funded scope.
+   funded scope. Second exhibit added 2026-08-24 — the Save the Children media-literacy
+   programme covers problem, users, delivery and Verstetigung, with a published flyer that
+   names the applicant. See [applicant background](./2026-08-24-applicant-background.md).
+   Keep the two in their lanes: the repo carries every technical claim.
 7. Draft, then have an outsider read it (their own checklist item).
 
 Sources: prototypefund.de/bewerbung, /foerderung, /foerderlinien, /resilienz, /faq,
