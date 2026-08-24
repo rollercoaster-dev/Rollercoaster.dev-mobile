@@ -314,10 +314,17 @@ const MOOD_NAMES: Record<ThemeName, string> = {
 };
 
 /**
- * All 7 product themes, each with one set row above one unset row — the pair
- * that has to stay distinguishable in `highContrast` (neither state uses a
- * shadow, so the ink itself must differ) and legible in `lowVision`, which also
- * doubles as the `largeText` density check.
+ * All 7 product themes, each showing every tone the row's timing line can
+ * carry: an `after`+`due` row, a `waiting` row, and an unset row.
+ *
+ * The set/unset pair has to stay distinguishable in `highContrast` (neither
+ * state uses a shadow, so the ink itself must differ) and legible in
+ * `lowVision`, which also doubles as the `largeText` density check. The
+ * `waiting` row is the #577 addition: `after` is painted `colors.success` and
+ * `waiting` `colors.warning`, and those two are separated by hue rather than
+ * lightness (see `themes/__tests__/contrast.test.ts`) — so a variant that
+ * desaturates both toward the same gray, which `autismFriendly` comes closest
+ * to doing, is only visible with the two rendered side by side.
  *
  * A live `ScopedTheme` matrix works here (unlike EditGoalView's) because the
  * bare row never re-renders after mount — it holds no state and runs no async
@@ -352,8 +359,21 @@ export const AllThemesMatrix: Story = {
               />
               <EditGoalStepRow
                 {...rowScaffold}
-                step={step(`${name}-unset`, "Final walkthrough")}
+                step={step(`${name}-waiting`, "Sign-off", {
+                  dateDepChips: [
+                    {
+                      tone: "waiting",
+                      text: "waiting on city inspector · expected Jun 24",
+                    },
+                  ],
+                })}
                 stepNumber={2}
+                onEditTiming={noop}
+              />
+              <EditGoalStepRow
+                {...rowScaffold}
+                step={step(`${name}-unset`, "Final walkthrough")}
+                stepNumber={3}
                 onEditTiming={noop}
               />
             </View>
