@@ -32,7 +32,7 @@ import {
 } from "phosphor-react-native";
 import { useUnistyles } from "react-native-unistyles";
 import { Text } from "../../components/Text";
-import { AnimatedSheet } from "../../components/EvidenceTypePicker/AnimatedSheet";
+import { AnimatedSheet } from "../../components/AnimatedSheet";
 import { styles } from "./BadgeShareSheet.styles";
 
 export interface BadgeShareSheetProps {
