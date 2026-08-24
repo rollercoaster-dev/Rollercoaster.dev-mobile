@@ -28,7 +28,12 @@ Germany_ — English-language project flyer (corporate-giving material).
 **Why it is retained.** It is the only public document evidencing the applicant's role in
 the programme, and it sits under `/Fuer_Unternehmen/` — a fundraising path whose assets
 get rotated out when a campaign ends. The flyer names the applicant in a participant
-quotation (Narven, 12, Syria: "The computer-class with Joe is fun…").
+quotation ("The computer-class with Joe is fun…").
+
+**Citing it.** The flyer quotes children by name, age and country of origin, and shows
+their photographs. They are minors in a refugee context. Quote the wording where it carries
+the argument, but attribute to "a participant quotation in the flyer" — do not reproduce
+the identifiers in our own prose, here or in any doc that cites this file.
 
 **Not yet done:** the upstream URL is not archived. Submitting it to an external archive
 is an outward-facing action and has been left to the project owner. If it is archived,

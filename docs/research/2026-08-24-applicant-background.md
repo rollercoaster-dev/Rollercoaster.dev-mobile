@@ -47,25 +47,41 @@ and shelters, run out of the organisation's Child Friendly Spaces.
 | Evaluation       | Each course closed with a test; content and methods were revised against feedback from children, parents and teachers                              |
 | Handover         | Equipment left on site and local staff trained so the courses continue without the original teacher                                                |
 
-Source: [retained flyer](./sources/save-the-children-medienprojekt-flyer-en.pdf),
-provenance in [sources/README.md](./sources/README.md).
+**Source.** Save the Children Deutschland e. V., _Media Literacy for Refugee Children and
+Youth in Germany_ (project flyer, English, undated — content places it in the 2018
+fundraising cycle), published at:
+
+<https://www.savethechildren.de/fileadmin/user_upload/Bilder/Unterstützen/Fuer_Unternehmen/Ihre_Hilfe/Laufendes_Projekt_untestuetzen/Medienprojekt_Flyer_english.pdf>
+
+Fetched 2026-08-24. A verbatim copy is retained at
+[`sources/save-the-children-medienprojekt-flyer-en.pdf`](./sources/save-the-children-medienprojekt-flyer-en.pdf)
+with checksum and full provenance in [`sources/README.md`](./sources/README.md), because the
+upstream path is fundraising material that gets rotated out. **Cite the URL above** — the
+in-tree copy is a hedge against link rot, not the citation.
 
 ## Three findings that change how this is framed
 
 ### 1. The flyer names the applicant
 
 > "In Syria we did not have a computer. The computer-class **with Joe** is fun and in terms
-> of grades, I can keep up with my classmates." — Narven, 12, Syria
+> of grades, I can keep up with my classmates."
+> — participant quotation, Save the Children project flyer, p. 5
 
 A learner quotation in material published by the funding NGO. Most applicants have nothing
 citable for their non-code claims; this is a checkable third-party attribution rather than
 a CV line.
 
+Attributions are given without the speakers' names, ages or countries of origin. The
+children quoted in the flyer are minors in a refugee context; the verbatim identifiers stay
+in the retained source, which reproduces its publisher's own wording, and are not repeated
+in our prose. Nothing in the argument depends on them. Do not restore them.
+
 ### 2. The "surfing license" is the project's origin story
 
 > "I already got the ›surfing license‹ and I really want to continue the course. We have
 > learned internet rules, e. g. that one should not send photos or his address to
-> strangers." — Mursal, 7, Afghanistan
+> strangers."
+> — participant quotation, ibid., p. 4
 
 A micro-credential for a real skill, issued informally at small scale to a learner no
 institution was going to certify, and it visibly motivated continuation. That is this
@@ -157,5 +173,7 @@ technical claim itself rides on the repo.
    caregivers → surfing license → handover → second phase → the same problem for a
    different group, now with the engineering to build it as software.
 
-Sources: retained flyer (fetched 2026-08-24, provenance in `sources/README.md`); applicant
+Sources: Save the Children Deutschland e. V., _Media Literacy for Refugee Children and
+Youth in Germany_, https://www.savethechildren.de/fileadmin/user_upload/Bilder/Unterstützen/Fuer_Unternehmen/Ihre_Hilfe/Laufendes_Projekt_untestuetzen/Medienprojekt_Flyer_english.pdf
+(fetched 2026-08-24; copy retained in `sources/`, SHA-256 in `sources/README.md`); applicant
 statement of role, 2026-08-24, pending the written confirmation in item 2.
