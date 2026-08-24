@@ -111,16 +111,20 @@ describe("read-out parity with Timeline", () => {
 });
 
 /**
- * The tests above compare two *rendered* surfaces, which is the parity that
- * matters today. But #576 replaces these components' English defaults with
- * `t()` output, and at that point the default path stops being rendered at all
- * — so a test that only exercises the defaults would keep passing while the
- * surfaces silently diverged.
+ * #576 landed, so `t()` output is what these surfaces render now and the
+ * English defaults above are the fallback path rather than the live one. These
+ * keep pinning the two resources that predate it, which is where a stray copy
+ * edit would land first.
  *
- * These pin the defaults to the resources that will replace them. A change to
- * either JSON now breaks this file, which is the drift actually worth catching.
+ * The `waitingOn` / `waitingOnExpected` / `wasExpected` keys get no block of
+ * their own: `src/__tests__/timingBandReadOutParity.test.tsx` drives all three
+ * namespaces' versions of them through the real components across all six
+ * timing shapes, and the #571 past-tense wording is pinned as literal copy on
+ * each surface already — `TimelineStep.test.tsx:215`,
+ * `FocusModeScreen.test.tsx:1166`, `EditModeScreen.test.tsx:496`. A copy here
+ * would restate both (#577).
  */
-describe("copy defaults match the i18n resources that will replace them", () => {
+describe("copy defaults match the i18n resources behind them", () => {
   const title = "Inspection & labels";
   const date = "Jun 30, 2026";
 

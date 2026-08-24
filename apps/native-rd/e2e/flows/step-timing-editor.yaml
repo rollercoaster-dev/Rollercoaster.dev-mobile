@@ -1,0 +1,191 @@
+appId: dev.rollercoaster.app
+tags:
+  - required
+env:
+  METRO_HOST: localhost
+  METRO_PORT: "8081"
+---
+# ============================================================================
+# IN-ROW TIMING AUTHORING (#577)
+#
+# The B/C authoring surface the epic (#570) built and no flow touched: opening
+# StepTimingEditor in place on an Edit Goal row, naming a `depends on`, and
+# reading the result back on two surfaces. In-app cross-surface parity, next to
+# the Jest comparison in src/__tests__/timingBandReadOutParity.test.tsx.
+#
+# Scope: `depends on` only, no due-date tap. StepDayGrid addresses its cells by
+# `${testID}-day-${YYYY-MM-DD}` computed from the live clock, and this suite has
+# no date-injection idiom and no "today" alias testID — inventing a production
+# seam for e2e's benefit is exactly what the suite does not do (#577 D6/D7).
+# Date authoring is tracked as its own follow-up.
+#
+# Addressing: the row's timing slot interpolates an Evolu-generated step id, so
+# it is matched by `id:` REGEX + `index:` — deterministic because this flow
+# authored the list order itself. The candidate row is matched by id + its OWN
+# accessibilityLabel (the candidate's title, also authored here) and NOT by
+# index: Maestro applies `index:` to whatever survives the other matchers, so
+# pairing unique text with an index selects the second of one match.
+#
+# Two load-bearing assertions:
+#   step 8  — the dependency was written and the collapsed line reads it back
+#   step 10 — Timeline reads the same sentence from the same DB row
+# ============================================================================
+
+# --- Prologue: isolation, boot, determinism lever ---------------------------
+- runFlow:
+    file: ../subflows/launch-and-onboard.yaml
+    env:
+      METRO_HOST: ${METRO_HOST}
+      METRO_PORT: ${METRO_PORT}
+      THEME_SWATCH: light-autismFriendly
+
+# --- Author a three-step goal ----------------------------------------------
+# Three steps because a `depends on` needs candidates, and the row being edited
+# is excluded from its own list: editing the third gives it two to choose from.
+#
+# 1. Open the wizard and name the goal. The Next button sits in a footer the
+#    soft keyboard covers, so Enter blurs first (returnKeyType="done").
+- tapOn:
+    id: "goals-cockpit-new-goal"
+- assertVisible:
+    id: "new-goal-wizard-content"
+- tapOn:
+    id: "new-goal-title-input"
+- inputText: "Timing goal"
+- pressKey: Enter
+- tapOn:
+    id: "new-goal-next-button"
+
+# 2. First step, with a Note plan. The capture grid is single-select and its
+#    handler self-closes the sheet, so no explicit close tap is needed.
+- tapOn:
+    id: "new-goal-first-step-input"
+- inputText: "Alpha step"
+- pressKey: Enter
+- tapOn:
+    id: "new-goal-evidence-chip"
+- assertVisible:
+    id: "animated-sheet-overlay"
+- tapOn:
+    id: "evidence-type-cell-text"
+- tapOn:
+    id: "new-goal-next-button"
+
+# 3. Two more steps, both on the default [text] plan. Enter, not the + button:
+#    the add row sits under the keyboard and its input is blurOnSubmit={false}
+#    for rapid multi-add, so the keyboard never lifts off +. The steps header is
+#    inert and lives inside a keyboardShouldPersistTaps="handled" ScrollView, so
+#    tapping it dismisses.
+- tapOn:
+    id: "edit-goal-add-step-input"
+- inputText: "Bravo step"
+- pressKey: Enter
+- inputText: "Charlie step"
+- pressKey: Enter
+- tapOn:
+    id: "edit-goal-steps-header"
+
+# 4. Commit the plan. The wizard's build step is local state only — timing is
+#    authored in EditMode, against real Evolu rows.
+- tapOn:
+    id: "new-goal-build-ready-button"
+- assertVisible:
+    id: "new-goal-start-working-button"
+- tapOn:
+    id: "new-goal-start-working-button"
+- extendedWaitUntil:
+    visible:
+      id: "focus-current-task-add-text"
+    timeout: 15000
+
+# --- Reach EditMode the way a user does -------------------------------------
+# 5. Focus → Timeline → EditMode. The progress strip's tap target is the OUTER
+#    Pressable; the inner bar sits inside an `accessible` wrapper and is
+#    collapsed out of the iOS a11y tree.
+- tapOn:
+    id: "focus-progress-strip"
+- tapOn:
+    id: "timeline-edit-button"
+- assertVisible:
+    id: "edit-goal-content"
+
+# --- Author the dependency in row ------------------------------------------
+# 6. Open the third row's timing editor. index 2 = Charlie, the third root row.
+#    Two things make the index deterministic here, and both are properties this
+#    flow authored: the sub-step slot is `edit-goal-substep-timing-*`, a
+#    different prefix, so the regex sees root rows only; and every row is still
+#    UNSET, so each contributes exactly one match. A row with timing also
+#    renders `<prefix>-mark-<tone>` per chip, which this regex would match too —
+#    so if an earlier row ever gains timing before this point, the index moves.
+#    Step 9 names the row it edited, so a mis-targeted tap fails there loudly.
+#    Scroll first: the third row is clipped
+#    below the ScrollView's viewport and iOS still reports a frame for it — one
+#    that lands on the floating tab bar, so a bare tap navigates to Settings.
+#    Index is hierarchy order, not screen position, so scrolling cannot perturb
+#    it.
+- scrollUntilVisible:
+    element:
+      id: "edit-goal-step-timing-.*"
+      index: 2
+    direction: DOWN
+    centerElement: true
+- tapOn:
+    id: "edit-goal-step-timing-.*"
+    index: 2
+
+# 7. The editor mounted in place of the line, with its `Depends on` control.
+#    Both ids share the row's timing prefix (#576).
+- assertVisible:
+    id: "edit-goal-step-timing-.*-editor"
+- assertVisible:
+    id: "edit-goal-step-timing-.*-depends-on-toggle"
+- tapOn:
+    id: "edit-goal-step-timing-.*-depends-on-toggle"
+
+# 8. Pick Alpha. The candidate list excludes the row being edited, so it holds
+#    "nothing", Alpha and Bravo. `text:` is the CandidateRow Pressable's own
+#    accessibilityLabel — the candidate's title — never a child Text, which iOS
+#    collapses away under the `accessible` row.
+- scrollUntilVisible:
+    element:
+      id: "edit-goal-step-timing-.*-depends-on-option-.*"
+      text: "Alpha step"
+    direction: DOWN
+    centerElement: true
+- tapOn:
+    id: "edit-goal-step-timing-.*-depends-on-option-.*"
+    text: "Alpha step"
+- tapOn:
+    id: "edit-goal-step-timing-.*-done"
+
+# 9. LOAD-BEARING: the write landed and the collapsed line reads it back. Done
+#    commits and closes in one breath, so the editor unmounting is not itself
+#    proof of anything — the chip is. Asserted on the line Pressable's own
+#    accessibilityLabel (editGoal:editor.timing.rowSetA11yLabel), because the
+#    chip's visible Text is collapsed out of the tree under it.
+- extendedWaitUntil:
+    visible: 'Edit timing for "Charlie step": after Alpha step'
+    timeout: 10000
+- assertNotVisible:
+    id: "edit-goal-step-timing-.*-editor"
+
+# --- Read it back on another surface ----------------------------------------
+# 10. LOAD-BEARING: Timeline renders the same sentence from the same row. Done
+#     navigates to Focus (not back), so the strip is the way to the Timeline.
+#     MetadataBand sits OUTSIDE the step header's `accessible` Pressable, so its
+#     text does reach the tree here — unlike the Edit Goal chip above. It is
+#     also outside `timeline-node-3`, so the sentence cannot be scoped to that
+#     id; the node assertion above pins which step is third, and no other step
+#     in this goal has a dependency, so the bare text cannot match elsewhere.
+- tapOn:
+    id: "edit-goal-done-button"
+- extendedWaitUntil:
+    visible:
+      id: "focus-current-task-title"
+    timeout: 15000
+- tapOn:
+    id: "focus-progress-strip"
+- assertVisible:
+    id: "timeline-node-3"
+    text: "Go to step 3: Charlie step"
+- assertVisible: "after Alpha step"

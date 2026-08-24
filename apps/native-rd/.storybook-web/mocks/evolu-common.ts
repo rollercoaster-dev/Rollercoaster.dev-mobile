@@ -24,8 +24,26 @@ export const DateIso = makeValidator();
 // Schema combinator
 export const nullOr = (_schema: unknown) => makeValidator();
 
-// Utility: converts Date to ISO string
-export const dateToDateIso = (date: Date) => date.toISOString();
+/**
+ * Evolu's `Result` constructors, same shape as the real `Result.js`.
+ *
+ * `err` is imported directly by `src/utils/localDay.ts`, so it has to be a
+ * named export here or the whole db module graph fails to load in Storybook.
+ */
+export const ok = <T>(value: T) => ({ ok: true as const, value });
+export const err = <E>(error: E) => ({ ok: false as const, error });
+
+/**
+ * Converts a Date to a branded `DateIso`, wrapped in a `Result` — the real
+ * signature. Callers unwrap it (`if (!now.ok) throw …`, `db/queries.ts:226`),
+ * so a bare string here makes `.ok` undefined and sends every completion path
+ * in Storybook down its failure branch.
+ */
+export const dateToDateIso = (date: Date) => {
+  const time = date.getTime();
+  if (Number.isNaN(time)) return err({ type: "DateIso", value: date });
+  return ok(date.toISOString());
+};
 
 // SQLite boolean constant
 export const sqliteTrue = 1;

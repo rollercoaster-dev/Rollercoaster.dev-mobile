@@ -152,6 +152,7 @@ A flow is `optional` when it covers aspirational or partially-implemented featur
 | `badge-view.yaml`                      | `required` | Badges tab navigation and empty state                                                                                                                                                                                                                                                                                    |
 | `settings-theme-switch.yaml`           | `required` | Settings → Night Ride, immediate selection                                                                                                                                                                                                                                                                               |
 | `settings-theme-persists-restart.yaml` | `required` | Night Ride survives a full app restart (Evolu-backed persistence)                                                                                                                                                                                                                                                        |
+| `step-timing-editor.yaml`              | `required` | In-row B/C authoring (#570): open StepTimingEditor on an Edit Goal row, name a `depends on`, read the chip back on the collapsed line and the same sentence on the Timeline. `depends on` only — no due-date tap (see below)                                                                                             |
 | `evidence-viewer.yaml`                 | `optional` | Mixed-type evidence (link + text) → Timeline card → EvidenceViewerScreen → thumbnail strip. **The only flow requiring `EXPO_PUBLIC_E2E_MODE=true`**                                                                                                                                                                      |
 
 Plus `subflows/launch-and-onboard.yaml`, which is not a flow.
@@ -166,6 +167,8 @@ Compensating coverage, all pure-Jest plus Storybook stories:
 - `src/screens/CaptureVideoScreen/__tests__/CaptureVideoScreen.test.tsx`
 - `src/screens/CaptureFile/__tests__/CaptureFile.test.tsx`
 - `src/screens/VoiceMemoScreen/__tests__/VoiceMemoScreen.test.tsx`
+
+**Due-date authoring in the timing editor.** `step-timing-editor.yaml` names a `depends on` but never taps a day. `StepDayGrid` addresses its cells by `${testID}-day-${YYYY-MM-DD}` computed from the live clock, there is no "today" alias testID, and this suite has no date-injection idiom (`runScript` or otherwise). Adding a production seam purely so a flow can tap today is exactly what the addressing rules above refuse, so the date path stays covered by Jest (`StepDayGrid/__tests__`) until it gets its own issue.
 
 **Badge redesign and goal-level reopen.** Nothing navigates to `BadgeDesignerScreen` in either stack, and `uncompleteGoal` has zero UI callers — no flow can reach either. "Reopen" in `full-ride.yaml` is **step** reopen.
 

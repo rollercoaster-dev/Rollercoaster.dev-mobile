@@ -1,5 +1,6 @@
 import { StyleSheet } from "react-native-unistyles";
 import { shadowStyle } from "../../styles/shadows";
+import { PILL_LIFT } from "../../navigation/FocusPillTabBar";
 
 // Zero hardcoded hex (hard acceptance gate). Token map to the App Shell
 // `edit` route: card surface #fff → background · ink border #0a0a0a →
@@ -483,6 +484,12 @@ export const styles = StyleSheet.create((theme) => ({
   // --- Done footer ---
   footer: {
     padding: theme.space[4],
+    // EditMode is a plain stack screen inside the tab navigator, so the
+    // FocusPillTabBar's lifted top half (`PILL_LIFT`) overlaps the bottom of
+    // this pinned footer and buries the Done button. Same clearance trick as
+    // FocusModeScreen's card section — not `useTabScreenContentInset()`, which
+    // doubles the lift for content scrolling *under* the bar.
+    paddingBottom: theme.space[4] + PILL_LIFT,
     borderTopWidth: theme.borderWidth.medium,
     borderTopColor: theme.colors.border,
   },

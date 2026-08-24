@@ -32,7 +32,31 @@ const SANCTIONED = ["not a deadline", "reads as “late.”"];
 const isSanctioned = (text: string) =>
   SANCTIONED.some((ok) => text.includes(ok));
 
-const COMPONENT_DIRS = ["StepTimingEditor", "StepDayGrid"];
+/**
+ * Whole words only. `EditGoalView` is a 24-file directory whose drag and
+ * geometry code is nowhere near this copy, and a substring match would read
+ * `late` out of `translate` and fail a test whose name says "forbidden copy".
+ * The ban is on the framing these words carry, which a word they are merely
+ * spelled inside of does not.
+ */
+const usesForbiddenWord = (text: string, word: string) =>
+  new RegExp(`\\b${word}\\b`, "i").test(text);
+
+/**
+ * Every component directory that carries B/C planning copy (#577).
+ *
+ * The two authoring surfaces — the in-row `StepTimingEditor` and its
+ * `StepDayGrid` — were the original scope. `EditGoalView` (the row chip tier,
+ * `EditGoalTimingLine`/`EditGoalRowTiming`) and the shared `TimingMarkIcon`
+ * carry the same copy on the read side and had no forbidden-word guard of
+ * their own: `TimelineStep` checks itself inline, these two checked nothing.
+ */
+const COMPONENT_DIRS = [
+  "StepTimingEditor",
+  "StepDayGrid",
+  "EditGoalView",
+  "TimingMarkIcon",
+];
 
 /**
  * String literals that can reach a user, per source file. Comments are stripped
@@ -62,9 +86,8 @@ describe.each(COMPONENT_DIRS)("%s forbidden copy", (dir) => {
   test.each(FORBIDDEN)(
     "never ships the word %p in a string literal",
     (word) => {
-      for (const literal of literals) {
-        expect(literal.toLowerCase()).not.toContain(word);
-      }
+      const offenders = literals.filter((l) => usesForbiddenWord(l, word));
+      expect(offenders).toEqual([]);
     },
   );
 });
@@ -116,7 +139,7 @@ describe("planning-copy i18n resources", () => {
 
   test.each(FORBIDDEN)("no planning copy ships the word %p", (word) => {
     const offenders = copy.filter((entry) =>
-      entry.value.toLowerCase().includes(word),
+      usesForbiddenWord(entry.value, word),
     );
     expect(offenders).toEqual([]);
   });
