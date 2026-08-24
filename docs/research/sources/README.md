@@ -1,40 +1,46 @@
-# Retained sources
+# Source register
 
-Primary documents kept in-tree because a research doc cites them as evidence and the
-original is on a host we do not control. Each entry records where the file came from,
-when it was fetched, and its checksum, so a citation stays checkable after the upstream
-URL moves or dies.
+Where the primary documents cited by the research docs came from, so a citation stays
+checkable after an upstream URL moves or dies: publisher, URL, fetch date, checksum.
 
-Retain a copy here only when the file is **publicly published** by its owner and the
-citation would break without it. Anything private, internal, or personal does not belong
-in this directory — this repository is public.
+**No source files are stored here.** This repository is public. A copy is kept in-tree only
+if the document is published by its owner, contains no personal data, and the citation
+would break without it — and so far none qualify. Cite the URL; verify a retrieved copy
+against the checksum recorded below.
 
-## `save-the-children-medienprojekt-flyer-en.pdf`
+## Save the Children — media literacy project flyer
 
 Save the Children Deutschland e. V., _Media Literacy for Refugee Children and Youth in
 Germany_ — English-language project flyer (corporate-giving material).
 
-|               |                                                                                                                                                                         |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Source URL    | `https://www.savethechildren.de/fileadmin/user_upload/Bilder/Unterstützen/Fuer_Unternehmen/Ihre_Hilfe/Laufendes_Projekt_untestuetzen/Medienprojekt_Flyer_english.pdf`   |
-| Fetched       | 2026-08-24                                                                                                                                                              |
-| SHA-256       | `935a902ae9657f19531113a1c7157548d35bd53b24b43cd27b38d9a6fae20b16`                                                                                                      |
-| Size          | 385 KB, PDF 1.7                                                                                                                                                         |
-| Publisher     | Save the Children Deutschland e. V., Berlin                                                                                                                             |
-| Document date | Undated. Content places it in the 2018 fundraising cycle — it describes the pilot as April 2017 – March 2018 and the next phase as April 2018 – September 2018          |
-| Rights        | Published by the copyright holder as public fundraising material. Retained here verbatim, unmodified, for citation. Photo credits © Bastian Strauch / Save the Children |
-| Cited by      | [Applicant background](../2026-08-24-applicant-background.md)                                                                                                           |
+|                  |                                                                                                                                                                       |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| URL              | `https://www.savethechildren.de/fileadmin/user_upload/Bilder/Unterstützen/Fuer_Unternehmen/Ihre_Hilfe/Laufendes_Projekt_untestuetzen/Medienprojekt_Flyer_english.pdf` |
+| Fetched          | 2026-08-24                                                                                                                                                            |
+| SHA-256          | `935a902ae9657f19531113a1c7157548d35bd53b24b43cd27b38d9a6fae20b16`                                                                                                    |
+| Size             | 385 KB, PDF 1.7                                                                                                                                                       |
+| Publisher        | Save the Children Deutschland e. V., Berlin                                                                                                                           |
+| Document date    | Undated. Content places it in the 2018 fundraising cycle — it describes the pilot as April 2017 – March 2018 and the next phase as April 2018 – September 2018        |
+| Rights           | Published by the copyright holder as public fundraising material. Photo credits © Bastian Strauch / Save the Children                                                 |
+| Cited by         | [Applicant background](../2026-08-24-applicant-background.md)                                                                                                         |
+| Archive snapshot | **Not yet archived.** Submitting the URL to a web archive is an outward-facing action and is left to the project owner. Record the snapshot URL here once it exists   |
 
-**Why it is retained.** It is the only public document evidencing the applicant's role in
-the programme, and it sits under `/Fuer_Unternehmen/` — a fundraising path whose assets
-get rotated out when a campaign ends. The flyer names the applicant in a participant
-quotation ("The computer-class with Joe is fun…").
+### Why it is not stored in-tree
 
-**Citing it.** The flyer quotes children by name, age and country of origin, and shows
-their photographs. They are minors in a refugee context. Quote the wording where it carries
-the argument, but attribute to "a participant quotation in the flyer" — do not reproduce
-the identifiers in our own prose, here or in any doc that cites this file.
+The flyer quotes five children by first name, age and country of origin, and shows their
+photographs. They are minors in a refugee context. Save the Children published it with a
+lawful basis for their own fundraising purpose; committing it here would republish it, in a
+public repository that is indexed, forked and permanently retained, with no basis of our own
+and no relationship to the families. Their publication is revocable and sits on a rotating
+campaign path; ours would not be revocable at all.
 
-**Not yet done:** the upstream URL is not archived. Submitting it to an external archive
-is an outward-facing action and has been left to the project owner. If it is archived,
-add the archive URL to the table above rather than replacing the original.
+A private copy is held outside the repository so the document survives if both the URL and
+the archive fail. Link rot is handled by the archive snapshot plus the checksum above, not
+by vendoring the file.
+
+### How to cite it
+
+Quote the wording where it carries the argument. Attribute to "a participant quotation in
+the flyer" with a page number — **do not reproduce the children's names, ages or countries
+of origin** in our prose, here or in any doc that cites this entry. Nothing in the argument
+depends on them.

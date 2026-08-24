@@ -53,11 +53,11 @@ fundraising cycle), published at:
 
 <https://www.savethechildren.de/fileadmin/user_upload/Bilder/Unterstützen/Fuer_Unternehmen/Ihre_Hilfe/Laufendes_Projekt_untestuetzen/Medienprojekt_Flyer_english.pdf>
 
-Fetched 2026-08-24. A verbatim copy is retained at
-[`sources/save-the-children-medienprojekt-flyer-en.pdf`](./sources/save-the-children-medienprojekt-flyer-en.pdf)
-with checksum and full provenance in [`sources/README.md`](./sources/README.md), because the
-upstream path is fundraising material that gets rotated out. **Cite the URL above** — the
-in-tree copy is a hedge against link rot, not the citation.
+Fetched 2026-08-24. Checksum and full provenance in
+[`sources/README.md`](./sources/README.md). The file itself is deliberately **not** stored in
+this repository — it shows and names five children in a refugee context, and this repo is
+public. Cite the URL above; the register records a SHA-256 so a retrieved copy can be
+verified byte-identical.
 
 ## Three findings that change how this is framed
 
