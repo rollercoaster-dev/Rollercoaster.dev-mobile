@@ -119,8 +119,10 @@ describe("read-out parity with Timeline", () => {
  * The `waitingOn` / `waitingOnExpected` / `wasExpected` keys get no block of
  * their own: `src/__tests__/timingBandReadOutParity.test.tsx` drives all three
  * namespaces' versions of them through the real components across all six
- * timing shapes, so a literal-string copy here would restate what a rendered
- * comparison already proves (#577).
+ * timing shapes, and the #571 past-tense wording is pinned as literal copy on
+ * each surface already — `TimelineStep.test.tsx:215`,
+ * `FocusModeScreen.test.tsx:1166`, `EditModeScreen.test.tsx:496`. A copy here
+ * would restate both (#577).
  */
 describe("copy defaults match the i18n resources behind them", () => {
   const title = "Inspection & labels";

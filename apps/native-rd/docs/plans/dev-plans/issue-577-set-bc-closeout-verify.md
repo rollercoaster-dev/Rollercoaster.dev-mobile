@@ -248,6 +248,24 @@ in 3) blocks the epic per the issue's own text.
   once with the band, once with nothing set — and the added strings are its read-out.
   This also makes the none/cleared shape self-checking: "renders no timing" is the empty
   difference, not an absence assertion aimed at copy someone has to name.
+- [2026-08-24] **Review fixes (code-review, both axes).** The contrast helper's `hsl()`
+  blue branch dropped its `(r - g) / delta` term, pinning every blue-dominant colour to
+  exactly 240 degrees — harmless for today's green/amber but silently wrong the moment a
+  variant retints either token, which is the regression the block exists to catch. Fixed
+  and verified across all six hue sectors. Also dropped `expect(success).not.toBe(warning)`
+  as subsumed by the hue floor beside it (the repo's no-unfalsifiable-assertions rule,
+  shape 4), and switched the forbidden-copy guard from substring to whole-word matching:
+  `EditGoalView` is a 24-file directory where `late` is a substring of `translate`, and a
+  test named "forbidden copy" should not fail on a transform.
+- [2026-08-24] **"One resolver call per shape" was overstated.** Timeline and Focus share
+  one call; the chip goes through `buildEditGoalSteps`, which resolves the same rows again.
+  That second call is deliberate — running the production builder is what compares its
+  waiting-outranks-after precedence against `MetadataBand`'s instead of restating it — but
+  the doc comment now says so rather than claiming a single call.
+- [2026-08-24] **The Intent Verification line's "14 themes" is unreachable.** `compose.ts`
+  registers seven product themes (six light plus `dark-default`); `2 modes × 7 variants`
+  describes what `composeTheme` can build, not what ships. The test iterates `themeNames`,
+  which is the whole runtime surface, and says so.
 - [2026-08-24] **The new e2e flow is syntax-checked, not executed.** `maestro
 check-syntax` passes and the retired-selector grep is clean, but running it needs a
   booted simulator with an `ios:e2e` build — it goes to the manual pre-merge gate below

@@ -110,9 +110,15 @@ env:
     id: "edit-goal-content"
 
 # --- Author the dependency in row ------------------------------------------
-# 6. Open the third row's timing editor. index 2 = Charlie, the third root row;
-#    the sub-step slot is `edit-goal-substep-timing-*`, a different prefix, so
-#    this regex sees root rows only. Scroll first: the third row is clipped
+# 6. Open the third row's timing editor. index 2 = Charlie, the third root row.
+#    Two things make the index deterministic here, and both are properties this
+#    flow authored: the sub-step slot is `edit-goal-substep-timing-*`, a
+#    different prefix, so the regex sees root rows only; and every row is still
+#    UNSET, so each contributes exactly one match. A row with timing also
+#    renders `<prefix>-mark-<tone>` per chip, which this regex would match too —
+#    so if an earlier row ever gains timing before this point, the index moves.
+#    Step 9 names the row it edited, so a mis-targeted tap fails there loudly.
+#    Scroll first: the third row is clipped
 #    below the ScrollView's viewport and iOS still reports a frame for it — one
 #    that lands on the floating tab bar, so a bare tap navigates to Settings.
 #    Index is hierarchy order, not screen position, so scrolling cannot perturb
@@ -167,7 +173,10 @@ env:
 # 10. LOAD-BEARING: Timeline renders the same sentence from the same row. Done
 #     navigates to Focus (not back), so the strip is the way to the Timeline.
 #     MetadataBand sits OUTSIDE the step header's `accessible` Pressable, so its
-#     text does reach the tree here — unlike the Edit Goal chip above.
+#     text does reach the tree here — unlike the Edit Goal chip above. It is
+#     also outside `timeline-node-3`, so the sentence cannot be scoped to that
+#     id; the node assertion above pins which step is third, and no other step
+#     in this goal has a dependency, so the bare text cannot match elsewhere.
 - tapOn:
     id: "edit-goal-done-button"
 - extendedWaitUntil:

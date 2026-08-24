@@ -23,15 +23,17 @@ const AFTER_TITLE = "Inspection & labels";
  *
  * The three surfaces are Timeline's step node, Focus's current-task card, and
  * the Edit Goal row's timing line — the three callers of
- * `resolveStepDependencyBand`. Every shape below drives all three from **one**
- * resolver call over one pair of step rows, so nothing here can agree with a
+ * `resolveStepDependencyBand`. Every shape below is **one pair of step rows**,
+ * resolved and read out three ways, so nothing here can agree with a
  * hand-copied string instead of with the other surfaces. The epic's framing:
  * a mismatch is an input bug, not a read bug.
  *
- * The Edit Goal side goes through the real `buildEditGoalSteps`, not a chip
- * fixture — that function owns the chip's own precedence rule (waiting outranks
- * after, due is independent) and it has to match `MetadataBand`'s C-line
- * precedence for the surfaces to agree at all. Reaching a screen module is also
+ * Timeline and Focus share a single resolver call; the Edit Goal side goes
+ * through the real `buildEditGoalSteps`, which resolves the same rows again on
+ * its own. That second call is the point, not an oversight — that function owns
+ * the chip's precedence rule (waiting outranks after, due is independent), and
+ * running it for real is what compares that rule against `MetadataBand`'s
+ * C-line precedence instead of restating it. Reaching a screen module is also
  * why this lives here rather than beside its sibling in
  * `components/StepTimingEditor/__tests__/readOutParity.test.tsx`: a test under
  * `src/components/` may not import from `src/screens/`, and a comparison whose
@@ -95,8 +97,12 @@ function collectStrings(node: unknown): string[] {
  * none/cleared shape self-checking — "renders no timing" is the empty
  * difference, not an absence assertion aimed at copy that has to be named.
  */
-function bandTextOf<T>(render: (input: T) => RenderResult, input: T, empty: T) {
-  const baseline = render(empty);
+function bandTextOf<T>(
+  render: (input: T) => RenderResult,
+  input: T,
+  baselineInput: T,
+) {
+  const baseline = render(baselineInput);
   const unchanged = collectStrings(baseline.toJSON());
   baseline.unmount();
 

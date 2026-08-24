@@ -194,6 +194,11 @@ describe("Sub-step indentation rail meets non-text contrast (#294)", () => {
  * `TimingMarkIcon` glyph and its own words — so this is a "stays readable as
  * two different things" gate, not an information-carrying-colour claim.
  *
+ * Scope is `themeNames`, i.e. the seven themes `compose.ts` actually registers
+ * — six light plus `dark-default`. `2 modes × 7 variants` describes what
+ * `composeTheme` *can* build, not what ships; there is no `dark-highContrast`
+ * to gate. If a dark variant is ever registered it joins this loop for free.
+ *
  * `src/utils/accessibility.ts` exports no HSL conversion (only
  * `getContrastRatio`/`meetsWCAG`), so the helper is local to this file.
  */
@@ -213,7 +218,11 @@ describe("Timing band tones stay distinguishable (#577)", () => {
     if (delta === 0) return { h: 0, s: 0, l };
     const s = l > 0.5 ? delta / (2 - max - min) : delta / (max + min);
     const sector =
-      max === r ? ((g - b) / delta) % 6 : max === g ? (b - r) / delta + 2 : 4;
+      max === r
+        ? ((g - b) / delta) % 6
+        : max === g
+          ? (b - r) / delta + 2
+          : (r - g) / delta + 4;
     const h = (sector * 60 + 360) % 360;
     return { h, s, l };
   }
@@ -226,8 +235,6 @@ describe("Timing band tones stay distinguishable (#577)", () => {
 
   test.each(themeNames)("%s · success and warning differ", (name) => {
     const { success, warning } = themes[name].colors;
-    expect(success).not.toBe(warning);
-
     const green = hsl(success);
     const amber = hsl(warning);
     expect(hueSeparation(green.h, amber.h)).toBeGreaterThanOrEqual(
