@@ -81,9 +81,9 @@ This is evidence for the Prototype Fund application's Realisierbarkeit criterion
 **Commit**: `feat(spike): correct did:key encoding + minimal badge credential lexicon`
 **Changes**:
 
-- [ ] `dev.rollercoaster.badge.credential` lexicon per the sketch in `atproto-evaluation.md` (`credential` VC blob + PNG blob ref)
-- [ ] `did-key.ts`: multibase `z…` + multicodec `0xed01` Ed25519 encoding, with a comment citing `ob3-compliance-status.md` gap #7 as the bug this corrects
-- [ ] `build-credential.ts`: minimal OB3-shaped VC using `signData`/`createDataIntegrityProof` from `@rollercoaster-dev/openbadges-core`, issuer set via the local `did-key.ts`, not `credentialBuilder.ts`
+- [x] `dev.rollercoaster.badge.credential` lexicon per the sketch in `atproto-evaluation.md` (`credential` VC blob + PNG blob ref)
+- [x] `did-key.ts`: multibase `z…` + multicodec `0xed01` Ed25519 encoding, with a comment citing `ob3-compliance-status.md` gap #7 as the bug this corrects
+- [x] `build-credential.ts`: minimal OB3-shaped VC using `signData`/`createDataIntegrityProof` from `@rollercoaster-dev/openbadges-core`, issuer set via the local `did-key.ts`, not `credentialBuilder.ts`
 
 ### Step 3: Publish and resolve scripts
 
@@ -164,6 +164,23 @@ Resolved by the user 2026-08-25. Recorded here as decisions; nothing outstanding
   a spike used as current evidence should be on the current client.
 - [2026-08-25] D2 isolation verified empirically: `bun install` at the repo root after
   scaffolding reports "no changes" and leaves `bun.lock` with an empty `git status`.
+
+- [2026-08-25] `did-key.ts` verified against the did:key method spec's own Ed25519 test
+  vector (`did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK`) — decode/encode
+  round-trips to the identical string. Also round-trips freshly generated keys and
+  satisfies the `did:key:z` assertion in `apps/native-rd/scripts/verify-badge.ts:245`.
+- [2026-08-25] **New decision D12: the spike's proof is labelled
+  `eddsa-raw-json-iteration-a`, not `eddsa-rdfc-2022`.** The plan did not specify. Real
+  `eddsa-rdfc-2022` needs RDFC-1.0 canonicalization, which is gap #5 and belongs to #598.
+  `apps/native-rd/src/hooks/useCreateBadge.ts:264` already sets this precedent of naming
+  the non-standard suite honestly rather than claiming compliance. None of the spike's
+  four questions depend on the cryptosuite being final, and overclaiming would weaken
+  the evidence.
+- [2026-08-25] **Question 4 is already answerable offline, before any PDS involvement.**
+  A credential signed with a spec-compliant `did:key` issuer verifies using only the
+  public key recovered from the DID string — no network, no PLC directory. Confirmed by
+  round-tripping through `decodeDidKey` into `verifySignature`. What remains is to show
+  the record still resolves when atproto hosts it without a PLC verificationMethod.
 
 <!-- Entries added by implement skill:
 - [YYYY-MM-DD HH:MM] <discovery description>
