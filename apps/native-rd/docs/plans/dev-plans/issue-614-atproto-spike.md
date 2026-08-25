@@ -91,8 +91,8 @@ This is evidence for the Prototype Fund application's Realisierbarkeit criterion
 **Commit**: `feat(spike): publish and resolve a badge record via a hosted PDS`
 **Changes**:
 
-- [ ] `publish.ts`: `AtpAgent.login` (app password), `com.atproto.repo.putRecord` with the credential from Step 2, print AT-URI + CID
-- [ ] `resolve.ts`: `com.atproto.repo.getRecord` given an AT-URI, print + diff the returned CID against the one from publish
+- [x] `publish.ts`: `AtpAgent.login` (app password), `com.atproto.repo.putRecord` with the credential from Step 2, print AT-URI + CID
+- [x] `resolve.ts`: `com.atproto.repo.getRecord` given an AT-URI, print + diff the returned CID against the one from publish
 - [ ] Run both against a real PDS (manual, one-time identity creation happens here — see Step 5 note); capture redacted JSON output as evidence
 
 ### Step 4: Firehose/jetstream propagation + did:key-only experiment
@@ -181,6 +181,15 @@ Resolved by the user 2026-08-25. Recorded here as decisions; nothing outstanding
   public key recovered from the DID string — no network, no PLC directory. Confirmed by
   round-tripping through `decodeDidKey` into `verifySignature`. What remains is to show
   the record still resolves when atproto hosts it without a PLC verificationMethod.
+
+- [2026-08-25] Step 3 split: the **scripts** are written, type-check, and their guard
+  paths are smoke-tested (missing env, missing/malformed AT-URI all fail with a usable
+  message). **Running them is blocked** on a burner bsky.social account — creating one
+  needs email verification and a CAPTCHA, which is a human step. Evidence files
+  (`evidence/publish-output.json`, `evidence/resolve-output.json`) land once it exists.
+- [2026-08-25] Added `src/session.ts`, not in the plan's file list: `readEnv`, `login`
+  and `writeEvidence` are needed by all four scripts and duplicating them four times
+  would be worse. Small and unexported outside the spike.
 
 <!-- Entries added by implement skill:
 - [YYYY-MM-DD HH:MM] <discovery description>
