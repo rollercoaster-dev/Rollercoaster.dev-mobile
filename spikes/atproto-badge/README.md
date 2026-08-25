@@ -23,7 +23,35 @@ This is **not** the shipped feature. No app integration, no UI, no key-managemen
 
 ## Running it
 
-<!-- filled in at Step 3 -->
+```bash
+cd spikes/atproto-badge
+bun install                 # isolated — does not touch the root lockfile
+cp .env.example .env        # then fill in the burner handle + app password
+```
+
+The app password is not the account password. Generate one at
+**Settings → Privacy and Security → App Passwords**. Bun loads `.env` automatically;
+`.env` is gitignored.
+
+```bash
+bun run publish-record                    # writes the record, prints AT-URI + CID
+bun run resolve-record <at-uri>           # reads it back unauthenticated, re-verifies
+bun run check-propagation <did> --wait    # jetstream + Bluesky-feed checks
+bun run did-key-only <at-uri>             # answers question 4
+```
+
+Each script writes a capture into `evidence/`. Those files are the reproducible half of
+this spike: a reader can re-resolve the same AT-URI and get the same CID.
+
+### Verifying without running anything
+
+Two of the findings need no account and no network state:
+
+```bash
+bun -e 'import {encodeDidKey,decodeDidKey} from "./src/did-key.ts";
+  const v="did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK";
+  console.log(encodeDidKey(decodeDidKey(v))===v)'   # true — matches the did:key spec vector
+```
 
 ## Identity
 
