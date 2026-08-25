@@ -101,8 +101,8 @@ This is evidence for the Prototype Fund application's Realisierbarkeit criterion
 **Commit**: `feat(spike): verify firehose propagation, Bluesky-feed absence, and the did:key-only path`
 **Changes**:
 
-- [ ] `check-propagation.ts`: subscribe to jetstream (or the relay firehose) filtered to the test DID, confirm the commit for our NSID appears; separately query the public Bluesky AppView API for the same DID's feed and confirm the record is absent
-- [ ] `did-key-only-experiment.ts`: publish a second record whose credential issuer is the `did:key` from Step 2, **without** ever calling `com.atproto.identity.signPlcOperation` to add it as a verificationMethod; independently verify the credential's signature by resolving the bare `did:key` (no network), confirming atproto's role here is transport-only
+- [x] `check-propagation.ts`: subscribe to jetstream (or the relay firehose) filtered to the test DID, confirm the commit for our NSID appears; separately query the public Bluesky AppView API for the same DID's feed and confirm the record is absent
+- [x] `did-key-only-experiment.ts`: publish a second record whose credential issuer is the `did:key` from Step 2, **without** ever calling `com.atproto.identity.signPlcOperation` to add it as a verificationMethod; independently verify the credential's signature by resolving the bare `did:key` (no network), confirming atproto's role here is transport-only
 - [ ] Record findings for both in evidence files
 
 ### Step 5: Write up findings — the actual deliverable
@@ -190,6 +190,26 @@ Resolved by the user 2026-08-25. Recorded here as decisions; nothing outstanding
 - [2026-08-25] Added `src/session.ts`, not in the plan's file list: `readEnv`, `login`
   and `writeEvidence` are needed by all four scripts and duplicating them four times
   would be worse. Small and unexported outside the spike.
+
+- [2026-08-25] **Verified finding (no account needed): jetstream's `wantedCollections`
+  filters `commit` events only.** A subscription filtered to
+  `dev.rollercoaster.badge.credential` — a collection nobody has ever published —
+  still delivers ~6 events in 12s, all `identity`/`account` churn. Any indexer that
+  treats message arrival as "our record propagated" reads pure noise. Filter on
+  `kind === "commit"` as well. Noted in `check-propagation.ts` and a real gotcha for
+  milestone 4.
+- [2026-08-25] **Verified PLC document shape against a live account.** A default hosted
+  account has exactly one `verificationMethod`, `#atproto`, a `zQ3sh…` secp256k1
+  Multikey. An Ed25519 badge key added by a PLC operation would be a second entry with a
+  `z6Mk…` prefix — so "was a PLC operation performed?" is answerable by inspection.
+  This is what makes part 2 of `did-key-only-experiment.ts` a real check rather than an
+  assertion.
+- [2026-08-25] `did-key-only-experiment.ts` reframed from the plan's description. The
+  plan had it publish a _second_ record; that is redundant, because `publish.ts` already
+  never calls `signPlcOperation`. The sharper experiment is the contrast: verify the
+  credential offline from the DID alone, then fetch the hosting account's PLC document
+  and show the badge key is absent from it. Same question, stronger evidence, one fewer
+  permanent public record.
 
 <!-- Entries added by implement skill:
 - [YYYY-MM-DD HH:MM] <discovery description>
