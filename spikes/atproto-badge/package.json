@@ -1,0 +1,23 @@
+{
+  "name": "atproto-badge-spike",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Throwaway spike: publish and resolve an Open Badges 3.0 credential as a record in a user-owned atproto repo (issue #614)",
+  "license": "Apache-2.0",
+  "scripts": {
+    "publish-record": "bun src/publish.ts",
+    "resolve-record": "bun src/resolve.ts",
+    "check-propagation": "bun src/check-propagation.ts",
+    "did-key-only": "bun src/did-key-only-experiment.ts",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@atproto/api": "^0.20.41",
+    "@rollercoaster-dev/openbadges-core": "file:../../packages/openbadges-core"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^6.0.3"
+  }
+}
