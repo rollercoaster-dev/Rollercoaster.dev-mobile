@@ -13,18 +13,20 @@ import { buildSignedCredential } from "./build-credential.js";
 import { login, readEnv } from "./session.js";
 
 const env = readEnv();
-const { agent, did } = await login(env);
-console.log(`Logged in as ${env.handle} (${did}) on ${env.pdsUrl}`);
+// Kept whole rather than destructured: `session.agent` is the authenticated client
+// you write with, `signed.credential` / `signed.publicKeyJwk` are what you write.
+const session = await login(env);
+console.log(`Logged in as ${env.handle} (${session.did}) on ${env.pdsUrl}`);
 
-const { credential, issuerDid, publicKeyJwk } = await buildSignedCredential({
+const signed = await buildSignedCredential({
   achievementName: "Published a badge to an atproto repo",
   achievementDescription:
     "Wrote an Open Badges 3.0 credential as a record in a user-owned atproto repository.",
 });
 
-console.log(`Credential issuer: ${issuerDid}`);
+console.log(`Credential issuer: ${signed.issuerDid}`);
 console.log(
-  `  (not ${did} — read lesson 05 on why these are two different things)`,
+  `  (not ${session.did} — read lesson 05 on why these are two different things)`,
 );
 
 // Imports you will need on top of the two above:
@@ -32,14 +34,15 @@ console.log(
 
 // YOUR TURN.
 //
-// Call com.atproto.repo.putRecord. You need four things:
+// Call `session.agent.com.atproto.repo.putRecord`. You need four things:
 //
 //   repo:       whose repository to write into. You are writing into your own.
 //   collection: the NSID. Use the COLLECTION constant.
 //   rkey:       the record key. Any valid rkey works; `Date.now().toString(36)` is fine.
 //               Lesson 05 covers why the choice matters more than it looks.
 //   record:     an object with `$type` set to the collection, plus your fields —
-//               `credential` (the VC as a JSON string), `issuerDid`, `createdAt`.
+//               `credential` (`signed.credential` as a JSON string), `issuerDid`,
+//               `createdAt`.
 //
 // The call returns `{ data: { uri, cid } }`. Print both.
 //
