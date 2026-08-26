@@ -3,14 +3,15 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Throwaway spike: publish and resolve an Open Badges 3.0 credential as a record in a user-owned atproto repo (issue #614)",
+  "description": "Hands-on tutorial: learn AT Protocol by publishing an Open Badges 3.0 credential to a repo you own (issue #614)",
   "license": "Apache-2.0",
   "scripts": {
+    "test": "bun test",
+    "type-check": "tsc --noEmit",
     "publish-record": "bun src/publish.ts",
     "resolve-record": "bun src/resolve.ts",
     "check-propagation": "bun src/check-propagation.ts",
-    "did-key-only": "bun src/did-key-only-experiment.ts",
-    "type-check": "tsc --noEmit"
+    "did-key-only": "bun src/did-key-only-experiment.ts"
   },
   "dependencies": {
     "@atproto/api": "^0.20.41",

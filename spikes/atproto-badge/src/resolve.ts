@@ -1,18 +1,13 @@
 /**
- * Question 2, second half: does the record resolve back, and does its CID match?
+ * LESSON 05 — see ../lessons/05-publish-and-resolve.md
  *
- * Reads a record by AT-URI through `com.atproto.repo.getRecord`, re-verifies the
- * credential's signature using only the public key recovered from its issuer `did:key`,
- * and reports the CID for comparison against the one the write returned.
- *
- * The read is unauthenticated on purpose. If it needed the session, the record would not
- * be publicly resolvable and the whole premise would collapse.
+ * Your job: read the record back and re-verify it, as a stranger would.
  *
  *     bun run resolve-record at://did:plc:.../dev.rollercoaster.badge.credential/...
  */
 
 import { AtpAgent } from "@atproto/api";
-import { verifySignature, KeyType } from "@rollercoaster-dev/openbadges-core";
+import { KeyType, verifySignature } from "@rollercoaster-dev/openbadges-core";
 import { decodeDidKey } from "./did-key.js";
 import { writeEvidence } from "./session.js";
 
@@ -22,67 +17,28 @@ if (!atUri?.startsWith("at://")) {
   process.exit(1);
 }
 
-// at://<did>/<collection>/<rkey>
-const [, , repo, collection, rkey] = atUri.split("/");
-if (!repo || !collection || !rkey) {
-  console.error(`Malformed AT-URI: ${atUri}`);
-  process.exit(1);
-}
+// YOUR TURN (1 of 3).
+//
+// Pull `repo`, `collection` and `rkey` out of the AT-URI. Its grammar is
+// `at://<authority>/<collection>/<rkey>` — spec: https://atproto.com/specs/at-uri-scheme
+// Exit with a clear message if it does not have all three parts.
 
-// No login — a public record must be readable by a stranger.
-const agent = new AtpAgent({
-  service: process.env.PDS_URL ?? "https://bsky.social",
-});
-const { data } = await agent.com.atproto.repo.getRecord({
-  repo,
-  collection,
-  rkey,
-});
+// YOUR TURN (2 of 3).
+//
+// Fetch the record with com.atproto.repo.getRecord.
+// Docs: https://docs.bsky.app/docs/api/com-atproto-repo-get-record
+//
+// Do this WITHOUT logging in. Construct a bare `new AtpAgent({ service })` and call
+// straight through. If this only works while authenticated then the record is not
+// publicly resolvable, and the entire premise of publishing badges this way collapses.
+// That is a real thing to check, not a formality.
 
-console.log(`Resolved ${atUri}`);
-console.log(`  CID: ${data.cid}`);
+// YOUR TURN (3 of 3).
+//
+// Parse the `credential` field back into an object, split the `proof` off, and verify
+// the signature against the key you recover from `issuerDid` with your `decodeDidKey`.
+//
+// Do not use any key material the PDS handed you. The whole argument of this tutorial
+// is that you do not have to trust the PDS. Take the key from the DID string.
 
-const record = data.value as { credential?: string; issuerDid?: string };
-if (!record.credential || !record.issuerDid) {
-  throw new Error("Record is missing the credential or issuerDid field.");
-}
-
-const credential = JSON.parse(record.credential) as Record<string, unknown> & {
-  proof: { proofValue: string };
-};
-const { proof, ...unsigned } = credential;
-
-// The point of the exercise: the key comes from the DID string itself — not from the
-// PDS, not from the PLC directory, not from anything this script had to be told.
-const recoveredKey = decodeDidKey(record.issuerDid);
-const signatureValid = await verifySignature(
-  JSON.stringify(unsigned),
-  proof.proofValue,
-  recoveredKey as Parameters<typeof verifySignature>[2],
-  KeyType.Ed25519,
-);
-
-console.log(`  Issuer DID: ${record.issuerDid}`);
-console.log(
-  `  Signature verifies against key recovered from the DID alone: ${signatureValid}`,
-);
-
-if (!signatureValid) {
-  console.error(
-    "\nSignature did NOT verify — that is a real finding, not a script bug.",
-  );
-}
-
-const evidencePath = await writeEvidence("resolve-output.json", {
-  note:
-    "Captured from `bun run resolve-record`, unauthenticated. Verification uses only " +
-    "the public key recovered from the issuer did:key — no PDS lookup, no PLC directory.",
-  atUri,
-  cid: data.cid,
-  issuerDid: record.issuerDid,
-  recoveredPublicKeyJwk: recoveredKey,
-  signatureValid,
-  record: data.value,
-});
-
-console.log(`\nEvidence written to ${evidencePath}`);
+throw new Error("Not implemented — see lessons/05-publish-and-resolve.md");

@@ -13,8 +13,8 @@ packages/
   openbadges-core/   Credential building, Ed25519 signing, PNG baking
   design-tokens/     Style Dictionary tokens (Unistyles export for RN)
 docs/                Cross-cutting plans + architecture (CI contract, E2E runner)
-spikes/              Throwaway research code — not workspace members, not built or
-                     tested by CI (see spikes/atproto-badge/README.md)
+spikes/              Research code and tutorials — not workspace members, not built
+                     or tested by CI (see spikes/atproto-badge/README.md)
 ```
 
 App-specific docs and plans live under `apps/native-rd/docs/`.

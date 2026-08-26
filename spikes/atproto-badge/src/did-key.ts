@@ -1,45 +1,29 @@
 /**
- * Spec-compliant `did:key` encoding for Ed25519 keys.
+ * LESSON 02 — see ../lessons/02-did-key.md
  *
- * This exists because the app's current implementation is not spec-compliant.
- * `apps/native-rd/src/badges/credentialBuilder.ts:52-64` builds the DID as
- * `did:key:${publicKeyJwk.x}` — the raw base64url x-coordinate, with no multibase
- * prefix and no multicodec header. Such a DID does not resolve, so a verifier cannot
- * recover the public key and signature verification fails no matter how correct the
- * proof is. That is gap #7 in
- * `apps/native-rd/docs/architecture/ob3-compliance-status.md:86-92`.
+ * Your job: turn an Ed25519 public key into a `did:key` identifier, and back again.
  *
- * Fixing it in the app belongs to the OB3 punch-list (issue #598), not to this spike.
- * The spike needs a correct DID for one reason only: question 4 in the README asks
- * whether a `did:key` can stay the credential issuer while atproto merely hosts the
- * record. That question is meaningless with a DID that does not resolve.
+ * The base58btc codec below is given to you. It is fiddly big-integer arithmetic and it
+ * is not what this lesson is about — the lesson is about *what gets encoded and why*.
  *
- * Encoding, per the did:key method spec for Ed25519:
- *
- *     did:key:z<base58btc( 0xed 0x01 || <32 raw public key bytes> )>
- *
- * `0xed01` is the varint-encoded multicodec for `ed25519-pub`; `z` is the multibase
- * prefix for base58btc. The output satisfies the `did:key:z…` check that
- * `apps/native-rd/scripts/verify-badge.ts:241-252` uses to assert gap #7 is closed.
- *
- * @see https://w3c-ccg.github.io/did-method-key/#ed25519
+ * Check your work:  bun test tests/02-did-key.test.ts
  */
 
 const BASE58BTC_ALPHABET =
   "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
-/** Multicodec header for `ed25519-pub`, varint-encoded. */
-const ED25519_MULTICODEC = Uint8Array.from([0xed, 0x01]);
+/** Multicodec header for `ed25519-pub`, varint-encoded. See lesson 02. */
+export const ED25519_MULTICODEC = Uint8Array.from([0xed, 0x01]);
 
-const ED25519_PUBLIC_KEY_BYTES = 32;
+export const ED25519_PUBLIC_KEY_BYTES = 32;
 
 /**
- * Encode bytes as base58btc.
+ * GIVEN. Encode bytes as base58btc.
  *
- * Big-integer base conversion, plus one leading `1` per leading zero byte — base58
- * has no way to represent a leading zero positionally, so they are carried out of band.
+ * Big-integer base conversion, plus one leading `1` per leading zero byte — base58 has
+ * no positional way to represent a leading zero, so they are carried out of band.
  */
-function base58btcEncode(bytes: Uint8Array): string {
+export function base58btcEncode(bytes: Uint8Array): string {
   if (bytes.length === 0) return "";
 
   const digits: number[] = [0];
@@ -69,8 +53,8 @@ function base58btcEncode(bytes: Uint8Array): string {
   );
 }
 
-/** Decode a base58btc string back to bytes. Inverse of {@link base58btcEncode}. */
-function base58btcDecode(encoded: string): Uint8Array {
+/** GIVEN. Decode a base58btc string back to bytes. */
+export function base58btcDecode(encoded: string): Uint8Array {
   const bytes: number[] = [0];
   for (const char of encoded) {
     const value = BASE58BTC_ALPHABET.indexOf(char);
@@ -97,71 +81,59 @@ function base58btcDecode(encoded: string): Uint8Array {
   ]);
 }
 
-function base64urlToBytes(value: string): Uint8Array {
-  const padded = value.replace(/-/g, "+").replace(/_/g, "/");
-  return Uint8Array.from(Buffer.from(padded, "base64"));
+/** GIVEN. JWK `x` fields are base64url. */
+export function base64urlToBytes(value: string): Uint8Array {
+  return Uint8Array.from(Buffer.from(value, "base64url"));
 }
 
-function bytesToBase64url(bytes: Uint8Array): string {
+/** GIVEN. */
+export function bytesToBase64url(bytes: Uint8Array): string {
   return Buffer.from(bytes).toString("base64url");
 }
 
 /**
+ * YOUR TURN (1 of 2).
+ *
  * Build a spec-compliant `did:key` from an Ed25519 public key JWK.
  *
- * @param publicKeyJwk - An `OKP`/`Ed25519` JWK; only `x` is read.
- * @throws If the JWK has no `x`, or `x` does not decode to 32 bytes.
+ * The shape you are aiming for:
+ *
+ *     did:key:z<base58btc( <multicodec header> || <32 raw key bytes> )>
+ *
+ * Steps:
+ *   1. Reject a JWK with no `x`. (The tests check the error.)
+ *   2. Decode `x` from base64url into bytes. Reject anything that is not 32 bytes.
+ *   3. Prepend ED25519_MULTICODEC to those bytes.
+ *   4. base58btc-encode the result.
+ *   5. Prefix the string with `did:key:z`.
+ *
+ * Why each step exists is in lesson 02. Do not skip the reading — step 3 is the whole
+ * point of the exercise and it looks like a pointless two bytes until you know why.
  */
 export function encodeDidKey(publicKeyJwk: { x?: string }): string {
-  if (!publicKeyJwk.x) {
-    throw new Error("Invalid public key JWK: missing x coordinate");
-  }
-
-  const keyBytes = base64urlToBytes(publicKeyJwk.x);
-  if (keyBytes.length !== ED25519_PUBLIC_KEY_BYTES) {
-    throw new Error(
-      `Expected a ${ED25519_PUBLIC_KEY_BYTES}-byte Ed25519 public key, got ${keyBytes.length}`,
-    );
-  }
-
-  const prefixed = new Uint8Array(ED25519_MULTICODEC.length + keyBytes.length);
-  prefixed.set(ED25519_MULTICODEC, 0);
-  prefixed.set(keyBytes, ED25519_MULTICODEC.length);
-
-  return `did:key:z${base58btcEncode(prefixed)}`;
+  throw new Error("Not implemented — see lessons/02-did-key.md");
 }
 
 /**
+ * YOUR TURN (2 of 2).
+ *
  * Recover the Ed25519 public key JWK from a `did:key`.
  *
- * This is the half that matters for the spike's question 4: it runs offline, with no
- * network and no directory lookup, which is exactly the property `did:plc` does not have.
+ * This is the half that matters most. It runs offline: no network, no directory, no
+ * server. Given only the DID string, you get back the key that verifies the signature.
  *
- * @throws If the DID is not a `did:key:z…`, or does not carry an Ed25519 multicodec header.
+ * Steps:
+ *   1. Strip any `#fragment`.
+ *   2. Reject anything not starting `did:key:z`.
+ *   3. base58btc-decode the rest (after the `z`).
+ *   4. Check the first two bytes are the Ed25519 multicodec. Reject other key types —
+ *      a secp256k1 did:key is valid, it is just not one you can verify with Ed25519.
+ *   5. Return `{ kty: "OKP", crv: "Ed25519", x: <base64url of the remaining bytes> }`.
  */
 export function decodeDidKey(did: string): {
   kty: "OKP";
   crv: "Ed25519";
   x: string;
 } {
-  const withoutFragment = did.split("#")[0]!;
-  if (!withoutFragment.startsWith("did:key:z")) {
-    throw new Error(`Not a multibase did:key: ${withoutFragment}`);
-  }
-
-  const decoded = base58btcDecode(withoutFragment.slice("did:key:z".length));
-  if (decoded[0] !== 0xed || decoded[1] !== 0x01) {
-    throw new Error(
-      `Not an Ed25519 did:key — expected multicodec 0xed01, got 0x${decoded[0]?.toString(16)}${decoded[1]?.toString(16)}`,
-    );
-  }
-
-  const keyBytes = decoded.slice(ED25519_MULTICODEC.length);
-  if (keyBytes.length !== ED25519_PUBLIC_KEY_BYTES) {
-    throw new Error(
-      `Expected a ${ED25519_PUBLIC_KEY_BYTES}-byte Ed25519 public key, got ${keyBytes.length}`,
-    );
-  }
-
-  return { kty: "OKP", crv: "Ed25519", x: bytesToBase64url(keyBytes) };
+  throw new Error("Not implemented — see lessons/02-did-key.md");
 }

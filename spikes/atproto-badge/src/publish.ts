@@ -1,13 +1,10 @@
 /**
- * Question 2, first half: will a hosted PDS accept a third-party record type?
+ * LESSON 05 — see ../lessons/05-publish-and-resolve.md
  *
- * Builds a signed credential, writes it to the logged-in account's repo under
- * `dev.rollercoaster.badge.credential`, and prints the AT-URI and CID.
+ * Your job: write the credential into your atproto repository.
  *
- * Note what this script does *not* do: it never calls
- * `com.atproto.identity.signPlcOperation`. The credential's issuer is its own `did:key`
- * and the account's `did:plc` is never made an authority over it. atproto's role here is
- * transport and addressing, nothing more.
+ * This is the first lesson that needs a real account. If you have not made the burner
+ * yet, stop and read lesson 05's "Getting an account" section first.
  *
  *     bun run publish-record
  */
@@ -22,44 +19,31 @@ console.log(`Logged in as ${env.handle} (${did}) on ${env.pdsUrl}`);
 const { credential, issuerDid, publicKeyJwk } = await buildSignedCredential({
   achievementName: "Published a badge to an atproto repo",
   achievementDescription:
-    "Wrote an Open Badges 3.0 credential as a record in a user-owned atproto repository and resolved it back.",
+    "Wrote an Open Badges 3.0 credential as a record in a user-owned atproto repository.",
 });
 
 console.log(`Credential issuer: ${issuerDid}`);
 console.log(
-  `  (not ${did} — the account hosts the record, it does not issue it)`,
+  `  (not ${did} — read lesson 05 on why these are two different things)`,
 );
 
-const response = await agent.com.atproto.repo.putRecord({
-  repo: did,
-  collection: COLLECTION,
-  rkey: Date.now().toString(36),
-  record: {
-    $type: COLLECTION,
-    credential: JSON.stringify(credential),
-    issuerDid,
-    createdAt: new Date().toISOString(),
-  },
-});
+// YOUR TURN.
+//
+// Call com.atproto.repo.putRecord. You need four things:
+//
+//   repo:       whose repository to write into. You are writing into your own.
+//   collection: the NSID. Use the COLLECTION constant.
+//   rkey:       the record key. Any valid rkey works; `Date.now().toString(36)` is fine.
+//               Lesson 05 covers why the choice matters more than it looks.
+//   record:     an object with `$type` set to the collection, plus your fields —
+//               `credential` (the VC as a JSON string), `issuerDid`, `createdAt`.
+//
+// The call returns `{ data: { uri, cid } }`. Print both.
+//
+// Docs: https://docs.bsky.app/docs/api/com-atproto-repo-put-record
+//
+// Predict before you run it: the PDS has never heard of dev.rollercoaster.badge.credential.
+// Will it accept the write? Write your guess down, then find out. Lesson 05 discusses
+// why the answer is what it is.
 
-console.log(`\nWritten.`);
-console.log(`  AT-URI: ${response.data.uri}`);
-console.log(`  CID:    ${response.data.cid}`);
-
-const evidencePath = await writeEvidence("publish-output.json", {
-  note:
-    "Captured from `bun run publish-record`. The handle, DID and AT-URI are real and " +
-    "deliberately unredacted — the acceptance criterion is that a reader can resolve " +
-    "this themselves. The account is a throwaway created for this spike.",
-  pdsUrl: env.pdsUrl,
-  hostingAccountDid: did,
-  credentialIssuerDid: issuerDid,
-  publicKeyJwk,
-  collection: COLLECTION,
-  uri: response.data.uri,
-  cid: response.data.cid,
-  credential,
-});
-
-console.log(`\nEvidence written to ${evidencePath}`);
-console.log(`Next: bun run resolve-record ${response.data.uri}`);
+throw new Error("Not implemented — see lessons/05-publish-and-resolve.md");

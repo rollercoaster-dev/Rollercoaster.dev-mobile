@@ -1,90 +1,83 @@
-# atproto badge spike
+# Learn atproto by building on it
 
-> **Status: in progress.** Scaffold only — findings are filled in as each step lands.
-> Tracking issue: [#614](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/614).
+A hands-on tutorial. You write the code; the tests tell you when it is right.
 
-Throwaway research code. Publishes one signed Open Badges 3.0 credential as a record in a
-user-owned [atproto](https://atproto.com/) repository, reads it back, and checks what the
-network does with it. It exists to answer a small number of concrete questions before
+By the end you will have published an [Open Badges 3.0](https://www.imsglobal.org/spec/ob/v3p0/)
+credential as a record in an [AT Protocol](https://atproto.com/) repository you own,
+resolved it back as a stranger would, watched it cross the firehose, and answered a
+question this project actually needs answered before it can design
 [ADR-0015](../../apps/native-rd/docs/decisions/ADR-0015-funded-scope-prototype-fund.md)
-milestone 4 is designed, and to be a reproducible artefact a reader can re-run.
+milestone 4.
 
-This is **not** the shipped feature. No app integration, no UI, no key-management hardening.
+That last part is not decoration. The tutorial is built around a real open question, so
+the code you write is the code that settles it, and the surprises you hit are real
+surprises rather than staged ones.
 
-## Questions this spike answers
+## Who this is for
 
-1. What does creating an atproto identity on a hosted PDS actually require — email token,
-   rotation-key custody, anything else the docs gloss over?
-2. Does a hosted PDS accept a third-party record type (`dev.rollercoaster.badge.credential`),
-   and does that record resolve by AT-URI and CID?
-3. Does the record reach the firehose, and does it stay out of Bluesky feeds?
-4. **Can a correctly encoded `did:key` remain the credential issuer while atproto only hosts
-   the record** — no PLC operation, no email, no custodial rotation key? At what cost?
+Someone who can write TypeScript and has never touched atproto. It assumes no
+familiarity with DIDs, verifiable credentials, content addressing, or the Bluesky stack.
+It does assume you would rather understand why something works than copy a snippet.
 
-## Running it
+## How it is arranged
+
+```
+lessons/     read these — concepts, with links to the real specs
+src/         write your code here (stubs with TODOs)
+tests/       run these to check your work
+solutions/   reference implementations — for when you are stuck, not before
+lexicons/    you will create a schema file here in lesson 03
+evidence/    output captures from your live runs land here
+```
+
+Each lesson tells you what to read, what to write, and what to run. Several ask you to
+predict an outcome before you run the code. Do that bit — a prediction you got wrong is
+worth more than a paragraph you agreed with.
+
+## Setup
 
 ```bash
 cd spikes/atproto-badge
-bun install                 # isolated — does not touch the root lockfile
-cp .env.example .env        # then fill in the burner handle + app password
+bun install
 ```
 
-The app password is not the account password. Generate one at
-**Settings → Privacy and Security → App Passwords**. Bun loads `.env` automatically;
-`.env` is gitignored.
+That is it for lessons 01–04. Lessons 05–07 talk to a live server and need an account;
+lesson 05 walks you through getting one.
 
-```bash
-bun run publish-record                    # writes the record, prints AT-URI + CID
-bun run resolve-record <at-uri>           # reads it back unauthenticated, re-verifies
-bun run check-propagation <did> --wait    # jetstream + Bluesky-feed checks
-bun run did-key-only <at-uri>             # answers question 4
-```
+Run all checks at once with `bun test`, or one lesson's with
+`bun test tests/02-did-key.test.ts`. Everything fails right now. That is the starting
+line, not a problem.
 
-Each script writes a capture into `evidence/`. Those files are the reproducible half of
-this spike: a reader can re-resolve the same AT-URI and get the same CID.
+## The lessons
 
-### Verifying without running anything
+| #                                           | What you learn                                                | Needs an account |
+| ------------------------------------------- | ------------------------------------------------------------- | ---------------- |
+| [01](lessons/01-what-atproto-is.md)         | The seven primitives, and which problem each one solves       | no               |
+| [02](lessons/02-did-key.md)                 | Identity that belongs to nobody — and a real bug in this repo | no               |
+| [03](lessons/03-lexicons-and-records.md)    | Schemas as public contracts; writing one by hand              | no               |
+| [04](lessons/04-signing-a-credential.md)    | Signing something a stranger can check without asking you     | no               |
+| [05](lessons/05-publish-and-resolve.md)     | Getting an identity; writing and reading a record             | **yes**          |
+| [06](lessons/06-the-firehose.md)            | What the network does with your data once it exists           | **yes**          |
+| [07](lessons/07-who-vouches-for-the-key.md) | The payoff: who has authority over your credential            | **yes**          |
 
-Two of the findings need no account and no network state:
+## A word on the solutions
 
-```bash
-bun -e 'import {encodeDidKey,decodeDidKey} from "./src/did-key.ts";
-  const v="did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK";
-  console.log(encodeDidKey(decodeDidKey(v))===v)'   # true — matches the did:key spec vector
-```
+`solutions/` holds working implementations of everything. They pass the tests; that is
+verified, not assumed.
 
-## Identity
+They are there for when you are properly stuck — but the tests are a better first
+resort, because a failing assertion usually tells you which idea you are missing rather
+than just handing you the shape of the answer. Lesson 02's suite in particular is built
+to fail in different ways depending on what you got wrong.
 
-<!-- filled in at Step 5: which PDS, what the PLC operation asked for, rotation key custody -->
+## Scope
 
-## Findings
-
-### What works
-
-<!-- filled in at Step 5 -->
-
-### What is stubbed
-
-<!-- filled in at Step 5 -->
-
-### What milestone 4 still has to build
-
-<!-- filled in at Step 5 -->
-
-## The `did:key`-only question
-
-<!-- filled in at Step 5: yes/no + the rotation/recovery cost -->
-
-## Isolation from the rest of the repo
-
-This directory is deliberately **not** a workspace member — root `package.json` globs only
-`packages/*` and `apps/*`. It has its own `package.json` and lockfile and is installed
-separately (`cd spikes/atproto-badge && bun install`). Nothing here is built, linted, tested,
-or type-checked by CI; `bun install` at the repo root does not touch it. The one repo-wide
-gate it does pass through is Prettier formatting.
+This is a spike, not the shipped feature. No app integration, no UI, no key-management
+hardening. Where the tutorial has an opinion about the real product, it says so and
+links to the document that owns the decision.
 
 ## License
 
 Apache-2.0, matching [`packages/openbadges-core`](../../packages/openbadges-core) — the
-standards-implementation category in [`LICENSING.md`](../../LICENSING.md). Note this differs
-from the AGPL-licensed app under `apps/native-rd`.
+standards-implementation category in [`LICENSING.md`](../../LICENSING.md). Note that
+this differs from the AGPL app under `apps/native-rd`.

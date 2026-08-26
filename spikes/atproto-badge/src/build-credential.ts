@@ -1,28 +1,10 @@
 /**
- * Builds a minimal, signed OB3-shaped credential for the spike to publish.
+ * LESSON 04 — see ../lessons/04-signing-a-credential.md
  *
- * Deliberately *not* a reuse of `apps/native-rd/src/badges/credentialBuilder.ts`. That
- * builder produces the Iteration-A credential shape, whose issuer DID does not resolve
- * (gap #7) and whose achievement ID appends a path segment to a `did:key`, which the
- * did:key method does not permit. Reusing it would make the spike's central question
- * unanswerable. Instead this module reuses the real Ed25519 signing code from
- * `@rollercoaster-dev/openbadges-core` and pairs it with the corrected `did:key`
- * encoder in `./did-key.ts`.
+ * Your job: build an Open Badges 3.0 credential and sign it, so that anyone holding
+ * only the issuer's DID string can verify it.
  *
- * What is honest about this credential and what is not:
- *
- * - The signature is real Ed25519 over the credential bytes, produced by the same
- *   `signData` the app uses.
- * - The issuer `did:key` is spec-compliant and resolves offline.
- * - The proof is **not** `eddsa-rdfc-2022`. That cryptosuite requires RDFC-1.0
- *   canonicalization, which is gap #5 in `ob3-compliance-status.md` and belongs to
- *   issue #598, not here. Following the precedent already set in
- *   `apps/native-rd/src/hooks/useCreateBadge.ts:264`, the proof carries the honest
- *   non-standard label `eddsa-raw-json-iteration-a` rather than claiming compliance
- *   it does not have.
- *
- * The spike's questions are all about transport and identity. None of them depend on
- * the cryptosuite being spec-final, and overclaiming here would make the evidence worse.
+ * Check your work:  bun test tests/04-credential.test.ts
  */
 
 import {
@@ -32,91 +14,51 @@ import {
 } from "@rollercoaster-dev/openbadges-core";
 import { encodeDidKey } from "./did-key.js";
 
-/** The non-standard cryptosuite label, matching the app. See the note above. */
+/**
+ * The cryptosuite label we put on the proof.
+ *
+ * NOT `eddsa-rdfc-2022`. That name is a promise that the signature was taken over
+ * RDFC-1.0 canonicalized RDF, and we sign `JSON.stringify` output instead. Lesson 04
+ * explains why that distinction is not pedantry. The app makes the same honest choice
+ * at apps/native-rd/src/hooks/useCreateBadge.ts:264.
+ */
 export const SPIKE_CRYPTOSUITE = "eddsa-raw-json-iteration-a";
 
 export interface SpikeCredential {
   credential: Record<string, unknown>;
   issuerDid: string;
-  /** The public key JWK, so a verifier can be handed it directly for comparison. */
   publicKeyJwk: JsonWebKey;
 }
 
 /**
- * Generate a fresh Ed25519 key, build a small OB3 credential, and sign it.
+ * YOUR TURN.
  *
- * A fresh key per run is intentional: the spike must not touch, and must not appear to
- * touch, any key the app holds in SecureStore. Key-management hardening is explicitly
- * out of scope for this spike.
+ * Generate a key, build a credential, sign it, return all three pieces.
+ *
+ * Steps:
+ *   1. `const keyProvider = new InMemoryKeyProvider()` and generate an Ed25519 pair.
+ *      Grab both the public and private JWK. A fresh key every call is deliberate —
+ *      lesson 04 says why you must not reach for the app's real key here.
+ *   2. Derive `issuerDid` from the public JWK using your `encodeDidKey`.
+ *   3. Build the unsigned credential object. The required shape is in lesson 04; the
+ *      tests pin the parts that matter. Three things the tests specifically check,
+ *      each for a reason the lesson explains:
+ *        - `issuer.id` is the did:key, not a URL
+ *        - the achievement `id` is an HTTPS URI, NOT the DID with a path glued on
+ *        - there is no `credentialSubject.id`
+ *   4. Sign `JSON.stringify(unsigned)` with `signData(data, privateKey, KeyType.Ed25519)`.
+ *   5. Return the credential with a `proof` object attached. Fields:
+ *      `type: "DataIntegrityProof"`, `cryptosuite: SPIKE_CRYPTOSUITE`, `created`,
+ *      `proofPurpose: "assertionMethod"`, `verificationMethod`, `proofValue`.
+ *
+ * The signature must be taken over the credential WITHOUT the proof attached. If you
+ * sign the object that already contains its own signature you have invented a
+ * chicken-and-egg problem that no verifier can solve.
  */
 export async function buildSignedCredential(options: {
   achievementName: string;
   achievementDescription: string;
-  /** Overrides the generated issue timestamp; used to make evidence captures stable. */
   issuedOn?: string;
 }): Promise<SpikeCredential> {
-  const keyProvider = new InMemoryKeyProvider();
-  const { keyId } = await keyProvider.generateKeyPair("Ed25519");
-  const publicKeyJwk = await keyProvider.getPublicKey(keyId);
-  const privateKeyJwk = await keyProvider.getPrivateKey(keyId);
-
-  const issuerDid = encodeDidKey(publicKeyJwk as { x?: string });
-  const issuedOn = options.issuedOn ?? new Date().toISOString();
-
-  const unsigned: Record<string, unknown> = {
-    "@context": [
-      "https://www.w3.org/ns/credentials/v2",
-      "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json",
-    ],
-    id: `urn:uuid:${crypto.randomUUID()}`,
-    type: ["VerifiableCredential", "OpenBadgeCredential"],
-    issuer: {
-      // A did:key issuer is the whole point of question 4 — the credential's
-      // authority comes from the key, not from wherever the record happens to live.
-      id: issuerDid,
-      type: ["Profile"],
-      name: "rollercoaster.dev (atproto spike)",
-    },
-    validFrom: issuedOn,
-    credentialSubject: {
-      // No `id`: the spike publishes no personal identifier. An unbound
-      // credentialSubject is the least the correlation risk (Risk 2 in
-      // atproto-evaluation.md) allows us to get away with while staying OB3-shaped.
-      type: ["AchievementSubject"],
-      achievement: {
-        // An HTTPS achievement ID, not a path appended to the DID. The latter is the
-        // second half of gap #7 (ob3-compliance-status.md:92) and is invalid.
-        id: "https://rollercoaster.dev/spike/achievements/atproto-record",
-        type: ["Achievement"],
-        name: options.achievementName,
-        description: options.achievementDescription,
-        criteria: {
-          narrative:
-            "Wrote a badge credential to an atproto repository and resolved it back by AT-URI.",
-        },
-      },
-    },
-  };
-
-  const proofValue = await signData(
-    JSON.stringify(unsigned),
-    privateKeyJwk as Parameters<typeof signData>[1],
-    KeyType.Ed25519,
-  );
-
-  return {
-    credential: {
-      ...unsigned,
-      proof: {
-        type: "DataIntegrityProof",
-        cryptosuite: SPIKE_CRYPTOSUITE,
-        created: issuedOn,
-        proofPurpose: "assertionMethod",
-        verificationMethod: `${issuerDid}#${issuerDid.slice("did:key:".length)}`,
-        proofValue,
-      },
-    },
-    issuerDid,
-    publicKeyJwk,
-  };
+  throw new Error("Not implemented — see lessons/04-signing-a-credential.md");
 }
