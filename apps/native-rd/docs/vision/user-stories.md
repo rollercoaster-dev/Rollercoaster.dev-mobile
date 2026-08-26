@@ -179,7 +179,7 @@ The person who opens it sees what Kai actually did, arranged the way Kai arrange
 earned node resolves to a signed credential with the evidence behind it — commits, a CLI
 tool, a merged bug fix — verifiable without taking Kai's word for anything and without
 asking Kai's app for permission. The planned nodes are visible too: TypeScript, a
-full-stack build. Not achievements, intentions, and legible as such.
+full-stack build. Not achievements but intentions, and legible as such.
 
 Nothing about it looks like a CV template. It looks like Kai's brain, which is the point.
 
