@@ -7,13 +7,6 @@
  * Check your work:  bun test tests/04-credential.test.ts
  */
 
-import {
-  InMemoryKeyProvider,
-  KeyType,
-  signData,
-} from "@rollercoaster-dev/openbadges-core";
-import { encodeDidKey } from "./did-key.js";
-
 /**
  * The cryptosuite label we put on the proof.
  *
@@ -34,6 +27,10 @@ export interface SpikeCredential {
  * YOUR TURN.
  *
  * Generate a key, build a credential, sign it, return all three pieces.
+ *
+ * Imports you will need:
+ *   import { InMemoryKeyProvider, KeyType, signData } from "@rollercoaster-dev/openbadges-core";
+ *   import { encodeDidKey } from "./did-key.js";
  *
  * Steps:
  *   1. `const keyProvider = new InMemoryKeyProvider()` and generate an Ed25519 pair.

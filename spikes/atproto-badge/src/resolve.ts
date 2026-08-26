@@ -6,16 +6,17 @@
  *     bun run resolve-record at://did:plc:.../dev.rollercoaster.badge.credential/...
  */
 
-import { AtpAgent } from "@atproto/api";
-import { KeyType, verifySignature } from "@rollercoaster-dev/openbadges-core";
-import { decodeDidKey } from "./did-key.js";
-import { writeEvidence } from "./session.js";
-
 const atUri = process.argv[2];
 if (!atUri?.startsWith("at://")) {
   console.error("Usage: bun run resolve-record <at-uri>");
   process.exit(1);
 }
+
+// Imports you will need:
+//   import { AtpAgent } from "@atproto/api";
+//   import { KeyType, verifySignature } from "@rollercoaster-dev/openbadges-core";
+//   import { decodeDidKey } from "./did-key.js";
+//   import { writeEvidence } from "./session.js";
 
 // YOUR TURN (1 of 3).
 //

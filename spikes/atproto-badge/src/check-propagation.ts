@@ -7,12 +7,6 @@
  *     bun run check-propagation <did> [--wait]
  */
 
-import { AtpAgent } from "@atproto/api";
-import { COLLECTION, writeEvidence } from "./session.js";
-
-const JETSTREAM = "wss://jetstream2.us-east.bsky.network/subscribe";
-const WAIT_MS = 60_000;
-
 const did = process.argv[2];
 if (!did?.startsWith("did:")) {
   console.error(
@@ -20,6 +14,13 @@ if (!did?.startsWith("did:")) {
   );
   process.exit(1);
 }
+
+// Imports and constants you will need:
+//   import { AtpAgent } from "@atproto/api";
+//   import { COLLECTION, writeEvidence } from "./session.js";
+//
+//   const JETSTREAM = "wss://jetstream2.us-east.bsky.network/subscribe";
+//   const WAIT_MS = 60_000; // how long --wait listens before giving up
 
 // YOUR TURN (1 of 2) — the firehose.
 //

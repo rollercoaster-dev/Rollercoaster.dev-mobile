@@ -10,7 +10,7 @@
  */
 
 import { buildSignedCredential } from "./build-credential.js";
-import { COLLECTION, login, readEnv, writeEvidence } from "./session.js";
+import { login, readEnv } from "./session.js";
 
 const env = readEnv();
 const { agent, did } = await login(env);
@@ -26,6 +26,9 @@ console.log(`Credential issuer: ${issuerDid}`);
 console.log(
   `  (not ${did} — read lesson 05 on why these are two different things)`,
 );
+
+// Imports you will need on top of the two above:
+//   import { COLLECTION, writeEvidence } from "./session.js";
 
 // YOUR TURN.
 //
