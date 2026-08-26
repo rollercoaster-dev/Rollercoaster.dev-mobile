@@ -38,7 +38,7 @@ import { IconButton } from "../IconButton";
 import { Button } from "../Button";
 import { ScreenSubHeader } from "../ScreenHeader/ScreenSubHeader";
 import { EvidenceTypePicker } from "../EvidenceTypePicker";
-import { AnimatedSheet } from "../EvidenceTypePicker/AnimatedSheet";
+import { AnimatedSheet } from "../AnimatedSheet";
 import { EditGoalStepList, type EditGoalStep } from "../EditGoalView";
 import type { DragScrollController } from "../StepList/dragAutoScroll";
 import { EvidenceType } from "../../db";
