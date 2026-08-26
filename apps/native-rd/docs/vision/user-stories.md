@@ -142,7 +142,7 @@ The big City Farm goal stays in the background. Maybe she'll come back to it. Ma
 
 ## Iteration C — Skill Tree (not started)
 
-Add the visual layer: badges become nodes in a tree you design, showing where you've been and where you could go.
+Add the visual layer: badges become nodes in a tree you design, showing where you've been and where you could go — and, when you choose to, showing it to someone else.
 
 ---
 
@@ -161,6 +161,34 @@ The tree is messy and personal. It doesn't look like a curriculum — it looks l
 **Features used:** Skill tree visualization, manual node placement, user-drawn connections, visual states (earned/in-progress/planned)
 **Evidence:** (accumulated from previous badges)
 **ND pattern:** Making invisible progress visible, turning scattered work into a coherent narrative, spatial organization matches how some ND brains think
+
+---
+
+### Kai Sends the Tree Instead of a CV
+
+**User:** Kai, 19, autistic + ADHD — Self-taught programmer, between jobs
+
+A small studio posts a junior role. The form wants a CV. Kai does not have one worth
+sending — eighteen months of real work, none of it with an employer's name on it, and a
+gap that would need explaining in a cover letter Kai does not want to write.
+
+Kai opens the tree, hides two clusters that are nobody's business, and taps Share. The
+tree gets an address. Kai pastes the link into the application.
+
+The person who opens it sees what Kai actually did, arranged the way Kai arranged it. Each
+earned node resolves to a signed credential with the evidence behind it — commits, a CLI
+tool, a merged bug fix — verifiable without taking Kai's word for anything and without
+asking Kai's app for permission. The planned nodes are visible too: TypeScript, a
+full-stack build. Not achievements, intentions, and legible as such.
+
+Nothing about it looks like a CV template. It looks like Kai's brain, which is the point.
+
+**Features used:** Shareable skill profile, per-cluster disclosure control, public
+resolution of earned credentials, planned nodes shown as intent
+**Evidence:** (accumulated from previous badges)
+**ND pattern:** Showing work in a shape that matches how it was actually done, rather
+than forcing it into a chronological format built for uninterrupted careers; disclosure
+stays under the user's control
 
 ---
 
@@ -228,6 +256,9 @@ Evidence is what makes a badge more than a checkbox. Every badge should have at 
 | Manual node placement                              | C    | No      |                                                                    |
 | User-drawn connections                             | C    | No      |                                                                    |
 | Visual states (earned/active/planned)              | C    | No      |                                                                    |
+| Shareable skill profile (public tree)              | C    | No      | Outward-facing half; ADR-0015 amendment 2                          |
+| Per-cluster disclosure control on a shared tree    | C    | No      |                                                                    |
+| User styling / theming of the tree                 | C    | No      | Post-grant; format must not preclude it                            |
 | Badge sharing (device-to-device)                   | D    | No      |                                                                    |
 | Selective disclosure (you choose who sees)         | D    | No      |                                                                    |
 | Peer verification                                  | D    | No      |                                                                    |
