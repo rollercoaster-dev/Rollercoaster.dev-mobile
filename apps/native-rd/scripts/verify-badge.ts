@@ -4,17 +4,22 @@
  *
  * Usage:
  *   bun scripts/verify-badge.ts <path-to-badge.png>
- *   bun scripts/verify-badge.ts <path-to-credential.json>
+ *   bun scripts/verify-badge.ts <path-to-credential.json-or-.jws>
  *
- * The two reports are complementary: a badge can pass the system
- * round-trip and fail OB3 conformance; that's the expected shape for a
- * self-signed Iteration-A badge.
+ * Handles both stored formats. Badges signed since #598 are compact ES256
+ * VC-JWTs (an external proof); badges earned before it are credential JSON
+ * with an embedded Iteration-A DataIntegrityProof. Old badges are never
+ * re-signed, so both paths have to keep working.
+ *
+ * The two reports are complementary: a badge can pass the system round-trip
+ * and fail OB3 conformance.
  */
 
 import { readFileSync } from "node:fs";
 import { createPublicKey, verify as cryptoVerify } from "node:crypto";
 import {
   Cryptosuite,
+  decodeP256DidKey,
   isPNG,
   unbakePNG,
 } from "@rollercoaster-dev/openbadges-core";
@@ -39,23 +44,91 @@ function skipped(name: string, detail?: string): CheckResult {
   return { name, status: "skipped", detail };
 }
 
-function loadCredential(path: string): {
+/** A parsed compact JWS, with the exact bytes the signature covers. */
+interface ParsedJws {
+  header: Record<string, unknown>;
+  payload: Record<string, unknown>;
+  /** `header.payload` — the ASCII the signature was computed over. */
+  signingInput: string;
+  signature: Buffer;
+}
+
+function decodeSegment(segment: string): Record<string, unknown> {
+  return JSON.parse(
+    Buffer.from(segment, "base64url").toString("utf8"),
+  ) as Record<string, unknown>;
+}
+
+/**
+ * Parses a compact JWS, or returns null if the string isn't one. Same
+ * 3-dot-segment / not-`{`-prefixed heuristic png-baking.ts uses.
+ */
+function parseJws(value: string): ParsedJws | null {
+  const trimmed = value.trim();
+  if (trimmed.startsWith("{")) return null;
+  const parts = trimmed.split(".");
+  if (parts.length !== 3) return null;
+  try {
+    return {
+      header: decodeSegment(parts[0]!),
+      payload: decodeSegment(parts[1]!),
+      signingInput: `${parts[0]}.${parts[1]}`,
+      signature: Buffer.from(parts[2]!, "base64url"),
+    };
+  } catch {
+    return null;
+  }
+}
+
+type LoadedCredential = {
+  /** The VC itself — unwrapped from the `vc` claim when the input is a JWS. */
   credential: Record<string, unknown>;
+  /** Present only for a VC-JWT external proof. */
+  jws: ParsedJws | null;
   source: "png" | "json";
-} {
+};
+
+function loadCredential(path: string): LoadedCredential {
   const buf = readFileSync(path);
+
+  // unbakePNG already returns a raw string for a JWS chunk and a parsed
+  // object for a JSON one, so normalise both to the same two branches below.
+  let raw: string | Record<string, unknown>;
+  let source: "png" | "json";
   if (isPNG(buf)) {
-    const cred = unbakePNG(buf) as Record<string, unknown> | null;
+    const cred = unbakePNG(buf) as string | Record<string, unknown> | null;
     if (!cred) {
       throw new Error(
         "PNG has no OpenBadges credential chunk (looked for iTXt with " +
           "keyword 'openbadgecredential' or 'openbadges').",
       );
     }
-    return { credential: cred, source: "png" };
+    raw = cred;
+    source = "png";
+  } else {
+    raw = buf.toString("utf8");
+    source = "json";
   }
-  // Assume JSON otherwise.
-  return { credential: JSON.parse(buf.toString("utf8")), source: "json" };
+
+  if (typeof raw === "string") {
+    const jws = parseJws(raw);
+    if (jws) {
+      const vc = jws.payload.vc;
+      if (!vc || typeof vc !== "object") {
+        throw new Error(
+          "JWS payload has no `vc` claim — not a VC-JWT credential.",
+        );
+      }
+      return { credential: vc as Record<string, unknown>, jws, source };
+    }
+    return {
+      credential: JSON.parse(raw) as Record<string, unknown>,
+      jws: null,
+      source,
+    };
+  }
+
+  return { credential: raw, jws: null, source };
 }
 
 /**
@@ -72,6 +145,88 @@ function getIterationADidX(did: string): string | null {
   if (tail.startsWith("z")) return null;
   if (!/^[A-Za-z0-9_-]+$/.test(tail)) return null;
   return tail;
+}
+
+/**
+ * Verifies the ES256 signature of a VC-JWT against the key inlined in its
+ * protected header, then confirms that key is the one the issuer DID names.
+ *
+ * A JWS ECDSA signature is the raw IEEE-P1363 `r‖s` pair; Node's verify()
+ * defaults to DER, hence the explicit dsaEncoding.
+ */
+function verifyVcJwtSignature(
+  jws: ParsedJws,
+  credential: Record<string, unknown>,
+): CheckResult {
+  const alg = jws.header.alg;
+  if (alg !== "ES256") {
+    return skipped(
+      "signature.vcJwt",
+      `header alg is '${String(alg)}'; this verifier only checks ES256`,
+    );
+  }
+
+  const jwk = jws.header.jwk;
+  if (!jwk || typeof jwk !== "object") {
+    return fail(
+      "signature.vcJwt",
+      "protected header has no inline `jwk` to verify against",
+    );
+  }
+
+  let pubKey;
+  try {
+    pubKey = createPublicKey({
+      key: jwk as Record<string, unknown>,
+      format: "jwk",
+    });
+  } catch (err) {
+    return fail(
+      "signature.vcJwt",
+      `failed to import the header jwk: ${err instanceof Error ? err.message : String(err)}`,
+    );
+  }
+
+  const ok = cryptoVerify(
+    "sha256",
+    Buffer.from(jws.signingInput, "ascii"),
+    { key: pubKey, dsaEncoding: "ieee-p1363" },
+    jws.signature,
+  );
+  if (!ok) {
+    return fail(
+      "signature.vcJwt",
+      "ES256 signature did not verify against the inline header jwk",
+    );
+  }
+
+  // A valid signature over an attacker-chosen key proves nothing on its own —
+  // the header key has to be the one the issuer DID resolves to.
+  const issuerId = (credential.issuer as Record<string, unknown> | undefined)
+    ?.id;
+  const issuerDid = typeof issuerId === "string" ? issuerId : "";
+  let resolved;
+  try {
+    resolved = decodeP256DidKey(issuerDid);
+  } catch (err) {
+    return fail(
+      "signature.vcJwt",
+      `signature verified, but the issuer DID does not resolve to a P-256 key: ${err instanceof Error ? err.message : String(err)}`,
+    );
+  }
+
+  const headerJwk = jwk as { x?: unknown; y?: unknown };
+  if (resolved.x !== headerJwk.x || resolved.y !== headerJwk.y) {
+    return fail(
+      "signature.vcJwt",
+      "signature verified, but the header jwk is not the key the issuer DID names",
+    );
+  }
+
+  return pass(
+    "signature.vcJwt",
+    `verified ${jws.signature.length}-byte ES256 signature; header jwk matches ${issuerDid.slice(0, 24)}…`,
+  );
 }
 
 function verifyIterationASignature(
@@ -109,10 +264,8 @@ function verifyIterationASignature(
     );
   }
 
-  // Reproduce the bytes that `useCreateBadge` signs: JSON.stringify of
-  // the credential without the proof field. Drift between this and the
-  // signing path is invisible until verification starts failing — when
-  // either side changes, factor the bytes-to-sign computation out.
+  // Reproduce the bytes that pre-#598 `useCreateBadge` signed: JSON.stringify
+  // of the credential without the proof field.
   const { proof: _omit, ...unsigned } = credential;
   const dataBytes = new TextEncoder().encode(JSON.stringify(unsigned));
 
@@ -157,7 +310,10 @@ function verifyIterationASignature(
  * predicate that returns PASS when the gap has been *fixed*, FAIL while
  * the gap is still present.
  */
-function conformanceChecks(credential: Record<string, unknown>): CheckResult[] {
+function conformanceChecks(
+  credential: Record<string, unknown>,
+  jws: ParsedJws | null,
+): CheckResult[] {
   const cs = credential.credentialSubject as
     | Record<string, unknown>
     | undefined;
@@ -176,13 +332,17 @@ function conformanceChecks(credential: Record<string, unknown>): CheckResult[] {
             `achievement.creator is ${typeof creator}, expected object`,
           );
 
-  // Gap 2: top-level proof should be an array, not a single object.
-  const gap2 = Array.isArray(proof)
-    ? pass("gap2.proofArray", "proof is an array")
-    : fail(
-        "gap2.proofArray",
-        "proof is a single object, OB3 schema requires proof: [...]",
-      );
+  // Gap 2: top-level proof should be an array, not a single object. An
+  // external proof carries no embedded `proof` at all, which is the correct
+  // shape rather than a missing one — the JWS *is* the proof.
+  const gap2 = jws
+    ? pass("gap2.proofArray", "external proof (VC-JWT) — no embedded proof")
+    : Array.isArray(proof)
+      ? pass("gap2.proofArray", "proof is an array")
+      : fail(
+          "gap2.proofArray",
+          "proof is a single object, OB3 schema requires proof: [...]",
+        );
 
   // Gap 3: top-level `name` required.
   const gap3 =
@@ -200,7 +360,11 @@ function conformanceChecks(credential: Record<string, unknown>): CheckResult[] {
         )
       : fail("gap4.issuanceDate", "top-level issuanceDate is missing");
 
-  // Gap 5: cryptosuite must be a standard one.
+  // Gap 5: the proof must be one the validator accepts. Two ways to pass:
+  // an external VC-JWT whose header alg is on the RS256/ES256 allowlist and
+  // that carries a key (inline `jwk` or dereferenceable `kid`), or an
+  // embedded DataIntegrityProof with a standard cryptosuite.
+  //
   // `eddsa-2022` is the second OB3-accepted DataIntegrity cryptosuite;
   // openbadges-core's enum currently only exports the rdfc variant. The
   // enum reference catches a future rename of `EddsaRdfc2022` at compile
@@ -209,22 +373,41 @@ function conformanceChecks(credential: Record<string, unknown>): CheckResult[] {
     Cryptosuite.EddsaRdfc2022,
     "eddsa-2022",
   ]);
+  const EXTERNAL_PROOF_ALGORITHMS = new Set<string>(["ES256", "RS256"]);
   const proofObj = (Array.isArray(proof) ? proof[0] : proof) as
     | Record<string, unknown>
     | undefined;
   const cryptosuite = proofObj?.cryptosuite;
   const proofType = proofObj?.type;
-  const gap5 =
-    proofType === "Ed25519Signature2020" ||
-    (typeof cryptosuite === "string" && STANDARD_CRYPTOSUITES.has(cryptosuite))
-      ? pass(
-          "gap5.cryptosuite",
-          `cryptosuite: ${String(cryptosuite ?? proofType)}`,
-        )
-      : fail(
-          "gap5.cryptosuite",
-          `cryptosuite '${String(cryptosuite)}' is not in the OB3 allowlist (eddsa-rdfc-2022, eddsa-2022, Ed25519Signature2020)`,
-        );
+
+  let gap5: CheckResult;
+  if (jws) {
+    const alg = jws.header.alg;
+    const hasKey = Boolean(jws.header.jwk) || Boolean(jws.header.kid);
+    gap5 =
+      typeof alg === "string" && EXTERNAL_PROOF_ALGORITHMS.has(alg) && hasKey
+        ? pass(
+            "gap5.proofFormat",
+            `external VC-JWT proof, alg: ${alg}, key: ${jws.header.jwk ? "inline jwk" : "kid"}`,
+          )
+        : fail(
+            "gap5.proofFormat",
+            `external proof with alg '${String(alg)}'${hasKey ? "" : " and no jwk/kid"} — the validator accepts only ES256/RS256 with a resolvable key`,
+          );
+  } else {
+    gap5 =
+      proofType === "Ed25519Signature2020" ||
+      (typeof cryptosuite === "string" &&
+        STANDARD_CRYPTOSUITES.has(cryptosuite))
+        ? pass(
+            "gap5.proofFormat",
+            `cryptosuite: ${String(cryptosuite ?? proofType)}`,
+          )
+        : fail(
+            "gap5.proofFormat",
+            `cryptosuite '${String(cryptosuite)}' is not in the OB3 allowlist (eddsa-rdfc-2022, eddsa-2022, Ed25519Signature2020), and this is not an external VC-JWT proof`,
+          );
+  }
 
   // Gap 6: umbrella oneOf — passes when 1–5 all pass.
   const upstream = [gap1, gap2, gap3, gap4, gap5];
@@ -238,19 +421,25 @@ function conformanceChecks(credential: Record<string, unknown>): CheckResult[] {
         `${upstream.filter((c) => c.status !== "pass").length} upstream gap(s) still open`,
       );
 
-  // Gap 7: did:key must use multibase `z` prefix, not raw jwk.x.
+  // Gap 7: the issuer did:key must actually decode — multibase `z` plus the
+  // p256-pub multicodec, not just a `did:key:z` string prefix, which a
+  // malformed multibase payload would also satisfy.
   const issuerId = (credential.issuer as Record<string, unknown> | undefined)
     ?.id;
   const issuerDid = typeof issuerId === "string" ? issuerId : "";
-  const gap7 = issuerDid.startsWith("did:key:z")
-    ? pass(
-        "gap7.didKeyMultibase",
-        `issuer DID is multibase-encoded: ${issuerDid.slice(0, 24)}…`,
-      )
-    : fail(
-        "gap7.didKeyMultibase",
-        `issuer DID is the Iteration-A form (raw jwk.x), not multibase: ${issuerDid}`,
-      );
+  let gap7: CheckResult;
+  try {
+    decodeP256DidKey(issuerDid);
+    gap7 = pass(
+      "gap7.didKeyMultibase",
+      `issuer DID decodes to a P-256 key: ${issuerDid.slice(0, 24)}…`,
+    );
+  } catch (err) {
+    gap7 = fail(
+      "gap7.didKeyMultibase",
+      `issuer DID '${issuerDid}' is not a resolvable P-256 did:key — ${err instanceof Error ? err.message : String(err)}`,
+    );
+  }
 
   return [gap1, gap2, gap3, gap4, gap5, gap6, gap7];
 }
@@ -289,9 +478,12 @@ async function main() {
     );
     process.exit(2);
   }
-  const { credential, source } = loaded;
+  const { credential, jws, source } = loaded;
 
-  console.log(`${BOLD}Badge verifier${RESET}  ${DIM}(${source} input)${RESET}`);
+  const format = jws ? "VC-JWT external proof" : "embedded proof";
+  console.log(
+    `${BOLD}Badge verifier${RESET}  ${DIM}(${source} input, ${format})${RESET}`,
+  );
   console.log(`  ${DIM}file:${RESET} ${path}`);
   console.log(`  ${DIM}id:${RESET}   ${String(credential.id ?? "—")}`);
   const ach = (
@@ -300,11 +492,13 @@ async function main() {
   console.log(`  ${DIM}name:${RESET} ${String(ach?.name ?? "—")}`);
 
   printSection("System round-trip");
-  const sigResult = verifyIterationASignature(credential);
+  const sigResult = jws
+    ? verifyVcJwtSignature(jws, credential)
+    : verifyIterationASignature(credential);
   printResult(sigResult);
 
-  printSection("OB 3.0 conformance delta (Iteration A → D)");
-  const conf = conformanceChecks(credential);
+  printSection("OB 3.0 conformance delta");
+  const conf = conformanceChecks(credential, jws);
   conf.forEach(printResult);
 
   const conformancePassed = conf.filter((c) => c.status === "pass").length;
@@ -331,9 +525,9 @@ async function main() {
   );
 
   // Exit non-zero only on a real signature mismatch — a broken pipeline. A
-  // skipped check (non-Iteration-A cryptosuite that we have no code to
-  // verify) is not a pipeline failure but also not a success: exit 0 but
-  // print to stderr so CI logs surface it.
+  // skipped check (a proof scheme we have no code to verify) is not a pipeline
+  // failure but also not a success: exit 0 but print to stderr so CI logs
+  // surface it.
   if (sigResult.status === "skipped") {
     console.error(
       `${YELLOW}warning:${RESET} signature was not verified (${sigResult.detail ?? "no detail"})`,
