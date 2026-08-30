@@ -47,6 +47,70 @@ function toBase64Url(bytes: Uint8Array): string {
     .replace(/=/g, "");
 }
 
+const BASE64URL_ALPHABET =
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+
+/**
+ * Decodes a base64url segment to a UTF-8 string.
+ *
+ * Hand-rolled on purpose. `Buffer.from(s, "base64url")` works under Jest,
+ * which resolves `buffer` to Node's core module, but the app bundles the
+ * feross `buffer` polyfill (see package.json), and that has no `base64url`
+ * encoding — on device it throws `Unknown encoding`. Callers here swallow
+ * parse errors to hide a section, so the failure would have been silent.
+ */
+function base64UrlToString(segment: string): string {
+  const bytes: number[] = [];
+  let bits = 0;
+  let acc = 0;
+  for (const char of segment) {
+    if (char === "=") break;
+    const digit = BASE64URL_ALPHABET.indexOf(char);
+    if (digit < 0) {
+      throw new Error(`Invalid base64url character: '${char}'`);
+    }
+    acc = (acc << 6) | digit;
+    bits += 6;
+    if (bits >= 8) {
+      bits -= 8;
+      bytes.push((acc >> bits) & 0xff);
+    }
+  }
+  return new TextDecoder().decode(Uint8Array.from(bytes));
+}
+
+/**
+ * True when a stored credential string is a compact JWS rather than
+ * credential JSON. Same shape test `png-baking.ts` uses to decide how to
+ * embed one.
+ */
+function isCompactJws(credential: string): boolean {
+  const trimmed = credential.trim();
+  return !trimmed.startsWith("{") && trimmed.split(".").length === 3;
+}
+
+/**
+ * Unwraps a stored `badge.credential` to the VC object inside it.
+ *
+ * Badges signed since #598 are compact JWS strings carrying the credential
+ * under the payload's `vc` claim; badges earned before it are plain
+ * credential JSON. Old badges are never migrated or re-signed — their
+ * signature covers the exact stored bytes — so both shapes stay readable
+ * indefinitely. Throws on malformed input; callers decide what to show.
+ */
+export function parseStoredCredential(
+  credential: string,
+): Record<string, unknown> {
+  const trimmed = credential.trim();
+  if (!isCompactJws(trimmed)) {
+    return JSON.parse(trimmed) as Record<string, unknown>;
+  }
+  const payload = JSON.parse(base64UrlToString(trimmed.split(".")[1]!)) as {
+    vc?: unknown;
+  };
+  return (payload.vc ?? {}) as Record<string, unknown>;
+}
+
 function jsonToBase64Url(value: unknown): string {
   return toBase64Url(new TextEncoder().encode(JSON.stringify(value)));
 }

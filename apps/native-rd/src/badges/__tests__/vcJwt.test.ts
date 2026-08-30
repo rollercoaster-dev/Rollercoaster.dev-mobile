@@ -6,7 +6,11 @@
  * is the JWS shape: what goes into the header, what goes into the claims, and
  * which bytes are handed to the signer.
  */
-import { signCredentialAsVcJwt, toPublicP256Jwk } from "../vcJwt";
+import {
+  signCredentialAsVcJwt,
+  toPublicP256Jwk,
+  parseStoredCredential,
+} from "../vcJwt";
 import { Buffer } from "buffer";
 
 const PUBLIC_JWK: JsonWebKey = {
@@ -175,5 +179,64 @@ describe("toPublicP256Jwk", () => {
     expect(() =>
       toPublicP256Jwk({ kty: "EC", crv: "P-256", x: "abc" }),
     ).toThrow("missing x or y coordinate");
+  });
+});
+
+describe("parseStoredCredential", () => {
+  it("unwraps the `vc` claim of a JWS produced by signCredentialAsVcJwt", async () => {
+    const jws = await sign();
+    expect(parseStoredCredential(jws)).toEqual(UNSIGNED_CREDENTIAL);
+  });
+
+  it("returns a pre-#598 JSON credential unchanged", () => {
+    // Old badges are never migrated or re-signed, so this path has to survive.
+    const json = JSON.stringify(UNSIGNED_CREDENTIAL);
+    expect(parseStoredCredential(json)).toEqual(UNSIGNED_CREDENTIAL);
+  });
+
+  it("decodes payloads carrying the base64url-only characters `-` and `_`", async () => {
+    // `Buffer.from(s, "base64url")` reads fine under Jest (Node core buffer)
+    // but throws on device, where the feross polyfill is bundled and has no
+    // such encoding. Decoding must not depend on it. These bytes force both
+    // characters into the segment, which plain base64 would spell + and /.
+    const jws = await signCredentialAsVcJwt({
+      unsignedCredential: { ...UNSIGNED_CREDENTIAL, name: "ÿ}ø?ÿ}ø?" },
+      issuerDid: ISSUER_DID,
+      publicKeyJwk: PUBLIC_JWK,
+      issuedOn: ISSUED_ON,
+      credentialId: CREDENTIAL_ID,
+      sign: async () => SIGNATURE,
+    });
+    const segment = jws.split(".")[1]!;
+    expect(segment).toMatch(/[-_]/);
+    expect(parseStoredCredential(jws)).toMatchObject({ name: "ÿ}ø?ÿ}ø?" });
+  });
+
+  it("round-trips multi-byte UTF-8 in credential text", async () => {
+    const jws = await signCredentialAsVcJwt({
+      unsignedCredential: {
+        ...UNSIGNED_CREDENTIAL,
+        name: "Ziel erreicht 🎢 日本語",
+      },
+      issuerDid: ISSUER_DID,
+      publicKeyJwk: PUBLIC_JWK,
+      issuedOn: ISSUED_ON,
+      credentialId: CREDENTIAL_ID,
+      sign: async () => SIGNATURE,
+    });
+    expect(parseStoredCredential(jws)).toMatchObject({
+      name: "Ziel erreicht 🎢 日本語",
+    });
+  });
+
+  it("yields an empty object for a JWS with no `vc` claim", () => {
+    const b64 = (v: unknown) =>
+      Buffer.from(JSON.stringify(v))
+        .toString("base64")
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/=/g, "");
+    const jws = `${b64({ alg: "ES256" })}.${b64({ iss: ISSUER_DID })}.sig`;
+    expect(parseStoredCredential(jws)).toEqual({});
   });
 });

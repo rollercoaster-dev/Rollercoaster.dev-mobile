@@ -277,13 +277,3 @@ export function decodeP256DidKey(did: string): JsonWebKey {
 
   return decompressP256PublicKey(decoded.slice(P256_PUB_MULTICODEC.length));
 }
-
-/** True when `did` is a well-formed `did:key` P-256 identifier this module can decode. */
-export function isP256DidKey(did: string): boolean {
-  try {
-    decodeP256DidKey(did);
-    return true;
-  } catch {
-    return false;
-  }
-}

@@ -35,16 +35,10 @@ export {
 export type { CryptoProvider, PlatformConfig } from "./adapters/types.js";
 export { NodeCryptoAdapter } from "./adapters/node-crypto.adapter.js";
 
-// did:key encoding (P-256)
-export {
-  base58btcEncode,
-  base58btcDecode,
-  compressP256PublicKey,
-  decompressP256PublicKey,
-  encodeP256DidKey,
-  decodeP256DidKey,
-  isP256DidKey,
-} from "./did-key.js";
+// did:key encoding (P-256). The base58btc and point-compression primitives
+// stay module-local — they are unit-tested directly and have no consumer of
+// their own; export them when one appears.
+export { encodeP256DidKey, decodeP256DidKey } from "./did-key.js";
 
 // JWT proof
 export type {

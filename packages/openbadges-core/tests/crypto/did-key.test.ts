@@ -7,7 +7,6 @@ import {
   decompressP256PublicKey,
   encodeP256DidKey,
   decodeP256DidKey,
-  isP256DidKey,
 } from "../../src/crypto/did-key";
 
 /**
@@ -124,17 +123,18 @@ describe("encodeP256DidKey / decodeP256DidKey", () => {
     expect(key.asymmetricKeyType).toBe("ec");
   });
 
-  test.each([0, 1, 2])(
-    "round-trips a freshly generated P-256 keypair (#%i)",
-    async () => {
+  test("round-trips freshly generated P-256 keypairs", async () => {
+    // Several keys, not one: decompression picks a parity branch, so a single
+    // key exercises only half of it even when the assertion passes.
+    for (let i = 0; i < 8; i++) {
       const jwk = await generateP256Jwk();
       const did = encodeP256DidKey(jwk);
       expect(did.startsWith("did:key:zDna")).toBe(true);
       const decoded = decodeP256DidKey(did);
       expect(decoded.x).toBe(jwk.x!);
       expect(decoded.y).toBe(jwk.y!);
-    },
-  );
+    }
+  });
 
   test("rejects a DID without the multibase `z` prefix", () => {
     expect(() => decodeP256DidKey("did:key:abc123")).toThrow(
@@ -156,13 +156,5 @@ describe("encodeP256DidKey / decodeP256DidKey", () => {
     expect(() => decodeP256DidKey(ed25519Did)).toThrow(
       "p256-pub multicodec prefix",
     );
-  });
-
-  test("isP256DidKey distinguishes decodable DIDs from malformed ones", () => {
-    expect(isP256DidKey(SPEC_DID)).toBe(true);
-    // Iteration-A form: raw jwk.x with no multibase/multicodec at all.
-    expect(
-      isP256DidKey("did:key:fyNYMN0976ci7xqiSdag3buk-ZCwgXU4kz9XNkBlNUI"),
-    ).toBe(false);
   });
 });

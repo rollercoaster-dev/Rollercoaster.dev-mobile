@@ -11,7 +11,7 @@ import type { CredentialInput } from "../credentialBuilder";
 jest.mock("@rollercoaster-dev/openbadges-core", () => ({
   // did:key encoding is NOT mocked — it's pure, dependency-free, and the DID
   // shape is exactly what this issue changed, so assert against the real thing.
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
+
   encodeP256DidKey:
     require("../../../../../packages/openbadges-core/src/crypto/did-key")
       .encodeP256DidKey,
@@ -73,12 +73,6 @@ const BASE_INPUT: CredentialInput = {
 describe("buildDid", () => {
   it("encodes a P-256 JWK as a multibase did:key", () => {
     expect(buildDid(P256_JWK)).toBe(P256_DID);
-  });
-
-  it("no longer emits the Iteration-A raw-jwk.x form", () => {
-    // Regression guard for gap 7: `did:key:<jwk.x>` is unresolvable, and the
-    // raw x would appear verbatim in the DID if the old path came back.
-    expect(buildDid(P256_JWK)).not.toContain(P256_JWK.x!);
   });
 
   it("throws for a non-P-256 key (a pre-migration Ed25519 key)", () => {

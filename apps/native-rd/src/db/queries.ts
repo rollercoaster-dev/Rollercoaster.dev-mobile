@@ -1500,7 +1500,8 @@ export const badgesWithGoalsQuery = evolu.createQuery((db) =>
  * Create a badge for a completed goal
  * @param params - Badge parameters
  * @param params.goalId - Goal ID
- * @param params.credential - OB3 Verifiable Credential JSON string
+ * @param params.credential - Signed OB3 credential: a compact ES256 JWS since
+ *   #598, credential JSON for badges earned before it. Stored opaquely.
  * @param params.imageUri - Local file path to baked badge image
  * @returns Insert command
  * @throws Error if validation fails

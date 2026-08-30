@@ -14,7 +14,6 @@ import { useUnistyles } from "react-native-unistyles";
 import { useQuery } from "@evolu/react";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "phosphor-react-native";
-import { Buffer } from "buffer";
 import { Text } from "../../components/Text";
 import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
@@ -26,6 +25,9 @@ import { ConfirmDeleteModal } from "../../components/ConfirmDeleteModal";
 import { badgeWithGoalQuery, deleteBadge } from "../../db";
 import type { BadgeId } from "../../db";
 import { PLACEHOLDER_IMAGE_URI } from "../../hooks/useCreateBadge";
+// Deep import, not the barrel: `badges/index` pulls in credentialBuilder ->
+// openbadges-core, which is ESM and unloadable in this screen's Jest runtime.
+import { parseStoredCredential } from "../../badges/vcJwt";
 import { useBadgeExport } from "../../hooks/useBadgeExport";
 import { useAnimationPref } from "../../hooks/useAnimationPref";
 import { parseBadgeDesign } from "../../badges/types";
@@ -68,28 +70,6 @@ const OVERFLOW_POPOVER_TOP_OFFSET = 56;
 const EVIDENCE_ID_PREFIX = "urn:ulid:";
 
 const logger = new Logger("BadgeDetailScreen");
-
-/**
- * Unwraps a stored `badge.credential` to the VC object holding `evidence`.
- *
- * Two shapes reach this screen. Badges signed since #598 are compact ES256
- * JWS strings whose credential sits under the payload's `vc` claim; badges
- * earned before it are plain credential JSON. Old badges are never migrated
- * or re-signed (their signature covers the exact stored bytes), so both
- * shapes have to stay readable indefinitely. The 3-dot-segment /
- * not-`{`-prefixed test is the same heuristic png-baking.ts uses to tell them
- * apart.
- */
-function parseStoredCredential(credential: string): Record<string, unknown> {
-  const trimmed = credential.trim();
-  if (!trimmed.startsWith("{") && trimmed.split(".").length === 3) {
-    const payload = JSON.parse(
-      Buffer.from(trimmed.split(".")[1]!, "base64url").toString("utf8"),
-    ) as { vc?: unknown };
-    return (payload.vc ?? {}) as Record<string, unknown>;
-  }
-  return JSON.parse(trimmed) as Record<string, unknown>;
-}
 
 /**
  * Pulls the achievement criteria narrative out of a stored OB3
