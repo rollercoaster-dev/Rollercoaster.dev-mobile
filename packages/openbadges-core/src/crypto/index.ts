@@ -35,6 +35,17 @@ export {
 export type { CryptoProvider, PlatformConfig } from "./adapters/types.js";
 export { NodeCryptoAdapter } from "./adapters/node-crypto.adapter.js";
 
+// did:key encoding (P-256)
+export {
+  base58btcEncode,
+  base58btcDecode,
+  compressP256PublicKey,
+  decompressP256PublicKey,
+  encodeP256DidKey,
+  decodeP256DidKey,
+  isP256DidKey,
+} from "./did-key.js";
+
 // JWT proof
 export type {
   JWTProof,
