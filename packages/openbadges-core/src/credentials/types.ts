@@ -89,10 +89,12 @@ export interface VerifiableCredentialData {
   "@context": string | string[];
   id: Shared.IRI;
   type: string | string[];
-  name: string | Shared.MultiLanguageString;
+  // Optional: credentials issued before these were emitted are parsed back
+  // into this type verbatim, and they carry neither.
+  name?: string | Shared.MultiLanguageString;
   issuer: Shared.IRI | Partial<IssuerData>;
   validFrom: string;
-  issuanceDate: string;
+  issuanceDate?: string;
   validUntil?: string;
   credentialSubject: {
     id: Shared.IRI;

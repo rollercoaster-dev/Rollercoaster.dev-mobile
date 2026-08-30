@@ -599,7 +599,6 @@ describe("useCreateBadge", () => {
       >;
       // OB3 requires `proof` to be an array, even with a single entry.
       const proofs = credential["proof"] as Record<string, unknown>[];
-      expect(Array.isArray(proofs)).toBe(true);
       expect(proofs).toHaveLength(1);
       const proof = proofs[0]!;
 

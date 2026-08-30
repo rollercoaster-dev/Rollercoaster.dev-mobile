@@ -233,9 +233,10 @@ export class OpenBadges3Serializer implements BadgeSerializer {
       description: badgeClass.description,
       image: badgeClass.image,
       criteria: badgeClass.criteria,
-      // OB3 wants a Profile object here, not a bare IRI. Defaults to the
-      // issuer profile built above; `badgeClass.creator` still overrides it.
-      creator: issuerObj,
+      // OB3 wants a Profile object here, not a bare IRI. Defaults to a copy
+      // of the issuer profile built above (a copy, so a consumer mutating
+      // one does not mutate the other); `badgeClass.creator` still overrides.
+      creator: { ...issuerObj },
     };
     if (badgeClass.alignment) achievement.alignments = badgeClass.alignment;
     if (badgeClass.tags) achievement.tags = badgeClass.tags;

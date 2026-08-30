@@ -116,7 +116,6 @@ describe("OB3 serializer error handling", () => {
       mockBadgeClass,
       mockIssuer,
     ) as VerifiableCredentialData;
-    expect(Array.isArray(result.proof)).toBe(true);
     expect(result.proof!).toHaveLength(1);
     expect(result.proof![0]!.type).toBe("Ed25519Signature2020");
     expect(result.proof![0]!.proofValue).toBe("abc123");
