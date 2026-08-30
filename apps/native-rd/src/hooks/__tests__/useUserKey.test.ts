@@ -25,7 +25,7 @@ jest.mock("../../crypto", () => ({
       .mockResolvedValue({ keyId: "generated-key-id", publicKeyJwk: {} }),
     getPublicKey: jest
       .fn()
-      .mockResolvedValue({ kty: "OKP", crv: "Ed25519", x: "pubkey" }),
+      .mockResolvedValue({ kty: "EC", crv: "P-256", x: "pubx", y: "puby" }),
   },
 }));
 
@@ -219,9 +219,10 @@ describe("useUserKey", () => {
       );
       // Second probe (for keyId-B) resolves immediately.
       mockKeyProvider.getPublicKey.mockResolvedValueOnce({
-        kty: "OKP",
-        crv: "Ed25519",
-        x: "B",
+        kty: "EC",
+        crv: "P-256",
+        x: "Bx",
+        y: "By",
       });
 
       mockUseQuery.mockReturnValue([{ id: MOCK_SETTINGS_ID, keyId: "key-A" }]);
@@ -240,13 +241,80 @@ describe("useUserKey", () => {
 
       // Now the stale first probe resolves with key-A's data.
       await act(async () => {
-        resolveFirstProbe({ kty: "OKP", crv: "Ed25519", x: "A" });
+        resolveFirstProbe({ kty: "EC", crv: "P-256", x: "Ax", y: "Ay" });
       });
 
       // The late result must NOT clobber the verified key-B state.
       expect(result.current.keyId).toBe("key-B");
       expect(result.current.isReady).toBe(true);
       expect(mockClearUserSettingsKey).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("when the stored key predates the P-256 migration (#598)", () => {
+    it("clears an Ed25519 keyId so a fresh P-256 keypair is generated", async () => {
+      mockUseQuery.mockReturnValue([
+        { id: MOCK_SETTINGS_ID, keyId: "ed25519-key-id" },
+      ]);
+      mockKeyProvider.getPublicKey.mockResolvedValueOnce({
+        kty: "OKP",
+        crv: "Ed25519",
+        x: "legacy-pubkey",
+      });
+
+      renderHook(() => useUserKey());
+      await act(async () => {});
+
+      expect(mockClearUserSettingsKey).toHaveBeenCalledWith(MOCK_SETTINGS_ID);
+    });
+
+    it("isReady stays false while the stale key is being rotated out", async () => {
+      mockUseQuery.mockReturnValue([
+        { id: MOCK_SETTINGS_ID, keyId: "ed25519-key-id" },
+      ]);
+      mockKeyProvider.getPublicKey.mockResolvedValueOnce({
+        kty: "OKP",
+        crv: "Ed25519",
+        x: "legacy-pubkey",
+      });
+
+      const { result } = renderHook(() => useUserKey());
+      await act(async () => {});
+
+      expect(result.current.isReady).toBe(false);
+      // Rotation is silent — a wrong-algorithm key is a migration, not a fault.
+      expect(result.current.error).toBeNull();
+    });
+
+    it("keeps a P-256 key (does not rotate a current key)", async () => {
+      mockUseQuery.mockReturnValue([
+        { id: MOCK_SETTINGS_ID, keyId: "p256-key-id" },
+      ]);
+
+      const { result } = renderHook(() => useUserKey());
+      await act(async () => {});
+
+      expect(mockClearUserSettingsKey).not.toHaveBeenCalled();
+      expect(result.current.isReady).toBe(true);
+    });
+
+    it("emits a 'key/rotate' breadcrumb when rotating, not when keeping", async () => {
+      mockUseQuery.mockReturnValue([
+        { id: MOCK_SETTINGS_ID, keyId: "ed25519-key-id" },
+      ]);
+      mockKeyProvider.getPublicKey.mockResolvedValueOnce({
+        kty: "OKP",
+        crv: "Ed25519",
+        x: "legacy-pubkey",
+      });
+
+      renderHook(() => useUserKey());
+      await act(async () => {});
+
+      expect(mockBreadcrumb).toHaveBeenCalledWith({
+        category: "key",
+        message: "rotate",
+      });
     });
   });
 
