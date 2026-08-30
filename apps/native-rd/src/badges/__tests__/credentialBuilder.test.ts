@@ -9,6 +9,12 @@ import { buildUnsignedCredential, buildDid } from "../credentialBuilder";
 import type { CredentialInput } from "../credentialBuilder";
 
 jest.mock("@rollercoaster-dev/openbadges-core", () => ({
+  // did:key encoding is NOT mocked — it's pure, dependency-free, and the DID
+  // shape is exactly what this issue changed, so assert against the real thing.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  encodeP256DidKey:
+    require("../../../../../packages/openbadges-core/src/crypto/did-key")
+      .encodeP256DidKey,
   serializeOB3: jest.fn((assertion, badgeClass, issuer) => ({
     "@context": [
       "https://www.w3.org/ns/credentials/v2",
@@ -37,6 +43,19 @@ jest.mock("@rollercoaster-dev/openbadges-core", () => ({
   })),
 }));
 
+/**
+ * The W3C did:key spec's own P-256 example, and the DID it encodes to.
+ * Using the spec pair here keeps the assertion a known answer rather than a
+ * restatement of whatever `encodeP256DidKey` happens to produce.
+ */
+const P256_JWK: JsonWebKey = {
+  kty: "EC",
+  crv: "P-256",
+  x: "fyNYMN0976ci7xqiSdag3buk-ZCwgXU4kz9XNkBlNUI",
+  y: "hW2ojTNfH7Jbi8--CJUo3OCbH3y5n91g-IMA9MLMbTU",
+};
+const P256_DID = "did:key:zDnaerDaTF5BXEavCrfRZEk316dpbLsfPDZ3WJ5hRTPFU2169";
+
 const BASE_INPUT: CredentialInput = {
   goal: {
     id: "goal-01",
@@ -44,27 +63,33 @@ const BASE_INPUT: CredentialInput = {
     description: "Build a mobile app",
   },
   evidence: [],
-  issuerDid: "did:key:abc123",
-  publicKeyJwk: { kty: "OKP", crv: "Ed25519", x: "abc123" },
+  issuerDid: P256_DID,
+  publicKeyJwk: P256_JWK,
   credentialId: "urn:uuid:cred-01",
   issuedOn: "2026-02-18T00:00:00.000Z",
   narrative: "Complete all steps for: Learn React Native",
 };
 
 describe("buildDid", () => {
-  it("returns a string starting with did:key:", () => {
-    const did = buildDid({ kty: "OKP", crv: "Ed25519", x: "somekey" });
-    expect(did).toMatch(/^did:key:/);
+  it("encodes a P-256 JWK as a multibase did:key", () => {
+    expect(buildDid(P256_JWK)).toBe(P256_DID);
   });
 
-  it("uses the x value from the JWK", () => {
-    const did = buildDid({ kty: "OKP", crv: "Ed25519", x: "mykey" });
-    expect(did).toBe("did:key:mykey");
+  it("no longer emits the Iteration-A raw-jwk.x form", () => {
+    // Regression guard for gap 7: `did:key:<jwk.x>` is unresolvable, and the
+    // raw x would appear verbatim in the DID if the old path came back.
+    expect(buildDid(P256_JWK)).not.toContain(P256_JWK.x!);
   });
 
-  it("throws when x is absent", () => {
-    expect(() => buildDid({ kty: "OKP", crv: "Ed25519" })).toThrow(
-      "missing x coordinate",
+  it("throws for a non-P-256 key (a pre-migration Ed25519 key)", () => {
+    expect(() => buildDid({ kty: "OKP", crv: "Ed25519", x: "abc" })).toThrow(
+      "Expected a P-256 EC public key JWK",
+    );
+  });
+
+  it("throws when the y coordinate is absent", () => {
+    expect(() => buildDid({ kty: "EC", crv: "P-256", x: P256_JWK.x })).toThrow(
+      "missing x or y coordinate",
     );
   });
 });
@@ -82,6 +107,15 @@ describe("buildUnsignedCredential", () => {
     const subject = cred["credentialSubject"] as Record<string, unknown>;
     const achievement = subject["achievement"] as Record<string, unknown>;
     expect(achievement["name"]).toBe("Learn React Native");
+  });
+
+  it("gives the achievement a urn:ulid: IRI, not a path under the issuer DID", () => {
+    const cred = buildUnsignedCredential(BASE_INPUT);
+    const subject = cred["credentialSubject"] as Record<string, unknown>;
+    const achievement = subject["achievement"] as Record<string, unknown>;
+    // gap 7: did:key DIDs have no path component, so the old
+    // `${issuerDid}/achievements/${goalId}` form was an invalid DID URL.
+    expect(achievement["id"]).toBe("urn:ulid:goal-01");
   });
 
   it("maps goal description to achievement description", () => {
