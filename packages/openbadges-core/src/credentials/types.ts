@@ -89,8 +89,10 @@ export interface VerifiableCredentialData {
   "@context": string | string[];
   id: Shared.IRI;
   type: string | string[];
+  name: string | Shared.MultiLanguageString;
   issuer: Shared.IRI | Partial<IssuerData>;
   validFrom: string;
+  issuanceDate: string;
   validUntil?: string;
   credentialSubject: {
     id: Shared.IRI;
@@ -111,12 +113,12 @@ export interface VerifiableCredentialData {
     };
   };
   evidence?: unknown;
-  proof?: {
+  proof?: Array<{
     type: string;
     created?: string;
     verificationMethod: string;
     proofPurpose: string;
     proofValue: string;
-  };
+  }>;
   credentialStatus?: unknown;
 }

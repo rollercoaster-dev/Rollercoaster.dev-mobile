@@ -233,7 +233,9 @@ export class OpenBadges3Serializer implements BadgeSerializer {
       description: badgeClass.description,
       image: badgeClass.image,
       criteria: badgeClass.criteria,
-      creator: issuer.id,
+      // OB3 wants a Profile object here, not a bare IRI. Defaults to the
+      // issuer profile built above; `badgeClass.creator` still overrides it.
+      creator: issuerObj,
     };
     if (badgeClass.alignment) achievement.alignments = badgeClass.alignment;
     if (badgeClass.tags) achievement.tags = badgeClass.tags;
@@ -249,8 +251,12 @@ export class OpenBadges3Serializer implements BadgeSerializer {
       "@context": BADGE_VERSION_CONTEXTS[BadgeVersion.V3],
       id: assertion.id,
       type: ["VerifiableCredential", "OpenBadgeCredential"],
+      name: badgeClass.name,
       issuer: issuerObj,
       validFrom: assertion.issuedOn,
+      // VC 1.1 validators require `issuanceDate`; VC 2.0 uses `validFrom`.
+      // Emitting both keeps the credential readable by either.
+      issuanceDate: assertion.issuedOn,
       credentialSubject: {
         id: assertion.recipient.identity,
         type: ["AchievementSubject"],
@@ -262,13 +268,15 @@ export class OpenBadges3Serializer implements BadgeSerializer {
     if (assertion.verification) {
       const v = assertion.verification;
       if (v.type && v.creator && v.signatureValue) {
-        result.proof = {
-          type: v.type,
-          ...(v.created && { created: v.created }),
-          verificationMethod: v.creator,
-          proofPurpose: "assertionMethod",
-          proofValue: v.signatureValue,
-        };
+        result.proof = [
+          {
+            type: v.type,
+            ...(v.created && { created: v.created }),
+            verificationMethod: v.creator,
+            proofPurpose: "assertionMethod",
+            proofValue: v.signatureValue,
+          },
+        ];
       }
     }
     if (assertion.credentialStatus)

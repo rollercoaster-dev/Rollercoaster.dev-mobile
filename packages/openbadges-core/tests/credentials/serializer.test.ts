@@ -137,7 +137,30 @@ describe("OpenBadges3Serializer", () => {
       const subject = result["credentialSubject"] as Record<string, unknown>;
       const achievement = subject.achievement as Record<string, unknown>;
       expect(achievement).toHaveProperty("creator");
-      expect(achievement.creator).toBe(mockIssuer.id);
+      expect(achievement.creator).toMatchObject({
+        id: mockIssuer.id,
+        type: ["Profile"],
+        name: mockIssuer.name,
+      });
+    });
+
+    it("should include a top-level name mirroring the achievement title", () => {
+      const result = serializer.serializeAssertion(
+        mockAssertion,
+        mockBadgeClass,
+        mockIssuer,
+      );
+      expect(result["name"]).toBe(mockBadgeClass.name);
+    });
+
+    it("should include issuanceDate alongside validFrom", () => {
+      const result = serializer.serializeAssertion(
+        mockAssertion,
+        mockBadgeClass,
+        mockIssuer,
+      );
+      expect(result["issuanceDate"]).toBe(mockAssertion.issuedOn);
+      expect(result["validFrom"]).toBe(mockAssertion.issuedOn);
     });
 
     it("should include credentialSubject with AchievementSubject", () => {
