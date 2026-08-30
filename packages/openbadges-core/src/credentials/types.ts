@@ -89,9 +89,9 @@ export interface VerifiableCredentialData {
   "@context": string | string[];
   id: Shared.IRI;
   type: string | string[];
-  // Optional: this type describes any OB3 credential a consumer of this
-  // package may hold, including ones issued before these fields were emitted.
-  // `OpenBadges3Serializer` itself always sets both.
+  // Optional, but always set by `OpenBadges3Serializer`. Requiredness would
+  // enforce nothing on the producer (the serializer returns through a cast)
+  // while telling every consumer the fields cannot be absent.
   name?: string | Shared.MultiLanguageString;
   issuer: Shared.IRI | Partial<IssuerData>;
   validFrom: string;
@@ -116,8 +116,20 @@ export interface VerifiableCredentialData {
     };
   };
   evidence?: unknown;
+  // Array-only, deliberately: OB3 requires `proof` to be a list even with a
+  // single entry, and this type has exactly one producer (the serializer) and
+  // no parse path — nothing reads stored JSON back into it, so there is no
+  // legacy singular shape to tolerate. Credentials persisted before the array
+  // change are read as `OB3.VerifiableCredential` (openbadges-types), whose
+  // `proof?: Proof` accepts either.
   proof?: Array<{
     type: string;
+    /**
+     * Cryptosuite for a DataIntegrityProof, e.g. `eddsa-rdfc-2022`. Optional
+     * because OB3 permits other proof types; required by `DataIntegrityProof`
+     * and switched on by `verifyDataIntegrityProof` (crypto/signature.ts).
+     */
+    cryptosuite?: string;
     created?: string;
     verificationMethod: string;
     proofPurpose: string;
