@@ -20,3 +20,4 @@ Completed research documents. These informed ADRs but are not the decisions them
 | [atproto-evaluation.md](./atproto-evaluation.md)                                     | AT Protocol fit: public badge hosting + identity, not sync                     | 2026-07-29    |
 | [step-containment-semantics.md](./step-containment-semantics.md)                     | Containment is informative both ways: the app offers, never asserts or refuses | 2026-07-30    |
 | [ob3-proof-format-spike.md](./ob3-proof-format-spike.md)                             | Validator accepts VC-JWT but not EdDSA; no `eddsa-jcs-2022`. Recommends ES256  | 2026-08-30    |
+| [openbadges-sub-badges.md](./openbadges-sub-badges.md)                               | OB3 has no hierarchy; CLR 2.0 `Association` is it. Tutorial scoping proposal   | 2026-08-30    |
