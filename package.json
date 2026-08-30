@@ -37,6 +37,7 @@
     "prepare": "husky"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.5",
     "@types/bun": "latest",
     "@types/node": "^26.1.2",
     "eslint": "^9.39.5",
@@ -44,7 +45,8 @@
     "lint-staged": "17.3.0",
     "prettier": "^3.8.5",
     "turbo": "^2.10.7",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.65.0"
   },
   "lint-staged": {
     "apps/native-rd/**/*.{ts,tsx,js,jsx}": [
