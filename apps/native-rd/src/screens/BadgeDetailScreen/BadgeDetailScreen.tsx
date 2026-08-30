@@ -14,6 +14,7 @@ import { useUnistyles } from "react-native-unistyles";
 import { useQuery } from "@evolu/react";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "phosphor-react-native";
+import { Buffer } from "buffer";
 import { Text } from "../../components/Text";
 import { Button } from "../../components/Button";
 import { Card } from "../../components/Card";
@@ -69,14 +70,37 @@ const EVIDENCE_ID_PREFIX = "urn:ulid:";
 const logger = new Logger("BadgeDetailScreen");
 
 /**
+ * Unwraps a stored `badge.credential` to the VC object holding `evidence`.
+ *
+ * Two shapes reach this screen. Badges signed since #598 are compact ES256
+ * JWS strings whose credential sits under the payload's `vc` claim; badges
+ * earned before it are plain credential JSON. Old badges are never migrated
+ * or re-signed (their signature covers the exact stored bytes), so both
+ * shapes have to stay readable indefinitely. The 3-dot-segment /
+ * not-`{`-prefixed test is the same heuristic png-baking.ts uses to tell them
+ * apart.
+ */
+function parseStoredCredential(credential: string): Record<string, unknown> {
+  const trimmed = credential.trim();
+  if (!trimmed.startsWith("{") && trimmed.split(".").length === 3) {
+    const payload = JSON.parse(
+      Buffer.from(trimmed.split(".")[1]!, "base64url").toString("utf8"),
+    ) as { vc?: unknown };
+    return (payload.vc ?? {}) as Record<string, unknown>;
+  }
+  return JSON.parse(trimmed) as Record<string, unknown>;
+}
+
+/**
  * Pulls the achievement criteria narrative out of a stored OB3
- * VerifiableCredential (the "how it was earned" text). Defensive: any parse
- * failure or shape mismatch returns null so the UI just hides the section.
+ * VerifiableCredential (the "how it was earned" text), in either stored
+ * format. Defensive: any parse failure or shape mismatch returns null so the
+ * UI just hides the section.
  */
 function extractCriteriaNarrative(credential: string | null): string | null {
   if (!credential) return null;
   try {
-    const parsed: unknown = JSON.parse(credential);
+    const parsed = parseStoredCredential(credential);
     const subject = (parsed as { credentialSubject?: unknown })
       ?.credentialSubject;
     const achievement = (subject as { achievement?: unknown })?.achievement;
@@ -134,7 +158,7 @@ function extractEvidenceItems(
 ): CredentialEvidence[] | null {
   if (!credential) return null;
   try {
-    const parsed: unknown = JSON.parse(credential);
+    const parsed = parseStoredCredential(credential);
     const rawList = (parsed as { evidence?: unknown })?.evidence;
     if (!Array.isArray(rawList) || rawList.length === 0) return null;
 

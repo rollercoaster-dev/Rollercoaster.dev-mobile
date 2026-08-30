@@ -630,6 +630,57 @@ describe("BadgeDetailScreen", () => {
         evidence,
       });
 
+    /**
+     * The shape #598 writes: a compact ES256 JWS whose payload carries the
+     * credential under `vc`. Signature bytes are irrelevant to this read path
+     * — the screen never verifies, it only displays.
+     */
+    const jwsCredentialWith = (evidence: unknown[], narrative = "Did it.") => {
+      const b64 = (value: unknown) =>
+        Buffer.from(JSON.stringify(value)).toString("base64url");
+      return [
+        b64({ alg: "ES256", typ: "JWT" }),
+        b64({
+          iss: "did:key:zDnaerDaTF5BXEavCrfRZEk316dpbLsfPDZ3WJ5hRTPFU2169",
+          vc: JSON.parse(credentialWith(evidence, narrative)) as unknown,
+        }),
+        Buffer.from(new Uint8Array(64)).toString("base64url"),
+      ].join(".");
+    };
+
+    it("renders proof cards for a JWS-signed credential (#598 format)", () => {
+      const credential = jwsCredentialWith([
+        {
+          id: "urn:ulid:ev-1",
+          type: ["Evidence"],
+          name: "Watch intro video",
+          genre: "video",
+        },
+      ]);
+      mockUseQuery.mockReturnValue([makeRow({ credential })]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+
+      expect(screen.getByText("Watch intro video")).toBeOnTheScreen();
+      expect(screen.getByText("Video")).toBeOnTheScreen();
+    });
+
+    it("renders the criteria narrative from a JWS-signed credential", () => {
+      const credential = jwsCredentialWith(
+        [{ id: "urn:ulid:ev-1", type: ["Evidence"], name: "A step" }],
+        "Finished every step.",
+      );
+      mockUseQuery.mockReturnValue([makeRow({ credential })]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+
+      expect(screen.getByText("Finished every step.")).toBeOnTheScreen();
+    });
+
     it("renders a proof card per evidence item, with its translated type label", () => {
       const credential = credentialWith([
         {
