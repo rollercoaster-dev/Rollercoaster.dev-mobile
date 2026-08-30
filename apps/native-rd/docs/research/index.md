@@ -19,3 +19,4 @@ Completed research documents. These informed ADRs but are not the decisions them
 | [pear-p2p-evaluation.md](./pear-p2p-evaluation.md)                                   | Holepunch Pear P2P runtime fit: transport not verification                     | 2026-07-01    |
 | [atproto-evaluation.md](./atproto-evaluation.md)                                     | AT Protocol fit: public badge hosting + identity, not sync                     | 2026-07-29    |
 | [step-containment-semantics.md](./step-containment-semantics.md)                     | Containment is informative both ways: the app offers, never asserts or refuses | 2026-07-30    |
+| [ob3-proof-format-spike.md](./ob3-proof-format-spike.md)                             | Validator accepts VC-JWT but not EdDSA; no `eddsa-jcs-2022`. Recommends ES256  | 2026-08-30    |
