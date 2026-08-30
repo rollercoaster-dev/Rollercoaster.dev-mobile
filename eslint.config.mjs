@@ -8,6 +8,7 @@
  */
 
 import js from "@eslint/js";
+import tseslint from "typescript-eslint";
 
 const nodeCommonJsGlobals = {
   __dirname: "readonly",
@@ -18,6 +19,23 @@ const nodeCommonJsGlobals = {
 
 export default [
   js.configs.recommended,
+
+  // TypeScript sources need the TS parser and the TS-aware rule set. Rule
+  // switches mirror packages/openbadges-core/eslint.config.mjs so a file
+  // linted here and via `bun run lint` in the package gets the same verdict.
+  ...tseslint.configs.recommended.map((config) => ({
+    ...config,
+    files: ["packages/**/*.ts"],
+  })),
+  {
+    files: ["packages/**/*.ts"],
+    rules: {
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/no-explicit-any": "off",
+      "no-undef": "off",
+    },
+  },
 
   // Node/Bun globals for core library (works with binary data)
   {

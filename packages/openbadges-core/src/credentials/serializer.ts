@@ -233,7 +233,11 @@ export class OpenBadges3Serializer implements BadgeSerializer {
       description: badgeClass.description,
       image: badgeClass.image,
       criteria: badgeClass.criteria,
-      creator: issuer.id,
+      // OB3 wants a Profile object here, not a bare IRI. Defaults to a
+      // shallow copy of the issuer profile built above, so reassigning a
+      // top-level field on one does not affect the other (nested values such
+      // as `image` stay shared). `badgeClass.creator` below still overrides.
+      creator: { ...issuerObj },
     };
     if (badgeClass.alignment) achievement.alignments = badgeClass.alignment;
     if (badgeClass.tags) achievement.tags = badgeClass.tags;
@@ -249,8 +253,14 @@ export class OpenBadges3Serializer implements BadgeSerializer {
       "@context": BADGE_VERSION_CONTEXTS[BadgeVersion.V3],
       id: assertion.id,
       type: ["VerifiableCredential", "OpenBadgeCredential"],
+      name: badgeClass.name,
       issuer: issuerObj,
       validFrom: assertion.issuedOn,
+      // The OB3 `anyachievementcredential` JSON Schema requires `issuanceDate`;
+      // VC 2.0 itself uses `validFrom`, so both are emitted. Note `issuanceDate`
+      // is not a defined term in either @context above, so JSON-LD processors
+      // drop it — revisit when RDFC canonicalization lands (#598).
+      issuanceDate: assertion.issuedOn,
       credentialSubject: {
         id: assertion.recipient.identity,
         type: ["AchievementSubject"],
@@ -262,13 +272,15 @@ export class OpenBadges3Serializer implements BadgeSerializer {
     if (assertion.verification) {
       const v = assertion.verification;
       if (v.type && v.creator && v.signatureValue) {
-        result.proof = {
-          type: v.type,
-          ...(v.created && { created: v.created }),
-          verificationMethod: v.creator,
-          proofPurpose: "assertionMethod",
-          proofValue: v.signatureValue,
-        };
+        result.proof = [
+          {
+            type: v.type,
+            ...(v.created && { created: v.created }),
+            verificationMethod: v.creator,
+            proofPurpose: "assertionMethod",
+            proofValue: v.signatureValue,
+          },
+        ];
       }
     }
     if (assertion.credentialStatus)

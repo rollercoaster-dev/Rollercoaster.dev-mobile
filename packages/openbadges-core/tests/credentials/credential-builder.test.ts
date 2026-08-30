@@ -116,9 +116,9 @@ describe("OB3 serializer error handling", () => {
       mockBadgeClass,
       mockIssuer,
     ) as VerifiableCredentialData;
-    expect(result.proof).toBeDefined();
-    expect(result.proof!.type).toBe("Ed25519Signature2020");
-    expect(result.proof!.proofValue).toBe("abc123");
+    expect(result.proof!).toHaveLength(1);
+    expect(result.proof![0]!.type).toBe("Ed25519Signature2020");
+    expect(result.proof![0]!.proofValue).toBe("abc123");
   });
 
   it("should skip proof when verification fields are incomplete", () => {
