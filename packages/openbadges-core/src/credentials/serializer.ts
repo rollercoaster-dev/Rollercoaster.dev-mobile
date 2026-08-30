@@ -233,9 +233,10 @@ export class OpenBadges3Serializer implements BadgeSerializer {
       description: badgeClass.description,
       image: badgeClass.image,
       criteria: badgeClass.criteria,
-      // OB3 wants a Profile object here, not a bare IRI. Defaults to a copy
-      // of the issuer profile built above (a copy, so a consumer mutating
-      // one does not mutate the other); `badgeClass.creator` still overrides.
+      // OB3 wants a Profile object here, not a bare IRI. Defaults to a
+      // shallow copy of the issuer profile built above, so reassigning a
+      // top-level field on one does not affect the other (nested values such
+      // as `image` stay shared). `badgeClass.creator` below still overrides.
       creator: { ...issuerObj },
     };
     if (badgeClass.alignment) achievement.alignments = badgeClass.alignment;
@@ -255,8 +256,10 @@ export class OpenBadges3Serializer implements BadgeSerializer {
       name: badgeClass.name,
       issuer: issuerObj,
       validFrom: assertion.issuedOn,
-      // VC 1.1 validators require `issuanceDate`; VC 2.0 uses `validFrom`.
-      // Emitting both keeps the credential readable by either.
+      // The OB3 `anyachievementcredential` JSON Schema requires `issuanceDate`;
+      // VC 2.0 itself uses `validFrom`, so both are emitted. Note `issuanceDate`
+      // is not a defined term in either @context above, so JSON-LD processors
+      // drop it — revisit when RDFC canonicalization lands (#598).
       issuanceDate: assertion.issuedOn,
       credentialSubject: {
         id: assertion.recipient.identity,

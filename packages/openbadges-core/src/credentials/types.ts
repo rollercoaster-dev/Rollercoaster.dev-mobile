@@ -89,8 +89,9 @@ export interface VerifiableCredentialData {
   "@context": string | string[];
   id: Shared.IRI;
   type: string | string[];
-  // Optional: credentials issued before these were emitted are parsed back
-  // into this type verbatim, and they carry neither.
+  // Optional: this type describes any OB3 credential a consumer of this
+  // package may hold, including ones issued before these fields were emitted.
+  // `OpenBadges3Serializer` itself always sets both.
   name?: string | Shared.MultiLanguageString;
   issuer: Shared.IRI | Partial<IssuerData>;
   validFrom: string;
