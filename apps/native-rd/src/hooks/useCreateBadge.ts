@@ -259,14 +259,17 @@ export function useCreateBadge(
         // Iteration D work.
         const signedCredential = {
           ...unsignedCredential,
-          proof: {
-            type: "DataIntegrityProof",
-            cryptosuite: "eddsa-raw-json-iteration-a",
-            created: issuedOn,
-            proofPurpose: "assertionMethod",
-            verificationMethod: `${issuerDid}#key-1`,
-            proofValue,
-          },
+          // OB3 requires `proof` to be an array, even with a single entry.
+          proof: [
+            {
+              type: "DataIntegrityProof",
+              cryptosuite: "eddsa-raw-json-iteration-a",
+              created: issuedOn,
+              proofPurpose: "assertionMethod",
+              verificationMethod: `${issuerDid}#key-1`,
+              proofValue,
+            },
+          ],
         };
 
         setStatus("baking");
