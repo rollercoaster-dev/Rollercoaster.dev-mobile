@@ -1,0 +1,157 @@
+appId: dev.rollercoaster.app
+tags:
+  - required
+env:
+  METRO_HOST: localhost
+  METRO_PORT: "8081"
+---
+# ============================================================================
+# EVIDENCE GATE (#635, was bake-recovery.yaml #502)
+#
+# The companion to full-ride.yaml: the ride proves a fully-evidenced goal bakes,
+# this proves an under-evidenced one cannot — and that capturing what is missing
+# is the whole recovery.
+#
+# The gate is `isGoalEvidenceComplete`: every step must have captured every type
+# it planned. It is evidence-only, and this flow is shaped to prove that — the
+# recovery lap never marks the step complete, it only captures the note. Both
+# laps reach the design stage through `finish-line-cta`, which stays tappable at
+# any progress level (`areAllStepsComplete` feeds the finish node's `celebrate`
+# styling and gates nothing).
+#
+# Kept separate from the canonical ride because the block needs a step with
+# NOTHING captured, mutually exclusive with the ride's whole point (#502 D14).
+#
+# What this flow no longer covers, deliberately: the bake-time error alert and
+# its retry. Tripping the gate at bake time is now unreachable — Bake is
+# disabled upstream — and every remaining bake failure (PNG corruption, FS
+# errors, signing) needs code-level fault injection Maestro cannot do. That UI
+# is covered at component level in FinishBakingStage.test.tsx and
+# CompletionFlowScreen.test.tsx (#635 D5).
+# ============================================================================
+
+- runFlow:
+    file: ../subflows/launch-and-onboard.yaml
+    env:
+      METRO_HOST: ${METRO_HOST}
+      METRO_PORT: ${METRO_PORT}
+      THEME_SWATCH: light-autismFriendly
+
+# --- A one-step goal with nothing captured ---------------------------------
+- tapOn:
+    id: "goals-cockpit-new-goal"
+- assertVisible:
+    id: "new-goal-wizard-content"
+- tapOn:
+    id: "new-goal-title-input"
+- inputText: "Evidence gate goal"
+# The Next button sits in a footer the soft keyboard covers, and `hideKeyboard`
+# is unsupported by this app — the input carries `returnKeyType="done"` so Enter
+# blurs it (#502, same as full-ride.yaml).
+- pressKey: Enter
+- tapOn:
+    id: "new-goal-next-button"
+- tapOn:
+    id: "new-goal-first-step-input"
+- inputText: "Gate step"
+- pressKey: Enter
+- tapOn:
+    id: "new-goal-next-button"
+- tapOn:
+    id: "new-goal-build-ready-button"
+- assertVisible:
+    id: "new-goal-start-working-button"
+- tapOn:
+    id: "new-goal-start-working-button"
+
+# The step's default plan is [text] and nothing has been captured, so the
+# step-level gate is shut — the same predicate the goal-level one lifts.
+- extendedWaitUntil:
+    visible:
+      id: "focus-current-task-add-text"
+    timeout: 15000
+- assertNotVisible:
+    id: "focus-current-task-mark-complete"
+
+# --- 1. Bake is blocked, with the reason on screen --------------------------
+- tapOn:
+    id: "focus-progress-strip"
+- scrollUntilVisible:
+    element:
+      id: "finish-line-cta"
+    direction: DOWN
+    centerElement: true
+- tapOn:
+    id: "finish-line-cta"
+- extendedWaitUntil:
+    visible:
+      id: "finish-celebrate-stage"
+    timeout: 15000
+# Skip the closing note. It would persist a goal-scoped evidence row, which the
+# old floor (`canCompleteGoal`) accepted as proof; asserting the block still
+# holds afterwards would be a fine test, but writing it here would also make the
+# recovery lap ambiguous about what actually opened the gate.
+- tapOn:
+    id: "finish-celebrate-cta"
+- assertVisible:
+    id: "finish-design-stage"
+- assertVisible:
+    id: "finish-design-bake-blocked"
+
+# --- 2. Capture the missing evidence ----------------------------------------
+# A downward drag, not `back`: CompletionFlow is `presentation: "modal"`
+# (GoalsStack.tsx:39), whose iOS dismiss gesture is a drag from the top —
+# Maestro's `back` is a left-edge swipe and does nothing to it.
+- swipe:
+    start: "50%, 15%"
+    end: "50%, 95%"
+# Dismissing returns to whatever pushed the modal — Timeline, not Focus.
+- tapOn:
+    id: "timeline-back-button"
+- extendedWaitUntil:
+    visible:
+      id: "focus-current-task-add-text"
+    timeout: 15000
+# Text, never link: CaptureLinkScreen has the soft-keyboard hazard the canonical
+# ride works around, and this flow has no reason to take it.
+- tapOn:
+    id: "focus-current-task-add-text"
+- tapOn:
+    id: "capture-text-body"
+- inputText: "Captured what the plan asked for."
+- tapOn:
+    id: "capture-text-save"
+# The step-level reveal appearing is the local read on the same predicate.
+- extendedWaitUntil:
+    visible:
+      id: "focus-current-task-mark-complete"
+    timeout: 15000
+
+# --- 3. The gate opens on the evidence alone --------------------------------
+# The step is deliberately left in-progress: no "Mark complete" tap. If the gate
+# ever regressed to reading `step.status` (ADR-0014), this is where it breaks.
+- tapOn:
+    id: "focus-progress-strip"
+- scrollUntilVisible:
+    element:
+      id: "finish-line-cta"
+    direction: DOWN
+    centerElement: true
+- tapOn:
+    id: "finish-line-cta"
+- extendedWaitUntil:
+    visible:
+      id: "finish-celebrate-stage"
+    timeout: 15000
+- tapOn:
+    id: "finish-celebrate-cta"
+- assertVisible:
+    id: "finish-design-stage"
+- assertNotVisible:
+    id: "finish-design-bake-blocked"
+- tapOn:
+    id: "finish-design-bake"
+- extendedWaitUntil:
+    visible:
+      id: "finish-reveal-stage"
+    timeout: 20000
