@@ -16,30 +16,33 @@ summary of it).
 
 `bun run test:e2e:required` → **6/6 flows passed in 4m 37s**, exit 0.
 
-| Flow                              | Tag        | Time   | Status |
-| --------------------------------- | ---------- | ------ | ------ |
-| `settings-theme-persists-restart` | `required` | 27s    | ✅     |
-| `badge-view`                      | `required` | 14s    | ✅     |
-| `bake-recovery`                   | `required` | 49s    | ✅     |
-| `full-ride`                       | `required` | 1m 59s | ✅     |
-| `step-timing-editor`              | `required` | 53s    | ✅     |
-| `settings-theme-switch`           | `required` | 15s    | ✅     |
+Per-flow times are the JUnit `testcase time` values, not the rounded CLI summary.
+
+| Flow                              | Tag        | Time     | Status |
+| --------------------------------- | ---------- | -------- | ------ |
+| `settings-theme-persists-restart` | `required` | 27.233s  | ✅     |
+| `badge-view`                      | `required` | 13.724s  | ✅     |
+| `bake-recovery`                   | `required` | 49.417s  | ✅     |
+| `full-ride`                       | `required` | 119.239s | ✅     |
+| `step-timing-editor`              | `required` | 52.505s  | ✅     |
+| `settings-theme-switch`           | `required` | 14.699s  | ✅     |
 
 `evidence-viewer.yaml` (`tags: [optional]`, needs `EXPO_PUBLIC_E2E_MODE=true`)
 was run separately and also passes, so **all seven flows on disk are green**.
 
 ## Environment
 
-|           |                                                                                               |
-| --------- | --------------------------------------------------------------------------------------------- |
-| Commit    | `62f113d`                                                                                     |
-| Maestro   | 2.8.0 (`/opt/homebrew/bin/maestro`)                                                           |
-| Simulator | iPhone 17 · iOS 26.5 · `75D0CBC4-A428-407D-BF2E-E5EE452737C7`                                 |
-| App       | `dev.rollercoaster.app` (iOS keeps the base bundle id; `app.config.js` only suffixes Android) |
-| Metro     | this worktree, port 8081, launched via `bun run ios:e2e`                                      |
-| Locale    | `en`, pinned by `scripts/run-e2e.sh`                                                          |
-| Timestamp | 2026-09-01T09:24:30                                                                           |
-| JUnit     | `e2e/reports/junit.xml` (`tests="6" failures="0" time="276.839"`)                             |
+|                        |                                                                                                                                                                                    |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Commit                 | `62f113d`                                                                                                                                                                          |
+| Maestro                | 2.8.0 (`/opt/homebrew/bin/maestro`)                                                                                                                                                |
+| Simulator              | iPhone 17 · iOS 26.5 · `75D0CBC4-A428-407D-BF2E-E5EE452737C7`                                                                                                                      |
+| App                    | `dev.rollercoaster.app` (iOS keeps the base bundle id; `app.config.js` only suffixes Android)                                                                                      |
+| Metro                  | this worktree, port 8081, launched via `bun run ios:e2e`                                                                                                                           |
+| Locale                 | `en`, pinned by `scripts/run-e2e.sh`                                                                                                                                               |
+| `EXPO_PUBLIC_E2E_MODE` | `true` for the whole run (`bun run ios:e2e` sets it on the Metro that built the bundle). Only `evidence-viewer.yaml` requires it, but the required six ran against the same bundle |
+| Timestamp              | 2026-09-01T09:24:30                                                                                                                                                                |
+| JUnit                  | `e2e/reports/junit.xml` (`tests="6" failures="0" time="276.839"`)                                                                                                                  |
 
 ### Simulator UserDefaults the runner writes
 
@@ -62,11 +65,22 @@ and had to be stopped before `bun run ios:e2e` could serve this tree.
 
 ## What the ride proved on device
 
-Unchanged from the `7e6149e` run — both risks the #502 plan could not close
-statically stay closed (the Autism-Friendly determinism lever reaches
-`EditGoalStepList`'s discrete ↑/↓/nest controls, and the nest-under picker's
-`Modal` rows reach the a11y tree). `step-timing-editor` adds the timing editor's
-day grid and dependency picker to what one run covers.
+Both risks the #502 plan could not close statically stay closed. Restated in
+full here rather than cross-referenced, so this file survives on its own:
+
+- **Risk 1 — the determinism lever reaches `EditGoalStepList`.** Ride step 12's
+  `edit-goal-step-hierarchy-actions-.*` assertion passes, so selecting the
+  Autism-Friendly theme in the prologue does render the discrete ↑/↓/nest
+  controls. The whole reorder/reparent leg depends on it.
+- **Risk 2 — the nest-under picker's rows reach the a11y tree.** Both target
+  rows render inside an RN `Modal` and appear in `maestro hierarchy` with their
+  `accessibilityText` intact. No fallback to `edit-goal-break-into-*` was needed.
+
+Risk 3 (`runFlow` resolving out of `flows/`) was closed by #502's first partial
+run and has not regressed.
+
+New since `7e6149e`: `step-timing-editor` adds the timing editor's day grid and
+dependency picker to what one run covers.
 
 ## What #636 fixed to get here
 
@@ -90,17 +104,25 @@ and one was a logging-severity bug:
    root mounts where the centred row was. Added a `scrollUntilVisible`.
    No production change — the toggle renders unconditionally.
 3. **`full-ride` — the promote-back was a silent no-op.** Step 18's un-nest tap
-   never reached the button: with Bravo nested, its un-nest control sits at the
-   bottom of the list underneath the pinned Done footer, and iOS reports a frame
-   there anyway, so Maestro tapped the footer and reported COMPLETED. Bravo
+   never reached the button. Measured from `maestro hierarchy` at the failure
+   point: with Bravo nested, `edit-goal-substep-un-nest-*` sat at y 788-824 while
+   the `edit-goal-content` scroll viewport ended at y 808, so most of the row was
+   clipped. iOS reports a frame for it anyway, Maestro aimed at its centre
+   (~y 806), nothing received the tap, and the step reported COMPLETED. Bravo
    stayed Charlie's child, and once Alpha completed the resolver drilled into
    Charlie's only child — Focus showed "Bravo step", failing an assertion twenty
    commands downstream of the command that actually broke. Added a
    `scrollUntilVisible` plus an `assertNotVisible` on the un-nest control right
    after the tap, so a future no-op fails on the promote itself.
-   No production change: reorder, reparent and resolver ordinal math were all
-   correct — verified by dumping the hierarchy at the failure point and
-   replaying the promote with the scroll, which yields `[Alpha, Charlie, Bravo]`.
+
+   Two things this was **not**. It was not the pinned `edit-goal-done-button`
+   footer (y 710-758) absorbing the tap: that would have closed edit mode and
+   failed step 18's very next command instead of step 23. And it is not a
+   production reachability defect — the list scrolls, the control is reachable
+   once scrolled (the fixed flow reaches and taps it), and a human scrolls before
+   tapping. Reorder, reparent and resolver ordinal math were all correct:
+   replaying only the promote against the failed run's own state yielded
+   `[Alpha, Charlie, Bravo]`. Hence no production change.
 
 ## Gate on #383
 

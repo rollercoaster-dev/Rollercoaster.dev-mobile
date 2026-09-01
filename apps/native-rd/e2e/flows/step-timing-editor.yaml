@@ -147,8 +147,6 @@ env:
       id: "edit-goal-step-timing-.*-depends-on-toggle"
     direction: DOWN
     centerElement: true
-- assertVisible:
-    id: "edit-goal-step-timing-.*-depends-on-toggle"
 - tapOn:
     id: "edit-goal-step-timing-.*-depends-on-toggle"
 

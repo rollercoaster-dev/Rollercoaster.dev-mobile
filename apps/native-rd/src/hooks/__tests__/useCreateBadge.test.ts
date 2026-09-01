@@ -7,6 +7,7 @@ import { useCreateBadge } from "../useCreateBadge";
 import { completeGoal, createBadge, updateBadge, GoalStatus } from "../../db";
 import type { GoalId } from "../../db";
 import { i18n } from "../../i18n";
+import { capturedLoggerFor } from "../../__tests__/logger-helpers";
 
 // openbadges-core and jose are ESM-only — mock at module level
 jest.mock("@rollercoaster-dev/openbadges-core", () => ({
@@ -82,23 +83,14 @@ const { keyProvider: mockKeyProvider } = require("../../crypto");
 const { useUserKey: mockUseUserKey } = require("../useUserKey");
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const mockBadges = require("../../badges");
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { breadcrumb: mockBreadcrumb } = require("../../services/sentry-report");
 
 const {
+  breadcrumb: mockBreadcrumb,
   reportError: mockReportError,
 } = require("../../services/sentry-report");
-// The hook builds its Logger at module scope. Several other modules in the
-// import graph do too, so pick the instance out by its constructor tag rather
-// than by position — and do it here, before beforeEach's clearAllMocks wipes
-// `mock.calls`/`mock.results`.
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const MockLoggerCtor = require("../../shims/rd-logger").Logger as jest.Mock;
-const mockLogger = MockLoggerCtor.mock.results[
-  MockLoggerCtor.mock.calls.findIndex(
-    (args: unknown[]) => args[0] === "useCreateBadge",
-  )
-].value as { error: jest.Mock; info: jest.Mock };
+// Must be captured at module scope, before beforeEach's clearAllMocks — see the
+// helper's own note on why.
+const mockLogger = capturedLoggerFor("useCreateBadge");
 
 const GOAL_ID = "goal-01" as GoalId;
 const MOCK_GOAL = {

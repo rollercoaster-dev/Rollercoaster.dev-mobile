@@ -288,6 +288,12 @@ Implemented 2026-08-09 on `feat/issue-502-e2e-canonical-ride`, branched from `58
 are green**. The recorded artifact is `e2e/reports/full-ride-7e6149e.md`, which
 carries the full environment block; it is not duplicated here.
 
+> **Superseded by #636.** That record was replaced by
+> `e2e/reports/full-ride-62f113d.md` (6/6 at `62f113d`) once
+> `step-timing-editor.yaml` joined the required gate and three flows went red.
+> Every reference to `full-ride-7e6149e.md` below is historical — the file is no
+> longer on disk; read the successor instead.
+
 **Risks 1, 2 and 3 are all CLOSED on device** — see the run record. Ride step 12
 proved the Autism-Friendly theme unlocks the discrete hierarchy controls, and
 `maestro hierarchy` showed both nest-under target rows reaching the a11y tree
@@ -360,8 +366,9 @@ and keeps the fresh-ref case as an explicitly-labelled companion.
 
 ### What is left
 
-1. **Edit issue #383's body** to add the blocking checklist item citing
-   `e2e/reports/full-ride-7e6149e.md`. This is the last piece of commit 9 and the
+1. **Edit issue #383's body** to add the blocking checklist item citing the
+   current run record (`e2e/reports/full-ride-62f113d.md` since #636). This is
+   the last piece of commit 9 and the
    only thing that makes acceptance criterion 5 enforceable rather than an
    honour system.
 2. ~~File the remaining follow-ups.~~ **Done** — #560, #561, #562, #563, #564,

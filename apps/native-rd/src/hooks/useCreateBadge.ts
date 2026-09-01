@@ -75,7 +75,7 @@ const logger = new Logger("useCreateBadge");
  * turned the `bake-recovery` E2E flow red (#636). Genuine faults keep going to
  * `logger.error` + Sentry.
  */
-export class BadgeGateError extends Error {
+class BadgeGateError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "BadgeGateError";

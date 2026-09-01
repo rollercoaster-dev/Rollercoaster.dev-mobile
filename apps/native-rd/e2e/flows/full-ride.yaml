@@ -254,12 +254,15 @@ env:
     id: "timeline-edit-button"
 - assertVisible:
     id: "edit-goal-content"
-#     Scroll first (#636): a nested Bravo pushes its un-nest control to the very
-#     bottom of the list, underneath the pinned Done footer. iOS still reports a
-#     frame there, so a bare tapOn lands on the footer, Maestro reports
-#     COMPLETED, and the promote never happens — silently. Focus then resolves
-#     into Charlie's only child (Bravo) at step 23 instead of Charlie, twenty
-#     commands away from the command that actually failed.
+#     Scroll first (#636): a nested Bravo pushes its un-nest control past the
+#     bottom of the scroll viewport. Measured at the failure point, the control
+#     sat at y 788-824 while `edit-goal-content` ended at y 808 — iOS reports a
+#     frame for the clipped row anyway, so `tapOn` aimed at its centre (~y 806),
+#     the tap never reached the Pressable, and Maestro reported COMPLETED. The
+#     promote silently did not happen; Focus then resolved into Charlie's only
+#     child (Bravo) at step 23 instead of Charlie, twenty commands away from the
+#     command that actually failed. (It did NOT hit the Done footer at y 710-758
+#     — that would have closed edit mode and failed the very next command.)
 - scrollUntilVisible:
     element:
       id: "edit-goal-substep-un-nest-.*"
