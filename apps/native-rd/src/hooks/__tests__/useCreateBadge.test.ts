@@ -85,6 +85,21 @@ const mockBadges = require("../../badges");
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { breadcrumb: mockBreadcrumb } = require("../../services/sentry-report");
 
+const {
+  reportError: mockReportError,
+} = require("../../services/sentry-report");
+// The hook builds its Logger at module scope. Several other modules in the
+// import graph do too, so pick the instance out by its constructor tag rather
+// than by position — and do it here, before beforeEach's clearAllMocks wipes
+// `mock.calls`/`mock.results`.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const MockLoggerCtor = require("../../shims/rd-logger").Logger as jest.Mock;
+const mockLogger = MockLoggerCtor.mock.results[
+  MockLoggerCtor.mock.calls.findIndex(
+    (args: unknown[]) => args[0] === "useCreateBadge",
+  )
+].value as { error: jest.Mock; info: jest.Mock };
+
 const GOAL_ID = "goal-01" as GoalId;
 const MOCK_GOAL = {
   id: GOAL_ID,
@@ -713,6 +728,49 @@ describe("useCreateBadge", () => {
 
       expect(result.current.error).toContain("no evidence attached");
       expect(mockCreateBadge).not.toHaveBeenCalled();
+    });
+
+    // #636: LogBox patches console.error, and its native overlay is invisible
+    // to Maestro — it swallowed the next tap and turned bake-recovery red. The
+    // no-evidence gate is an expected, user-recoverable rejection with its own
+    // error UI, so it must not reach console.error or Sentry.
+    it("does not log an error or report to Sentry for the expected gate rejection", async () => {
+      mockUseQuery.mockImplementation((query: string) => {
+        if (query === "mock-goals-query") return [MOCK_GOAL];
+        if (query === "mock-badge-query") return [];
+        return [];
+      });
+
+      const { result } = renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
+      await waitFor(() => expect(result.current.status).toBe("error"));
+
+      expect(mockLogger.error).not.toHaveBeenCalled();
+      expect(mockReportError).not.toHaveBeenCalled();
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        "Badge bake blocked: evidence gate not satisfied",
+        { goalId: GOAL_ID },
+      );
+    });
+
+    // Guard for the other half of the narrowing: a genuine fault still has to
+    // reach both LogBox and Sentry.
+    it("still logs an error and reports a genuine persistence failure", async () => {
+      mockCreateBadge.mockReturnValueOnce({
+        ok: false,
+        error: { type: "WriteError" },
+      });
+
+      const { result } = renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
+      await waitFor(() => expect(result.current.status).toBe("error"));
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        "Failed to create badge credential",
+        expect.objectContaining({ goalId: GOAL_ID }),
+      );
+      expect(mockReportError).toHaveBeenCalledWith(
+        expect.any(Error),
+        expect.objectContaining({ area: "badge.create" }),
+      );
     });
   });
 

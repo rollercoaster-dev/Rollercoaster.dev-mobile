@@ -64,6 +64,24 @@ import { Logger } from "../shims/rd-logger";
 
 const logger = new Logger("useCreateBadge");
 
+/**
+ * The one bake failure that is expected, by design, and already has its own
+ * recovery UI (`finish-baking-error-alert` + Retry): the user tried to finish a
+ * goal with no evidence attached.
+ *
+ * It gets its own class so the outer catch can route it through `logger.info`
+ * instead of `logger.error`. `console.error` is patched by LogBox, whose native
+ * overlay Maestro cannot see or dismiss — it silently eats the next tap and
+ * turned the `bake-recovery` E2E flow red (#636). Genuine faults keep going to
+ * `logger.error` + Sentry.
+ */
+export class BadgeGateError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "BadgeGateError";
+  }
+}
+
 export const PLACEHOLDER_IMAGE_URI = "pending:baked-image";
 
 export type BadgeCreationStatus =
@@ -361,7 +379,7 @@ export function useCreateBadge(
           type: (e.type as string | null) ?? null,
         }));
         if (!canCompleteGoal(evidenceForGating)) {
-          throw new Error(
+          throw new BadgeGateError(
             "Cannot complete goal: no evidence attached. Add at least one evidence item first.",
           );
         }
@@ -411,14 +429,22 @@ export function useCreateBadge(
         const message = err instanceof Error ? err.message : "Unknown error";
         setError(message);
         setStatus("error");
-        logger.error("Failed to create badge credential", {
-          goalId,
-          error: err,
-        });
-        // Single outer report — the broad catch covers build/sign/bake/store
-        // stages. Sub-stage granularity would require per-stage try/catch and
-        // is deferred until triage data shows we need it.
-        reportError(err, { area: "badge.create" });
+        if (err instanceof BadgeGateError) {
+          // Expected, user-recoverable, and already surfaced in the UI. Keep it
+          // off `console.error` (LogBox) and out of Sentry — see BadgeGateError.
+          logger.info("Badge bake blocked: evidence gate not satisfied", {
+            goalId,
+          });
+        } else {
+          logger.error("Failed to create badge credential", {
+            goalId,
+            error: err,
+          });
+          // Single outer report — the broad catch covers build/sign/bake/store
+          // stages. Sub-stage granularity would require per-stage try/catch and
+          // is deferred until triage data shows we need it.
+          reportError(err, { area: "badge.create" });
+        }
       }
       // No finally reset — hasTriggered.current stays true permanently
     })();
