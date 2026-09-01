@@ -78,6 +78,7 @@ export function celebrateCopy(
 
 export function designCopy(
   t: FinishT,
+  { stepsMissingEvidence }: { stepsMissingEvidence: number },
 ): CopyProps<
   FinishDesignStageProps,
   | "headerTitle"
@@ -111,7 +112,15 @@ export function designCopy(
     bakeLabel: t("completion:finish.design.bakeLabel"),
     bakeSubcopy: t("completion:finish.design.bakeSubcopy"),
     // Always supplied; `canBake` at the call site decides whether it shows.
-    bakeBlockedMessage: t("completion:finish.design.bakeBlockedMessage"),
+    // A stepless goal has nothing outstanding and still cannot bake, so it gets
+    // its own line rather than a "0 steps" plural — the escape there is adding
+    // a step, not capturing evidence.
+    bakeBlockedMessage:
+      stepsMissingEvidence === 0
+        ? t("completion:finish.design.bakeBlockedNoSteps")
+        : t("completion:finish.design.bakeBlockedMessage", {
+            count: stepsMissingEvidence,
+          }),
   };
 }
 

@@ -99,7 +99,11 @@ export interface FinishDesignStageProps {
    * computed the gate get today's behavior.
    */
   canBake?: boolean;
-  /** Shown in place of `bakeSubcopy` while `canBake` is false. */
+  /**
+   * Shown in place of `bakeSubcopy` while `canBake` is false, and announced as
+   * the CTA's `accessibilityHint` — a disabled button otherwise reads as
+   * "dimmed" with the reason stranded in an unlinked sibling.
+   */
   bakeBlockedMessage?: string;
   /** Live preview size in logical pixels (matches the prototype's `badgePreviewMd`). */
   badgeSize?: number;
@@ -157,7 +161,7 @@ export function FinishDesignStage({
   bakeIcon = "✓",
   bakeSubcopy = "saves & seals it into a verifiable badge",
   canBake = true,
-  bakeBlockedMessage = "Every step needs the evidence it planned. Capture what's left and this opens up.",
+  bakeBlockedMessage = "Some steps still need the evidence they planned. Capture what's left and this opens up.",
   badgeSize = 150,
   initialExpandedSection = "shape",
   previewRef,
@@ -485,6 +489,7 @@ export function FinishDesignStage({
           variant="primary"
           size="lg"
           disabled={!canBake}
+          {...(canBake ? {} : { accessibilityHint: bakeBlockedMessage })}
           testID="finish-design-bake"
         />
         {/* One slot, two messages: the blocked reason replaces the subcopy

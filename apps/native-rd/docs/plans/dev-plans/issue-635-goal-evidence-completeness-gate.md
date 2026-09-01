@@ -180,6 +180,26 @@ No `Blocked by` / `Depends on` / `After` markers in the issue body.
   under it** — one line to read below the CTA, and no footer height jump when
   the gate opens.
 
+- [2026-09-01] **Review pass — the blocked copy now names the gap.** Step 5
+  drafted a generic line ("Every step needs the evidence it planned…"), but the
+  Intent Verification bullet asks for "an inline reason **naming what is
+  outstanding**", and the drafted string names the rule, not the gap. Closed
+  with `countStepsMissingEvidence` behind a pluralized
+  `bakeBlockedMessage_one/_other`. A step counts once no matter how many types
+  it owes — the message points at steps, and a per-type total would overstate
+  the work. This is not D9: D9 defers the _up-front_ `FinishLine` messaging,
+  which is still deferred.
+
+- [2026-09-01] **A stepless goal gets its own line.** Zero outstanding steps is
+  not the same as bakeable (D3), so the count copy would have read "0 steps".
+  `bakeBlockedNoSteps` points at adding a step, which is the actual escape.
+  Found while wiring the count, not in the plan.
+
+- [2026-09-01] **The blocked reason is also the CTA's `accessibilityHint`.** A
+  disabled `Button` announces as "dimmed" and nothing else, leaving the reason
+  in an unlinked sibling `Text` — the ND posture the issue invokes ("never
+  dead-end someone") was visual-only. Flagged by both review axes.
+
 - [2026-09-01] **The E2E recovery lap never taps "Mark complete."** The plan's
   version marked the step complete before re-entering the design stage (as the
   old flow did). Leaving it in-progress makes the flow fail if the gate ever

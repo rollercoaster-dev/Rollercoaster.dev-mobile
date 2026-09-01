@@ -37,7 +37,10 @@ import type { GoalId } from "../../db";
 // Imported from the leaf module, not the `../../db` barrel: the gate is a pure
 // predicate over row shapes, and reaching it through the barrel would tie it to
 // the Evolu runtime for every consumer (and every test that stubs the barrel).
-import { isGoalEvidenceComplete } from "../../db/evidenceGate";
+import {
+  countStepsMissingEvidence,
+  isGoalEvidenceComplete,
+} from "../../db/evidenceGate";
 import { useCreateBadge } from "../../hooks/useCreateBadge";
 import { useAnimationPref } from "../../hooks/useAnimationPref";
 import type {
@@ -131,6 +134,12 @@ function FinishFlowContent({ goalId }: { goalId: string }) {
   // note cannot unblock this: `stepEvidenceByGoalQuery` is step-scoped rows
   // only, and a reflection on the ride is not proof a step happened.
   const canBake = isGoalEvidenceComplete(stepRows, stepEvidenceRows);
+  // Drives the blocked copy, which names how many steps are outstanding rather
+  // than restating the rule.
+  const stepsMissingEvidence = countStepsMissingEvidence(
+    stepRows,
+    stepEvidenceRows,
+  );
 
   const previewRef = useRef<BadgeRendererHandle | null>(null);
   const capturingRef = useRef(false);
@@ -288,7 +297,7 @@ function FinishFlowContent({ goalId }: { goalId: string }) {
   if (stage === "design") {
     return (
       <FinishDesignStage
-        {...designCopy(t)}
+        {...designCopy(t, { stepsMissingEvidence })}
         design={currentDesign}
         onDesignChange={setDesign}
         goalColor={goalColor}

@@ -11,9 +11,6 @@ export {
   Schema,
 } from "./schema";
 export { evolu, useAppEvolu, EvoluAppProvider } from "./evolu";
-// The strict evidence tier. Lives outside queries.ts so UI can import it
-// without the Evolu runtime — see evidenceGate.ts.
-export { isStepEvidenceComplete, isGoalEvidenceComplete } from "./evidenceGate";
 export {
   // Goal
   goalsQuery,

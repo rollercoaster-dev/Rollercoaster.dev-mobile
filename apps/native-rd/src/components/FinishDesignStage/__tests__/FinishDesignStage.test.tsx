@@ -377,6 +377,29 @@ describe("FinishDesignStage", () => {
       ).toBeNull();
     });
 
+    // A disabled button announces as "dimmed" and nothing else; without this the
+    // reason is visible but unreachable non-visually.
+    it("announces the reason as the CTA's accessibility hint while blocked", () => {
+      renderWithProviders(
+        <FinishDesignStage
+          {...makeProps({
+            canBake: false,
+            bakeBlockedMessage: "Two steps still owe a photo.",
+          })}
+        />,
+      );
+      expect(
+        screen.getByTestId("finish-design-bake").props.accessibilityHint,
+      ).toBe("Two steps still owe a photo.");
+    });
+
+    it("carries no blocked hint while the CTA is enabled", () => {
+      renderWithProviders(<FinishDesignStage {...makeProps()} />);
+      expect(
+        screen.getByTestId("finish-design-bake").props.accessibilityHint,
+      ).toBeUndefined();
+    });
+
     it("does not fire onBake while blocked", () => {
       const onBake = jest.fn();
       renderWithProviders(

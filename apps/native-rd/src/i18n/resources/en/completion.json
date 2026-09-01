@@ -22,7 +22,9 @@
       "backA11yLabel": "Back",
       "bakeLabel": "Bake my badge",
       "bakeSubcopy": "saves & seals it into a verifiable badge",
-      "bakeBlockedMessage": "Every step needs the evidence it planned. Capture what's left and this opens up."
+      "bakeBlockedMessage_one": "1 step still needs the evidence it planned. Capture it and this opens up.",
+      "bakeBlockedMessage_other": "{{count}} steps still need the evidence they planned. Capture what's left and this opens up.",
+      "bakeBlockedNoSteps": "This goal has no steps yet. Add one, capture its evidence, and this opens up."
     },
     "baking": {
       "label": "Baking your badge…",

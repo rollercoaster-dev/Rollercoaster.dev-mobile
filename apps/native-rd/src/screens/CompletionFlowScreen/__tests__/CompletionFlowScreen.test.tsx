@@ -330,9 +330,39 @@ describe("CompletionFlowScreen", () => {
       goToDesign();
 
       expect(screen.getByTestId("finish-design-bake")).toBeDisabled();
+      // Both steps are outstanding, and the copy says so rather than restating
+      // the rule.
       expect(
         screen.getByTestId("finish-design-bake-blocked"),
-      ).toHaveTextContent(t("completion:finish.design.bakeBlockedMessage"));
+      ).toHaveTextContent(
+        t("completion:finish.design.bakeBlockedMessage", { count: 2 }),
+      );
+    });
+
+    it("names a single outstanding step in the singular", () => {
+      setupQueries({ stepEvidence: [stepNote("step-1")] });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      goToDesign();
+
+      expect(
+        screen.getByTestId("finish-design-bake-blocked"),
+      ).toHaveTextContent(
+        t("completion:finish.design.bakeBlockedMessage", { count: 1 }),
+      );
+    });
+
+    // The closing note is goal-scoped. Feeding the gate `stepEvidenceByGoalQuery`
+    // rather than a mixed array is what keeps it from unblocking anything, and a
+    // row with a null stepId is what a switch to `evidenceByGoalQuery` would
+    // deliver here (#635 D1, pinned against the old `canCompleteGoal` floor).
+    it("stays blocked when the only evidence is goal-scoped", () => {
+      setupQueries({
+        stepEvidence: [{ ...stepNote("step-1"), stepId: null }],
+      });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      goToDesign();
+
+      expect(screen.getByTestId("finish-design-bake")).toBeDisabled();
     });
 
     it("blocks Bake when only some steps have their evidence", () => {
@@ -391,12 +421,17 @@ describe("CompletionFlowScreen", () => {
 
     // A goal with no steps has nothing to evidence, so it cannot bake either
     // (D3) — the vacuous `[].every(...)` hole, at the screen level.
-    it("blocks Bake on a stepless goal", () => {
+    it("blocks a stepless goal and points at adding a step, not capturing", () => {
       setupQueries({ steps: [], stepEvidence: [] });
       renderWithProviders(<CompletionFlowScreen {...routeProps} />);
       goToDesign();
 
       expect(screen.getByTestId("finish-design-bake")).toBeDisabled();
+      // Nothing is outstanding on a stepless goal, so the count copy would read
+      // "0 steps" — it gets its own line instead.
+      expect(
+        screen.getByTestId("finish-design-bake-blocked"),
+      ).toHaveTextContent(t("completion:finish.design.bakeBlockedNoSteps"));
     });
   });
 

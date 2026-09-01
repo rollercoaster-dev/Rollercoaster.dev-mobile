@@ -30,7 +30,7 @@ export function validateEvidenceType(type: string): EvidenceTypeValue {
  *
  * This is the predicate the completion UI gates on, one level below the two
  * callers that own a data shape:
- * `db/queries`'s `isStepEvidenceComplete` (a step's JSON column) and
+ * `db/evidenceGate`'s `isStepEvidenceComplete` (a step's JSON column) and
  * `FocusCurrentTaskCard` (props already normalized by `FocusModeScreen`).
  * Both sides arrive here through `validateEvidenceType`, so an unknown stored
  * key ("sketch") compares as `file` on the plan and the capture alike.

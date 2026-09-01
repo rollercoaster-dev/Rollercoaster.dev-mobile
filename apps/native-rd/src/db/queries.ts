@@ -325,8 +325,8 @@ function serializePlannedTypes(
  * the card still shows as unfinished can pass this gate. Callers must not treat
  * a `true` here as "the card would offer completion"; it only means completion
  * is permitted. That stricter tier is `evidenceGate.ts`'s
- * `isStepEvidenceComplete`, which `FocusCurrentTaskCard` and the goal-level
- * bake gate both derive from.
+ * `isStepEvidenceComplete`; `FocusCurrentTaskCard` reaches the same rule
+ * through `types/evidence`'s `isEvidencePlanSatisfied`, which both share.
  *
  * @param plannedEvidenceTypesJson - Value from step.plannedEvidenceTypes column (JSON string or null)
  * @param stepEvidence - All non-deleted evidence rows for this step

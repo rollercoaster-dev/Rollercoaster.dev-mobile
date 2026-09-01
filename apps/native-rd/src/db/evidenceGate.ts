@@ -19,6 +19,18 @@ import { resolvePlannedEvidenceTypes } from "../utils/parsePlannedEvidenceTypes"
 
 const logger = new Logger("db.evidenceGate");
 
+/** The columns of a step row the gate reads — nothing about its status. */
+export interface EvidenceGateStep {
+  readonly id: string;
+  readonly plannedEvidenceTypes: string | null;
+}
+
+/** A step-scoped evidence row, as `stepEvidenceByGoalQuery` returns it. */
+export interface EvidenceGateRow {
+  readonly stepId: string | null;
+  readonly type: string | null;
+}
+
 /**
  * The strict evidence tier for one step, read off its stored columns.
  *
@@ -73,11 +85,31 @@ export function isStepEvidenceComplete(
  * @returns true if the goal's every step has all its planned evidence
  */
 export function isGoalEvidenceComplete(
-  steps: readonly { id: string; plannedEvidenceTypes: string | null }[],
-  stepEvidence: readonly { stepId: string | null; type: string | null }[],
+  steps: readonly EvidenceGateStep[],
+  stepEvidence: readonly EvidenceGateRow[],
 ): boolean {
-  if (steps.length === 0) return false;
+  return (
+    steps.length > 0 && countStepsMissingEvidence(steps, stepEvidence) === 0
+  );
+}
 
+/**
+ * How many steps still owe some of the evidence they planned.
+ *
+ * The number behind the blocked-Bake copy, so the reason can name the size of
+ * the gap rather than restating the rule. A step counts once no matter how many
+ * of its planned types are outstanding — the message points at steps, and
+ * naming a per-type total would overstate the work.
+ *
+ * Zero on a stepless goal, which is *not* the same as bakeable: a goal with no
+ * steps has nothing outstanding and still cannot bake (see
+ * {@link isGoalEvidenceComplete}). Callers rendering copy must handle that case
+ * separately.
+ */
+export function countStepsMissingEvidence(
+  steps: readonly EvidenceGateStep[],
+  stepEvidence: readonly EvidenceGateRow[],
+): number {
   const evidenceByStep = new Map<string, { type: string | null }[]>();
   for (const row of stepEvidence) {
     if (row.stepId === null) continue;
@@ -86,10 +118,11 @@ export function isGoalEvidenceComplete(
     else evidenceByStep.set(row.stepId, [row]);
   }
 
-  return steps.every((step) =>
-    isStepEvidenceComplete(
-      step.plannedEvidenceTypes,
-      evidenceByStep.get(step.id) ?? [],
-    ),
-  );
+  return steps.filter(
+    (step) =>
+      !isStepEvidenceComplete(
+        step.plannedEvidenceTypes,
+        evidenceByStep.get(step.id) ?? [],
+      ),
+  ).length;
 }

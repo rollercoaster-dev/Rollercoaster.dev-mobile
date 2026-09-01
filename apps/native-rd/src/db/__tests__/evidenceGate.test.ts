@@ -7,14 +7,11 @@
  */
 
 import {
-  isStepEvidenceComplete,
+  countStepsMissingEvidence,
   isGoalEvidenceComplete,
+  isStepEvidenceComplete,
 } from "../evidenceGate";
 import { EvidenceType, type StepId } from "../schema";
-import {
-  isEvidencePlanSatisfied,
-  type EvidenceTypeValue,
-} from "../../types/evidence";
 
 /** A step row as `stepsByGoalQuery` returns it, narrowed to what the gate reads. */
 function step(id: string, plannedEvidenceTypes: string | null = null) {
@@ -25,34 +22,6 @@ function step(id: string, plannedEvidenceTypes: string | null = null) {
 function evidence(stepId: string | null, type: string | null) {
   return { stepId: stepId as StepId | null, type };
 }
-
-describe("isEvidencePlanSatisfied", () => {
-  const { text, photo, video } = EvidenceType;
-  const cases: readonly [
-    string,
-    EvidenceTypeValue[],
-    EvidenceTypeValue[],
-    boolean,
-  ][] = [
-    ["empty plan is never satisfied, even with evidence", [], [text], false],
-    ["empty plan, no evidence", [], [], false],
-    ["single planned type captured", [text], [text], true],
-    ["single planned type not captured", [text], [], false],
-    ["one of two planned types captured", [text, photo], [text], false],
-    ["both planned types captured", [text, photo], [photo, text], true],
-    ["extra captures beyond the plan still satisfy it", [text], [text, video], true], // prettier-ignore
-    [
-      "captures of the wrong type do not satisfy",
-      [photo],
-      [text, video],
-      false,
-    ],
-  ];
-
-  test.each(cases)("%s", (_label, planned, captured, expected) => {
-    expect(isEvidencePlanSatisfied(planned, captured)).toBe(expected);
-  });
-});
 
 describe("isStepEvidenceComplete", () => {
   test.each([
@@ -99,10 +68,6 @@ describe("isStepEvidenceComplete", () => {
 describe("isGoalEvidenceComplete", () => {
   test("a goal with no steps is not complete (D3 — no vacuous truth)", () => {
     expect(isGoalEvidenceComplete([], [])).toBe(false);
-  });
-
-  test("a goal with no steps stays incomplete even with evidence rows", () => {
-    expect(isGoalEvidenceComplete([], [evidence("s1", "text")])).toBe(false);
   });
 
   test("one step, its planned evidence captured → complete", () => {
@@ -163,5 +128,41 @@ describe("isGoalEvidenceComplete", () => {
     expect(isGoalEvidenceComplete([step("s1")], [evidence("s1", null)])).toBe(
       false,
     );
+  });
+});
+
+describe("countStepsMissingEvidence", () => {
+  test("counts each outstanding step once, however many types it owes", () => {
+    expect(
+      countStepsMissingEvidence(
+        [step("s1", '["text","photo","link"]'), step("s2")],
+        [evidence("s1", EvidenceType.text)],
+      ),
+    ).toBe(2);
+  });
+
+  test("does not count steps whose plan is fully captured", () => {
+    expect(
+      countStepsMissingEvidence(
+        [step("s1"), step("s2")],
+        [evidence("s1", EvidenceType.text)],
+      ),
+    ).toBe(1);
+  });
+
+  test("zero once every step is satisfied", () => {
+    expect(
+      countStepsMissingEvidence(
+        [step("s1"), step("s2")],
+        [evidence("s1", EvidenceType.text), evidence("s2", EvidenceType.text)],
+      ),
+    ).toBe(0);
+  });
+
+  // Zero outstanding is not the same as bakeable — the copy layer has to tell
+  // these two apart, which is why the count and the gate are separate calls.
+  test("zero on a stepless goal, which still cannot bake", () => {
+    expect(countStepsMissingEvidence([], [])).toBe(0);
+    expect(isGoalEvidenceComplete([], [])).toBe(false);
   });
 });
