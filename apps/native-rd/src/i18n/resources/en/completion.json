@@ -21,7 +21,8 @@
       "headerTitle": "Make your badge",
       "backA11yLabel": "Back",
       "bakeLabel": "Bake my badge",
-      "bakeSubcopy": "saves & seals it into a verifiable badge"
+      "bakeSubcopy": "saves & seals it into a verifiable badge",
+      "bakeBlockedMessage": "Every step needs the evidence it planned. Capture what's left and this opens up."
     },
     "baking": {
       "label": "Baking your badge…",

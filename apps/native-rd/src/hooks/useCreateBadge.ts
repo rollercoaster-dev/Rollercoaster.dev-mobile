@@ -357,6 +357,12 @@ export function useCreateBadge(
         // only goal-scoped affordance — the closing note — is optional. One
         // array feeds both the pre-mutation gate and the write-time re-check
         // inside completeGoal, so the two can't diverge.
+        //
+        // Deliberately the *floor* (`canCompleteGoal`), not the strict tier the
+        // UI gates on: `CompletionFlowScreen` disables Bake unless
+        // `isGoalEvidenceComplete` holds, so by the time control reaches here
+        // the only thing left for this check to catch is the residual race —
+        // evidence deleted between designing and baking (#635 D6).
         const evidenceForGating = [...gev, ...sev].map((e) => ({
           type: (e.type as string | null) ?? null,
         }));

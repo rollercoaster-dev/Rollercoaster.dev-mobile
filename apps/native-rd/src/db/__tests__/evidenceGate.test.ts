@@ -6,7 +6,10 @@
  * tier above them — what the "Mark complete" reveal and the Bake CTA gate on.
  */
 
-import { isStepEvidenceComplete, isGoalEvidenceComplete } from "../queries";
+import {
+  isStepEvidenceComplete,
+  isGoalEvidenceComplete,
+} from "../evidenceGate";
 import { EvidenceType, type StepId } from "../schema";
 import {
   isEvidencePlanSatisfied,

@@ -91,6 +91,7 @@ export function designCopy(
   | "bottomLabelAccessibilityLabel"
   | "bakeLabel"
   | "bakeSubcopy"
+  | "bakeBlockedMessage"
 > {
   return {
     headerTitle: t("completion:finish.design.headerTitle"),
@@ -109,6 +110,8 @@ export function designCopy(
     bottomLabelAccessibilityLabel: t("badgeDesigner:bottomLabel.a11y"),
     bakeLabel: t("completion:finish.design.bakeLabel"),
     bakeSubcopy: t("completion:finish.design.bakeSubcopy"),
+    // Always supplied; `canBake` at the call site decides whether it shows.
+    bakeBlockedMessage: t("completion:finish.design.bakeBlockedMessage"),
   };
 }
 
