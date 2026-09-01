@@ -5,6 +5,8 @@ export type {
   CredentialInput,
 } from "./credentialBuilder";
 
+export { signCredentialAsVcJwt } from "./vcJwt";
+export type { VcJwtInput } from "./vcJwt";
 export { bakePNG, unbakePNG, isPNG } from "./png-baking";
 export {
   generateBadgeImagePNG,

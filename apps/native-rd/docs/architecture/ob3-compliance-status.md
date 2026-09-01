@@ -67,14 +67,16 @@ Each gap below is a real validator error, mapped to the line of code that produc
 | Cause     | `assertion.issuedOn` is set but not surfaced as the VC envelope's `issuanceDate`. |
 | Fix scope | Schema-shape only.                                                                |
 
-### 5. Non-standard cryptosuite
+### 5. Non-standard cryptosuite — **addressed (#598), pending re-validation**
 
-|           |                                                                                                                                                                                                |
-| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Validator | `No proof with type any of ("Ed25519Signature2020", "DataIntegrityProof" with cryptosuite attr of "eddsa-rdfc-2022" or "eddsa-2022") or proof purpose "assertionMethod" found`                 |
-| Source    | [`useCreateBadge.ts:200-205`](../../src/hooks/useCreateBadge.ts)                                                                                                                               |
-| Cause     | Cryptosuite is `eddsa-raw-json-iteration-a`. Signature is over raw `JSON.stringify(credential)`, not RDFC-1.0 canonicalized form. `proofValue` is bare base64url, not multibase `u…`-prefixed. |
-| Fix scope | Crypto. Requires RDFC-1.0 canonicalization (W3C Data Integrity), multibase encoding, cryptosuite rename.                                                                                       |
+|              |                                                                                                                                                                                                                          |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Validator    | `No proof with type any of ("Ed25519Signature2020", "DataIntegrityProof" with cryptosuite attr of "eddsa-rdfc-2022" or "eddsa-2022") or proof purpose "assertionMethod" found`                                           |
+| Was          | Cryptosuite `eddsa-raw-json-iteration-a`. Signature over raw `JSON.stringify(credential)`, not RDFC-1.0 canonicalized form. `proofValue` bare base64url, not multibase `u…`-prefixed.                                    |
+| Now          | The credential **is** a compact ES256 JWS (VC-JWT external proof) — no embedded `proof` member at all. Header is `{alg: "ES256", typ: "JWT", jwk}`; the unsigned VC rides under the `vc` claim.                          |
+| Why not RDFC | The embedded-proof route needs RDFC-1.0 canonicalization, which has no working implementation available to this app. The external route needs none. See [the proof-format spike](../research/ob3-proof-format-spike.md). |
+| Source       | [`vcJwt.ts`](../../src/badges/vcJwt.ts), wired in [`useCreateBadge.ts`](../../src/hooks/useCreateBadge.ts)                                                                                                               |
+| Still open   | Confirming against the live validator is #600's job — the report snapshot linked above predates this change.                                                                                                             |
 
 ### 6. Umbrella `oneOf` failure
 
@@ -83,14 +85,38 @@ Each gap below is a real validator error, mapped to the line of code that produc
 | Validator | `$: must be valid to one and only one schema, but 0 are valid` |
 | Cause     | Consequence of 1–5. Resolves automatically once they're fixed. |
 
-### 7. Non-resolvable `did:key` (related, not flagged by this validator)
+### 7. Non-resolvable `did:key` — **addressed (#598), pending re-validation**
 
-|           |                                                                                                                                                                                                                                 |
-| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Source    | [`credentialBuilder.ts:51-56`](../../src/badges/credentialBuilder.ts)                                                                                                                                                           |
-| Cause     | `did:key:${publicKeyJwk.x}` uses raw base64url, not the spec-required multibase (`z…`) + multicodec (`0xed01`) Ed25519 encoding. The DID will not resolve, so signature verification fails even after the cryptosuite is fixed. |
-| Also      | Achievement IDs append a path segment to the DID (`credentialBuilder.ts:76-78`); `did:key` DIDs do not support paths. Use HTTPS URIs instead.                                                                                   |
-| Fix scope | Crypto / identifier. Bundled with #5.                                                                                                                                                                                           |
+|            |                                                                                                                                                                                                                                                        |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Was        | `did:key:${publicKeyJwk.x}` — raw base64url, not multibase + multicodec. The DID would not resolve, so signature verification failed even with a valid cryptosuite.                                                                                    |
+| Now        | Multibase base58btc (`z`) over multicodec `p256-pub` (`0x1200`) plus a SEC1-compressed point, so a verifier recovers the public key from the DID alone. Encoding: [`did-key.ts`](../../../../packages/openbadges-core/src/crypto/did-key.ts).          |
+| Also (was) | Achievement IDs appended a path segment to the DID; `did:key` DIDs have no path component.                                                                                                                                                             |
+| Also (now) | Achievement IDs are `urn:ulid:<goalId>` — not an HTTPS URI as the earlier note suggested. The app hosts nothing, so a fabricated `https://` achievement URL would never resolve; `urn:ulid:` matches the evidence IRIs already emitted alongside them. |
+| Source     | [`credentialBuilder.ts`](../../src/badges/credentialBuilder.ts)                                                                                                                                                                                        |
+
+---
+
+## Signing-key migration (#598)
+
+The proof format above needs an **ES256** signature: the validator's
+external-proof path accepts only `RS256`/`ES256` and rejects `EdDSA`
+outright. The device signing key therefore moved from Ed25519 to ECDSA P-256.
+
+Two consequences worth knowing before reading the code:
+
+- **Existing badges are never touched.** `badge.credential` is immutable and
+  the old signature covers the exact old byte serialization, so re-shaping a
+  stored credential would invalidate it without re-signing. Old badges keep
+  their Iteration-A JSON form and their Ed25519 signature — `verify-badge.ts`
+  and `BadgeDetailScreen` both still read that shape, and will need to
+  indefinitely.
+- **An existing key is force-rotated, silently.** On the first launch after
+  upgrading, `useUserKey` treats a non-P-256 stored key exactly like an
+  orphaned one: cleared, and a fresh P-256 key generated. No prompt — that
+  matches the hook's existing no-UI design, and an unrotated user could never
+  produce a badge the validator accepts. Rotation only affects the _next_
+  badge signed.
 
 ---
 

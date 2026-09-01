@@ -25,6 +25,9 @@ import { ConfirmDeleteModal } from "../../components/ConfirmDeleteModal";
 import { badgeWithGoalQuery, deleteBadge } from "../../db";
 import type { BadgeId } from "../../db";
 import { PLACEHOLDER_IMAGE_URI } from "../../hooks/useCreateBadge";
+// Deep import, not the barrel: `badges/index` pulls in credentialBuilder ->
+// openbadges-core, which is ESM and unloadable in this screen's Jest runtime.
+import { parseStoredCredential } from "../../badges/vcJwt";
 import { useBadgeExport } from "../../hooks/useBadgeExport";
 import { useAnimationPref } from "../../hooks/useAnimationPref";
 import { parseBadgeDesign } from "../../badges/types";
@@ -70,13 +73,14 @@ const logger = new Logger("BadgeDetailScreen");
 
 /**
  * Pulls the achievement criteria narrative out of a stored OB3
- * VerifiableCredential (the "how it was earned" text). Defensive: any parse
- * failure or shape mismatch returns null so the UI just hides the section.
+ * VerifiableCredential (the "how it was earned" text), in either stored
+ * format. Defensive: any parse failure or shape mismatch returns null so the
+ * UI just hides the section.
  */
 function extractCriteriaNarrative(credential: string | null): string | null {
   if (!credential) return null;
   try {
-    const parsed: unknown = JSON.parse(credential);
+    const parsed = parseStoredCredential(credential);
     const subject = (parsed as { credentialSubject?: unknown })
       ?.credentialSubject;
     const achievement = (subject as { achievement?: unknown })?.achievement;
@@ -134,7 +138,7 @@ function extractEvidenceItems(
 ): CredentialEvidence[] | null {
   if (!credential) return null;
   try {
-    const parsed: unknown = JSON.parse(credential);
+    const parsed = parseStoredCredential(credential);
     const rawList = (parsed as { evidence?: unknown })?.evidence;
     if (!Array.isArray(rawList) || rawList.length === 0) return null;
 

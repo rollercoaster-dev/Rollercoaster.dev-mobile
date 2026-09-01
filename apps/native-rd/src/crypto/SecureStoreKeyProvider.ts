@@ -6,6 +6,10 @@
  *   rcd_privkey_<keyId>  — private key JWK
  *   rcd_pubkey_<keyId>   — public key JWK
  *
+ * Keys are ECDSA P-256 (ES256). P-256 rather than Ed25519 because the OB3
+ * external-proof (VC-JWT) path only accepts RS256/ES256 — an EdDSA JWS is
+ * rejected outright by the validator. See docs/research/ob3-proof-format-spike.md.
+ *
  * Requires react-native-quick-crypto to be installed at app entry (index.ts does this).
  */
 import * as SecureStore from "expo-secure-store";
@@ -32,7 +36,7 @@ export class SecureStoreKeyProvider implements KeyProvider {
     publicKeyJwk: JsonWebKey;
   }> {
     const keyPair = await crypto.subtle.generateKey(
-      { name: "Ed25519" },
+      { name: "ECDSA", namedCurve: "P-256" },
       true, // extractable — needed to export as JWK
       ["sign", "verify"],
     );
@@ -60,7 +64,7 @@ export class SecureStoreKeyProvider implements KeyProvider {
       ),
     ]);
 
-    logger.info("Ed25519 keypair generated and stored", { keyId });
+    logger.info("P-256 keypair generated and stored", { keyId });
     return { keyId, publicKeyJwk };
   }
 
@@ -82,7 +86,7 @@ export class SecureStoreKeyProvider implements KeyProvider {
     const cryptoKey = await crypto.subtle.importKey(
       "jwk",
       privateKeyJwk,
-      { name: "Ed25519" },
+      { name: "ECDSA", namedCurve: "P-256" },
       false, // not extractable after import
       ["sign"],
     );
@@ -92,7 +96,13 @@ export class SecureStoreKeyProvider implements KeyProvider {
       data.byteOffset,
       data.byteOffset + data.byteLength,
     ) as ArrayBuffer;
-    const signature = await crypto.subtle.sign("Ed25519", cryptoKey, buffer);
+    // WebCrypto's ECDSA sign() returns the raw IEEE-P1363 `r‖s` pair, which is
+    // exactly the form a JWS ES256 signature takes — no DER unwrapping needed.
+    const signature = await crypto.subtle.sign(
+      { name: "ECDSA", hash: "SHA-256" },
+      cryptoKey,
+      buffer,
+    );
     return new Uint8Array(signature);
   }
 }

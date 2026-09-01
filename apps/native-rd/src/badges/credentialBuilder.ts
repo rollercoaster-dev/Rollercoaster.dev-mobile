@@ -5,7 +5,10 @@
  * Uses openbadges-core's serializeOB3 for data structure construction.
  * Signing is handled separately by useCreateBadge via SecureStoreKeyProvider.
  */
-import { serializeOB3 } from "@rollercoaster-dev/openbadges-core";
+import {
+  serializeOB3,
+  encodeP256DidKey,
+} from "@rollercoaster-dev/openbadges-core";
 import type {
   IssuerData,
   BadgeClassData,
@@ -49,19 +52,15 @@ export interface CredentialInput {
 }
 
 /**
- * Constructs a simplified did:key identifier from an Ed25519 public key JWK.
+ * Constructs a resolvable `did:key` identifier from a P-256 public key JWK.
  *
- * NOTE: Simplified implementation for Iteration A only.
- * A fully spec-compliant did:key requires multibase+multicodec encoding
- * (0xed01 prefix + raw 32-byte key, base58btc with 'z' prefix).
- * The JWK 'x' field is the base64url-encoded raw Ed25519 public key.
- * Proper verification is not implemented until Iteration D.
+ * Spec-compliant multibase + multicodec form (`did:key:z…`, p256-pub 0x1200
+ * over a SEC1-compressed point), so a verifier can recover the public key
+ * from the DID alone. Encoding lives in openbadges-core alongside the other
+ * shared crypto primitives; this module stays pure.
  */
 export function buildDid(publicKeyJwk: JsonWebKey): string {
-  if (!publicKeyJwk.x) {
-    throw new Error("Invalid public key JWK: missing x coordinate");
-  }
-  return `did:key:${publicKeyJwk.x}`;
+  return encodeP256DidKey(publicKeyJwk);
 }
 
 /**
@@ -79,12 +78,12 @@ export function buildUnsignedCredential(
     publicKey: input.publicKeyJwk,
   };
 
-  // NOTE (Iteration A): Appending a path segment to a did:key: identifier produces
-  // an invalid DID URL — did:key: DIDs do not support path components per the spec.
-  // A proper achievementId should be a separate HTTPS URI. Fixed in Iteration D.
-  const achievementId = iri(
-    `${input.issuerDid}/achievements/${encodeURIComponent(input.goal.id)}`,
-  );
+  // A `urn:ulid:` IRI rather than a path under the issuer DID: did:key DIDs
+  // have no path component, so the old `${did}/achievements/${id}` form was an
+  // invalid DID URL. The app hosts nothing, so an https:// achievement URL
+  // would be a fake that never resolves — an honest urn: is better, and it
+  // matches the evidence IRIs built below.
+  const achievementId = iri(`urn:ulid:${input.goal.id}`);
 
   // image is intentionally omitted — OB3 Achievement.image is OPTIONAL per spec.
   // A local file:// URI is not a valid or shareable IRI; a hosted URL would be

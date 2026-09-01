@@ -22,9 +22,12 @@ jest.mock("@rollercoaster-dev/openbadges-core", () => ({
 
 jest.mock("../../crypto", () => ({
   keyProvider: {
-    getPublicKey: jest
-      .fn()
-      .mockResolvedValue({ kty: "OKP", crv: "Ed25519", x: "testkey" }),
+    getPublicKey: jest.fn().mockResolvedValue({
+      kty: "EC",
+      crv: "P-256",
+      x: "fyNYMN0976ci7xqiSdag3buk-ZCwgXU4kz9XNkBlNUI",
+      y: "hW2ojTNfH7Jbi8--CJUo3OCbH3y5n91g-IMA9MLMbTU",
+    }),
     sign: jest.fn().mockResolvedValue(new Uint8Array(64)),
   },
 }));
@@ -59,7 +62,13 @@ jest.mock("../../badges", () => ({
     id: "urn:uuid:cred-01",
     type: ["VerifiableCredential"],
   })),
-  buildDid: jest.fn(() => "did:key:testkey"),
+  buildDid: jest.fn(
+    () => "did:key:zDnaerDaTF5BXEavCrfRZEk316dpbLsfPDZ3WJ5hRTPFU2169",
+  ),
+  // Not stubbed: the JWS is the artifact this hook now produces, so the tests
+  // below decode a real one rather than trusting a fake string.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  signCredentialAsVcJwt: require("../../badges/vcJwt").signCredentialAsVcJwt,
   bakePNG: jest.fn(() => Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])),
   isPNG: jest.fn(
     (buf: Buffer) => buf.length >= 8 && buf[0] === 137 && buf[1] === 80,
@@ -71,6 +80,19 @@ jest.mock("../../badges", () => ({
     Promise.resolve(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])),
   ),
 }));
+
+/** Three dot-separated base64url segments — the compact JWS the hook now emits. */
+const JWS_PATTERN = /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/;
+
+function decodeJwsSegment(jws: string, index: number): Record<string, unknown> {
+  return JSON.parse(
+    Buffer.from(jws.split(".")[index]!, "base64url").toString("utf8"),
+  ) as Record<string, unknown>;
+}
+
+function decodeJwsPayload(jws: string): Record<string, unknown> {
+  return decodeJwsSegment(jws, 1);
+}
 
 const mockUseQuery = useQuery as jest.Mock;
 const mockCompleteGoal = completeGoal as jest.Mock;
@@ -196,7 +218,7 @@ describe("useCreateBadge", () => {
       expect(mockUpdateBadge).toHaveBeenCalledWith(
         "badge-01",
         expect.objectContaining({
-          credential: expect.stringContaining("VerifiableCredential"),
+          credential: expect.stringMatching(JWS_PATTERN),
           imageUri: "file:///app/badges/test-badge.png",
         }),
       );
@@ -344,15 +366,21 @@ describe("useCreateBadge", () => {
       );
     });
 
-    it("stores a credential JSON string", async () => {
+    it("stores the credential as a compact JWS, not a JSON envelope", async () => {
       renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
       await act(async () => {});
 
       expect(mockCreateBadge).toHaveBeenCalledWith(
         expect.objectContaining({
-          credential: expect.stringContaining("VerifiableCredential"),
+          credential: expect.stringMatching(JWS_PATTERN),
         }),
       );
+      const { credential } = mockCreateBadge.mock.calls[0][0] as {
+        credential: string;
+      };
+      expect(decodeJwsPayload(credential)["vc"]).toMatchObject({
+        type: ["VerifiableCredential"],
+      });
     });
 
     it("reaches status: done after successful creation", async () => {
@@ -582,30 +610,60 @@ describe("useCreateBadge", () => {
     });
   });
 
-  describe("proof value encoding", () => {
-    it("stores a proof with a valid base64url proofValue (no +, /, or = chars)", async () => {
-      // sign returns 64 zero bytes — deterministic base64url output
-      mockKeyProvider.sign.mockResolvedValue(new Uint8Array(64));
-
+  describe("ES256 VC-JWT proof", () => {
+    it("bakes the same JWS string it stores on the badge row", async () => {
       renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
       await act(async () => {});
 
-      const callArg = mockCreateBadge.mock.calls[0][0] as {
+      const { credential } = mockCreateBadge.mock.calls[0][0] as {
         credential: string;
       };
-      const credential = JSON.parse(callArg.credential) as Record<
-        string,
-        unknown
-      >;
-      // OB3 requires `proof` to be an array, even with a single entry.
-      const proofs = credential["proof"] as Record<string, unknown>[];
-      expect(proofs).toHaveLength(1);
-      const proof = proofs[0]!;
+      // A divergence here means the PNG carries a different credential from
+      // the DB — the export would verify against something the app can't show.
+      expect(mockBadges.bakePNG).toHaveBeenCalledWith(
+        expect.anything(),
+        credential,
+      );
+    });
 
-      expect(proof["proofValue"]).toMatch(/^[A-Za-z0-9_-]+$/);
-      expect(proof["proofValue"]).not.toContain("=");
-      expect(proof["proofValue"]).not.toContain("+");
-      expect(proof["proofValue"]).not.toContain("/");
+    it("declares alg ES256 with an inline P-256 jwk in the protected header", async () => {
+      renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
+      await act(async () => {});
+
+      const { credential } = mockCreateBadge.mock.calls[0][0] as {
+        credential: string;
+      };
+      const header = decodeJwsSegment(credential, 0);
+      expect(header["alg"]).toBe("ES256");
+      expect(header["jwk"]).toMatchObject({ kty: "EC", crv: "P-256" });
+    });
+
+    it("wraps the unsigned credential under `vc` and issues from the did:key", async () => {
+      renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
+      await act(async () => {});
+
+      const { credential } = mockCreateBadge.mock.calls[0][0] as {
+        credential: string;
+      };
+      const payload = decodeJwsPayload(credential);
+      expect(payload["iss"]).toBe(
+        "did:key:zDnaerDaTF5BXEavCrfRZEk316dpbLsfPDZ3WJ5hRTPFU2169",
+      );
+      expect(payload["vc"]).toBeDefined();
+    });
+
+    it("signs the header.payload bytes with the user's key", async () => {
+      renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
+      await act(async () => {});
+
+      const { credential } = mockCreateBadge.mock.calls[0][0] as {
+        credential: string;
+      };
+      const [header, payload] = credential.split(".");
+      expect(mockKeyProvider.sign).toHaveBeenCalledWith(
+        "key-001",
+        new TextEncoder().encode(`${header}.${payload}`),
+      );
     });
   });
 

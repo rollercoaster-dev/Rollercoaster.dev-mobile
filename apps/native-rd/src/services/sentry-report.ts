@@ -142,7 +142,9 @@ export type BreadcrumbInput =
       kind: EvidenceTypeValue;
     }
   | { category: "badge"; message: "build" | "sign" | "bake" | "store" }
-  | { category: "key"; message: "generate" | "verify" }
+  // "rotate" is the Ed25519 -> P-256 migration (#598): a stale-algorithm key
+  // is cleared and regenerated, which otherwise looks like an orphan clear.
+  | { category: "key"; message: "generate" | "verify" | "rotate" }
   | { category: "focus"; message: "enter" | "exit" }
   // The cockpit pin writes userSettings, not goal — filing it under "goal"
   // would plant a phantom "goal updated" crumb ahead of unrelated goal errors.

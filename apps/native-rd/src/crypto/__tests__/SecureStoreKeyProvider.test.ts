@@ -14,15 +14,17 @@ const mockSetItem = setItemAsync as jest.Mock;
 
 const MOCK_KEY_ID = "test-uuid-1234";
 const MOCK_PUB_JWK: JsonWebKey = {
-  kty: "OKP",
-  crv: "Ed25519",
-  x: "pubkeydata",
+  kty: "EC",
+  crv: "P-256",
+  x: "pubkeyx",
+  y: "pubkeyy",
   key_ops: ["verify"],
 };
 const MOCK_PRIV_JWK: JsonWebKey = {
-  kty: "OKP",
-  crv: "Ed25519",
-  x: "pubkeydata",
+  kty: "EC",
+  crv: "P-256",
+  x: "pubkeyx",
+  y: "pubkeyy",
   d: "privkeydata",
   key_ops: ["sign"],
 };
@@ -78,10 +80,10 @@ describe("SecureStoreKeyProvider", () => {
   });
 
   describe("generateKeyPair()", () => {
-    it("generates an Ed25519 keypair via crypto.subtle", async () => {
+    it("generates a P-256 ECDSA keypair via crypto.subtle", async () => {
       await provider.generateKeyPair();
       expect(mockSubtle.generateKey).toHaveBeenCalledWith(
-        { name: "Ed25519" },
+        { name: "ECDSA", namedCurve: "P-256" },
         true,
         ["sign", "verify"],
       );
@@ -143,12 +145,14 @@ describe("SecureStoreKeyProvider", () => {
       expect(mockSubtle.importKey).toHaveBeenCalledWith(
         "jwk",
         MOCK_PRIV_JWK,
-        { name: "Ed25519" },
+        { name: "ECDSA", namedCurve: "P-256" },
         false,
         ["sign"],
       );
+      // SHA-256 is what makes this ES256 rather than any other ECDSA variant —
+      // a JWS with alg:ES256 over a differently-hashed signature won't verify.
       expect(mockSubtle.sign).toHaveBeenCalledWith(
-        "Ed25519",
+        { name: "ECDSA", hash: "SHA-256" },
         mockPrivKey,
         expect.any(ArrayBuffer),
       );

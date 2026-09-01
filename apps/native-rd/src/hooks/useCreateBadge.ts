@@ -52,6 +52,7 @@ import { keyProvider } from "../crypto";
 import {
   buildUnsignedCredential,
   buildDid,
+  signCredentialAsVcJwt,
   bakePNG,
   isPNG,
   saveBadgePNG,
@@ -87,14 +88,6 @@ export interface UseCreateBadgeResult {
    * "Terminal error state and recovery" note above.
    */
   retryBake: () => void;
-}
-
-function toBase64Url(bytes: Uint8Array): string {
-  return Buffer.from(bytes)
-    .toString("base64")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=/g, "");
 }
 
 export interface UseCreateBadgeOptions {
@@ -246,31 +239,20 @@ export function useCreateBadge(
         setStatus("signing");
         breadcrumb({ category: "badge", message: "sign" });
 
-        const credentialJson = JSON.stringify(unsignedCredential);
-        const encoded = new TextEncoder().encode(credentialJson);
-        const signatureBytes = await keyProvider.sign(keyId, encoded);
-        const proofValue = toBase64Url(signatureBytes);
-
-        // NOTE (Iteration A): The `eddsa-rdfc-2022` cryptosuite spec requires
-        // RDFC-1.0 canonicalization and a multibase `u`-prefixed proofValue.
-        // We sign raw JSON.stringify() and emit plain base64url instead, so
-        // this proof will NOT verify under a spec-compliant verifier.
-        // Full spec-compliant signing (RDFC canonicalization + multibase) is
-        // Iteration D work.
-        const signedCredential = {
-          ...unsignedCredential,
-          // OB3 requires `proof` to be an array, even with a single entry.
-          proof: [
-            {
-              type: "DataIntegrityProof",
-              cryptosuite: "eddsa-raw-json-iteration-a",
-              created: issuedOn,
-              proofPurpose: "assertionMethod",
-              verificationMethod: `${issuerDid}#key-1`,
-              proofValue,
-            },
-          ],
-        };
+        // OB3 external proof: the signed credential IS a compact ES256 JWS,
+        // not a JSON object carrying a `proof` array. The embedded
+        // DataIntegrityProof form would need RDFC-1.0 canonicalization, which
+        // this app has no implementation for; see docs/research/
+        // ob3-proof-format-spike.md. Badges signed before this change keep
+        // their old JSON form — nothing re-serializes or re-signs them.
+        const signedCredential = await signCredentialAsVcJwt({
+          unsignedCredential,
+          issuerDid,
+          publicKeyJwk,
+          issuedOn,
+          credentialId,
+          sign: (bytes) => keyProvider.sign(keyId, bytes),
+        });
 
         setStatus("baking");
         breadcrumb({ category: "badge", message: "bake" });
@@ -328,8 +310,7 @@ export function useCreateBadge(
           }
           pngBuffer = capturedPngRef.current;
         }
-        const credentialJsonOut = JSON.stringify(signedCredential);
-        const bakedPng = bakePNG(pngBuffer, credentialJsonOut);
+        const bakedPng = bakePNG(pngBuffer, signedCredential);
 
         // Save to disk — legitimately recoverable (filesystem errors). Fall back
         // to placeholder so badge creation still succeeds without a baked image.
@@ -373,12 +354,12 @@ export function useCreateBadge(
         // Result would let a failed persist fall through to setStatus("done").
         const badgeResult = existingBadge
           ? updateBadge(existingBadge.id as BadgeId, {
-              credential: credentialJsonOut,
+              credential: signedCredential,
               imageUri,
             })
           : createBadge({
               goalId,
-              credential: credentialJsonOut,
+              credential: signedCredential,
               imageUri,
               ...(designRef.current ? { design: designRef.current } : {}),
             });
