@@ -1,4 +1,4 @@
-# Recorded green E2E run — `62f113d`
+# Recorded green E2E run — `a550bcd`
 
 The artifact acceptance criterion 5 of #502 requires, and the one **#383 cannot
 close without**. It records a real simulator run of the required gate, not a
@@ -14,18 +14,18 @@ summary of it).
 
 ## Result
 
-`bun run test:e2e:required` → **6/6 flows passed in 4m 37s**, exit 0.
+`bun run test:e2e:required` → **6/6 flows passed in 3m 43s**, exit 0.
 
 Per-flow times are the JUnit `testcase time` values, not the rounded CLI summary.
 
-| Flow                              | Tag        | Time     | Status |
-| --------------------------------- | ---------- | -------- | ------ |
-| `settings-theme-persists-restart` | `required` | 27.233s  | ✅     |
-| `badge-view`                      | `required` | 13.724s  | ✅     |
-| `bake-recovery`                   | `required` | 49.417s  | ✅     |
-| `full-ride`                       | `required` | 119.239s | ✅     |
-| `step-timing-editor`              | `required` | 52.505s  | ✅     |
-| `settings-theme-switch`           | `required` | 14.699s  | ✅     |
+| Flow                              | Tag        | Time    | Status |
+| --------------------------------- | ---------- | ------- | ------ |
+| `settings-theme-persists-restart` | `required` | 20.815s | ✅     |
+| `badge-view`                      | `required` | 10.943s | ✅     |
+| `bake-recovery`                   | `required` | 38.526s | ✅     |
+| `full-ride`                       | `required` | 97.503s | ✅     |
+| `step-timing-editor`              | `required` | 42.900s | ✅     |
+| `settings-theme-switch`           | `required` | 11.875s | ✅     |
 
 `evidence-viewer.yaml` (`tags: [optional]`, needs `EXPO_PUBLIC_E2E_MODE=true`)
 was run separately and also passes, so **all seven flows on disk are green**.
@@ -34,15 +34,15 @@ was run separately and also passes, so **all seven flows on disk are green**.
 
 |                        |                                                                                                                                                                                    |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Commit                 | `62f113d`                                                                                                                                                                          |
+| Commit                 | `a550bcd`                                                                                                                                                                          |
 | Maestro                | 2.8.0 (`/opt/homebrew/bin/maestro`)                                                                                                                                                |
 | Simulator              | iPhone 17 · iOS 26.5 · `75D0CBC4-A428-407D-BF2E-E5EE452737C7`                                                                                                                      |
 | App                    | `dev.rollercoaster.app` (iOS keeps the base bundle id; `app.config.js` only suffixes Android)                                                                                      |
 | Metro                  | this worktree, port 8081, launched via `bun run ios:e2e`                                                                                                                           |
 | Locale                 | `en`, pinned by `scripts/run-e2e.sh`                                                                                                                                               |
 | `EXPO_PUBLIC_E2E_MODE` | `true` for the whole run (`bun run ios:e2e` sets it on the Metro that built the bundle). Only `evidence-viewer.yaml` requires it, but the required six ran against the same bundle |
-| Timestamp              | 2026-09-01T09:24:30                                                                                                                                                                |
-| JUnit                  | `e2e/reports/junit.xml` (`tests="6" failures="0" time="276.839"`)                                                                                                                  |
+| Timestamp              | 2026-09-01T09:51:39                                                                                                                                                                |
+| JUnit                  | `e2e/reports/junit.xml` (`tests="6" failures="0" time="222.581"`)                                                                                                                  |
 
 ### Simulator UserDefaults the runner writes
 

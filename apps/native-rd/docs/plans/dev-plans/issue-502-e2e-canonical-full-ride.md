@@ -289,7 +289,7 @@ are green**. The recorded artifact is `e2e/reports/full-ride-7e6149e.md`, which
 carries the full environment block; it is not duplicated here.
 
 > **Superseded by #636.** That record was replaced by
-> `e2e/reports/full-ride-62f113d.md` (6/6 at `62f113d`) once
+> `e2e/reports/full-ride-a550bcd.md` (6/6 at `a550bcd`) once
 > `step-timing-editor.yaml` joined the required gate and three flows went red.
 > Every reference to `full-ride-7e6149e.md` below is historical — the file is no
 > longer on disk; read the successor instead.
@@ -367,7 +367,7 @@ and keeps the fresh-ref case as an explicitly-labelled companion.
 ### What is left
 
 1. **Edit issue #383's body** to add the blocking checklist item citing the
-   current run record (`e2e/reports/full-ride-62f113d.md` since #636). This is
+   current run record (`e2e/reports/full-ride-a550bcd.md` since #636). This is
    the last piece of commit 9 and the
    only thing that makes acceptance criterion 5 enforceable rather than an
    honour system.
