@@ -24,6 +24,36 @@ export function validateEvidenceType(type: string): EvidenceTypeValue {
 }
 
 /**
+ * The strict evidence tier, on already-normalized keys: the plan is satisfied
+ * only when it asks for something *and* every type it asks for has been
+ * captured.
+ *
+ * This is the predicate the completion UI gates on, one level below the two
+ * callers that own a data shape:
+ * `db/queries`'s `isStepEvidenceComplete` (a step's JSON column) and
+ * `FocusCurrentTaskCard` (props already normalized by `FocusModeScreen`).
+ * Both sides arrive here through `validateEvidenceType`, so an unknown stored
+ * key ("sketch") compares as `file` on the plan and the capture alike.
+ *
+ * The empty-plan guard is load-bearing: `[].every(...)` is `true`, so without
+ * it a step with no planned types would read as complete with zero evidence —
+ * violating "every step needs evidence" (#360/#408).
+ *
+ * Contrast `db/queries`'s `canCompleteStep`, the data-layer floor ("at least
+ * one planned type captured"). A step can pass that floor and still fail this
+ * tier.
+ */
+export function isEvidencePlanSatisfied(
+  plannedTypes: readonly EvidenceTypeValue[],
+  capturedTypes: readonly EvidenceTypeValue[],
+): boolean {
+  return (
+    plannedTypes.length > 0 &&
+    plannedTypes.every((type) => capturedTypes.includes(type))
+  );
+}
+
+/**
  * One captured evidence artifact as the timeline surfaces render it.
  * Lived in `components/EvidenceDrawer` until that component was deleted;
  * the timeline family (TimelineStep, TimelineEvidenceCard, FinishLine)

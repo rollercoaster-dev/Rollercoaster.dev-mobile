@@ -19,7 +19,10 @@ import {
 import type { DateIso } from "@evolu/common";
 import { breadcrumb } from "../services/sentry-report";
 import { Logger } from "../shims/rd-logger";
-import { validateEvidenceType } from "../types/evidence";
+import {
+  isEvidencePlanSatisfied,
+  validateEvidenceType,
+} from "../types/evidence";
 import type { EvidenceTypeValue } from "../types/evidence";
 import { resolvePlannedEvidenceTypes } from "../utils/parsePlannedEvidenceTypes";
 import { evolu } from "./evolu";
@@ -321,10 +324,11 @@ function serializePlannedTypes(
  *
  * They do differ in strictness, deliberately: this is the data-layer floor
  * ("at least one planned type captured"), while the card's "✓ Mark complete"
- * reveal is stricter — it waits for *every* planned type
- * (`FocusCurrentTaskCard`'s `completionReady`, #497 D1). So a step the card still
- * shows as unfinished can pass this gate. Callers must not treat a `true` here
- * as "the card would offer completion"; it only means completion is permitted.
+ * reveal is stricter — it waits for *every* planned type (#497 D1). So a step
+ * the card still shows as unfinished can pass this gate. Callers must not treat
+ * a `true` here as "the card would offer completion"; it only means completion
+ * is permitted. That stricter tier is {@link isStepEvidenceComplete}, which
+ * `FocusCurrentTaskCard` and the goal-level gate both derive from.
  *
  * @param plannedEvidenceTypesJson - Value from step.plannedEvidenceTypes column (JSON string or null)
  * @param stepEvidence - All non-deleted evidence rows for this step
@@ -348,6 +352,80 @@ export function canCompleteStep(
 }
 
 /**
+ * The strict evidence tier for one step, read off its stored columns.
+ *
+ * Same resolution `canCompleteStep` applies — an *unset* plan resolves to the
+ * default of one text note rather than exempting the step (#466 D4) — then
+ * {@link isEvidencePlanSatisfied} decides. So this is `canCompleteStep`'s
+ * stricter sibling on identical inputs: it wants *every* planned type, not
+ * *some*.
+ *
+ * @param plannedEvidenceTypesJson - Value from step.plannedEvidenceTypes column (JSON string or null)
+ * @param stepEvidence - All non-deleted evidence rows for this step
+ * @returns true if every type the step planned has been captured
+ */
+export function isStepEvidenceComplete(
+  plannedEvidenceTypesJson: string | null,
+  stepEvidence: readonly { type: string | null }[],
+): boolean {
+  const plannedTypes = resolvePlannedEvidenceTypes(
+    plannedEvidenceTypesJson,
+    logger,
+  ).map(validateEvidenceType);
+
+  const capturedTypes = stepEvidence
+    .filter((e) => e.type !== null)
+    .map((e) => validateEvidenceType(e.type!));
+
+  return isEvidencePlanSatisfied(plannedTypes, capturedTypes);
+}
+
+/**
+ * The strict evidence tier for a whole goal: every step has captured every type
+ * it planned (#635 D1).
+ *
+ * This is the completion contract the badge gate reads — the tier
+ * `FocusCurrentTaskCard` has enforced per-step since #497 D1, lifted one level.
+ * It is evidence-only by construction: it never reads `step.status`, so it does
+ * not gate a goal on its steps being *marked* done, only on the evidence its
+ * structure said it would collect (ADR-0014).
+ *
+ * A goal with no steps is not complete, for the same reason an empty plan is
+ * not: `[].every(...)` is `true`, and a stepless goal would otherwise bake with
+ * nothing behind it (D3).
+ *
+ * Goal-*scoped* evidence — the closing note on `FinishCelebrateStage` — is
+ * deliberately not an input. It is a reflection on the ride, not proof that any
+ * step happened, so it cannot unblock one. Contrast {@link canCompleteGoal},
+ * the data-layer floor that accepts any single typed row anywhere.
+ *
+ * @param steps - All non-deleted steps for the goal (needs `plannedEvidenceTypes`)
+ * @param stepEvidence - All non-deleted step-scoped evidence rows for the goal
+ * @returns true if the goal's every step has all its planned evidence
+ */
+export function isGoalEvidenceComplete(
+  steps: readonly { id: string; plannedEvidenceTypes: string | null }[],
+  stepEvidence: readonly { stepId: string | null; type: string | null }[],
+): boolean {
+  if (steps.length === 0) return false;
+
+  const evidenceByStep = new Map<string, { type: string | null }[]>();
+  for (const row of stepEvidence) {
+    if (row.stepId === null) continue;
+    const bucket = evidenceByStep.get(row.stepId);
+    if (bucket) bucket.push(row);
+    else evidenceByStep.set(row.stepId, [row]);
+  }
+
+  return steps.every((step) =>
+    isStepEvidenceComplete(
+      step.plannedEvidenceTypes,
+      evidenceByStep.get(step.id) ?? [],
+    ),
+  );
+}
+
+/**
  * Check if a goal has at least one typed evidence item anywhere beneath it.
  *
  * "Beneath it" means either scope: rows attached directly to the goal *and*
@@ -355,6 +433,13 @@ export function canCompleteStep(
  * (see `useCreateBadge`, which concatenates `evidenceByGoalQuery` and
  * `stepEvidenceByGoalQuery`) — a step-driven ride never writes a goal-scoped
  * row, and the goal demonstrably has proof, just filed under steps (#449 D13).
+ *
+ * This is the data-layer floor and `useCreateBadge`'s pre-mutation backstop —
+ * **not** the completion contract (#449 D13: "backstop, not the primary UX").
+ * One typed row anywhere clears it, so a six-step goal with a single note on
+ * step one passes. {@link isGoalEvidenceComplete} is the tier above it, and is
+ * what the Bake CTA gates on (#635 D6). The same relationship holds one level
+ * down between {@link canCompleteStep} and {@link isStepEvidenceComplete}.
  *
  * @param evidence - All non-deleted evidence rows belonging to the goal or its steps
  * @returns true if the goal can be completed
