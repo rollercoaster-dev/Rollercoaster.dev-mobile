@@ -71,4 +71,13 @@ export const styles = StyleSheet.create((theme) => ({
     textAlign: "center",
     marginTop: theme.space[2],
   },
+  // Sits in the subcopy's slot when the Bake CTA is blocked. Full-strength
+  // body colour rather than `textMuted`: this line is the only explanation of
+  // why the button below the preview won't respond, so it has to read as
+  // information, not as fine print.
+  blockedMessage: {
+    color: theme.colors.text,
+    textAlign: "center",
+    marginTop: theme.space[2],
+  },
 }));

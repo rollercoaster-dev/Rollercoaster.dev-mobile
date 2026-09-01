@@ -91,6 +91,16 @@ export interface FinishDesignStageProps {
   bakeIcon?: string;
   /** Muted subcopy below the CTA. */
   bakeSubcopy?: string;
+  /**
+   * Whether the goal has the evidence its plan asked for (#635). `false`
+   * disables the Bake CTA and swaps the subcopy for `bakeBlockedMessage`, so
+   * the reason is readable *here* rather than after a tap that dead-ends in an
+   * error alert. Defaults to `true` — stories and any caller that has not
+   * computed the gate get today's behavior.
+   */
+  canBake?: boolean;
+  /** Shown in place of `bakeSubcopy` while `canBake` is false. */
+  bakeBlockedMessage?: string;
   /** Live preview size in logical pixels (matches the prototype's `badgePreviewMd`). */
   badgeSize?: number;
   /**
@@ -146,6 +156,8 @@ export function FinishDesignStage({
   bakeLabel = "Bake my badge",
   bakeIcon = "✓",
   bakeSubcopy = "saves & seals it into a verifiable badge",
+  canBake = true,
+  bakeBlockedMessage = "Every step needs the evidence it planned. Capture what's left and this opens up.",
   badgeSize = 150,
   initialExpandedSection = "shape",
   previewRef,
@@ -472,11 +484,25 @@ export function FinishDesignStage({
           onPress={onBake}
           variant="primary"
           size="lg"
+          disabled={!canBake}
           testID="finish-design-bake"
         />
-        <Text variant="caption" style={styles.subcopy}>
-          {bakeSubcopy}
-        </Text>
+        {/* One slot, two messages: the blocked reason replaces the subcopy
+            rather than stacking under it, so the footer height doesn't jump
+            and there is exactly one line to read below the CTA. */}
+        {canBake ? (
+          <Text variant="caption" style={styles.subcopy}>
+            {bakeSubcopy}
+          </Text>
+        ) : (
+          <Text
+            variant="caption"
+            style={styles.blockedMessage}
+            testID="finish-design-bake-blocked"
+          >
+            {bakeBlockedMessage}
+          </Text>
+        )}
       </View>
 
       {/* Custom-hex picker for whichever channel opened it. `Modal` portals

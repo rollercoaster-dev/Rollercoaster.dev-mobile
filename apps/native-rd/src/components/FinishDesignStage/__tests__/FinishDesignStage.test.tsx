@@ -348,6 +348,45 @@ describe("FinishDesignStage", () => {
     expect(onBack).toHaveBeenCalledTimes(1);
   });
 
+  describe("bake gate (#635)", () => {
+    it("leaves the CTA enabled and shows the subcopy by default", () => {
+      renderWithProviders(<FinishDesignStage {...makeProps()} />);
+      expect(screen.getByTestId("finish-design-bake")).toBeEnabled();
+      expect(
+        screen.getByText("saves & seals it into a verifiable badge"),
+      ).toBeOnTheScreen();
+      expect(screen.queryByTestId("finish-design-bake-blocked")).toBeNull();
+    });
+
+    it("disables the CTA and swaps in the reason when canBake is false", () => {
+      renderWithProviders(
+        <FinishDesignStage
+          {...makeProps({
+            canBake: false,
+            bakeBlockedMessage: "Two steps still owe a photo.",
+          })}
+        />,
+      );
+      expect(screen.getByTestId("finish-design-bake")).toBeDisabled();
+      expect(
+        screen.getByTestId("finish-design-bake-blocked"),
+      ).toHaveTextContent("Two steps still owe a photo.");
+      // The reason replaces the subcopy rather than stacking under it.
+      expect(
+        screen.queryByText("saves & seals it into a verifiable badge"),
+      ).toBeNull();
+    });
+
+    it("does not fire onBake while blocked", () => {
+      const onBake = jest.fn();
+      renderWithProviders(
+        <FinishDesignStage {...makeProps({ canBake: false, onBake })} />,
+      );
+      fireEvent.press(screen.getByTestId("finish-design-bake"));
+      expect(onBake).not.toHaveBeenCalled();
+    });
+  });
+
   it("fires onBake when the CTA is pressed", () => {
     const onBake = jest.fn();
     renderWithProviders(<FinishDesignStage {...makeProps({ onBake })} />);
