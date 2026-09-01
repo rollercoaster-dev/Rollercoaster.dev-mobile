@@ -135,8 +135,18 @@ env:
 
 # 7. The editor mounted in place of the line, with its `Depends on` control.
 #    Both ids share the row's timing prefix (#576).
+#    Scroll again before the toggle (#636): step 6 centred the *collapsed* row,
+#    but the expanded editor renders StepDayGrid — a full month calendar —
+#    between its root and the DependencyPicker, which pushes the toggle below
+#    the fold. The `-editor` assert above still passes because the root mounts
+#    where the centred row was.
 - assertVisible:
     id: "edit-goal-step-timing-.*-editor"
+- scrollUntilVisible:
+    element:
+      id: "edit-goal-step-timing-.*-depends-on-toggle"
+    direction: DOWN
+    centerElement: true
 - assertVisible:
     id: "edit-goal-step-timing-.*-depends-on-toggle"
 - tapOn:
