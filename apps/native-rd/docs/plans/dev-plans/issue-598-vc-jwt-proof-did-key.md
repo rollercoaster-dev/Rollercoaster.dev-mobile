@@ -171,9 +171,9 @@ verified since the spike was written.
 
 - [ ] `SecureStoreKeyProvider.generateKeyPair()`: `crypto.subtle.generateKey`
       params → `{name: "ECDSA", namedCurve: "P-256"}`.
-- [ ] `SecureStoreKeyProvider.sign()`: import params → `{name: "ECDSA",
-  namedCurve: "P-256"}`; sign params → `{name: "ECDSA", hash:
-  "SHA-256"}`.
+- [ ] `SecureStoreKeyProvider.sign()`: import params →
+      `{name: "ECDSA", namedCurve: "P-256"}`; sign params →
+      `{name: "ECDSA", hash: "SHA-256"}`.
 - [ ] `useUserKey`'s verification effect: alongside the existing "orphan"
       branch (key not found in SecureStore → clear), add "wrong algorithm"
       (stored public JWK's `kty`/`crv` isn't P-256 → clear) so a pre-upgrade
