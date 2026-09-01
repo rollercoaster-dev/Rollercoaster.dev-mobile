@@ -157,6 +157,30 @@ No `Blocked by` / `Depends on` / `After` markers in the issue body.
 
 ## Discovery Log
 
-<!-- Entries added by implement skill:
-- [YYYY-MM-DD HH:MM] <discovery description>
--->
+- [2026-09-01] **D2's placement changed, not its substance.** The plan put both
+  predicates in `db/queries.ts` and had `FocusCurrentTaskCard.completionReady`
+  call `isStepEvidenceComplete`. Two problems surfaced on contact: the card
+  holds an already-resolved `readonly EvidenceTypeValue[]`, not the JSON column,
+  so it cannot call that signature at all; and `queries.ts` imports `evolu`, so
+  either the presentational card or the screen would have taken a db-runtime
+  dependency for one pure predicate. Resolved by splitting on data shape:
+  - `isEvidencePlanSatisfied(plannedTypes, capturedTypes)` in
+    `src/types/evidence.ts` — the leaf module both sides already share for
+    `validateEvidenceType`. This is what the card calls.
+  - `isStepEvidenceComplete` / `isGoalEvidenceComplete` in a new
+    `src/db/evidenceGate.ts` — pure functions over row shapes, no Evolu import,
+    re-exported from the `db` barrel. `CompletionFlowScreen` imports them from
+    the leaf path directly, which is also what lets its test exercise the real
+    predicate rather than a stub (the suite mocks the `../../db` barrel whole).
+
+  `queries.ts` keeps the floors and the cross-referencing docstrings, which was
+  D2's actual goal.
+
+- [2026-09-01] **The blocked message replaces `bakeSubcopy` rather than stacking
+  under it** — one line to read below the CTA, and no footer height jump when
+  the gate opens.
+
+- [2026-09-01] **The E2E recovery lap never taps "Mark complete."** The plan's
+  version marked the step complete before re-entering the design stage (as the
+  old flow did). Leaving it in-progress makes the flow fail if the gate ever
+  regresses to reading `step.status`, which is Intent Verification bullet 4.
