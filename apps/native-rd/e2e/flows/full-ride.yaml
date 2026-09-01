@@ -254,9 +254,25 @@ env:
     id: "timeline-edit-button"
 - assertVisible:
     id: "edit-goal-content"
+#     Scroll first (#636): a nested Bravo pushes its un-nest control to the very
+#     bottom of the list, underneath the pinned Done footer. iOS still reports a
+#     frame there, so a bare tapOn lands on the footer, Maestro reports
+#     COMPLETED, and the promote never happens — silently. Focus then resolves
+#     into Charlie's only child (Bravo) at step 23 instead of Charlie, twenty
+#     commands away from the command that actually failed.
+- scrollUntilVisible:
+    element:
+      id: "edit-goal-substep-un-nest-.*"
+      index: 0
+    direction: DOWN
+    centerElement: true
 - tapOn:
     id: "edit-goal-substep-un-nest-.*"
     index: 0
+#     Fail here, not at step 23, if the promote didn't commit: Bravo was the
+#     goal's only sub-step, so a flat list renders no un-nest control at all.
+- assertNotVisible:
+    id: "edit-goal-substep-un-nest-.*"
 - tapOn:
     id: "edit-goal-done-button"
 
