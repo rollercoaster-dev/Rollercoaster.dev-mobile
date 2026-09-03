@@ -19,10 +19,16 @@ export const styles = StyleSheet.create((theme) => ({
 
   headerTitle: {
     ...theme.textStyles.title,
-    color: theme.colors.accentPurpleFg,
+    color: theme.chrome.screenHeaderFg,
   },
-  headerSpacer: {
-    width: 48,
+  // Trailing CTA mirrors the close button's 48pt box so the title stays
+  // optically centered; selection applies live, so Done just dismisses.
+  doneButton: {
+    minWidth: 48,
+    height: 48,
+    paddingHorizontal: theme.space[2],
+    justifyContent: "center",
+    alignItems: "flex-end",
   },
   closeButton: {
     width: 48,
@@ -31,7 +37,7 @@ export const styles = StyleSheet.create((theme) => ({
     alignItems: "center",
   },
   closeIconFallback: {
-    color: theme.colors.accentPurpleFg,
+    color: theme.chrome.screenHeaderFg,
     fontSize: 18,
     fontWeight: "700",
   },

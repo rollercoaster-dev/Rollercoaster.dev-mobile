@@ -27,14 +27,12 @@ import {
 } from "./text/Banner";
 import {
   BOTTOM_LABEL_INPUT_MAX_CHARS,
-  getBottomLabelFontSize,
-  getBottomLabelY,
+  getBottomLabelPlateBox,
   getBottomLabelBottomOverflow,
   getBottomLabelExtraOffset,
 } from "./text/BottomLabel";
 import { getMonogramFontSize } from "./text/MonogramCenter";
 import { PATH_TEXT_FONT_SIZE_RATIO } from "./text/PathText";
-import { measureTextWidth } from "./text/measureTextWidth";
 
 /** Axis-aligned bounding box in SVG user-units. */
 export type Box = { x: number; y: number; w: number; h: number };
@@ -262,16 +260,14 @@ function buildBottomLabelBox(
   const label = (design.bottomLabel ?? "")
     .trim()
     .slice(0, BOTTOM_LABEL_INPUT_MAX_CHARS);
-  const fontSize = getBottomLabelFontSize(label, size, scale);
-  const cy = getBottomLabelY(size, scale) + extraOffset;
-  const textWidth = measureTextWidth(label, fontSize);
-
-  return {
-    x: size / 2 - textWidth / 2,
-    y: cy - fontSize / 2,
-    w: textWidth,
-    h: fontSize,
-  };
+  // The reserved box is the plate's outer edge, border included.
+  const { x, y, w, h } = getBottomLabelPlateBox(
+    label,
+    size,
+    scale,
+    extraOffset,
+  );
+  return { x, y, w, h };
 }
 
 type ViewBoxInputs = {

@@ -271,7 +271,7 @@ export const BadgeRenderer = forwardRef<
     }
     return theme.colors.border;
   }, [design.frameColor, theme.colors.border]);
-  const bannerBorderColor = theme.colors.border;
+  const hardBorderColor = theme.colors.border;
 
   const iconSize = iconOrMonogram.size;
   const iconOffsetX = iconOrMonogram.cx - iconSize / 2;
@@ -371,6 +371,7 @@ export const BadgeRenderer = forwardRef<
         extraOffset={bottomLabelExtraOffset}
         fontFamily={theme.fontFamily.body}
         scale={layout.bottomLabelScale}
+        borderColor={hardBorderColor}
       />
 
       {/* Layer 6: Banner — neo-brutalist ribbon overlay */}
@@ -379,7 +380,7 @@ export const BadgeRenderer = forwardRef<
         size={size}
         badgeColor={design.color}
         topVisibleRatio={bannerTopVisibleRatio}
-        borderColor={bannerBorderColor}
+        borderColor={hardBorderColor}
         fontFamily={theme.fontFamily.mono}
         showShadow={hasShadow}
         scale={layout.bannerScale}

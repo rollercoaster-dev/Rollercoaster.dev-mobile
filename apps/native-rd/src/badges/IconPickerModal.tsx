@@ -21,6 +21,7 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import { useUnistyles } from "react-native-unistyles";
+import { useTranslation } from "react-i18next";
 import type { IconWeight } from "phosphor-react-native";
 
 import { HeaderBand } from "../components/ScreenHeader";
@@ -200,6 +201,7 @@ function IconPickerModalContent({
     setQuery("");
   }, []);
 
+  const { t } = useTranslation("badgeDesigner");
   const selectedLabel = iconNameToLabel(selectedIcon);
   const weightLabel =
     WEIGHTS.find((w) => w.value === selectedWeight)?.label ?? "Regular";
@@ -253,7 +255,7 @@ function IconPickerModalContent({
           {XIcon ? (
             <XIcon
               size={24}
-              color={theme.colors.accentPurpleFg}
+              color={theme.chrome.screenHeaderFg}
               weight="bold"
             />
           ) : (
@@ -263,7 +265,15 @@ function IconPickerModalContent({
         <Text style={styles.headerTitle} accessibilityRole="header">
           Choose Icon
         </Text>
-        <View style={styles.headerSpacer} />
+        <Pressable
+          onPress={onClose}
+          accessibilityRole="button"
+          accessibilityLabel={t("iconPicker.doneA11y")}
+          style={styles.doneButton}
+          testID={`${testID}-done`}
+        >
+          <Text style={styles.headerTitle}>{t("iconPicker.done")}</Text>
+        </Pressable>
       </HeaderBand>
 
       <View style={styles.contentArea}>

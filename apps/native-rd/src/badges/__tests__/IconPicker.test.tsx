@@ -14,6 +14,7 @@ import {
 } from "../../__tests__/test-utils";
 import { IconPicker } from "../IconPicker";
 import { POPULAR_ICON_NAMES } from "../iconIndex";
+import { i18n } from "../../i18n";
 
 // Mock phosphor-react-native — each icon is a simple View with testID
 jest.mock("phosphor-react-native", () => {
@@ -460,6 +461,16 @@ describe("IconPicker", () => {
       fireEvent.press(closeButton);
 
       // Modal content should be gone
+      expect(screen.queryByText("Choose Icon")).toBeNull();
+    });
+
+    it("renders a Done CTA that closes the modal", () => {
+      renderAndOpen();
+
+      fireEvent.press(
+        screen.getByText(i18n.t("badgeDesigner:iconPicker.done")),
+      );
+
       expect(screen.queryByText("Choose Icon")).toBeNull();
     });
 

@@ -125,6 +125,10 @@
     "close": "Close color picker",
     "confirmHint": "Use color {{hex}}"
   },
+  "iconPicker": {
+    "done": "Done",
+    "doneA11y": "Done choosing icon"
+  },
   "frame": {
     "a11y": "Badge frame",
     "optionA11y": "{{label}} frame",

@@ -118,7 +118,7 @@ function ColorPickerModalContent({
           {XIcon ? (
             <XIcon
               size={24}
-              color={theme.colors.accentPurpleFg}
+              color={theme.chrome.screenHeaderFg}
               weight="bold"
             />
           ) : (
