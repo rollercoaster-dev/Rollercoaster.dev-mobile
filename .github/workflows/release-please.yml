@@ -62,9 +62,8 @@ jobs:
       # generic JSON updater, which re-serialises the file with its own
       # pretty-printer and expands short arrays (e.g. supportedLocales) onto
       # multiple lines. Prettier's format:check then rejects the file, so every
-      # release commit turns ci-docs / ci-packages / ci-native-rd red on merge
-      # to main (release PRs are bot-opened, so pull_request CI never catches it
-      # at PR time). Re-run Prettier on the release PR branch so the bumped file
+      # release commit turns ci-format red on merge to main (release PRs are
+      # bot-opened, so pull_request CI never catches it at PR time). Re-run Prettier on the release PR branch so the bumped file
       # lands already formatted.
       - name: Checkout release PR branch
         if: ${{ steps.pr.outputs.pr }}

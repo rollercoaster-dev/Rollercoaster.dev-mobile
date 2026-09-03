@@ -1,17 +1,25 @@
 # Validation contract: docs/architecture/ci-contract.md
-name: ci-docs
+name: ci-format
 
+# Single owner of `bun run format:check`. ci-native-rd and ci-packages
+# deliberately do NOT run it (#256) — the Prettier glob is workspace-wide, so
+# one run per PR is enough. Path filters mirror that glob exactly.
 on:
   pull_request:
     paths:
+      - "**/*.ts"
+      - "**/*.tsx"
+      - "**/*.js"
+      - "**/*.jsx"
+      - "**/*.json"
       - "**/*.md"
       - ".prettierignore"
-      - ".github/workflows/ci-docs.yml"
+      - ".github/workflows/ci-format.yml"
   push:
     branches: [main]
 
 concurrency:
-  group: ci-docs-${{ github.ref }}
+  group: ci-format-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -19,7 +27,7 @@ permissions:
 
 jobs:
   format:
-    name: Docs Format Check
+    name: Format Check
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

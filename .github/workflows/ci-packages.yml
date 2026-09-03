@@ -67,9 +67,6 @@ jobs:
       - name: Verify patched dependencies
         run: bun run check:patches
 
-      - name: Format check
-        run: bun run format:check
-
       - name: Typecheck packages
         run: bun run turbo type-check --filter='./packages/*'
 
