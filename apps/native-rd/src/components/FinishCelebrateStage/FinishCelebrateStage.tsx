@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { Pressable, TextInput, View } from "react-native";
+import { KeyboardAvoidingView, Pressable, TextInput, View } from "react-native";
 import { useUnistyles } from "react-native-unistyles";
 
 import { Text } from "../Text";
 import { Button } from "../Button";
+import { KEYBOARD_AVOIDING_PROPS } from "../../utils/keyboard";
 import { styles } from "./FinishCelebrateStage.styles";
 
 export interface FinishCelebrateStageProps {
@@ -77,69 +78,77 @@ export function FinishCelebrateStage({
 
   return (
     <View style={styles.container} testID="finish-celebrate-stage">
-      <View style={styles.content}>
-        <Text variant="mono" style={styles.eyebrow}>
-          {eyebrow}
-        </Text>
-        <Text
-          variant="display"
-          style={styles.headline}
-          accessibilityRole="header"
-        >
-          {headline}
-        </Text>
-        <Text variant="body" style={styles.summary}>
-          {summary}
-        </Text>
-
-        {noteOpen ? (
-          <TextInput
-            style={styles.noteInput}
-            value={closingNoteValue}
-            onChangeText={onClosingNoteChange}
-            onBlur={() => onSaveClosingNote?.(closingNoteValue)}
-            placeholder={closingNotePlaceholder}
-            placeholderTextColor={theme.colors.textMuted}
-            multiline
-            autoFocus
-            accessibilityLabel={closingNoteAccessibilityLabel}
-            accessibilityHint={closingNoteAccessibilityHint}
-            testID="finish-celebrate-note-input"
-          />
-        ) : (
-          <Pressable
-            style={styles.notePrompt}
-            onPress={() => setNoteOpen(true)}
-            accessibilityRole="button"
-            accessibilityLabel={closingNotePromptLabel}
-            accessibilityHint={closingNoteAccessibilityHint}
-            testID="finish-celebrate-note-prompt"
+      {/* The closing note is a multiline input with no return-key dismissal,
+          so without keyboard avoidance the CTA below it sat under the keyboard
+          with no way out. Same shape as the New Goal wizard fix. */}
+      <KeyboardAvoidingView
+        style={styles.keyboardFrame}
+        {...KEYBOARD_AVOIDING_PROPS}
+      >
+        <View style={styles.content}>
+          <Text variant="mono" style={styles.eyebrow}>
+            {eyebrow}
+          </Text>
+          <Text
+            variant="display"
+            style={styles.headline}
+            accessibilityRole="header"
           >
-            <Text style={styles.notePromptIcon} accessibilityElementsHidden>
-              ✍️
-            </Text>
-            <Text variant="body" style={styles.notePromptText}>
-              {closingNotePromptLabel}{" "}
-              <Text style={styles.noteOptional}>
-                · {closingNoteOptionalLabel}
-              </Text>
-            </Text>
-          </Pressable>
-        )}
-      </View>
+            {headline}
+          </Text>
+          <Text variant="body" style={styles.summary}>
+            {summary}
+          </Text>
 
-      <View style={styles.footer}>
-        <Button
-          label={ctaLabel}
-          onPress={onDesignBadge}
-          variant="primary"
-          size="lg"
-          testID="finish-celebrate-cta"
-        />
-        <Text variant="caption" style={styles.subcopy}>
-          {ctaSubcopy}
-        </Text>
-      </View>
+          {noteOpen ? (
+            <TextInput
+              style={styles.noteInput}
+              value={closingNoteValue}
+              onChangeText={onClosingNoteChange}
+              onBlur={() => onSaveClosingNote?.(closingNoteValue)}
+              placeholder={closingNotePlaceholder}
+              placeholderTextColor={theme.colors.textMuted}
+              multiline
+              autoFocus
+              accessibilityLabel={closingNoteAccessibilityLabel}
+              accessibilityHint={closingNoteAccessibilityHint}
+              testID="finish-celebrate-note-input"
+            />
+          ) : (
+            <Pressable
+              style={styles.notePrompt}
+              onPress={() => setNoteOpen(true)}
+              accessibilityRole="button"
+              accessibilityLabel={closingNotePromptLabel}
+              accessibilityHint={closingNoteAccessibilityHint}
+              testID="finish-celebrate-note-prompt"
+            >
+              <Text style={styles.notePromptIcon} accessibilityElementsHidden>
+                ✍️
+              </Text>
+              <Text variant="body" style={styles.notePromptText}>
+                {closingNotePromptLabel}{" "}
+                <Text style={styles.noteOptional}>
+                  · {closingNoteOptionalLabel}
+                </Text>
+              </Text>
+            </Pressable>
+          )}
+        </View>
+
+        <View style={styles.footer}>
+          <Button
+            label={ctaLabel}
+            onPress={onDesignBadge}
+            variant="primary"
+            size="lg"
+            testID="finish-celebrate-cta"
+          />
+          <Text variant="caption" style={styles.subcopy}>
+            {ctaSubcopy}
+          </Text>
+        </View>
+      </KeyboardAvoidingView>
     </View>
   );
 }
