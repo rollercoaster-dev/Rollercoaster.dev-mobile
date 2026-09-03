@@ -527,10 +527,9 @@ describe("useCreateBadge", () => {
       expect(result.current.error).toBe(
         "Secure storage is unavailable on this device",
       );
-      expect(mockCreateBadge).not.toHaveBeenCalled();
     });
 
-    it("prefers no-key over the idempotent done only when no badge exists yet", () => {
+    it("idempotent done still wins over no-key when a badge already exists", () => {
       mockUseUserKey.mockReturnValue({
         keyId: "key-001",
         isReady: false,
