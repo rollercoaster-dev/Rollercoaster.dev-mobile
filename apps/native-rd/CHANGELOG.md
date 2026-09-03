@@ -1,5 +1,28 @@
 # native-rd
 
+## [0.1.20](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/compare/v0.1.19...v0.1.20) (2026-09-03)
+
+
+### Features
+
+* **native-rd:** atproto spike — write and resolve a badge record, answer the did:key question ([#614](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/614)) ([#648](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/648)) ([3f49027](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/3f490274f59e41508d36f950f04b7c80dbc8fdcd))
+* **native-rd:** ES256 VC-JWT proof + resolvable P-256 did:key — close gaps 5 and 7 ([#637](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/637)) ([ec68a9b](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/ec68a9b7d3539f3b83c1d58c368dd634b380e850))
+* **native-rd:** run the Maestro suite on a physical Android device ([#660](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/660)) ([d53f4d6](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/d53f4d6c0e672c1cc01b82d1d16306189da1ca40))
+
+
+### Bug Fixes
+
+* **ci:** make CI honest — re-enable CodeQL, drop dead Codecov, reconcile ci-contract.md ([#609](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/609)) ([#644](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/644)) ([fc51529](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/fc51529ed930d9c94441af9b1890cabe54ff1a87))
+* **completion:** require every step's planned evidence before a badge can bake ([#640](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/640)) ([ccbd2c6](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/ccbd2c6da24baad6868ead2669d9fdf14c15242f))
+* **native-rd:** get the required E2E gate back to 6/6 green ([#641](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/641)) ([24777c2](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/24777c2b3868ee825739aa31c6192fe4f4b30ae9))
+* **native-rd:** keep footer CTAs above the soft keyboard (wizard, Edit Goal, capture, finish) ([#649](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/649)) ([f4e50b4](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/f4e50b44da0a1156c5623a3653d5e297d2b7895a))
+* **native-rd:** light header ink in dark mode + bottom-label plate in badge designer ([#663](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/663)) ([0eb7d3c](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/0eb7d3c3c59a7163fb5da870e21c779b05e25a8a))
+* **native-rd:** make the no-key bake state reachable on a real key failure ([#566](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/566)) ([#650](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/650)) ([1032f70](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/1032f704fec1eaf552f30c89853c23f132292b21))
+* **native-rd:** OB3 badge verifies on the 1EdTech validator — drop issuanceDate, .jwt export, compliance docs ([#600](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/600)) ([#662](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/662)) ([c3da82a](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/c3da82acdb129de7cd38da9c52ed7efb8b2c48d1))
+* **native-rd:** open a sealed goal's finish flow on the read-only reveal ([#563](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/563)) ([#652](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/652)) ([6f65b89](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/6f65b89795d650cee2875f38ccf334ef451b13fd))
+* **native-rd:** stop the Edit Goal title debounce from alerting mid-edit ([#562](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/562)) ([#651](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/651)) ([f55fd78](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/f55fd7883b8cd2f08defbec2c8753d3305f2bf8b))
+* **openbadges-core:** close OB3 schema gaps 1-4 — creator, proof array, name, issuanceDate ([#597](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/597)) ([#628](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/628)) ([4d3209a](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/commit/4d3209ae618e2358617236498d297c68f2200b29))
+
 ## [0.1.19](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/compare/v0.1.18...v0.1.19) (2026-08-24)
 
 
