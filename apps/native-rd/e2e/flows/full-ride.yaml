@@ -311,12 +311,12 @@ env:
 - assertNotVisible:
     id: "focus-current-task-mark-complete"
 
-# 21. Capture the Link. The keyboard dismissal is MANDATORY, not defensive:
-#     CaptureLinkScreen has no KeyboardAvoidingView and no keyboard-controller
-#     padding, so its Save button sits under the soft keyboard. Dismiss from
-#     the caption input (returnKeyType="done"); the URL input is labelled
-#     returnKeyType="next" but wires no onSubmitEditing/ref, so that label is
-#     cosmetic and focus never moves. Filed as a production bug.
+# 21. Capture the Link. CaptureLinkScreen now wraps its content in a
+#     KeyboardAvoidingView, so Save sits above the keyboard and the dismissal
+#     below is belt and braces, not load-bearing. It dismisses from the caption
+#     input (returnKeyType="done"); the URL input is labelled
+#     returnKeyType="next" but wires no onSubmitEditing/ref, so that key
+#     advances no focus.
 - tapOn:
     id: "focus-current-task-add-link"
 - tapOn:

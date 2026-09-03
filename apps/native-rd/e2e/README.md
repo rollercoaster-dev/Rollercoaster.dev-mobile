@@ -107,7 +107,9 @@ This is verifiable, and should be verified, with `maestro hierarchy` — VoiceOv
 
 ### Soft keyboard occlusion
 
-`CaptureTextNote` lifts its footer above the keyboard (`useReanimatedKeyboardAnimation`). **`CaptureLinkScreen` does not** — no `KeyboardAvoidingView`, no keyboard-controller — so its Save button sits under the keyboard and the tap lands on the keyboard instead. Every link capture must dismiss first by tapping `capture-link-caption` (`returnKeyType="done"`) then `pressKey: Enter`. Don't dismiss from the URL field instead: it is labelled `returnKeyType="next"`, but nothing wires `onSubmitEditing` or a ref to the caption input, so the label is cosmetic — the key advances no focus and leaves the caption field unvisited. The production fix is filed separately.
+Every screen with a text input above a pinned footer CTA now lifts that footer above the keyboard: `CaptureTextNote` via `useReanimatedKeyboardAnimation`, and `NewGoalWizard`, `EditGoalView`, `CaptureLinkScreen`, `VoiceMemoScreen`, `FinishCelebrateStage` and `FinishDesignStage` via `KeyboardAvoidingView` + the shared `KEYBOARD_AVOIDING_PROPS`. `keyboard-cta-reachable.yaml` pins this for the two screens whose add-step input keeps the keyboard up between adds (`blurOnSubmit={false}`): it taps the footer CTA with the keyboard still showing and asserts arrival. Do not add a dismissal step before those taps.
+
+Older flows still dismiss before tapping `capture-link-save` (tap `capture-link-caption`, `pressKey: Enter`). That is now belt and braces, not load-bearing. If you do dismiss from Capture Link, do it from the caption: the URL input is labelled `returnKeyType="next"` but wires no `onSubmitEditing`/ref, so that key advances no focus.
 
 ### Flow structure
 
@@ -153,6 +155,7 @@ A flow is `optional` when it covers aspirational or partially-implemented featur
 | `settings-theme-switch.yaml`           | `required` | Settings → Night Ride, immediate selection                                                                                                                                                                                                                                                                               |
 | `settings-theme-persists-restart.yaml` | `required` | Night Ride survives a full app restart (Evolu-backed persistence)                                                                                                                                                                                                                                                        |
 | `step-timing-editor.yaml`              | `required` | In-row B/C authoring (#570): open StepTimingEditor on an Edit Goal row, name a `depends on`, read the chip back on the collapsed line and the same sentence on the Timeline. `depends on` only — no due-date tap (see below)                                                                                             |
+| `keyboard-cta-reachable.yaml`          | `required` | Footer CTAs stay reachable with the soft keyboard up: four wizard steps added via Enter, then "I'm ready" tapped without dismissing; a fifth step in Edit Goal, then Done tapped the same way. Pins the `KeyboardAvoidingView` wrap on both screens                                                                      |
 | `evidence-viewer.yaml`                 | `optional` | Mixed-type evidence (link + text) → Timeline card → EvidenceViewerScreen → thumbnail strip. **The only flow requiring `EXPO_PUBLIC_E2E_MODE=true`**                                                                                                                                                                      |
 
 Plus `subflows/launch-and-onboard.yaml`, which is not a flow.
