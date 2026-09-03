@@ -153,15 +153,16 @@ describe("baked iTXt chunk — OB 3.0 wire format (#599)", () => {
     return parsed.filter((c) => c.keyword === OB3_KEYWORD);
   }
 
+  const baked = bakePNG(
+    Buffer.from(generateBadgeImagePNG("#FF5733")),
+    JSON.stringify(CREDENTIAL_STUB),
+  );
+
   it("writes exactly one iTXt chunk keyed `openbadgecredential`", () => {
-    const png = generateBadgeImagePNG("#FF5733");
-    const baked = bakePNG(Buffer.from(png), JSON.stringify(CREDENTIAL_STUB));
     expect(findOb3Chunk(baked)).toHaveLength(1);
   });
 
   it("stores the credential uncompressed (flag 0, method 0)", () => {
-    const png = generateBadgeImagePNG("#FF5733");
-    const baked = bakePNG(Buffer.from(png), JSON.stringify(CREDENTIAL_STUB));
     const [chunk] = findOb3Chunk(baked);
     expect(chunk?.compressionFlag).toBe(0);
     expect(chunk?.compressionMethod).toBe(0);
