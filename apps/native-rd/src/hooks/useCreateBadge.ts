@@ -94,7 +94,7 @@ export type BadgeCreationStatus =
   | "storing"
   | "done"
   | "error"
-  | "no-key"; // key is ready but absent (permanent failure)
+  | "no-key"; // key is unusable — useUserKey reported an error (permanent failure)
 
 export interface UseCreateBadgeResult {
   status: BadgeCreationStatus;
@@ -133,7 +133,7 @@ export function useCreateBadge(
   options?: UseCreateBadgeOptions,
 ): UseCreateBadgeResult {
   const enabled = options?.enabled !== false;
-  const { keyId, isReady } = useUserKey();
+  const { keyId, isReady, error: keyError } = useUserKey();
   // Narrative is localized at bake time in the active UI language and frozen
   // into the signed credential — single language, by design. See docs/i18n.md.
   const { t } = useTranslation("badges");
@@ -182,14 +182,22 @@ export function useCreateBadge(
       return;
     }
 
-    if (!isReady) {
-      setStatus("loading");
+    // Key unusable → permanent failure (#566). useUserKey sets `error` when
+    // SecureStore is unavailable, keypair generation threw, or verification
+    // failed for a non-orphan reason, and never clears it within a session, so
+    // `isReady` stays false forever. Without this branch that lands on
+    // "loading" — an unbounded "Baking your badge…" spinner with no alert,
+    // retry, or exit. "no-key" renders the alert + "Continue without a badge".
+    if (keyError !== null) {
+      setStatus("no-key");
+      setError(keyError);
       return;
     }
 
-    // Key ready but absent → permanent failure (generation failed).
-    if (!keyId) {
-      setStatus("no-key");
+    // Key still initialising. `isReady` implies a non-null `keyId`, so the
+    // second check only narrows the type for the signing calls below.
+    if (!isReady || !keyId) {
+      setStatus("loading");
       return;
     }
 
@@ -435,7 +443,16 @@ export function useCreateBadge(
       }
       // No finally reset — hasTriggered.current stays true permanently
     })();
-  }, [existingBadge, isReady, keyId, goal, goalId, enabled, retryNonce]); // evidence read via ref, not deps
+  }, [
+    existingBadge,
+    isReady,
+    keyId,
+    keyError,
+    goal,
+    goalId,
+    enabled,
+    retryNonce,
+  ]); // evidence read via ref, not deps
 
   // Recovery from the terminal "error" state: clear the never-reset guard and
   // return to "idle" so the guarded effect can re-run on the next render.
