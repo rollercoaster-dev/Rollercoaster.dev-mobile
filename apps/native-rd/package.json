@@ -39,7 +39,7 @@
     "i18n:sync": "bun run scripts/i18n/sync.cli.ts"
   },
   "dependencies": {
-    "@evolu/common": "^7.4.1",
+    "@evolu/common": "^8.7.0",
     "@evolu/react": "^10.4.0",
     "@evolu/react-native": "^14.3.0",
     "@react-native-async-storage/async-storage": "2.2.0",
