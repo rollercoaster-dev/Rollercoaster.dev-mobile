@@ -157,6 +157,16 @@ beforeEach(() => {
   });
 });
 
+/**
+ * #599: the string baked into the PNG must be the very string persisted as
+ * badge.credential — that is what exportJSON ships, so PNG and JSON exports
+ * carry the same signed credential.
+ */
+function bakedCredentialArg(): string {
+  const call = mockBadges.bakePNG.mock.calls[0] as unknown as [Buffer, string];
+  return call[1];
+}
+
 describe("useCreateBadge", () => {
   describe("when key is not ready (isReady: false)", () => {
     it("returns status: loading — transient, key is still initialising", () => {
@@ -238,6 +248,12 @@ describe("useCreateBadge", () => {
         FRESH,
         expect.any(String),
       );
+      // #599: the re-baked PNG carries the same credential updateBadge persists
+      const [, updated] = mockUpdateBadge.mock.calls[0] as [
+        string,
+        { credential: string },
+      ];
+      expect(updated.credential).toBe(bakedCredentialArg());
     });
 
     it("re-bakes using readBadgePNG of the existing imageUri when no freshCapturedPng is provided", async () => {
@@ -272,6 +288,11 @@ describe("useCreateBadge", () => {
       );
       expect(mockUpdateBadge).toHaveBeenCalled();
       expect(mockCreateBadge).not.toHaveBeenCalled();
+      const [, updated] = mockUpdateBadge.mock.calls[0] as [
+        string,
+        { credential: string },
+      ];
+      expect(updated.credential).toBe(bakedCredentialArg());
     });
 
     it("fails loud when readBadgePNG throws on re-completion (does not silently fall back)", async () => {
@@ -388,6 +409,17 @@ describe("useCreateBadge", () => {
       expect(decodeJwsPayload(credential)["vc"]).toMatchObject({
         type: ["VerifiableCredential"],
       });
+    });
+
+    it("bakes the exact credential string it persists (PNG and JSON exports agree, #599)", async () => {
+      renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
+      await act(async () => {});
+
+      const { credential } = mockCreateBadge.mock.calls[0][0] as {
+        credential: string;
+      };
+      expect(credential).toMatch(JWS_PATTERN);
+      expect(bakedCredentialArg()).toBe(credential);
     });
 
     it("reaches status: done after successful creation", async () => {
