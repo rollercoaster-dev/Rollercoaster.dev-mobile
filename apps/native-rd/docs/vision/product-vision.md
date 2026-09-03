@@ -121,7 +121,36 @@ Add the learning graph. Set learning goals, track interrupts and context switche
 
 Add the visual layer. Your badges become nodes in a skill tree you design. Plan where you want to go, see where you've been, identify gaps. Earned badges are solid, in-progress badges glow, planned badges are ghosts. This is the video game progression system for real life.
 
-**No code or data model exists for this iteration.**
+**The tree is outward-facing, not just a private view.** It is how a user organises,
+displays and _shares_ everything they have done alongside where they intend to go — a
+verifiable alternative to the skills section of a CV, where every earned claim resolves
+to a signed credential the user owns rather than a self-reported line of text. Showing
+planned paths next to earned ones is the unusual part: most credential profiles show
+only what you finished.
+
+**It is meant to be the user's own.** The long-term intent is maximal self-styling —
+layout, grouping, visual treatment — so the tree can be as ornate or as plain as its
+owner wants. A personal video game skill tree, not a template with someone's data poured
+into it. That is post-Iteration-C polish, but it constrains the design now: the published
+format has to carry presentation alongside the credential graph, or styling can never be
+added without breaking every already-published tree.
+
+**Relationship to goal templates.** They are separate things pointing in opposite
+directions. A goal template is an _input_ — adopt someone's goal definition and it
+becomes an ordinary user-created goal, indistinguishable from one you wrote yourself. The
+tree is an _output_ — how your own earned goals and planned paths get organised and
+shown. An adopted goal can end up as a node in your tree, but a template is not a path
+through one.
+
+**No code or data model exists for this iteration.** Seeds only: `SkillTreeNode` and
+`SkillTreeEdge` are named in [ADR-0004](../decisions/ADR-0004-data-model-storage.md) and
+nothing implements them.
+
+**Funding status.** [ADR-0015](../decisions/ADR-0015-funded-scope-prototype-fund.md)
+originally deferred the whole of Iteration C as inward-facing. Its
+[second amendment](../decisions/ADR-0015-funded-scope-prototype-fund.md#amendment-2026-08-26--the-skill-tree-is-outward-facing-and-the-remix-to-8020)
+reverses that for the shareable profile — the format, publishing and a read-only
+rendering — while leaving the free-form authoring canvas post-grant.
 
 ### Iteration D — Community (not started)
 
