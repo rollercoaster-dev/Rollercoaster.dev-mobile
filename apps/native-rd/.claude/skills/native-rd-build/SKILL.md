@@ -1018,7 +1018,7 @@ adb kill-server
 ADB_LOCAL_TRANSPORT_MAX_PORT=5554 adb start-server
 ```
 
-**Stale `packages/*/dist`.** `@rollercoaster-dev/openbadges-core` and `design-tokens` resolve through package.json `exports` to their built `dist/`; Metro never looks at their `src/`. Pull a commit that touches a package and run the app without `bun run build`, and the app serves last month's code — here `encodeP256DidKey` was missing and the bake died with `TypeError: undefined is not a function`, which reads as an app bug. Both run scripts now run `turbo run build --filter='./packages/*'` first (cached, sub-second when nothing changed). Metro does **not** pick up a rebuilt `dist/` while running — restart it after the build.
+**Stale `packages/*/dist`.** `@rollercoaster-dev/openbadges-core` and `design-tokens` resolve through package.json `exports` to their built `dist/`; Metro never looks at their `src/`. Pull a commit that touches a package and run the app without `bun run build`, and the app serves last month's code — here `encodeP256DidKey` was missing and the bake died with `TypeError: undefined is not a function`, which reads as an app bug. Both run scripts now run `bun run build:packages` (root package.json) first (cached, sub-second when nothing changed). Metro does **not** pick up a rebuilt `dist/` while running — restart it after the build.
 
 While you're on a physical phone that also carries the Play Store build: never uninstall the store app to make room (user data), build the `.dev` variant instead (the run script default), and see `e2e/README.md` → Android for the E2E lane.
 

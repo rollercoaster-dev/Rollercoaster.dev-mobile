@@ -58,18 +58,6 @@ fi
 export NODE_BINARY="${NODE_BIN}"
 export PATH="$(dirname "${NODE_BIN}"):${PATH}"
 
-
-# Workspace packages (design-tokens, openbadges-core) are consumed through their
-# built dist/ via package.json `exports`; Metro never sees their src/. A stale
-# dist serves old code silently — 2026-09-03 the bake failed on a physical
-# phone with "undefined is not a function" because dist/ predated
-# `encodeP256DidKey`. Turbo caches, so this is a no-op when nothing changed.
-echo "Building workspace packages..."
-(
-  cd "${APP_DIR}/../.." \
-    && ./node_modules/.bin/turbo run build --filter='./packages/*' --output-logs=errors-only
-)
-
 # Bun's npm-compat env vars confuse Gradle's autolinking shell-out.
 while IFS='=' read -r env_name _; do
   unset "${env_name}"
@@ -119,7 +107,7 @@ fi
 # the ghost. If an offline emulator is listed and no emulator process is
 # running, restart adb with the probe range collapsed to a single port.
 if adb devices | awk 'NR>1 && $1 ~ /^emulator-/ && $2=="offline" { found=1 } END { exit found ? 0 : 1 }' \
-  && ! pgrep -qf 'qemu-system-|/emulator/emulator|/emulator/qemu' 2>/dev/null; then
+  && ! pgrep -qf 'qemu-system-|/emulator/emulator' 2>/dev/null; then
   echo "Phantom offline emulator in 'adb devices' with no emulator running — restarting adb with ADB_LOCAL_TRANSPORT_MAX_PORT=5554"
   adb kill-server
   ADB_LOCAL_TRANSPORT_MAX_PORT=5554 adb start-server
@@ -139,6 +127,12 @@ if [ "${device_count}" -gt 1 ] && [ -z "${ANDROID_DEVICE_ID:-}" ]; then
   adb devices >&2 || true
   exit 1
 fi
+
+# Workspace packages are consumed through their built dist/ (see native-rd-build
+# skill Gotcha 17: a stale dist serves old code silently). Turbo caches, so this
+# is a no-op when nothing changed.
+echo "Building workspace packages..."
+(cd "${APP_DIR}/../.." && bun run build:packages)
 
 # Reverse the Metro port so the emulator/device can reach the host's bundler
 # via localhost. Scope to the target device when ANDROID_DEVICE_ID is set so

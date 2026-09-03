@@ -80,16 +80,11 @@ echo "Installing iOS pods directly before Expo launch..."
   pod install --repo-update --ansi
 )
 
-# Workspace packages (design-tokens, openbadges-core) are consumed through their
-# built dist/ via package.json `exports`; Metro never sees their src/. A stale
-# dist serves old code silently — 2026-09-03 the bake failed on a physical
-# phone with "undefined is not a function" because dist/ predated
-# `encodeP256DidKey`. Turbo caches, so this is a no-op when nothing changed.
+# Workspace packages are consumed through their built dist/ (see native-rd-build
+# skill Gotcha 17: a stale dist serves old code silently). Turbo caches, so this
+# is a no-op when nothing changed.
 echo "Building workspace packages..."
-(
-  cd "${APP_DIR}/../.." \
-    && ./node_modules/.bin/turbo run build --filter='./packages/*' --output-logs=errors-only
-)
+(cd "${APP_DIR}/../.." && bun run build:packages)
 
 echo "Launching iOS app with Expo (skipping Expo-managed install step)..."
 

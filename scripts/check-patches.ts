@@ -21,7 +21,7 @@ import {
   realpathSync,
   statSync,
 } from "node:fs";
-import { basename, join, resolve, sep } from "node:path";
+import { basename, join, resolve } from "node:path";
 
 type Manifest = {
   patchedDependencies?: Record<string, string>;
@@ -105,19 +105,24 @@ function readManifest(path: string): Manifest {
  */
 function manifestPaths(): string[] {
   const paths = [join(repoRoot, "package.json")];
+  for (const dir of workspaceDirs()) {
+    const manifest = join(dir, "package.json");
+    if (existsSync(manifest)) paths.push(manifest);
+  }
+  return paths;
+}
 
+/** Every workspace package directory (`packages/<x>`, `apps/<x>`). */
+function workspaceDirs(): string[] {
+  const dirs: string[] = [];
   for (const workspaceRoot of workspaceRoots) {
     const dir = join(repoRoot, workspaceRoot);
     if (!existsSync(dir)) continue;
-
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      if (!entry.isDirectory()) continue;
-      const manifest = join(dir, entry.name, "package.json");
-      if (existsSync(manifest)) paths.push(manifest);
+      if (entry.isDirectory()) dirs.push(join(dir, entry.name));
     }
   }
-
-  return paths;
+  return dirs;
 }
 
 function descriptorName(entry: unknown[] | undefined): string | null {
@@ -175,17 +180,9 @@ function installDirs(
   const store = join(repoRoot, "node_modules", ".bun");
   const segments = name.split("/");
   const escaped = name.replace(/\//g, "+");
+  const nested = (root: string) => join(root, "node_modules", ...segments);
   const ownStoreDirs: string[] = [];
-  const candidates: string[] = [join(repoRoot, "node_modules", ...segments)];
-
-  for (const workspaceRoot of workspaceRoots) {
-    const dir = join(repoRoot, workspaceRoot);
-    if (!existsSync(dir)) continue;
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      if (!entry.isDirectory()) continue;
-      candidates.push(join(dir, entry.name, "node_modules", ...segments));
-    }
-  }
+  const candidates = [repoRoot, ...workspaceDirs()].map(nested);
 
   if (existsSync(store)) {
     for (const dir of readdirSync(store)) {
@@ -194,32 +191,29 @@ function installDirs(
         dir.startsWith(`${escaped}@${version}+`);
       // A store dir's own `node_modules/<name>` is the package itself, not a
       // link to it — counting it would make every orphan look reachable.
-      if (isOwn)
-        ownStoreDirs.push(join(store, dir, "node_modules", ...segments));
-      else candidates.push(join(store, dir, "node_modules", ...segments));
+      if (isOwn) ownStoreDirs.push(join(store, dir));
+      else candidates.push(nested(join(store, dir)));
     }
   }
 
   const live = new Set<string>();
   for (const candidate of candidates) {
     if (!existsSync(candidate)) continue;
-    let manifest: { version?: string };
     try {
-      manifest = JSON.parse(
+      const manifest = JSON.parse(
         readFileSync(join(candidate, "package.json"), "utf8"),
       ) as { version?: string };
+      if (manifest.version === version) live.add(realpathSync(candidate));
     } catch {
-      continue;
+      // unreadable manifest: not a copy anything can import
     }
-    if (manifest.version === version) live.add(realpathSync(candidate));
   }
 
   // Report the store dir itself — that is the thing to `rm -rf`.
-  const orphans = ownStoreDirs
-    .filter((dir) => existsSync(dir) && !live.has(realpathSync(dir)))
-    .map((dir) =>
-      dir.slice(0, dir.indexOf(`${sep}node_modules${sep}`, store.length)),
-    );
+  const orphans = ownStoreDirs.filter((dir) => {
+    const pkg = nested(dir);
+    return existsSync(pkg) && !live.has(realpathSync(pkg));
+  });
 
   return { live: [...live].sort(), orphans };
 }

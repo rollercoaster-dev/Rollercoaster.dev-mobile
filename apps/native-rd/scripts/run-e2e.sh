@@ -43,18 +43,9 @@ done
 
 APP_BUNDLE_ID="dev.rollercoaster.app"
 FLOW_DIR="e2e/flows/"
-ANDROID_PKG="${APP_BUNDLE_ID}"
-ANDROID_SERIAL=""
-LOCALE_LOOP_PID=""
-
-cleanup() {
-  if [ -n "${LOCALE_LOOP_PID}" ]; then
-    kill "${LOCALE_LOOP_PID}" 2>/dev/null || true
-  fi
-}
-trap cleanup EXIT
 
 if [ "${LANE}" = "android" ]; then
+  ANDROID_PKG="${APP_BUNDLE_ID}"
   if ! command -v adb >/dev/null 2>&1; then
     echo "error: --android needs adb on PATH (Android SDK platform-tools)." >&2
     exit 1
@@ -88,13 +79,11 @@ if [ "${LANE}" = "android" ]; then
     # `maestro test -e` override (verified 2026-09-03: the chooser came back on
     # every flow), so the copy rewrites the default too.
     rm -rf e2e/.android
-    mkdir -p e2e/.android
-    cp -R e2e/flows e2e/subflows e2e/.android/
-    for f in e2e/.android/flows/*.yaml e2e/.android/subflows/*.yaml; do
+    mkdir -p e2e/.android/flows e2e/.android/subflows
+    for src in e2e/flows/*.yaml e2e/subflows/*.yaml; do
       sed -e "s/^appId: ${APP_BUNDLE_ID}\$/appId: ${ANDROID_PKG}/" \
           -e "s/^  DEV_CLIENT_SCHEME: exp+rollercoasterdev\$/  DEV_CLIENT_SCHEME: rollercoasterdev-dev/" \
-          "${f}" > "${f}.tmp"
-      mv "${f}.tmp" "${f}"
+          "${src}" > "e2e/.android/${src#e2e/}"
     done
     FLOW_DIR="e2e/.android/flows/"
   fi
@@ -125,6 +114,7 @@ if [ "${LANE}" = "android" ]; then
     done
   ) &
   LOCALE_LOOP_PID=$!
+  trap 'kill "${LOCALE_LOOP_PID}" 2>/dev/null || true' EXIT
 
   # No dev-menu seed here, deliberately. The iOS UserDefaults trick has no
   # durable Android equivalent: expo-dev-menu keeps `isOnboardingFinished` in

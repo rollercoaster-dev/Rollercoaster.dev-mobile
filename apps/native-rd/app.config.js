@@ -18,8 +18,8 @@
 // suite hangs on it (docs/plans/dev-plans/2026-09-03-android-device-e2e.md,
 // obstacle 6). `rollercoasterdev-dev://expo-development-client/?url=…` is
 // registered by the local variant alone, so the dev launcher opens without a
-// chooser. scripts/run-e2e.sh passes it as `DEV_CLIENT_SCHEME` on the Android
-// lane; the flows default to `exp+rollercoasterdev`.
+// chooser. The flows default `DEV_CLIENT_SCHEME` to `exp+rollercoasterdev`;
+// scripts/run-e2e.sh --android rewrites that default (e2e/README.md → Android).
 //
 // Why only local is split: the INSTALL_FAILED_VERSION_DOWNGRADE error only occurs
 // between a local debug build (versionCode 1) and an EAS build (remote counter).
