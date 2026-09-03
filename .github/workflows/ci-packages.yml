@@ -15,7 +15,6 @@ on:
       - "package.json"
       - "tsconfig.json"
       - "eslint.config.mjs"
-      - ".prettierignore"
       - ".github/workflows/ci-packages.yml"
   push:
     branches: [main]

@@ -24,6 +24,10 @@ module.exports = {
   // RN's custom test environment patches global (ErrorUtils, __DEV__, etc.)
   testEnvironment: "@react-native/jest-preset/jest/react-native-env.js",
 
+  // `--coverage` output: lcov for humans/tools, json-summary for the CI job
+  // summary table (see docs/architecture/ci-contract.md, "Coverage contract").
+  coverageReporters: ["lcov", "json-summary"],
+
   // Custom resolver that stubs RN 0.81 specs_DEPRECATED ESM files
   resolver: "./jest.resolver.js",
 

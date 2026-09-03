@@ -16,7 +16,6 @@ on:
       - "bunfig.toml"
       - "turbo.json"
       - "package.json"
-      - ".prettierignore"
       - ".github/workflows/ci-native-rd.yml"
   push:
     branches: [main]
@@ -76,7 +75,7 @@ jobs:
 
       - name: Test (with coverage)
         working-directory: apps/native-rd
-        run: bun run test:ci -- --coverage --coverageReporters=lcov --coverageReporters=json-summary
+        run: bun run test:ci -- --coverage
 
       # Coverage is published in-repo (job summary + artifact) rather than to a
       # third-party service. No token, no continue-on-error: if the summary file

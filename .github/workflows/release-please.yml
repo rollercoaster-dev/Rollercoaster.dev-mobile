@@ -63,8 +63,9 @@ jobs:
       # pretty-printer and expands short arrays (e.g. supportedLocales) onto
       # multiple lines. Prettier's format:check then rejects the file, so every
       # release commit turns ci-format red on merge to main (release PRs are
-      # bot-opened, so pull_request CI never catches it at PR time). Re-run Prettier on the release PR branch so the bumped file
-      # lands already formatted.
+      # bot-opened, so pull_request CI never catches it at PR time). Re-run
+      # Prettier on the release PR branch so the bumped file lands already
+      # formatted.
       - name: Checkout release PR branch
         if: ${{ steps.pr.outputs.pr }}
         uses: actions/checkout@v7
