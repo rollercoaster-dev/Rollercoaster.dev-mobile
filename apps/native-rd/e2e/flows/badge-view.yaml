@@ -4,6 +4,10 @@ tags:
 env:
   METRO_HOST: localhost
   METRO_PORT: "8081"
+  # Dev-client URL scheme. scripts/run-e2e.sh --android rewrites this default in
+  # its e2e/.android copy (the local `.dev` build registers `rollercoasterdev-dev`,
+  # app.config.js); a `-e` override does not beat a flow-level default.
+  DEV_CLIENT_SCHEME: exp+rollercoasterdev
 ---
 # Badges tab navigation smoke test.
 #
@@ -15,6 +19,7 @@ env:
     env:
       METRO_HOST: ${METRO_HOST}
       METRO_PORT: ${METRO_PORT}
+      DEV_CLIENT_SCHEME: ${DEV_CLIENT_SCHEME}
       THEME_SWATCH: light-autismFriendly
 
 # Tap the Badges tab and confirm the empty state.

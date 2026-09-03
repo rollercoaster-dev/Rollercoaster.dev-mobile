@@ -58,6 +58,18 @@ fi
 export NODE_BINARY="${NODE_BIN}"
 export PATH="$(dirname "${NODE_BIN}"):${PATH}"
 
+
+# Workspace packages (design-tokens, openbadges-core) are consumed through their
+# built dist/ via package.json `exports`; Metro never sees their src/. A stale
+# dist serves old code silently — 2026-09-03 the bake failed on a physical
+# phone with "undefined is not a function" because dist/ predated
+# `encodeP256DidKey`. Turbo caches, so this is a no-op when nothing changed.
+echo "Building workspace packages..."
+(
+  cd "${APP_DIR}/../.." \
+    && ./node_modules/.bin/turbo run build --filter='./packages/*' --output-logs=errors-only
+)
+
 # Bun's npm-compat env vars confuse Gradle's autolinking shell-out.
 while IFS='=' read -r env_name _; do
   unset "${env_name}"
@@ -99,6 +111,18 @@ fi
 if [ ! -f "${ANDROID_DIR}/local.properties" ]; then
   echo "Writing android/local.properties with sdk.dir=${ANDROID_HOME}"
   printf 'sdk.dir=%s\n' "${ANDROID_HOME}" > "${ANDROID_DIR}/local.properties"
+fi
+
+# Phantom `emulator-5554 offline` guard. adb probes TCP 5555–5585 on localhost
+# for emulators and lists anything that answers as an offline emulator —
+# OrbStack, for one, listens on 5555. Expo's device enumeration then trips over
+# the ghost. If an offline emulator is listed and no emulator process is
+# running, restart adb with the probe range collapsed to a single port.
+if adb devices | awk 'NR>1 && $1 ~ /^emulator-/ && $2=="offline" { found=1 } END { exit found ? 0 : 1 }' \
+  && ! pgrep -qf 'qemu-system-|/emulator/emulator|/emulator/qemu' 2>/dev/null; then
+  echo "Phantom offline emulator in 'adb devices' with no emulator running — restarting adb with ADB_LOCAL_TRANSPORT_MAX_PORT=5554"
+  adb kill-server
+  ADB_LOCAL_TRANSPORT_MAX_PORT=5554 adb start-server
 fi
 
 # Require a connected emulator or device. `adb devices` lines after the

@@ -4,6 +4,10 @@ tags:
 env:
   METRO_HOST: localhost
   METRO_PORT: "8081"
+  # Dev-client URL scheme. scripts/run-e2e.sh --android rewrites this default in
+  # its e2e/.android copy (the local `.dev` build registers `rollercoasterdev-dev`,
+  # app.config.js); a `-e` override does not beat a flow-level default.
+  DEV_CLIENT_SCHEME: exp+rollercoasterdev
 ---
 # Theme persistence — verify Night Ride survives a full app restart.
 #
@@ -17,6 +21,7 @@ env:
     env:
       METRO_HOST: ${METRO_HOST}
       METRO_PORT: ${METRO_PORT}
+      DEV_CLIENT_SCHEME: ${DEV_CLIENT_SCHEME}
       THEME_SWATCH: light-default
 
 # Switch to Night Ride and verify immediate selection.
@@ -35,7 +40,7 @@ env:
 # than a second runFlow of the prologue, which would clearState and destroy the
 # very thing under test.
 - stopApp
-- openLink: "exp+rollercoasterdev://expo-development-client/?url=http%3A%2F%2F${METRO_HOST}%3A${METRO_PORT}"
+- openLink: "${DEV_CLIENT_SCHEME}://expo-development-client/?url=http%3A%2F%2F${METRO_HOST}%3A${METRO_PORT}"
 # Positive barrier, same reasoning as the prologue's: a negative assertion
 # passes instantly on the empty tree that exists before the bundle mounts.
 # Post-restart we land on the cockpit, not Welcome.

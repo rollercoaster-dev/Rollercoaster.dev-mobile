@@ -4,6 +4,10 @@ tags:
 env:
   METRO_HOST: localhost
   METRO_PORT: "8081"
+  # Dev-client URL scheme. scripts/run-e2e.sh --android rewrites this default in
+  # its e2e/.android copy (the local `.dev` build registers `rollercoasterdev-dev`,
+  # app.config.js); a `-e` override does not beat a flow-level default.
+  DEV_CLIENT_SCHEME: exp+rollercoasterdev
 ---
 # ============================================================================
 # FOOTER CTA REACHABLE WITH THE KEYBOARD UP
@@ -29,6 +33,7 @@ env:
     env:
       METRO_HOST: ${METRO_HOST}
       METRO_PORT: ${METRO_PORT}
+      DEV_CLIENT_SCHEME: ${DEV_CLIENT_SCHEME}
       THEME_SWATCH: light-autismFriendly
 
 # --- Wizard: name + first step ----------------------------------------------
