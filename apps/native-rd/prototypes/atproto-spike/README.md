@@ -14,14 +14,16 @@ This is a spike, not milestone 4. No app integration, no UI, no key-management h
 | -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
 | Reader path: resolve an AT-URI with no account, recompute CID from the returned bytes  | **Verified** against a live public record (`bsky.app` profile), CIDs match |
 | did:key issuer: mint P-256, encode did:key, sign ES256 VC-JWT, verify offline          | **Verified** locally, no network                                         |
-| Write a record to a hosted PDS and read it back by AT-URI + CID                        | Code complete — **not yet run**; needs a test account (see Reproduce)   |
-| Host a did:key-issued credential in a did:plc repo, verify from read-back bytes        | Code complete — **not yet run**; same dependency                        |
-| Firehose propagation observed via Jetstream                                            | Code complete — **not yet run**; same dependency                        |
-| Invisible to the Bluesky AppView (author feed + post search), against a positive control | Code complete — **not yet run**; same dependency                        |
-| What creating the identity actually required (email token, rotation-key custody)       | **Not yet recorded** — filled in from the first real signup             |
+| Write a record to a hosted PDS and read it back by AT-URI + CID                        | **Verified** 2026-09-03 against `bsky.social` — see Run log             |
+| Host a did:key-issued credential in a did:plc repo, verify from read-back bytes        | **Verified** 2026-09-03 — answer: yes                                    |
+| Firehose propagation observed via Jetstream                                            | **Verified** 2026-09-03 — commit event for exactly our record            |
+| Invisible to the Bluesky AppView (author feed + post search), against a positive control | **Verified** 2026-09-03 — control post seen, spike record not            |
+| What the identity actually involves (email, rotation-key custody)                      | **Recorded** from the PLC audit log; signup itself predates the spike     |
 
-When the live runs happen, paste their output into [Run log](#run-log) below and flip the
-rows. Until then this README describes what the code does, not what has been observed.
+The live runs used the project's own account, `rollercoaster-dev.bsky.social`
+(`did:plc:zhwenrx5y5dgfpu4cdaedbh7`), not a throwaway — a deliberate choice so the evidence
+sits in Rollercoaster.dev's own repo. The spike records are still there; resolve them yourself
+with the URIs in the [Run log](#run-log).
 
 ## What is here
 
@@ -79,13 +81,24 @@ there is nothing to point at but the key itself. The alternative (adding the bad
 the issuer identity depend on the PLC directory and its email/rotation-key custody. Milestone 4
 has to pick one; this spike shows both are technically open.
 
-## What creating the identity required
+## What the hosting identity actually involves
 
-_To be recorded from the first real signup on `bsky.social`._ The expected shape, which the
-run will confirm or correct: an email address, an email verification code, a handle, and a
-password; the PDS generates and **custodies** the repo signing key and the PLC rotation key —
-the user never sees either. An app password (Settings → Privacy and security → App passwords)
-is what the scripts log in with; it is revocable and never the account password.
+The account predates this spike (created 2025-01-07 through the Bluesky app), so the signup
+was not observed here. What the PLC directory records about it is public and is the evidence
+that matters — [`plc.directory/did:plc:zhwenrx5y5dgfpu4cdaedbh7/log/audit`](https://plc.directory/did:plc:zhwenrx5y5dgfpu4cdaedbh7/log/audit):
+
+- **Two rotation keys**, both `did:key:zQ3sh…` (secp256k1) — one is Bluesky's published
+  recovery key, the other belongs to `bsky.social`. The account holder holds neither.
+- **One `atproto` verificationMethod** — the repo signing key. Generated and held by the PDS
+  (`rooter.us-west.host.bsky.network`). The account holder never sees it.
+- The hosted-PDS signup requires an email address and email verification; the PDS performs
+  the PLC genesis operation on the user's behalf. The user contributes a handle and a password
+  and nothing cryptographic.
+
+So on a hosted PDS the *hosting* identity is fully custodial: Bluesky can rotate or recover it,
+the user cannot without Bluesky. That is exactly why the issuer identity should not depend on
+it (next section). Scripts authenticate with a revocable app password, never the account
+password.
 
 ## Firehose and Bluesky visibility
 
@@ -154,6 +167,94 @@ Every script exits non-zero on any mismatch. `.env` and `.last-record.json` are 
 
 ## Run log
 
-_Paste live output here, with the date, and keep the `at://` URIs in it. Do not delete the
-records afterwards — a reader verifies the trail by running `bun run resolve <uri>` against
-them. Until this section has entries, the Status table's "not yet run" rows stand._
+All runs 2026-09-03, `bsky.social`, account `rollercoaster-dev.bsky.social`. Records were
+left in place — re-resolve them with `bun run resolve <uri>`.
+
+### `bun run spike`
+
+```
+logged in as did:plc:zhwenrx5y5dgfpu4cdaedbh7 via https://bsky.social/
+
+createRecord →
+  uri  at://did:plc:zhwenrx5y5dgfpu4cdaedbh7/dev.rollercoaster.badge.spike/3mum73tifzo26
+  cid  bafyreibvoc3jamn2bn35sj2u4slalguonutkv6m2tnr3da57xsqrpubpdu
+
+getRecord (by AT-URI + CID) →
+  value {"note":"writeAndResolve.ts — repo mechanics only, fixture payload (#614)","$type":"dev.rollercoaster.badge.spike","createdAt":"2026-09-03T10:03:30.483Z","credential":"fixture:not-a-real-credential"}
+
+local CID (dag-cbor + sha2-256 of the returned value) bafyreibvoc3jamn2bn35sj2u4slalguonutkv6m2tnr3da57xsqrpubpdu
+
+uri + cid round-trip AND cid matches local recomputation: true
+
+OK — wrote .last-record.json for `bun run observe` / `bun run resolve`
+```
+
+### `bun run didkey`
+
+```
+issuer did:key       did:key:zDnaewsuEa8kCg2G6rBzK2BNz7Z7sHtWu7JuEsKBC6ZnhFrE5
+offline verify       true (ES256)
+
+repo did:plc         did:plc:zhwenrx5y5dgfpu4cdaedbh7
+record uri           at://did:plc:zhwenrx5y5dgfpu4cdaedbh7/dev.rollercoaster.badge.spike/3mum74a5xhj2l
+record cid           bafyreigtnur63qvykfvkxrkdnnwmexnextrqpqz6zdqgb2v7mzon2cd4gq
+read-back cid match  true  (server round-trip + local recomputation)
+read-back verify     true  (key resolved offline from the JWT's own iss)
+issuer ≠ repo        true  (did:key:zDna… vs did:plc:zhwe…)
+
+ANSWER: yes. did:key stayed the issuer; atproto only hosted the record.
+COST:   the did:key has no rotation and no recovery — lose the private key, lose attribution.
+        (This run's private key was never persisted; that is the point and the cost.)
+```
+
+### `bun run observe`
+
+```
+subscribing wss://jetstream2.us-east.bsky.network/subscribe?wantedDids=did:plc:zhwenrx5y5dgfpu4cdaedbh7&wantedCollections=dev.rollercoaster.badge.spike
+jetstream open — writing a record now
+
+createRecord  at://did:plc:zhwenrx5y5dgfpu4cdaedbh7/dev.rollercoaster.badge.spike/3mum75om3xz2t
+              bafyreid7wacl2gaxh6i6b2yy3pvncxjzugniysxgjuyczrz7bhy3izyecm
+
+(a) FIREHOSE: commit event received for exactly this record
+    did        did:plc:zhwenrx5y5dgfpu4cdaedbh7
+    operation  create  collection dev.rollercoaster.badge.spike  rkey 3mum75om3xz2t
+    cid        bafyreid7wacl2gaxh6i6b2yy3pvncxjzugniysxgjuyczrz7bhy3izyecm
+    time_us    1788429873528927
+
+control post  at://did:plc:zhwenrx5y5dgfpu4cdaedbh7/app.bsky.feed.post/3mum75pbbrd2m
+
+(b) BLUESKY APPVIEW for did:plc:zhwenrx5y5dgfpu4cdaedbh7, 1 feed item(s), 0 search hit(s):
+    control post in author feed   true
+    spike record in author feed   false
+    control post in searchPosts   false
+    spike record in searchPosts   false
+    (control post deleted)
+
+firehose propagation: true   appview control visible: true   spike record invisible: true
+```
+
+(A first attempt 403'd on `searchPosts`: `public.api.bsky.app` does not serve that method
+anonymously. The script now calls it through the logged-in session, which the PDS proxies to
+the AppView. The orphaned control post from that attempt was deleted by hand.)
+
+### `bun run resolve` — as a reader, no account
+
+```
+DID document         https://plc.directory/did:plc:zhwenrx5y5dgfpu4cdaedbh7
+  alsoKnownAs        at://rollercoaster-dev.bsky.social
+  verificationMethod 1 key(s) — the PLC-managed repo signing key(s)
+  PDS                https://rooter.us-west.host.bsky.network
+
+getRecord
+  uri   at://did:plc:zhwenrx5y5dgfpu4cdaedbh7/dev.rollercoaster.badge.spike/3mum74a5xhj2l
+  cid   bafyreigtnur63qvykfvkxrkdnnwmexnextrqpqz6zdqgb2v7mzon2cd4gq
+  local bafyreigtnur63qvykfvkxrkdnnwmexnextrqpqz6zdqgb2v7mzon2cd4gq  (matches)
+  value {
+  "note": "didKeyIssuer.ts — iss is a did:key, repo is a did:plc (#614)",
+  "$type": "dev.rollercoaster.badge.spike",
+  "issuer": "did:key:zDnaewsuEa8kCg2G6rBzK2BNz7Z7sHtWu7JuEsKBC6ZnhFrE5",
+  "createdAt": "2026-09-03T10:03:43.778Z",
+  "credential": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImRpZDprZXk6ekRuYWV3c3VFYThrQ2cyRzZyQnpLMkJOejdaN3NIdFd1N0p1RXNLQkM2Wm5oRnJFNSN6RG5hZXdzdUVhOGtDZzJHNnJCeksyQk56N1o3c0h0V3U3SnVFc0tCQzZabmhGckU1In0.eyJpc3MiOiJkaWQ6a2V5OnpEbmFld3N1RWE4a0NnMkc2ckJ6SzJCTno3WjdzSHRXdTdKdUVzS0JDNlpuaEZyRTUiLCJpYXQiOjE3ODg0Mjk4MjMsInZjIjp7IkBjb250ZXh0IjpbImh0dHBzOi8vd3d3LnczLm9yZy9ucy9jcmVkZW50aWFscy92MiIsImh0dHBzOi8vcHVybC5pbXNnbG9iYWwub3JnL3NwZWMvb2IvdjNwMC9jb250ZXh0LTMuMC4zLmpzb24iXSwidHlwZSI6WyJWZXJpZmlhYmxlQ3JlZGVudGlhbCIsIk9wZW5CYWRnZUNyZWRlbnRpYWwiXSwiaXNzdWVyIjp7ImlkIjoiZGlkOmtleTp6RG5hZXdzdUVhOGtDZzJHNnJCeksyQk56N1o3c0h0V3U3SnVFc0tCQzZabmhGckU1IiwidHlwZSI6WyJQcm9maWxlIl0sIm5hbWUiOiJhdHByb3RvIHNwaWtlIGlzc3VlciAoZml4dHVyZSkifSwidmFsaWRGcm9tIjoiMjAyNi0wOS0wM1QxMDowMzo0My4zMjVaIiwiY3JlZGVudGlhbFN1YmplY3QiOnsidHlwZSI6WyJBY2hpZXZlbWVudFN1YmplY3QiXSwiYWNoaWV2ZW1lbnQiOnsidHlwZSI6WyJBY2hpZXZlbWVudCJdLCJuYW1lIjoiRml4dHVyZSBhY2hpZXZlbWVudCDigJQgIzYxNCBzcGlrZSIsImRlc2NyaXB0aW9uIjoiU3ludGhldGljLiBQcm92ZXMgaG9zdGluZy9pc3N1ZXIgZGVjb3VwbGluZywgbm90IGEgcmVhbCBiYWRnZS4iLCJjcml0ZXJpYSI6eyJuYXJyYXRpdmUiOiJSYW4gZGlkS2V5SXNzdWVyLnRzLiJ9fX19fQ.xUGSLhWN58zgnPW3XHFKe2VZX-GSBkkVPe8aNlFMLOP95akF3KVTYDS2RI-cLcxuNhXxU7pGcFL5XYZ2rNRo6w"
+}
+```

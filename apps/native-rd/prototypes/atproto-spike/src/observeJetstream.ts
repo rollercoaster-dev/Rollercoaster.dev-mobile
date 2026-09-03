@@ -106,7 +106,9 @@ const feed = await appview.app.bsky.feed.getAuthorFeed({ actor: did, limit: 50 }
 const feedUris = feed.data.feed.map((f) => f.post.uri);
 const controlInFeed = feedUris.includes(control.uri);
 const spikeInFeed = feedUris.some((u) => u.includes(`/${SPIKE_COLLECTION}/`));
-const search = await appview.app.bsky.feed.searchPosts({ q: marker, limit: 10 });
+// searchPosts is not served anonymously by public.api.bsky.app (403 at the CDN);
+// the PDS proxies it to the AppView for a logged-in session.
+const search = await agent.app.bsky.feed.searchPosts({ q: marker, limit: 10 });
 const searchUris = search.data.posts.map((p) => p.uri);
 const controlInSearch = searchUris.includes(control.uri);
 const spikeInSearch = searchUris.some((u) => u.includes(`/${SPIKE_COLLECTION}/`));
