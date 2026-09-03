@@ -1,7 +1,7 @@
 # OB3 Compliance Status
 
 **Status:** **Compliant** — the 1EdTech OB30Inspector returns `VALID`, 14/14 probes, 0 errors.
-**Last verified:** 2026-09-03 against the official 1EdTech validator at [vc.1ed.tech](https://vc.1ed.tech) (OB30Inspector), on a badge earned end-to-end in the app (goal → evidence → sign → bake → export) — see [provenance](#provenance-of-the-snapshot) below.
+**Last verified:** 2026-09-03 against the official 1EdTech validator at [vc.1ed.tech](https://vc.1ed.tech) (OB30Inspector), on a badge earned end-to-end in the app on a physical iPhone (goal → evidence → sign → bake → export, validated on the device itself) — see [provenance](#provenance-of-the-snapshot) below.
 
 ---
 
@@ -97,7 +97,9 @@ The planned two-PR split (schema, then crypto) is what happened. The proof forma
 
 ## Provenance of the snapshot
 
-Earned end-to-end in the app on 2026-09-03: a goal was completed in the running app on the iOS simulator, the badge was signed and baked by the device code path (`useCreateBadge` → `signCredentialAsVcJwt` → PNG bake), exported through the share sheet, and submitted to OB30Inspector at vc.1ed.tech — both the baked PNG (this report) and the `.jwt` returned `VALID`, 14/14. One earlier export attempt against a badge minted before the signing-key rotation still failed exactly as documented in gap 4, which is expected: old badges are never re-signed.
+Earned end-to-end in the app on 2026-09-03: a goal was completed in the running app, the badge was signed and baked by the device code path (`useCreateBadge` → `signCredentialAsVcJwt` → PNG bake), exported through the share sheet, and submitted to OB30Inspector at vc.1ed.tech — both the baked PNG (this report) and the `.jwt` returned `VALID`, 14/14. One earlier export attempt against a badge minted before the signing-key rotation still failed exactly as documented in gap 4, which is expected: old badges are never re-signed.
+
+The first snapshot's badge (`mtlvcrec…`) was earned on the **iOS simulator**. It was superseded the same day by a badge earned on a **physical iPhone**: goal completed in the app on the device, badge signed, baked and exported there, then validated in Safari on the phone against vc.1ed.tech — `Verify-badge-mtlwtbek-fbc442.png`, `VALID`, 14 tests, 0 errors/warnings/exceptions, validator timestamp 2026-09-03 19:21:03. Screenshot of the on-device result: [`ob3-compliance-status.real-device-validation.png`](./ob3-compliance-status.real-device-validation.png).
 
 ---
 
