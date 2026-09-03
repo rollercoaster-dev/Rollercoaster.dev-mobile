@@ -53,6 +53,12 @@ export const styles = StyleSheet.create((theme) => ({
   },
 
   // --- Shared step body / footer frame ---
+  // KeyboardAvoidingView around the [body][footer] pair of every step. flex:1
+  // so it takes the space under the progress bar and shrinks with the keyboard,
+  // lifting the footer CTA above it.
+  stepFrame: {
+    flex: 1,
+  },
   stepBody: {
     flex: 1,
     justifyContent: "center" as const,
