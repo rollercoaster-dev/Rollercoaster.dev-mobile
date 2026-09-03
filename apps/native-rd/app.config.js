@@ -50,8 +50,11 @@ module.exports = ({ config }) => {
     ...config,
     // Top-level `scheme` is the only place Expo accepts one, so the local iOS
     // build picks it up too. Harmless there: the bundle id is unchanged and the
-    // dev launcher still answers `exp+rollercoasterdev://`.
-    ...(isLocalDevVariant ? { scheme: LOCAL_DEV_SCHEME } : {}),
+    // dev launcher still answers `exp+rollercoasterdev://`. Appended to any
+    // scheme app.json already declares, never substituted for it.
+    ...(isLocalDevVariant
+      ? { scheme: [].concat(config.scheme ?? [], LOCAL_DEV_SCHEME) }
+      : {}),
     android: { ...config.android, package: packageName },
     // iOS unconditionally keeps the base bundle id — see header note.
     ios: config.ios,

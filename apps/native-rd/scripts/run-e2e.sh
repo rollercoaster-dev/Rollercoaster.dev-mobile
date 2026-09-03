@@ -42,6 +42,8 @@ for arg in "$@"; do
 done
 
 APP_BUNDLE_ID="dev.rollercoaster.app"
+BASE_SCHEME="exp+rollercoasterdev"
+LOCAL_DEV_SCHEME="rollercoasterdev-dev" # app.config.js LOCAL_DEV_SCHEME
 FLOW_DIR="e2e/flows/"
 
 if [ "${LANE}" = "android" ]; then
@@ -82,16 +84,42 @@ if [ "${LANE}" = "android" ]; then
     mkdir -p e2e/.android/flows e2e/.android/subflows
     for src in e2e/flows/*.yaml e2e/subflows/*.yaml; do
       sed -e "s/^appId: ${APP_BUNDLE_ID}\$/appId: ${ANDROID_PKG}/" \
-          -e "s/^  DEV_CLIENT_SCHEME: exp+rollercoasterdev\$/  DEV_CLIENT_SCHEME: rollercoasterdev-dev/" \
+          -e "s/^  DEV_CLIENT_SCHEME: ${BASE_SCHEME}\$/  DEV_CLIENT_SCHEME: ${LOCAL_DEV_SCHEME}/" \
           "${src}" > "e2e/.android/${src#e2e/}"
     done
+    # The rewrite is anchored on exact lines, so a flow that formats its
+    # `appId:` or `DEV_CLIENT_SCHEME:` differently would slip through unchanged
+    # and Maestro's clearState would then `pm clear` the STORE build — user
+    # data. Refuse to run unless every copied file was rewritten.
+    unrewritten="$(grep -lE "^appId: ${APP_BUNDLE_ID}\$|^ *DEV_CLIENT_SCHEME: ${BASE_SCHEME}\$" \
+      e2e/.android/flows/*.yaml e2e/.android/subflows/*.yaml || true)"
+    if [ -n "${unrewritten}" ]; then
+      echo "error: appId/DEV_CLIENT_SCHEME rewrite did not apply to:" >&2
+      printf '       %s\n' ${unrewritten} >&2
+      echo "       Expected exactly 'appId: ${APP_BUNDLE_ID}' and '  DEV_CLIENT_SCHEME: ${BASE_SCHEME}'." >&2
+      exit 1
+    fi
     FLOW_DIR="e2e/.android/flows/"
   fi
   MAESTRO_ARGS+=(--device "${ANDROID_SERIAL}")
 
-  if ! adb -s "${ANDROID_SERIAL}" shell pm path "${ANDROID_PKG}" >/dev/null 2>&1; then
-    echo "error: ${ANDROID_PKG} is not installed on ${ANDROID_SERIAL}." >&2
+  if ! adb -s "${ANDROID_SERIAL}" shell pm path "${ANDROID_PKG}" 2>/dev/null | grep -q '^package:'; then
+    echo "error: ${ANDROID_PKG} is not installed on ${ANDROID_SERIAL} (or adb cannot reach it):" >&2
+    adb -s "${ANDROID_SERIAL}" shell pm path "${ANDROID_PKG}" >&2 || true
     echo "       Build it with \`bun run android:e2e\` (Metro must stay up for the suite)." >&2
+    exit 1
+  fi
+
+  # The prologue's openLink uses the `.dev` build's own scheme. That scheme
+  # lands in AndroidManifest.xml at `expo prebuild` time, and run-android.sh
+  # only prebuilds when android/ is missing — an android/ generated before the
+  # scheme existed installs fine but answers no `rollercoasterdev-dev://`, and
+  # every flow then dies at the 60s boot barrier looking like an app hang.
+  if [ "${ANDROID_PKG}" != "${APP_BUNDLE_ID}" ] \
+    && ! adb -s "${ANDROID_SERIAL}" shell dumpsys package "${ANDROID_PKG}" 2>/dev/null | grep -q "${LOCAL_DEV_SCHEME}"; then
+    echo "error: the installed ${ANDROID_PKG} does not register the ${LOCAL_DEV_SCHEME}:// scheme." >&2
+    echo "       Its android/ project predates app.config.js's scheme. Regenerate and reinstall:" >&2
+    echo "         rm -rf android && bun run android:e2e" >&2
     exit 1
   fi
 
@@ -106,15 +134,30 @@ if [ "${LANE}" = "android" ]; then
   # it has to. A device on any locale other than en-* fails the flows that
   # assert interpolated English a11y labels — as product regressions, not as
   # what they are.
-  (
-    while true; do
-      adb -s "${ANDROID_SERIAL}" shell cmd locale set-app-locales "${ANDROID_PKG}" \
-        --user 0 --locales en-US >/dev/null 2>&1 || true
-      sleep 0.5
-    done
-  ) &
-  LOCALE_LOOP_PID=$!
-  trap 'kill "${LOCALE_LOOP_PID}" 2>/dev/null || true' EXIT
+  #
+  # One synchronous seed first, so a device that cannot take it (per-app
+  # locales need Android 13) says so instead of failing every flow quietly.
+  # An en-* device does not need the seed at all, so it only warns there.
+  if ! adb -s "${ANDROID_SERIAL}" shell cmd locale set-app-locales "${ANDROID_PKG}" \
+      --user 0 --locales en-US >/dev/null 2>&1; then
+    device_locale="$(adb -s "${ANDROID_SERIAL}" shell getprop persist.sys.locale 2>/dev/null | tr -d '\r')"
+    if [ "${device_locale#en}" = "${device_locale}" ]; then
+      echo "error: cannot pin ${ANDROID_PKG} to en-US (per-app locales need Android 13+) and the device is '${device_locale:-unknown}'." >&2
+      echo "       Switch the device language to English and retry." >&2
+      exit 1
+    fi
+    echo "warning: per-app locale seed unsupported on this device; relying on its ${device_locale} system locale." >&2
+  else
+    (
+      while true; do
+        adb -s "${ANDROID_SERIAL}" shell cmd locale set-app-locales "${ANDROID_PKG}" \
+          --user 0 --locales en-US >/dev/null 2>&1 || true
+        sleep 0.5
+      done
+    ) &
+    LOCALE_LOOP_PID=$!
+    trap 'kill "${LOCALE_LOOP_PID}" 2>/dev/null || true' EXIT
+  fi
 
   # No dev-menu seed here, deliberately. The iOS UserDefaults trick has no
   # durable Android equivalent: expo-dev-menu keeps `isOnboardingFinished` in

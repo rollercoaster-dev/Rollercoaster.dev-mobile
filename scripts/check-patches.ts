@@ -186,6 +186,12 @@ function installDirs(
 
   if (existsSync(store)) {
     for (const dir of readdirSync(store)) {
+      // `.bun/node_modules/<name>` is the store's own hoisted link dir, not a
+      // package — probe it directly rather than its (nonexistent) nested copy.
+      if (dir === "node_modules") {
+        candidates.push(join(store, ...segments));
+        continue;
+      }
       const isOwn =
         dir === `${escaped}@${version}` ||
         dir.startsWith(`${escaped}@${version}+`);
@@ -526,14 +532,15 @@ if (existsSync(patchesDir)) {
   }
 }
 
+// Notes first, so the orphan/duplicate context is not lost behind a failure.
+for (const note of notes) console.warn(`warning: ${note.slice(2)}`);
+
 if (errors.length > 0) {
   console.error("Patched dependency check failed.");
   console.error("");
   for (const error of errors) console.error(error);
   process.exit(1);
 }
-
-for (const note of notes) console.warn(`warning: ${note.slice(2)}`);
 
 console.log(
   `Patched dependency check passed (${entries.length} patch(es) verified, applied in node_modules).`,
