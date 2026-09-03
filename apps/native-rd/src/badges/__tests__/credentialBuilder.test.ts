@@ -25,7 +25,6 @@ jest.mock("@rollercoaster-dev/openbadges-core", () => ({
     name: badgeClass.name,
     issuer,
     validFrom: assertion.issuedOn,
-    issuanceDate: assertion.issuedOn,
     credentialSubject: {
       id: assertion.recipient.identity,
       type: ["AchievementSubject"],

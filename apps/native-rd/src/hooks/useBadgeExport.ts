@@ -4,6 +4,7 @@ import * as Sharing from "expo-sharing";
 import * as FileSystem from "expo-file-system/legacy";
 import { PLACEHOLDER_IMAGE_URI } from "./useCreateBadge";
 import { slugifyBadgeName } from "../badges/badgeFilename";
+import { isCompactJws } from "../badges/vcJwt";
 
 // expo-sharing's `shareAsync` rejects with a generic Error when the user
 // dismisses the system share sheet on Android (iOS currently resolves
@@ -172,7 +173,18 @@ export function useBadgeExport() {
 
       setIsExportingJSON(true);
       const safeName = slugifyBadgeName(goalTitle);
-      const tempUri = `${cacheDir}${safeName}-${Date.now()}.json`;
+      // Validators pick the parser by file extension (the 1EdTech
+      // OB30Inspector routes `.jwt` to its JWT parser and tries to parse
+      // `.json` as JSON — a compact JWS in a `.json` file is a fatal parse
+      // error there). Badges signed since #598 are compact JWS strings, so
+      // ship those as `.jwt`; pre-#598 credential JSON stays `.json`.
+      const isJws = isCompactJws(credential);
+      const extension = isJws ? "jwt" : "json";
+      const mimeType = isJws ? "application/jwt" : "application/ld+json";
+      // iOS has no registered UTI for JWT; `public.data` keeps the filename
+      // and bytes intact through Save to Files / AirDrop.
+      const uti = isJws ? "public.data" : "public.json";
+      const tempUri = `${cacheDir}${safeName}-${Date.now()}.${extension}`;
       try {
         const canShare = await Sharing.isAvailableAsync();
         if (!canShare) {
@@ -188,8 +200,8 @@ export function useBadgeExport() {
         });
 
         await Sharing.shareAsync(tempUri, {
-          UTI: "public.json",
-          mimeType: "application/ld+json",
+          UTI: uti,
+          mimeType,
           dialogTitle: "Export Badge Credential",
         });
       } catch (error) {

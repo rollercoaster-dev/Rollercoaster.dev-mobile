@@ -338,6 +338,29 @@ describe("useBadgeExport", () => {
       );
     });
 
+    it("ships a compact JWS credential as .jwt / application/jwt so validators route it to their JWT parser", async () => {
+      const { result } = renderHook(() => useBadgeExport());
+      // header.payload.signature — shape only; the export never parses it.
+      const jws = "eyJhbGciOiJFUzI1NiJ9.eyJ2YyI6e319.c2ln";
+
+      await act(async () => {
+        await result.current.exportJSON(jws, "Learn TypeScript");
+      });
+
+      expect(FileSystem.writeAsStringAsync).toHaveBeenCalledWith(
+        expect.stringMatching(/Learn-TypeScript-\d+\.jwt$/),
+        jws,
+        { encoding: FileSystem.EncodingType.UTF8 },
+      );
+      expect(Sharing.shareAsync).toHaveBeenCalledWith(
+        expect.stringMatching(/\.jwt$/),
+        expect.objectContaining({
+          UTI: "public.data",
+          mimeType: "application/jwt",
+        }),
+      );
+    });
+
     it("cleans up temp file even when shareAsync throws", async () => {
       (Sharing.shareAsync as jest.Mock).mockRejectedValueOnce(
         new Error("cancelled"),

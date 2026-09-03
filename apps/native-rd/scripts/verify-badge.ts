@@ -350,15 +350,21 @@ function conformanceChecks(
       ? pass("gap3.topLevelName", `name: "${credential.name as string}"`)
       : fail("gap3.topLevelName", "top-level credential.name is missing");
 
-  // Gap 4: top-level `issuanceDate` required.
-  const gap4 =
-    typeof credential.issuanceDate === "string" &&
-    credential.issuanceDate.length > 0
-      ? pass(
-          "gap4.issuanceDate",
-          `issuanceDate: ${credential.issuanceDate as string}`,
+  // Gap 4: the credential must carry its issuance instant as VC 2.0
+  // `validFrom`, and must NOT carry VC 1.1 `issuanceDate`. The 2026-05-01
+  // snapshot demanded `issuanceDate` (old OB 3.0.0 schema); the current
+  // OB30Inspector rejects it as an undefined JSON-LD term (#625). The
+  // predicate follows the validator, not the older snapshot.
+  const hasValidFrom =
+    typeof credential.validFrom === "string" && credential.validFrom.length > 0;
+  const gap4 = !hasValidFrom
+    ? fail("gap4.validFrom", "top-level validFrom is missing")
+    : "issuanceDate" in credential
+      ? fail(
+          "gap4.validFrom",
+          "issuanceDate present — undefined JSON-LD term in the VC 2.0 + OB 3.0.3 contexts; the validator rejects it",
         )
-      : fail("gap4.issuanceDate", "top-level issuanceDate is missing");
+      : pass("gap4.validFrom", `validFrom: ${credential.validFrom as string}`);
 
   // Gap 5: the proof must be one the validator accepts. Two ways to pass:
   // an external VC-JWT whose header alg is on the RS256/ES256 allowlist and

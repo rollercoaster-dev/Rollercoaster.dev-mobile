@@ -130,7 +130,7 @@ On iOS, the existing `Sharing.shareAsync` is already correct — the share sheet
 ### Patterns that solve the problem
 
 1. **Share-link** — issuer-hosted verification URL. The user shares text; messengers can't damage text. Tradeoff: requires backend, ties verification to a domain, kills offline verification.
-2. **Save credential file (`.json`)** — share the raw signed VC. Tradeoff: looks technical, but is the canonical OB 3.0 format and survives every transport.
+2. **Save credential file (`.jwt`, or `.json` for pre-#598 badges)** — share the raw signed VC. Tradeoff: looks technical, but is the canonical OB 3.0 format and survives every transport.
 3. **QR code** — either embed the VC (compact formats only, ~2-3 KB max) or embed a URL/deep link. Tradeoff: requires the verifier side to have a scanner.
 4. **Save to Files only** — bypass the share sheet. Tradeoff: less convenient than tap-to-messenger, but guaranteed byte preservation.
 5. **Multi-button export** — separate intent buttons rather than one ambiguous "Share." Each button names the trade-off ("Save as image — this is a picture, not the credential").

@@ -45,7 +45,7 @@ The funded slice is **interoperability**: make the credential real, then let it 
 Six milestones:
 
 1. **OB3 external verification.** Close gaps 1–7 in [`ob3-compliance-status.md`](../architecture/ob3-compliance-status.md). Two PRs:
-   schema shape, then cryptosuite plus resolvable DID. Done when verifybadge.org passes.
+   schema shape, then cryptosuite plus resolvable DID. Done when the 1EdTech validator ([vc.1ed.tech](https://vc.1ed.tech) — verifybadge.org is a stale third-party mirror) passes.
 2. **Export carries the credential.** Signed VC JSON-LD leads. Baked PNG stays as the
    convenience wrapper, not the canonical artefact.
 3. **Import Badge Opportunity.** Ship the shape the research doc already drew.
@@ -169,7 +169,7 @@ and not a choice:
    the survey found is the tracker-plus-self-issued-credential fusion, not the wallet.
 
 **Unchanged either way.** Milestones 1 and 2 ship unfunded regardless, and the jury-fit doc
-calls verifybadge.org passing the strongest available Realisierbarkeit exhibit — under
+calls the 1EdTech validator passing the strongest available Realisierbarkeit exhibit — under
 Innovation it also becomes the infrastructure substance the line is judged on. Line choice
 and sketch framing stay separate levers: sketches are routed by juror expertise, so an
 Innovation submission can still lead with digital participation.
@@ -234,7 +234,7 @@ alternative, whose rejection rested on the same ~50/50 assumption Innovation rem
 
 | #   | Milestone                                                                  | h   | Kind     |
 | --- | -------------------------------------------------------------------------- | --- | -------- |
-| 1   | OB3 external verification — gaps 1–7, verifybadge.org passes               | —   | unfunded |
+| 1   | OB3 external verification — gaps 1–7, 1EdTech validator passes             | —   | unfunded |
 | 2   | Export carries the credential                                              | —   | unfunded |
 | 3   | `openbadges-core` extracted, documented, published as a standalone library | 200 | dev      |
 | 4   | Import Badge Opportunity — adopt a badge definition                        | 110 | dev      |

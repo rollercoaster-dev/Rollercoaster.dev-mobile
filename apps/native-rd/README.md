@@ -182,6 +182,6 @@ Badges are self-signed [Open Badges 3.0](https://www.imsglobal.org/spec/ob/v3p0)
 
 No issuer server. No account. The badge is yours.
 
-> **Iteration A caveat:** badges currently fail external verifiers (e.g. verifybadge.org) by design. Local verification works; spec-strict third-party verification lands in Iteration D. See [OB3 Compliance Status](docs/architecture/ob3-compliance-status.md).
+> **External verification:** badges signed since #598 pass the official 1EdTech OB 3.0 validator ([vc.1ed.tech](https://vc.1ed.tech)) as `.jwt` and as baked PNG. Badges earned before that keep their Iteration-A shape and still fail. See [OB3 Compliance Status](docs/architecture/ob3-compliance-status.md).
 
 See [openbadges-core architecture](docs/architecture/openbadges-core.md) for architecture details. The `@rollercoaster-dev/openbadges-core` package lives at `packages/openbadges-core/` in this repository and is declared as a `workspace:*` dependency.

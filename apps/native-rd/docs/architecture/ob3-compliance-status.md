@@ -1,99 +1,62 @@
 # OB3 Compliance Status
 
-**Status:** Iteration A — **NOT compliant** with the Open Badges 3.0 spec.
-**Target:** Iteration D — full external verifier compatibility.
-**Last verified:** 2026-05-01 against IMS Global's OB30Inspector (the engine behind [verifybadge.org](https://verifybadge.org)).
+**Status:** **Compliant** — the 1EdTech OB30Inspector returns `VALID`, 14/14 probes, 0 errors.
+**Last verified:** 2026-09-03 against the official 1EdTech validator at [vc.1ed.tech](https://vc.1ed.tech) (OB30Inspector), on a badge earned end-to-end in the app on a physical iPhone (goal → evidence → sign → bake → export, validated on the device itself) — see [provenance](#provenance-of-the-snapshot) below.
 
 ---
 
 ## TL;DR
 
-Badges exported from native-rd today **will fail external verification.** This is a known, intentional Iteration A trade-off, scoped for fix in Iteration D ([ADR-0001](../decisions/ADR-0001-iteration-strategy.md#iteration-d--community)).
+A badge signed by native-rd since #598 is an ES256 VC-JWT over a spec-shaped OB 3.0 credential, and it verifies on the official OB 3.0 validator — as a `.jwt` file and as a baked PNG. The seven gaps recorded on 2026-05-01 are closed (#597, #598, #599, #625). ADR-0001's deferral of "OB3 signing" to Iteration D is discharged.
 
-The credentials are real OB3-shaped Verifiable Credentials and verify locally inside the app — but they don't satisfy the IMS Global spec strictly enough for third-party verifiers.
+Two things to know before you test:
+
+- **Use vc.1ed.tech, not verifybadge.org.** The validator's README states verifybadge.org "is not owned or maintained by 1EdTech". It runs a build older than 2025-04-08 that rejects every non-`RS256` JWT (`alg must be present and must be 'RS256'`), so an ES256 badge fails there at the header. The official deployment at [vc.1ed.tech](https://vc.1ed.tech) runs current code and accepts ES256.
+- **File extension picks the parser.** OB30Inspector routes `.jwt` to its JWT parser, `.png`/`.svg` to the bake extractors, and `.json` to a JSON parser. A compact JWS saved as `.json` is a fatal parse error; as `.jws` it is "could not detect credential payload type". The app's credential export therefore ships JWS credentials as `.jwt` (`application/jwt`).
+
+Badges earned **before** #598 keep their Iteration-A shape (Ed25519, non-standard cryptosuite, `issuanceDate`) and still fail external verification. They are never re-signed — the old signature covers the old bytes.
 
 ---
 
-## Validator outcome (2026-05-01)
+## Validator outcome (2026-09-03)
 
 ```text
-Outcome:   ERROR
-Errors:    6
+Outcome:   VALID
+Errors:    0
 Warnings:  0
-Probes:    13 run, 0 skipped
+Probes:    14 run, 0 skipped
+Input:     Baked PNG (iTXt openbadgecredential → compact ES256 JWS, inline jwk)
 Spec:      Open Badges 3.0 (ob30.pid)
-Generator: OB30Inspector
+Generator: OB30Inspector @ vc.1ed.tech
 ```
 
-Full report: [`ob3-compliance-status.validator-report.json`](./ob3-compliance-status.validator-report.json)
+Full report: [`ob3-compliance-status.validator-report.json`](./ob3-compliance-status.validator-report.json). The same badge exported as a `.jwt` also returns `VALID`, 14/14.
+
+For comparison, the 2026-05-01 snapshot was `ERROR`, 6 errors, 13 probes.
 
 ---
 
-## Compliance gaps
+## Gaps — all closed
 
-Each gap below is a real validator error, mapped to the line of code that produces it.
+| Gap | Was (2026-05-01)                                                        | Now                                                                                                                      | Closed by |
+| --- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | --------- |
+| 1   | `achievement.creator` is a string                                       | Profile object mirroring `issuer`                                                                                        | #597      |
+| 2   | `proof` is an object, array expected                                    | No embedded `proof` at all — the proof is external (the JWS itself)                                                      | #598      |
+| 3   | No top-level `name`                                                     | `name` mirrors the achievement title                                                                                     | #597      |
+| 4   | No top-level `issuanceDate`                                             | `validFrom` only. `issuanceDate` is a VC 1.1 term, undefined in the VC 2.0 + OB 3.0.3 contexts; the validator rejects it | #597→#625 |
+| 5   | Cryptosuite `eddsa-raw-json-iteration-a` over raw `JSON.stringify`      | ES256 VC-JWT external proof, `{alg: "ES256", typ: "JWT", jwk}`; no canonicalization step exists to get wrong             | #598      |
+| 6   | Umbrella `oneOf` failure                                                | Resolves with 1–5                                                                                                        | —         |
+| 7   | `did:key` was raw base64url; achievement IDs appended a path to the DID | `did:key:z…` multibase/multicodec `p256-pub`; achievement IDs are `urn:ulid:<goalId>`                                    | #598      |
 
-### 1. `creator` is a string, not an object
+### Gap 4 in detail — why `issuanceDate` went, not stayed
 
-|           |                                                                                                                 |
-| --------- | --------------------------------------------------------------------------------------------------------------- |
-| Validator | `$.credentialSubject.achievement.creator: string found, object expected`                                        |
-| Source    | [`credentialBuilder.ts:87`](../../src/badges/credentialBuilder.ts) — `badgeClass.issuer = iri(input.issuerDid)` |
-| Cause     | `serializeOB3` projects the bare DID string into `achievement.creator`. OB3 requires a Profile object.          |
-| Fix scope | Schema-shape only. No crypto changes.                                                                           |
+#597 emitted both `validFrom` and `issuanceDate` because the 2026-05-01 report demanded `issuanceDate`. That demand came from the old OB 3.0.0 / VC 1.1 `anyachievementcredential` schema. The current OB30Inspector applies the OB 3.0.3 schema (no `issuanceDate` requirement) **and** runs a JSON-LD probe, which fails the whole credential on an undefined term:
 
-### 2. `proof` is an object, not an array
+```text
+Error while validation JSON LD object: JSON-LD problem. (Undefined JSON-LD term: issuanceDate)
+```
 
-|           |                                                                              |
-| --------- | ---------------------------------------------------------------------------- |
-| Validator | `$.proof: object found, array expected`                                      |
-| Source    | [`useCreateBadge.ts:193-216`](../../src/hooks/useCreateBadge.ts)             |
-| Cause     | A single proof object is attached. The OB3 schema requires `proof: [{...}]`. |
-| Fix scope | Schema-shape only.                                                           |
-
-### 3. Missing top-level `name`
-
-|           |                                                                                                                                  |
-| --------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| Validator | `$: required property 'name' not found`                                                                                          |
-| Cause     | `serializeOB3` does not surface a top-level `name` on the credential envelope. Only `credentialSubject.achievement.name` is set. |
-| Fix scope | Schema-shape only.                                                                                                               |
-
-### 4. Missing top-level `issuanceDate`
-
-|           |                                                                                   |
-| --------- | --------------------------------------------------------------------------------- |
-| Validator | `$: required property 'issuanceDate' not found`                                   |
-| Cause     | `assertion.issuedOn` is set but not surfaced as the VC envelope's `issuanceDate`. |
-| Fix scope | Schema-shape only.                                                                |
-
-### 5. Non-standard cryptosuite — **addressed (#598), pending re-validation**
-
-|              |                                                                                                                                                                                                                          |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Validator    | `No proof with type any of ("Ed25519Signature2020", "DataIntegrityProof" with cryptosuite attr of "eddsa-rdfc-2022" or "eddsa-2022") or proof purpose "assertionMethod" found`                                           |
-| Was          | Cryptosuite `eddsa-raw-json-iteration-a`. Signature over raw `JSON.stringify(credential)`, not RDFC-1.0 canonicalized form. `proofValue` bare base64url, not multibase `u…`-prefixed.                                    |
-| Now          | The credential **is** a compact ES256 JWS (VC-JWT external proof) — no embedded `proof` member at all. Header is `{alg: "ES256", typ: "JWT", jwk}`; the unsigned VC rides under the `vc` claim.                          |
-| Why not RDFC | The embedded-proof route needs RDFC-1.0 canonicalization, which has no working implementation available to this app. The external route needs none. See [the proof-format spike](../research/ob3-proof-format-spike.md). |
-| Source       | [`vcJwt.ts`](../../src/badges/vcJwt.ts), wired in [`useCreateBadge.ts`](../../src/hooks/useCreateBadge.ts)                                                                                                               |
-| Still open   | Confirming against the live validator is #600's job — the report snapshot linked above predates this change.                                                                                                             |
-
-### 6. Umbrella `oneOf` failure
-
-|           |                                                                |
-| --------- | -------------------------------------------------------------- |
-| Validator | `$: must be valid to one and only one schema, but 0 are valid` |
-| Cause     | Consequence of 1–5. Resolves automatically once they're fixed. |
-
-### 7. Non-resolvable `did:key` — **addressed (#598), pending re-validation**
-
-|            |                                                                                                                                                                                                                                                        |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Was        | `did:key:${publicKeyJwk.x}` — raw base64url, not multibase + multicodec. The DID would not resolve, so signature verification failed even with a valid cryptosuite.                                                                                    |
-| Now        | Multibase base58btc (`z`) over multicodec `p256-pub` (`0x1200`) plus a SEC1-compressed point, so a verifier recovers the public key from the DID alone. Encoding: [`did-key.ts`](../../../../packages/openbadges-core/src/crypto/did-key.ts).          |
-| Also (was) | Achievement IDs appended a path segment to the DID; `did:key` DIDs have no path component.                                                                                                                                                             |
-| Also (now) | Achievement IDs are `urn:ulid:<goalId>` — not an HTTPS URI as the earlier note suggested. The app hosts nothing, so a fabricated `https://` achievement URL would never resolve; `urn:ulid:` matches the evidence IRIs already emitted alongside them. |
-| Source     | [`credentialBuilder.ts`](../../src/badges/credentialBuilder.ts)                                                                                                                                                                                        |
+With `issuanceDate` present: 14 run, 1 error. Without: 14 run, 0 errors. The serializer now emits `validFrom` only, and `verify-badge.ts` gap 4 asserts `validFrom` present **and** `issuanceDate` absent. #625 records the decision.
 
 ---
 
@@ -122,22 +85,23 @@ Two consequences worth knowing before reading the code:
 
 ## Iteration mapping
 
-| Gap                           | Iteration    | Why deferred                                                                  |
-| ----------------------------- | ------------ | ----------------------------------------------------------------------------- |
-| 1–4 (schema shape)            | D, but cheap | Could ship earlier as a "shape-compliant but signature-invalid" intermediate. |
-| 5 + 7 (cryptosuite + did:key) | D            | Requires RDFC-1.0 canonicalization + multibase + DID resolution. Real work.   |
-| 6                             | D            | Auto-resolves with 1–5.                                                       |
+| Gap                     | Planned (ADR-0001)   | Actual                                                             |
+| ----------------------- | -------------------- | ------------------------------------------------------------------ |
+| 1–4 (schema shape)      | Iteration D, "cheap" | Shipped 2026-08 in #597 (+ #625 for the `issuanceDate` correction) |
+| 5 + 7 (proof + did:key) | Iteration D          | Shipped 2026-09 in #598 — as VC-JWT, not `eddsa-rdfc-2022`         |
+| 6                       | Iteration D          | Auto-resolved with 1–5                                             |
 
-A reasonable two-PR split:
-
-1. **PR A — Schema shape:** errors 1–4. Pure JSON shape, no crypto. Closes most validator probes; only `EmbeddedProofProbe` stays red.
-2. **PR B — Cryptosuite + did:key:** errors 5 + 7. Closes the loop.
+The planned two-PR split (schema, then crypto) is what happened. The proof format changed on the way — see [the proof-format spike](../research/ob3-proof-format-spike.md) for why VC-JWT replaced RDFC-1.0 canonicalization.
 
 ---
 
-## What does verify today
+## Provenance of the snapshot
 
-Local verification inside the app works because native-rd both signs and verifies with the same non-standard scheme. This is suitable for the Iteration A scope (self-signed, on-device, no external verifier in the loop) but **not** for sharing badges with anyone who uses a spec-compliant verifier.
+Earned end-to-end in the app on 2026-09-03: a goal was completed in the running app, the badge was signed and baked by the device code path (`useCreateBadge` → `signCredentialAsVcJwt` → PNG bake), exported through the share sheet, and submitted to OB30Inspector at vc.1ed.tech — both the baked PNG (this report) and the `.jwt` returned `VALID`, 14/14. One earlier export attempt against a badge minted before the signing-key rotation still failed exactly as documented in gap 4, which is expected: old badges are never re-signed.
+
+The first snapshot's badge (`mtlvcrec…`) was earned on the **iOS simulator**. It was superseded the same day by a badge earned on a **physical iPhone**: goal completed in the app on the device, badge signed, baked and exported there, then validated in Safari on the phone against vc.1ed.tech — `Verify-badge-mtlwtbek-fbc442.png`, `VALID`, 14 tests, 0 errors/warnings/exceptions, validator timestamp 2026-09-03 19:21:03. Screenshot of the on-device result: [`ob3-compliance-status.real-device-validation.png`](./ob3-compliance-status.real-device-validation.png).
+
+Reproducibility anchors for the device run: badge identifier `mtlwtbek-fbc442` (truncated from the export filename — the full ULID is not recoverable from the PNG filename alone), validated from the phone's browser at 21:21 local (UTC+2), repository branch `docs/issue-600-ob3-verify-snapshot` at commit `bd425eff` (the app build predates the docs commits on that branch). Re-run the check with the steps in [How to re-test](#how-to-re-test).
 
 ---
 
@@ -146,27 +110,37 @@ Local verification inside the app works because native-rd both signs and verifie
 ### Fast local check
 
 ```sh
-bun run verify:badge <path-to-badge.png-or-.json>
+bun run verify:badge <badge.png | credential.jwt>
 ```
 
-Runs the 7 gap checks documented above without leaving the repo. Source
-at `apps/native-rd/scripts/verify-badge.ts`. Treat divergence between
-this tool's output and the table above as a doc bug; both should track
-together.
+Runs the 7 gap checks above without leaving the repo. Source at
+`apps/native-rd/scripts/verify-badge.ts`. Treat divergence between this
+tool's output and the external validator as a doc bug; both should track together.
 
 ### Full external re-test (replaces the snapshot)
 
 1. Earn or open a badge in the app.
-2. Use **Export → JSON** to share the credential off-device.
-3. Upload the `.json` to [verifybadge.org](https://verifybadge.org/validate) and select OB 3.0.
-4. Save the JSON report.
-5. Replace [`ob3-compliance-status.validator-report.json`](./ob3-compliance-status.validator-report.json) and update the date at the top of this file.
+2. Export it — **Export verifiable badge** for the baked PNG, or **Export credential** for the `.jwt`. Use a byte-preserving channel (AirDrop, Save to Files, Android SAF). Messenger "photo" attachments re-encode PNGs and strip the credential chunk.
+3. Validate, either in the browser at <https://vc.1ed.tech/upload?validatorId=OB30Inspector> or from a shell:
+
+   ```sh
+   curl -s -X POST "https://vc.1ed.tech/api/validate?validatorId=OB30Inspector" \
+     -F "file=@badge.png" > report.json   # or file=@badge.jwt
+   ```
+
+   The API returns the same JSON the UI's download button does. Keep the file extension honest — `.png` or `.jwt` — or the validator picks the wrong parser.
+
+4. Replace [`ob3-compliance-status.validator-report.json`](./ob3-compliance-status.validator-report.json) with `report.json` and update the date at the top of this file.
 
 ---
 
 ## Related
 
-- [ADR-0001: Iteration Strategy](../decisions/ADR-0001-iteration-strategy.md) — Iteration D scope
+- [ADR-0001: Iteration Strategy](../decisions/ADR-0001-iteration-strategy.md) — the deferral this discharges
+- [ADR-0015: funded scope](../decisions/ADR-0015-funded-scope-prototype-fund.md) — milestone 1
+- [OB3 proof-format spike](../research/ob3-proof-format-spike.md) — why VC-JWT + P-256
 - [openbadges-core architecture](./openbadges-core.md) — where credential building lives
 - [`credentialBuilder.ts`](../../src/badges/credentialBuilder.ts) — credential construction
-- [`useCreateBadge.ts`](../../src/hooks/useCreateBadge.ts) — signing
+- [`vcJwt.ts`](../../src/badges/vcJwt.ts) — ES256 VC-JWT proof
+- [`useCreateBadge.ts`](../../src/hooks/useCreateBadge.ts) — signing + baking
+- [`useBadgeExport.ts`](../../src/hooks/useBadgeExport.ts) — `.png` / `.jwt` export
