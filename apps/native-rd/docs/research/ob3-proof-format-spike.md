@@ -34,7 +34,7 @@ So it is a two-way choice, not a three-way one:
 
 ## What was actually inspected
 
-The engine named in our validator snapshot (`"generator": "OB30Inspector"`, [`ob3-compliance-status.validator-report.json`](../architecture/ob3-compliance-status.validator-report.json)) is the `inspector-vc` module of [1EdTech/digital-credentials-public-validator](https://github.com/1EdTech/digital-credentials-public-validator) — the code behind [verifybadge.org](https://verifybadge.org).
+The engine named in our validator snapshot (`"generator": "OB30Inspector"`, [`ob3-compliance-status.validator-report.json`](../architecture/ob3-compliance-status.validator-report.json)) is the `inspector-vc` module of [1EdTech/digital-credentials-public-validator](https://github.com/1EdTech/digital-credentials-public-validator) — the code behind the official validator at [vc.1ed.tech](https://vc.1ed.tech). (verifybadge.org runs the same project but, per its README, is not maintained by 1EdTech; as of 2026-09-03 it is on a pre-ECDSA build that rejects ES256 — see [`ob3-compliance-status.md`](../architecture/ob3-compliance-status.md).)
 
 Read at commit `e666bb9` (2026-08-24, `chore: bump version to 1.11.1 in all POM files`) — six days before this document. Line numbers below are from that commit.
 
@@ -147,7 +147,7 @@ Stated explicitly, because #596's acceptance criteria ask for a measured number 
 - **No on-device measurement was taken.** Nothing was run under Hermes. If option A is chosen anyway, the original spike stands in full and still needs a real device number.
 - Under option B the measurement question largely dissolves — an ES256 signature over a JSON payload has no canonicalization step to measure — but "largely" is not "entirely", and signing latency in the completion flow should still be observed once wired.
 - **The `issuanceDate` question is untouched.** Our snapshot validated against `ob_v3p0_anyachievementcredential_schema.json`, which requires `issuanceDate` (VC 1.1 shape) while our serializer emits `validFrom` (VC 2.0 shape). That is gap 4 and it is independent of proof format. See [#597](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/597).
-- **Not verified end to end.** No badge has been signed as ES256 VC-JWT and submitted to verifybadge.org. Until [#600](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/600) does that, this is a source-reading argument, not a passing report.
+- ~~**Not verified end to end.**~~ **Verified 2026-09-03:** an ES256 VC-JWT built by this repo's code path returns `VALID` 14/14 on vc.1ed.tech, as `.jwt` and as baked PNG, once `issuanceDate` is dropped (#625). Device-earned confirmation is still [#600](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/600)'s job. Record: [`ob3-compliance-status.md`](../architecture/ob3-compliance-status.md).
 
 ## Suggested change to the epic
 
