@@ -256,6 +256,30 @@ describe("useCreateBadge", () => {
       expect(updatedCredentialArg()).toBe(bakedCredentialArg());
     });
 
+    it("passes the design through updateBadge on re-bake so badge.design tracks the new image (#563)", async () => {
+      mockUseQuery.mockImplementation((query: string) => {
+        if (query === "mock-goals-query") return [MOCK_GOAL]; // active
+        if (query === "mock-evidence-query")
+          return [{ id: "ev-1", type: "photo", goalId: GOAL_ID }];
+        if (query === "mock-badge-query")
+          return [
+            { id: "badge-01", goalId: GOAL_ID, imageUri: EXISTING_IMAGE_URI },
+          ];
+        return [];
+      });
+
+      const { result } = renderHook(() =>
+        useCreateBadge(GOAL_ID, { ...WITH_PNG, design: '{"shape":"star"}' }),
+      );
+      await act(async () => {});
+
+      expect(result.current.status).toBe("done");
+      expect(mockUpdateBadge).toHaveBeenCalledWith(
+        "badge-01",
+        expect.objectContaining({ design: '{"shape":"star"}' }),
+      );
+    });
+
     it("re-bakes using readBadgePNG of the existing imageUri when no freshCapturedPng is provided", async () => {
       mockUseQuery.mockImplementation((query: string) => {
         if (query === "mock-goals-query") return [MOCK_GOAL]; // active
