@@ -101,6 +101,8 @@ Earned end-to-end in the app on 2026-09-03: a goal was completed in the running 
 
 The first snapshot's badge (`mtlvcrec…`) was earned on the **iOS simulator**. It was superseded the same day by a badge earned on a **physical iPhone**: goal completed in the app on the device, badge signed, baked and exported there, then validated in Safari on the phone against vc.1ed.tech — `Verify-badge-mtlwtbek-fbc442.png`, `VALID`, 14 tests, 0 errors/warnings/exceptions, validator timestamp 2026-09-03 19:21:03. Screenshot of the on-device result: [`ob3-compliance-status.real-device-validation.png`](./ob3-compliance-status.real-device-validation.png).
 
+Reproducibility anchors for the device run: badge identifier `mtlwtbek-fbc442` (truncated from the export filename — the full ULID is not recoverable from the PNG filename alone), validated from the phone's browser at 21:21 local (UTC+2), repository branch `docs/issue-600-ob3-verify-snapshot` at commit `bd425eff` (the app build predates the docs commits on that branch). Re-run the check with the steps in [How to re-test](#how-to-re-test).
+
 ---
 
 ## How to re-test
