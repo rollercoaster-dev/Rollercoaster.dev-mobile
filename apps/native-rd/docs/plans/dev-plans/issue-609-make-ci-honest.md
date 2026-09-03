@@ -43,7 +43,9 @@ Make every file in `.github/workflows/` either genuinely running or deleted, rem
 
 ## Affected Areas
 
-- `.github/workflows/codeql.yml`: deleted (dead, `disabled_manually` since ~2026-06-03)
+> **Superseded:** the step-by-step plan below was written before implementation. Where it disagrees with the Discovery Log at the bottom (CodeQL re-enabled rather than deleted; `json-summary` + `jq` rather than `text-summary | tee`; no `if: always()` / `warn` on the coverage upload; separate extension globs rather than brace expansion; `play-internal` submit profile removed), the Discovery Log and the tree are authoritative.
+
+- `.github/workflows/codeql.yml`: ~~deleted~~ re-enabled + `workflow_dispatch` added (see D1 / Discovery Log)
 - `.github/workflows/ci-native-rd.yml`: remove `Format check` step (dup of new `ci-format`); replace Codecov upload step with coverage-summary + artifact-upload steps
 - `.github/workflows/ci-packages.yml`: remove `Format check` step
 - `.github/workflows/ci-docs.yml` → `.github/workflows/ci-format.yml`: renamed, trigger broadened to match the full `format:check` glob
@@ -69,7 +71,7 @@ Make every file in `.github/workflows/` either genuinely running or deleted, rem
 
 ## Implementation Plan
 
-### Step 1: Delete the dead CodeQL workflow
+### Step 1: ~~Delete the dead CodeQL workflow~~ Re-enable it (superseded — see D1)
 
 **Files**: `.github/workflows/codeql.yml` (delete)
 **Commit**: `fix(ci): delete disabled CodeQL workflow, defer to default setup`

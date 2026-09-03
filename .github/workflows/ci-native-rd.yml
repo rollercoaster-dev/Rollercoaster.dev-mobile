@@ -83,12 +83,16 @@ jobs:
       - name: Publish coverage summary
         working-directory: apps/native-rd
         run: |
+          summary=coverage/coverage-summary.json
+          # Fail if the summary is missing or has no totals — an empty table
+          # must not pass as "coverage published".
+          jq -e '.total | length > 0' "$summary" > /dev/null
           {
             echo "### native-rd coverage"
             echo
             echo "| Metric | Covered | Total | % |"
             echo "| --- | ---: | ---: | ---: |"
-            jq -r '.total | to_entries[] | "| \(.key) | \(.value.covered) | \(.value.total) | \(.value.pct) |"' coverage/coverage-summary.json
+            jq -r '.total | del(.branchesTrue) | to_entries[] | "| \(.key) | \(.value.covered) | \(.value.total) | \(.value.pct) |"' "$summary"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload coverage artifact
@@ -109,7 +113,7 @@ jobs:
         with:
           name: a11y-audit
           path: apps/native-rd/a11y.json
-          if-no-files-found: warn
+          if-no-files-found: error
 
       - name: Storybook web build
         working-directory: apps/native-rd

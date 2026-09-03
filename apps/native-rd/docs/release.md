@@ -1,6 +1,6 @@
 # Release Runbook
 
-**Last verified:** 2026-06-07
+**Last verified:** 2026-09-03
 
 ## Pipeline at a glance
 

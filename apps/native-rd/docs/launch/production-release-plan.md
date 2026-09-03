@@ -83,17 +83,10 @@ Required changes:
       launch is intentionally enabled.
 - [ ] `docs/release.md` describes the current beta and production workflows.
 
-Current Android internal-testing submit profile:
-
-```json
-"play-internal": {
-  "extends": "preview"
-}
-```
-
-The profile extends `preview` because `preview.submit.android` already contains
-the Google Play `internal` track config. The separate name keeps the workflow
-readable without duplicating submit settings.
+Android internal testing is submitted through `submit.production.android`
+(`track: "internal"`) via `build-production` with `platform: android`. The
+separate `play-internal` submit profile and `build-play-internal` workflow were
+removed in #609 as duplicates of that path.
 
 Do not submit to `alpha` or `beta` until the app is intentionally moved to a
 formal closed testing track in Play Console.
