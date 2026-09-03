@@ -177,7 +177,7 @@ Compensating coverage, all pure-Jest plus Storybook stories:
 
 **The bake-failure error alert and its retry.** `finish-baking-error-alert` / `finish-baking-retry-button` have no E2E coverage since #635. The only UI-reachable deterministic bake failure was the no-evidence gate, and that is now blocked upstream at the Bake CTA (`evidence-gate.yaml` asserts the block instead) — every remaining failure mode (`bakePNG` corruption, `saveBadgePNG`/`readBadgePNG` FS errors, `keyProvider.sign`) needs code-level fault injection Maestro cannot do. Covered at component level in `FinishBakingStage.test.tsx` and `CompletionFlowScreen.test.tsx`.
 
-**The `no-key` bake branch.** Logically unreachable: the hook sets it only when `isReady && !keyId`, but `isReady` already implies a `keyId`. The real no-key failure mode is an unbounded spinner with no alert, retry or exit — filed as a bug rather than asserted.
+**The `no-key` bake branch.** Reachable since #566 — the hook lands on it whenever `useUserKey` reports an error (SecureStore unavailable, keypair generation threw, verification failed). No E2E coverage because every trigger is a native-keystore fault Maestro cannot inject; covered in `useCreateBadge.test.ts`, `FinishBakingStage.test.tsx` and `CompletionFlowScreen.test.tsx`.
 
 ## The pre-merge gate
 
