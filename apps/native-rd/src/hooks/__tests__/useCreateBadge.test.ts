@@ -157,6 +157,20 @@ beforeEach(() => {
   });
 });
 
+/**
+ * #599: the string baked into the PNG must be the very string persisted as
+ * badge.credential — that is what exportJSON ships, so PNG and JSON exports
+ * carry the same signed credential.
+ */
+function bakedCredentialArg(): string {
+  return mockBadges.bakePNG.mock.calls[0][1] as string;
+}
+
+/** Credential field of the record handed to updateBadge (re-bake paths). */
+function updatedCredentialArg(): string {
+  return mockUpdateBadge.mock.calls[0][1].credential as string;
+}
+
 describe("useCreateBadge", () => {
   describe("when key is not ready (isReady: false)", () => {
     it("returns status: loading — transient, key is still initialising", () => {
@@ -238,6 +252,8 @@ describe("useCreateBadge", () => {
         FRESH,
         expect.any(String),
       );
+      // #599: the re-baked PNG carries the same credential updateBadge persists
+      expect(updatedCredentialArg()).toBe(bakedCredentialArg());
     });
 
     it("re-bakes using readBadgePNG of the existing imageUri when no freshCapturedPng is provided", async () => {
@@ -272,6 +288,7 @@ describe("useCreateBadge", () => {
       );
       expect(mockUpdateBadge).toHaveBeenCalled();
       expect(mockCreateBadge).not.toHaveBeenCalled();
+      expect(updatedCredentialArg()).toBe(bakedCredentialArg());
     });
 
     it("fails loud when readBadgePNG throws on re-completion (does not silently fall back)", async () => {
@@ -388,6 +405,32 @@ describe("useCreateBadge", () => {
       expect(decodeJwsPayload(credential)["vc"]).toMatchObject({
         type: ["VerifiableCredential"],
       });
+    });
+
+    it("bakes the exact credential string it persists (PNG and JSON exports agree, #599)", async () => {
+      renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
+      await act(async () => {});
+
+      const { credential } = mockCreateBadge.mock.calls[0][0] as {
+        credential: string;
+      };
+      // Guards the toBe below against a vacuous undefined === undefined.
+      expect(credential).toMatch(JWS_PATTERN);
+      expect(bakedCredentialArg()).toBe(credential);
+    });
+
+    it("saves the baked bytes, not the raw capture (#599 bug shape)", async () => {
+      // Distinguishable from the input so "saved the raw capture" cannot pass.
+      const BAKED = Buffer.concat([VALID_PNG, Buffer.from("iTXt")]);
+      mockBadges.bakePNG.mockReturnValueOnce(BAKED);
+
+      renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
+      await act(async () => {});
+
+      expect(mockBadges.saveBadgePNG).toHaveBeenCalledWith(
+        BAKED,
+        expect.any(String),
+      );
     });
 
     it("reaches status: done after successful creation", async () => {

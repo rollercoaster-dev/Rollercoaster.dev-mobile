@@ -10,6 +10,7 @@ import {
   DEFAULT_BADGE_COLOR,
 } from "../badgeImageGenerator";
 import { bakePNG, unbakePNG, isPNG } from "../png-baking";
+import { extractChunks } from "../png-chunk-utils";
 
 // The OB3 credential stub we bake into test images
 const CREDENTIAL_STUB = {
@@ -121,6 +122,59 @@ describe("bakePNG / unbakePNG roundtrip", () => {
     // JWS path returns the raw string, not a parsed object
     expect(typeof recovered).toBe("string");
     expect(recovered).toBe(jws);
+  });
+});
+
+/**
+ * Regression guard for #599: the bytes that leave the app must carry the
+ * credential in the OB 3.0 shape. Parsed straight from the chunk stream with
+ * a literal keyword so a symmetric typo in the module's own constant (which
+ * both bakePNG and unbakePNG read) cannot round-trip green.
+ */
+describe("baked iTXt chunk — OB 3.0 wire format (#599)", () => {
+  const OB3_KEYWORD = "openbadgecredential";
+
+  function findOb3Chunk(baked: Buffer) {
+    const iTXtChunks = extractChunks(baked).filter((c) => c.name === "iTXt");
+    const parsed = iTXtChunks.map((c) => {
+      const data = Buffer.from(c.data);
+      const keywordEnd = data.indexOf(0);
+      const keyword = data.subarray(0, keywordEnd).toString("latin1");
+      // iTXt layout after the keyword's null terminator:
+      // compression flag (1) | compression method (1) |
+      // language tag \0 | translated keyword \0 | text
+      const compressionFlag = data[keywordEnd + 1];
+      const compressionMethod = data[keywordEnd + 2];
+      const langEnd = data.indexOf(0, keywordEnd + 3);
+      const translatedEnd = data.indexOf(0, langEnd + 1);
+      const text = data.subarray(translatedEnd + 1).toString("utf8");
+      return { keyword, compressionFlag, compressionMethod, text };
+    });
+    return parsed.filter((c) => c.keyword === OB3_KEYWORD);
+  }
+
+  const baked = bakePNG(
+    Buffer.from(generateBadgeImagePNG("#FF5733")),
+    JSON.stringify(CREDENTIAL_STUB),
+  );
+
+  it("writes exactly one iTXt chunk keyed `openbadgecredential`", () => {
+    expect(findOb3Chunk(baked)).toHaveLength(1);
+  });
+
+  it("stores the credential uncompressed (flag 0, method 0)", () => {
+    const [chunk] = findOb3Chunk(baked);
+    expect(chunk?.compressionFlag).toBe(0);
+    expect(chunk?.compressionMethod).toBe(0);
+  });
+
+  it("the chunk text is byte-identical to the credential string handed to bakePNG", () => {
+    const png = generateBadgeImagePNG("#FF5733");
+    const jws =
+      "eyJhbGciOiJFUzI1NiJ9.eyJ2YyI6eyJpZCI6InVybjp1dWlkOjU5OSJ9fQ.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+    const baked = bakePNG(Buffer.from(png), jws);
+    const [chunk] = findOb3Chunk(baked);
+    expect(chunk?.text).toBe(jws);
   });
 });
 
