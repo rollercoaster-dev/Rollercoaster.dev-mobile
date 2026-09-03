@@ -321,10 +321,12 @@ function serializePlannedTypes(
  *
  * They do differ in strictness, deliberately: this is the data-layer floor
  * ("at least one planned type captured"), while the card's "✓ Mark complete"
- * reveal is stricter — it waits for *every* planned type
- * (`FocusCurrentTaskCard`'s `completionReady`, #497 D1). So a step the card still
- * shows as unfinished can pass this gate. Callers must not treat a `true` here
- * as "the card would offer completion"; it only means completion is permitted.
+ * reveal is stricter — it waits for *every* planned type (#497 D1). So a step
+ * the card still shows as unfinished can pass this gate. Callers must not treat
+ * a `true` here as "the card would offer completion"; it only means completion
+ * is permitted. That stricter tier is `evidenceGate.ts`'s
+ * `isStepEvidenceComplete`; `FocusCurrentTaskCard` reaches the same rule
+ * through `types/evidence`'s `isEvidencePlanSatisfied`, which both share.
  *
  * @param plannedEvidenceTypesJson - Value from step.plannedEvidenceTypes column (JSON string or null)
  * @param stepEvidence - All non-deleted evidence rows for this step
@@ -355,6 +357,14 @@ export function canCompleteStep(
  * (see `useCreateBadge`, which concatenates `evidenceByGoalQuery` and
  * `stepEvidenceByGoalQuery`) — a step-driven ride never writes a goal-scoped
  * row, and the goal demonstrably has proof, just filed under steps (#449 D13).
+ *
+ * This is the data-layer floor and `useCreateBadge`'s pre-mutation backstop —
+ * **not** the completion contract (#449 D13: "backstop, not the primary UX").
+ * One typed row anywhere clears it, so a six-step goal with a single note on
+ * step one passes. `evidenceGate.ts`'s `isGoalEvidenceComplete` is the tier
+ * above it, and is what the Bake CTA gates on (#635 D6). The same relationship
+ * holds one level down between {@link canCompleteStep} and that module's
+ * `isStepEvidenceComplete`.
  *
  * @param evidence - All non-deleted evidence rows belonging to the goal or its steps
  * @returns true if the goal can be completed

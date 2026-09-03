@@ -21,7 +21,10 @@
       "headerTitle": "Gestalte dein Badge",
       "backA11yLabel": "Zurück",
       "bakeLabel": "Badge fertigstellen",
-      "bakeSubcopy": "wird gespeichert und zu einem überprüfbaren Badge versiegelt"
+      "bakeSubcopy": "wird gespeichert und zu einem überprüfbaren Badge versiegelt",
+      "bakeBlockedMessage_one": "1 Schritt braucht noch seinen geplanten Nachweis. Erfasse ihn und das öffnet sich.",
+      "bakeBlockedMessage_other": "{{count}} Schritte brauchen noch ihren geplanten Nachweis. Erfasse, was fehlt, und das öffnet sich.",
+      "bakeBlockedNoSteps": "Dieses Ziel hat noch keine Schritte. Füge einen hinzu, erfasse seinen Nachweis, und das öffnet sich."
     },
     "baking": {
       "label": "Dein Badge wird erstellt…",

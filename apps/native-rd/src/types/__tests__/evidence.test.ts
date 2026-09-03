@@ -1,5 +1,9 @@
 import { EvidenceType } from "../../db";
-import { EVIDENCE_OPTIONS } from "../evidence";
+import {
+  EVIDENCE_OPTIONS,
+  isEvidencePlanSatisfied,
+  type EvidenceTypeValue,
+} from "../evidence";
 
 /** Evidence types presented to the user — must match EVIDENCE_OPTIONS */
 const ACTION_SHEET_TYPES = EVIDENCE_OPTIONS.map((o) => o.type);
@@ -39,5 +43,33 @@ describe("Evidence options", () => {
   it("all route names are unique", () => {
     const routes = Object.values(EVIDENCE_ROUTE_MAP);
     expect(new Set(routes).size).toBe(routes.length);
+  });
+});
+
+describe("isEvidencePlanSatisfied", () => {
+  const { text, photo, video } = EvidenceType;
+  const cases: readonly [
+    string,
+    EvidenceTypeValue[],
+    EvidenceTypeValue[],
+    boolean,
+  ][] = [
+    ["empty plan is never satisfied, even with evidence", [], [text], false],
+    ["empty plan, no evidence", [], [], false],
+    ["single planned type captured", [text], [text], true],
+    ["single planned type not captured", [text], [], false],
+    ["one of two planned types captured", [text, photo], [text], false],
+    ["both planned types captured", [text, photo], [photo, text], true],
+    ["extra captures beyond the plan still satisfy it", [text], [text, video], true], // prettier-ignore
+    [
+      "captures of the wrong type do not satisfy",
+      [photo],
+      [text, video],
+      false,
+    ],
+  ];
+
+  test.each(cases)("%s", (_label, planned, captured, expected) => {
+    expect(isEvidencePlanSatisfied(planned, captured)).toBe(expected);
   });
 });

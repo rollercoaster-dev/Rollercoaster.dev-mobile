@@ -107,6 +107,9 @@ jest.mock("../../../db", () => ({
   TEXT_EVIDENCE_PREFIX: "content:text;",
   goalsQuery: "goalsQuery",
   stepsByGoalQuery: jest.fn((id: string) => `stepsByGoalQuery-${id}`),
+  stepEvidenceByGoalQuery: jest.fn(
+    (id: string) => `stepEvidenceByGoalQuery-${id}`,
+  ),
   badgeByGoalQuery: jest.fn((id: string) => `badgeByGoalQuery-${id}`),
   createEvidence: (...args: unknown[]) => mockCreateEvidence(...args),
 }));
@@ -130,10 +133,35 @@ const GOAL = {
   completedAt: "2026-02-03T00:00:00.000Z",
 };
 
+// `plannedEvidenceTypes` is null on both, which resolves to the default plan of
+// one text note (#466 D4) — so one text row per step satisfies the bake gate.
 const STEPS = [
-  { id: "step-1", title: "Read docs", status: "completed", ordinal: 0 },
-  { id: "step-2", title: "Practice", status: "completed", ordinal: 1 },
+  {
+    id: "step-1",
+    title: "Read docs",
+    status: "completed",
+    ordinal: 0,
+    plannedEvidenceTypes: null,
+  },
+  {
+    id: "step-2",
+    title: "Practice",
+    status: "completed",
+    ordinal: 1,
+    plannedEvidenceTypes: null,
+  },
 ];
+
+/** Step-scoped evidence rows as `stepEvidenceByGoalQuery` returns them. */
+const stepNote = (stepId: string, type = "text") => ({
+  id: `evidence-${stepId}-${type}`,
+  stepId,
+  type,
+  uri: "content:text;done",
+});
+
+/** Every step in STEPS carrying the one text note its default plan asks for. */
+const SATISFYING_EVIDENCE = STEPS.map((step) => stepNote(step.id));
 
 const BADGE_ROW = {
   id: "badge-1",
@@ -154,12 +182,18 @@ const routeProps = {
 function setupQueries({
   goal = GOAL as object | null,
   steps = STEPS as object[],
+  stepEvidence = SATISFYING_EVIDENCE as object[],
   badge = null as object | null,
 } = {}) {
   mockUseQuery.mockImplementation((query: unknown) => {
     if (query === "goalsQuery") return goal ? [goal] : [];
     if (typeof query === "string" && query.startsWith("stepsByGoalQuery"))
       return steps;
+    if (
+      typeof query === "string" &&
+      query.startsWith("stepEvidenceByGoalQuery")
+    )
+      return stepEvidence;
     if (typeof query === "string" && query.startsWith("badgeByGoalQuery"))
       return badge ? [badge] : [];
     return [];
@@ -286,6 +320,118 @@ describe("CompletionFlowScreen", () => {
       } finally {
         jest.useRealTimers();
       }
+    });
+  });
+
+  describe("bake gate (#635)", () => {
+    it("blocks Bake when no step has captured its planned evidence", () => {
+      setupQueries({ stepEvidence: [] });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      goToDesign();
+
+      expect(screen.getByTestId("finish-design-bake")).toBeDisabled();
+      // Both steps are outstanding, and the copy says so rather than restating
+      // the rule.
+      expect(
+        screen.getByTestId("finish-design-bake-blocked"),
+      ).toHaveTextContent(
+        t("completion:finish.design.bakeBlockedMessage", { count: 2 }),
+      );
+    });
+
+    it("names a single outstanding step in the singular", () => {
+      setupQueries({ stepEvidence: [stepNote("step-1")] });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      goToDesign();
+
+      expect(
+        screen.getByTestId("finish-design-bake-blocked"),
+      ).toHaveTextContent(
+        t("completion:finish.design.bakeBlockedMessage", { count: 1 }),
+      );
+    });
+
+    // The closing note is goal-scoped. Feeding the gate `stepEvidenceByGoalQuery`
+    // rather than a mixed array is what keeps it from unblocking anything, and a
+    // row with a null stepId is what a switch to `evidenceByGoalQuery` would
+    // deliver here (#635 D1, pinned against the old `canCompleteGoal` floor).
+    it("stays blocked when the only evidence is goal-scoped", () => {
+      setupQueries({
+        stepEvidence: [{ ...stepNote("step-1"), stepId: null }],
+      });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      goToDesign();
+
+      expect(screen.getByTestId("finish-design-bake")).toBeDisabled();
+    });
+
+    it("blocks Bake when only some steps have their evidence", () => {
+      setupQueries({ stepEvidence: [stepNote("step-1")] });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      goToDesign();
+
+      expect(screen.getByTestId("finish-design-bake")).toBeDisabled();
+    });
+
+    // The issue's own case: a goal whose steps are untouched but which has one
+    // typed row filed somewhere. `canCompleteGoal` — the old floor — says yes.
+    it("blocks Bake when a step carries only part of a multi-type plan", () => {
+      setupQueries({
+        steps: [
+          { ...STEPS[0], plannedEvidenceTypes: '["text","photo"]' },
+          { ...STEPS[1] },
+        ],
+        stepEvidence: [stepNote("step-1"), stepNote("step-2")],
+      });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      goToDesign();
+
+      expect(screen.getByTestId("finish-design-bake")).toBeDisabled();
+    });
+
+    it("stays on the design stage when a blocked Bake is pressed", () => {
+      setupQueries({ stepEvidence: [] });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      goToDesign();
+
+      fireEvent.press(screen.getByTestId("finish-design-bake"));
+
+      expect(screen.getByTestId("finish-design-stage")).toBeOnTheScreen();
+      expect(mockCaptureBadge).not.toHaveBeenCalled();
+    });
+
+    it("opens Bake once every step has all of its planned evidence", () => {
+      setupQueries({
+        steps: [
+          { ...STEPS[0], plannedEvidenceTypes: '["text","photo"]' },
+          { ...STEPS[1] },
+        ],
+        stepEvidence: [
+          stepNote("step-1"),
+          stepNote("step-1", "photo"),
+          stepNote("step-2"),
+        ],
+      });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      goToDesign();
+
+      expect(screen.getByTestId("finish-design-bake")).toBeEnabled();
+      expect(screen.queryByTestId("finish-design-bake-blocked")).toBeNull();
+    });
+
+    // A goal with no steps has nothing to evidence, so it cannot bake either
+    // (D3) — the vacuous `[].every(...)` hole, at the screen level.
+    it("blocks a stepless goal and points at adding a step, not capturing", () => {
+      setupQueries({ steps: [], stepEvidence: [] });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      goToDesign();
+
+      expect(screen.getByTestId("finish-design-bake")).toBeDisabled();
+      // Nothing is outstanding on a stepless goal, so the count copy would read
+      // "0 steps" — it gets its own line instead.
+      expect(
+        screen.getByTestId("finish-design-bake-blocked"),
+      ).toHaveTextContent(t("completion:finish.design.bakeBlockedNoSteps"));
     });
   });
 

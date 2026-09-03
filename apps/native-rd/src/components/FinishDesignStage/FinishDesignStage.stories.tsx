@@ -30,10 +30,12 @@ function InteractiveDesign({
   initialExpandedSection = "shape",
   goalTitle = GOAL_TITLE,
   designOverrides,
+  canBake,
 }: {
   initialExpandedSection?: FinishDesignSection | null;
   goalTitle?: string;
   designOverrides?: Partial<BadgeDesign>;
+  canBake?: boolean;
 }) {
   const [design, setDesign] = useState<BadgeDesign>(() => ({
     ...createDefaultBadgeDesign(goalTitle, GOAL_COLOR),
@@ -47,6 +49,7 @@ function InteractiveDesign({
       goalTitle={goalTitle}
       onBack={() => {}}
       onBake={() => {}}
+      canBake={canBake ?? true}
       initialExpandedSection={initialExpandedSection}
     />
   );
@@ -54,6 +57,11 @@ function InteractiveDesign({
 
 export const Default: Story = {
   render: () => <InteractiveDesign />,
+};
+
+/** The bake gate shut: the goal still owes evidence somewhere (#635). */
+export const BakeBlocked: Story = {
+  render: () => <InteractiveDesign canBake={false} />,
 };
 
 export const ShapeOpen: Story = {

@@ -2,7 +2,10 @@ import React from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { useTranslation } from "react-i18next";
 import { evidenceShortLabel } from "../../i18n/labels";
-import { validateEvidenceType } from "../../types/evidence";
+import {
+  isEvidencePlanSatisfied,
+  validateEvidenceType,
+} from "../../types/evidence";
 import { getMissingQuickEvidenceOptions } from "../StepCard/StepCardEvidenceCapture";
 import { styles } from "./FocusCurrentTaskCard.styles";
 import {
@@ -147,14 +150,16 @@ function InProgressView({
     normalizedPlannedTypes,
     capturedTypes,
   );
-  // Ready only when the step actually plans evidence AND every planned type has
-  // a captured piece. The empty-plan guard is load-bearing: with no planned
-  // types `unsatisfiedTypes` is trivially empty, so without it an empty plan
-  // would reveal "Mark complete" with zero evidence — violating "every step
-  // needs evidence" (#360/#408). This is the "every planned type captured"
-  // contract, never "at least one," and never "none."
-  const completionReady =
-    normalizedPlannedTypes.length > 0 && unsatisfiedTypes.length === 0;
+  // The app-wide strict tier, shared with the goal-level bake gate (#635 D2):
+  // ready only when the step actually plans evidence AND every planned type has
+  // a captured piece — never "at least one," and never "none." The empty-plan
+  // guard lives inside the predicate and is load-bearing there; see its
+  // docstring. Kept separate from `unsatisfiedTypes` above, which exists to
+  // order the capture buttons, not to decide readiness.
+  const completionReady = isEvidencePlanSatisfied(
+    normalizedPlannedTypes,
+    capturedTypes,
+  );
 
   return (
     <CardShell

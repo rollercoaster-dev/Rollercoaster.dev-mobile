@@ -27,12 +27,20 @@ import { useFrameParamsForGoal } from "../../badges/frames";
 import {
   goalsQuery,
   stepsByGoalQuery,
+  stepEvidenceByGoalQuery,
   badgeByGoalQuery,
   createEvidence,
   EvidenceType,
   TEXT_EVIDENCE_PREFIX,
 } from "../../db";
 import type { GoalId } from "../../db";
+// Imported from the leaf module, not the `../../db` barrel: the gate is a pure
+// predicate over row shapes, and reaching it through the barrel would tie it to
+// the Evolu runtime for every consumer (and every test that stubs the barrel).
+import {
+  countStepsMissingEvidence,
+  isGoalEvidenceComplete,
+} from "../../db/evidenceGate";
 import { useCreateBadge } from "../../hooks/useCreateBadge";
 import { useAnimationPref } from "../../hooks/useAnimationPref";
 import type {
@@ -86,6 +94,7 @@ function FinishFlowContent({ goalId }: { goalId: string }) {
   const goals = useQuery(goalsQuery);
   const goal = goals.find((g) => g.id === goalId) ?? null;
   const stepRows = useQuery(stepsByGoalQuery(goalId as GoalId));
+  const stepEvidenceRows = useQuery(stepEvidenceByGoalQuery(goalId as GoalId));
   const badgeRows = useQuery(badgeByGoalQuery(goalId as GoalId));
   const badgeRow = badgeRows[0] ?? null;
 
@@ -116,6 +125,20 @@ function FinishFlowContent({ goalId }: { goalId: string }) {
     goalId as GoalId,
     (goal?.createdAt as string | null | undefined) ?? null,
     (goal?.completedAt as string | null | undefined) ?? null,
+  );
+
+  // The badge's evidence gate (#635 D1/D4): every step must have captured every
+  // type it planned. Rendered at the Bake CTA rather than on `finish-line-cta`,
+  // because the closing note — the only goal-scoped evidence affordance — sits
+  // behind that CTA, so locking it would be a lockout (D4). Note the closing
+  // note cannot unblock this: `stepEvidenceByGoalQuery` is step-scoped rows
+  // only, and a reflection on the ride is not proof a step happened.
+  const canBake = isGoalEvidenceComplete(stepRows, stepEvidenceRows);
+  // Drives the blocked copy, which names how many steps are outstanding rather
+  // than restating the rule.
+  const stepsMissingEvidence = countStepsMissingEvidence(
+    stepRows,
+    stepEvidenceRows,
   );
 
   const previewRef = useRef<BadgeRendererHandle | null>(null);
@@ -274,7 +297,7 @@ function FinishFlowContent({ goalId }: { goalId: string }) {
   if (stage === "design") {
     return (
       <FinishDesignStage
-        {...designCopy(t)}
+        {...designCopy(t, { stepsMissingEvidence })}
         design={currentDesign}
         onDesignChange={setDesign}
         goalColor={goalColor}
@@ -284,6 +307,7 @@ function FinishFlowContent({ goalId }: { goalId: string }) {
         previewRef={previewRef}
         onBack={() => setStage("celebrate")}
         onBake={handleBake}
+        canBake={canBake}
       />
     );
   }
