@@ -1,0 +1,23 @@
+{
+  "name": "atproto-spike",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Spike for #614: write one record to a hosted atproto PDS, resolve it, and answer ADR-0015's did:key-as-issuer question. Not a workspace member; not shipped in the app.",
+  "scripts": {
+    "spike": "bun run src/writeAndResolve.ts",
+    "didkey": "bun run src/didKeyIssuer.ts",
+    "observe": "bun run src/observeJetstream.ts",
+    "resolve": "bun run src/resolve.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@atproto/api": "0.20.42",
+    "jose": "6.2.3"
+  },
+  "devDependencies": {
+    "@types/bun": "1.3.14",
+    "typescript": "5.9.3"
+  }
+}
