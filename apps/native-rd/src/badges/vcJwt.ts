@@ -84,7 +84,7 @@ function base64UrlToString(segment: string): string {
  * credential JSON. Same shape test `png-baking.ts` uses to decide how to
  * embed one.
  */
-function isCompactJws(credential: string): boolean {
+export function isCompactJws(credential: string): boolean {
   const trimmed = credential.trim();
   return !trimmed.startsWith("{") && trimmed.split(".").length === 3;
 }
