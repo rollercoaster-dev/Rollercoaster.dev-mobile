@@ -46,6 +46,7 @@ updates:
       # minor versions, breaking the jest setup path. Bump manually via SDK upgrades.
       - dependency-name: "react-test-renderer"
       - dependency-name: "react-native"
+      - dependency-name: "@react-native/jest-preset"
       - dependency-name: "react-native-reanimated"
       - dependency-name: "react-native-worklets"
       - dependency-name: "react"
