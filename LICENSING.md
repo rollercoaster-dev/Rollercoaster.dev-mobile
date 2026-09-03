@@ -10,7 +10,7 @@ This repository is a multi-package workspace. Different packages are licensed di
 | `packages/design-tokens`   | **MIT**           | [`packages/design-tokens/LICENSE`](packages/design-tokens/LICENSE)     | Design tokens. Maximally permissive.                                                         |
 | `apps/native-rd`           | **AGPL-3.0-only** | [`apps/native-rd/LICENSE`](apps/native-rd/LICENSE)                     | Differentiated product. Strong copyleft: any commercial fork or SaaS clone must remain open. |
 
-The root `package.json` is a private workspace meta-package — it is not published and has no per-se license; see this file.
+The root `package.json` is a private, unpublished workspace meta-package. Its `license` field points to this file rather than naming a single SPDX id, because the repo is licensed per package as above. The root [`LICENSE`](LICENSE) file carries the AGPL-3.0-only text (the dominant product license) so GitHub's license detector can populate the repository's license metadata; it does not change any package's license.
 
 ## Copyright
 
@@ -40,14 +40,14 @@ Forks may use the code under the applicable license. Forks **may not** publish t
 
 ## SPDX identifiers
 
-New source files should include an SPDX identifier in a header comment, e.g.:
+Source files may include an SPDX identifier in a header comment, e.g.:
 
 ```ts
 // SPDX-FileCopyrightText: 2026 Joe Czarnecki
 // SPDX-License-Identifier: AGPL-3.0-only
 ```
 
-Existing files will be backfilled progressively; lack of an SPDX header in an older file does not change which license applies (the package's LICENSE file is authoritative).
+SPDX headers are optional, not required. The package's LICENSE file is authoritative regardless of whether a given source file carries a header.
 
 ## Future-state notes
 
