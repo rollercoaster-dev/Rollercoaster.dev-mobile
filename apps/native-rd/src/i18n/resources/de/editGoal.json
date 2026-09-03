@@ -59,7 +59,6 @@
     "message": "\"{{title}}\" wird gelöscht, samt Evidenz."
   },
   "errors": {
-    "titleRequired": "Titel darf nicht leer sein.",
     "updateTitleFailed": "Titel konnte nicht aktualisiert werden.",
     "alertErrorTitle": "Fehler",
     "updateDescriptionMessage": "Beschreibung konnte nicht aktualisiert werden.",

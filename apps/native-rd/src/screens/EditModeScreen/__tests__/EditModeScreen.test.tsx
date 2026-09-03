@@ -318,20 +318,90 @@ describe("EditModeScreen", () => {
       });
     });
 
-    it("alerts and skips the write when the title is cleared", async () => {
+    // #562: clearing the title mid-edit used to pop a modal Alert after the
+    // debounce, stealing focus and dropping the replacement text.
+    it("neither writes nor alerts when the title is cleared and the debounce elapses", async () => {
       setupQueries();
       const alertSpy = jest.spyOn(Alert, "alert");
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
-      fireEvent.changeText(screen.getByTestId("edit-goal-title-input"), "   ");
+      const titleInput = screen.getByTestId("edit-goal-title-input");
+      fireEvent.changeText(titleInput, "   ");
 
       await act(async () => {
         jest.advanceTimersByTime(500);
       });
-      expect(alertSpy).toHaveBeenCalledWith(
-        i18n.t("editGoal:errors.alertErrorTitle"),
-        i18n.t("editGoal:errors.titleRequired"),
-      );
+      expect(alertSpy).not.toHaveBeenCalled();
       expect(mockUpdateGoal).not.toHaveBeenCalled();
+      // The field stays as the user left it — no snap-back while still editing.
+      expect(titleInput.props.value).toBe("   ");
+    });
+
+    it("persists a replacement typed after clearing, and only the replacement", async () => {
+      setupQueries();
+      renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+      const titleInput = screen.getByTestId("edit-goal-title-input");
+      fireEvent.changeText(titleInput, "");
+      await act(async () => {
+        jest.advanceTimersByTime(500);
+      });
+      fireEvent.changeText(titleInput, "Learn Rust");
+
+      await act(async () => {
+        jest.advanceTimersByTime(500);
+      });
+      expect(mockUpdateGoal).toHaveBeenCalledTimes(1);
+      expect(mockUpdateGoal).toHaveBeenCalledWith("goal-1", {
+        title: "Learn Rust",
+      });
+    });
+
+    it("restores the stored title when the field is left empty, without writing", async () => {
+      setupQueries();
+      renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+      const titleInput = screen.getByTestId("edit-goal-title-input");
+      fireEvent.changeText(titleInput, "");
+      fireEvent(titleInput, "endEditing");
+
+      expect(titleInput.props.value).toBe(GOAL.title);
+      await act(async () => {
+        jest.advanceTimersByTime(500);
+      });
+      expect(mockUpdateGoal).not.toHaveBeenCalled();
+    });
+
+    // Done/back inside the debounce window unmounts the screen and drops the
+    // timer, so end editing must flush a pending write instead of waiting.
+    it("flushes a pending non-empty title write on end editing, exactly once", async () => {
+      setupQueries();
+      renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+      const titleInput = screen.getByTestId("edit-goal-title-input");
+      fireEvent.changeText(titleInput, "Learn Rust");
+      fireEvent(titleInput, "endEditing");
+
+      expect(titleInput.props.value).toBe("Learn Rust");
+      expect(mockUpdateGoal).toHaveBeenCalledTimes(1);
+      expect(mockUpdateGoal).toHaveBeenCalledWith("goal-1", {
+        title: "Learn Rust",
+      });
+
+      await act(async () => {
+        jest.advanceTimersByTime(500);
+      });
+      expect(mockUpdateGoal).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not re-write an already-debounced title on end editing", async () => {
+      setupQueries();
+      renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+      const titleInput = screen.getByTestId("edit-goal-title-input");
+      fireEvent.changeText(titleInput, "Learn Rust");
+      await act(async () => {
+        jest.advanceTimersByTime(500);
+      });
+      expect(mockUpdateGoal).toHaveBeenCalledTimes(1);
+
+      fireEvent(titleInput, "endEditing");
+      expect(mockUpdateGoal).toHaveBeenCalledTimes(1);
     });
 
     it("updates description input on change and debounces mutation", async () => {

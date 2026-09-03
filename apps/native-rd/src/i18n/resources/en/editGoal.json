@@ -59,7 +59,6 @@
     "message": "\"{{title}}\" will be deleted, along with its evidence."
   },
   "errors": {
-    "titleRequired": "Title cannot be empty",
     "updateTitleFailed": "Failed to update title",
     "alertErrorTitle": "Error",
     "updateDescriptionMessage": "Failed to update description.",
