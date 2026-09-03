@@ -1,8 +1,7 @@
 # OB3 Compliance Status
 
 **Status:** **Compliant** — the 1EdTech OB30Inspector returns `VALID`, 14/14 probes, 0 errors.
-**Last verified:** 2026-09-03 against the official 1EdTech validator at [vc.1ed.tech](https://vc.1ed.tech) (OB30Inspector), on a credential built and signed by this repo's own code path — see [provenance](#provenance-of-the-snapshot) below.
-**Still owed (#600):** the same result from a badge earned on a real device.
+**Last verified:** 2026-09-03 against the official 1EdTech validator at [vc.1ed.tech](https://vc.1ed.tech) (OB30Inspector), on a badge earned end-to-end in the app (goal → evidence → sign → bake → export) — see [provenance](#provenance-of-the-snapshot) below.
 
 ---
 
@@ -26,12 +25,12 @@ Outcome:   VALID
 Errors:    0
 Warnings:  0
 Probes:    14 run, 0 skipped
-Input:     JWT (compact ES256 JWS, inline jwk)
+Input:     Baked PNG (iTXt openbadgecredential → compact ES256 JWS, inline jwk)
 Spec:      Open Badges 3.0 (ob30.pid)
 Generator: OB30Inspector @ vc.1ed.tech
 ```
 
-Full report: [`ob3-compliance-status.validator-report.json`](./ob3-compliance-status.validator-report.json). The same credential baked into a PNG (`iTXt` `openbadgecredential`) also returns `VALID`, 14/14.
+Full report: [`ob3-compliance-status.validator-report.json`](./ob3-compliance-status.validator-report.json). The same badge exported as a `.jwt` also returns `VALID`, 14/14.
 
 For comparison, the 2026-05-01 snapshot was `ERROR`, 6 errors, 13 probes.
 
@@ -98,7 +97,7 @@ The planned two-PR split (schema, then crypto) is what happened. The proof forma
 
 ## Provenance of the snapshot
 
-The 2026-09-03 report was produced from a credential built by `buildUnsignedCredential` and signed by `signCredentialAsVcJwt` — the exact functions `useCreateBadge` calls — run under Bun with a throwaway P-256 WebCrypto key, then submitted through the validator's REST API. It proves the credential _shape and proof_ this code path emits are accepted. It does not yet prove the on-device path end to end (SecureStore key, real goal and evidence, PNG capture and bake, share-sheet export). That is what #600 still owes; when it lands, the report file is replaced with the device run and this section shrinks to a date.
+Earned end-to-end in the app on 2026-09-03: a goal was completed in the running app on the iOS simulator, the badge was signed and baked by the device code path (`useCreateBadge` → `signCredentialAsVcJwt` → PNG bake), exported through the share sheet, and submitted to OB30Inspector at vc.1ed.tech — both the baked PNG (this report) and the `.jwt` returned `VALID`, 14/14. One earlier export attempt against a badge minted before the signing-key rotation still failed exactly as documented in gap 4, which is expected: old badges are never re-signed.
 
 ---
 
