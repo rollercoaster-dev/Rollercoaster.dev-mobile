@@ -380,6 +380,11 @@ export function useCreateBadge(
           ? updateBadge(existingBadge.id as BadgeId, {
               credential: signedCredential,
               imageUri,
+              // The re-baked PNG renders designRef.current; persisting it too
+              // keeps badge.design and imageUri describing the same badge
+              // (#563). Unreachable today — needs a badge on an active goal,
+              // i.e. a reopen flow — but wrong the day one ships.
+              ...(designRef.current ? { design: designRef.current } : {}),
             })
           : createBadge({
               goalId,

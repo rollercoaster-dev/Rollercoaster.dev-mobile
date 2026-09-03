@@ -112,6 +112,7 @@ jest.mock("../../../db", () => ({
   ),
   badgeByGoalQuery: jest.fn((id: string) => `badgeByGoalQuery-${id}`),
   createEvidence: (...args: unknown[]) => mockCreateEvidence(...args),
+  GoalStatus: { active: "active", completed: "completed" },
 }));
 
 const mockUseQuery = jest.fn();
@@ -702,6 +703,77 @@ describe("CompletionFlowScreen", () => {
 
       fireEvent.press(screen.getByTestId("finish-reveal-view-badge"));
       expect(mockParentNavigate).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("completed goal re-entry (#563)", () => {
+    const COMPLETED_GOAL = { ...GOAL, status: "completed" };
+    const BAKED_BADGE_ROW = { ...BADGE_ROW, design: '{"shape":"star"}' };
+
+    /** Shape of the design CompletionFlow is currently rendering, read off the
+     *  JSON it hands useCreateBadge — the same value the reveal renders. */
+    const renderedDesignShape = () => {
+      const lastCall =
+        mockUseCreateBadge.mock.calls[mockUseCreateBadge.mock.calls.length - 1];
+      return (JSON.parse(lastCall[1].design as string) as { shape: string })
+        .shape;
+    };
+
+    it("opens on the read-only reveal, never on celebrate or design", () => {
+      mockUseCreateBadge.mockReturnValue({
+        status: "done",
+        error: null,
+        retryBake: mockRetryBake,
+      });
+      setupQueries({ goal: COMPLETED_GOAL, badge: BAKED_BADGE_ROW });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+
+      expect(screen.getByTestId("finish-reveal-stage")).toBeOnTheScreen();
+      expect(screen.queryByTestId("finish-celebrate-stage")).toBeNull();
+      expect(screen.queryByTestId("finish-design-stage")).toBeNull();
+      expect(screen.queryByTestId("finish-design-bake")).toBeNull();
+    });
+
+    it("reveals the badge on record (badge.design), not a default synthesized from the goal", () => {
+      mockUseCreateBadge.mockReturnValue({
+        status: "done",
+        error: null,
+        retryBake: mockRetryBake,
+      });
+      // goal.design is null on every goal completed through this flow — the
+      // bake writes badge.design only — so the old goal-first seed rendered a
+      // design the user had never seen.
+      setupQueries({ goal: COMPLETED_GOAL, badge: BAKED_BADGE_ROW });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+
+      expect(renderedDesignShape()).toBe("star");
+    });
+
+    it("prefers badge.design over goal.design when both are set", () => {
+      setupQueries({
+        goal: { ...GOAL, design: '{"shape":"circle"}' },
+        badge: BAKED_BADGE_ROW,
+      });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+      goToDesign();
+
+      expect(renderedDesignShape()).toBe("star");
+    });
+
+    it("still opens on celebrate for a completed goal with no badge row", () => {
+      // The completed-without-badge partial state (completeGoal ok, badge write
+      // failed) is not sealed — the flow must stay walkable so the user can bake.
+      setupQueries({ goal: COMPLETED_GOAL, badge: null });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+
+      expect(screen.getByTestId("finish-celebrate-stage")).toBeOnTheScreen();
+    });
+
+    it("still opens on celebrate for an active goal that already has a badge row", () => {
+      setupQueries({ goal: GOAL, badge: BADGE_ROW });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+
+      expect(screen.getByTestId("finish-celebrate-stage")).toBeOnTheScreen();
     });
   });
 
