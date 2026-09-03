@@ -4,6 +4,10 @@ tags:
 env:
   METRO_HOST: localhost
   METRO_PORT: "8081"
+  # Dev-client URL scheme. scripts/run-e2e.sh --android rewrites this default in
+  # its e2e/.android copy (the local `.dev` build registers `rollercoasterdev-dev`,
+  # app.config.js); a `-e` override does not beat a flow-level default.
+  DEV_CLIENT_SCHEME: exp+rollercoasterdev
 ---
 # ============================================================================
 # IN-ROW TIMING AUTHORING (#577)
@@ -37,6 +41,7 @@ env:
     env:
       METRO_HOST: ${METRO_HOST}
       METRO_PORT: ${METRO_PORT}
+      DEV_CLIENT_SCHEME: ${DEV_CLIENT_SCHEME}
       THEME_SWATCH: light-autismFriendly
 
 # --- Author a three-step goal ----------------------------------------------
@@ -76,13 +81,19 @@ env:
 #    stays up between adds. The steps header is inert and lives inside a
 #    keyboardShouldPersistTaps="handled" ScrollView, so tapping it dismisses.
 #    (The footer is keyboard-avoiding now — keyboard-cta-reachable.yaml pins
-#    that — so this dismissal is tidiness, not a requirement.)
+#    that — so this dismissal is tidiness, not a requirement.) Scroll to the
+#    header first: Android's adjustResize auto-scrolls to the focused input and
+#    leaves the header off-screen; a no-op on iOS (see full-ride.yaml step 6).
 - tapOn:
     id: "edit-goal-add-step-input"
 - inputText: "Bravo step"
 - pressKey: Enter
 - inputText: "Charlie step"
 - pressKey: Enter
+- scrollUntilVisible:
+    element:
+      id: "edit-goal-steps-header"
+    direction: UP
 - tapOn:
     id: "edit-goal-steps-header"
 
@@ -111,28 +122,26 @@ env:
     id: "edit-goal-content"
 
 # --- Author the dependency in row ------------------------------------------
-# 6. Open the third row's timing editor. index 2 = Charlie, the third root row.
-#    Two things make the index deterministic here, and both are properties this
-#    flow authored: the sub-step slot is `edit-goal-substep-timing-*`, a
-#    different prefix, so the regex sees root rows only; and every row is still
-#    UNSET, so each contributes exactly one match. A row with timing also
-#    renders `<prefix>-mark-<tone>` per chip, which this regex would match too —
-#    so if an earlier row ever gains timing before this point, the index moves.
-#    Step 9 names the row it edited, so a mis-targeted tap fails there loudly.
-#    Scroll first: the third row is clipped
-#    below the ScrollView's viewport and iOS still reports a frame for it — one
-#    that lands on the floating tab bar, so a bare tap navigates to Settings.
-#    Index is hierarchy order, not screen position, so scrolling cannot perturb
-#    it.
+# 6. Open Charlie's timing editor. The timing line is a Pressable that carries
+#    both the row testID and a title-bearing accessibilityLabel
+#    (editGoal:editor.timing.rowUnsetA11yLabel, `Set when "<title>" is due`), so
+#    id + text names the row outright. Not `index:`: index is hierarchy order,
+#    and on Android the hierarchy holds only what is on screen, so it shifts
+#    with every scroll — the first Android run failed exactly here. The regex
+#    alone would also match the `-editor`/`-mark-*` ids of an expanded row;
+#    the text half rules those out.
+#    Scroll first: the third row is clipped below the ScrollView's viewport and
+#    iOS still reports a frame for it — one that lands on the floating tab bar,
+#    so a bare tap navigates to Settings.
 - scrollUntilVisible:
     element:
       id: "edit-goal-step-timing-.*"
-      index: 2
+      text: 'Set when "Charlie step" is due'
     direction: DOWN
     centerElement: true
 - tapOn:
     id: "edit-goal-step-timing-.*"
-    index: 2
+    text: 'Set when "Charlie step" is due'
 
 # 7. The editor mounted in place of the line, with its `Depends on` control.
 #    Both ids share the row's timing prefix (#576).

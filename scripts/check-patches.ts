@@ -14,7 +14,13 @@
  * in node_modules rather than trusting the bookkeeping.
  */
 
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import {
+  existsSync,
+  readdirSync,
+  readFileSync,
+  realpathSync,
+  statSync,
+} from "node:fs";
 import { basename, join, resolve } from "node:path";
 
 type Manifest = {
@@ -99,19 +105,24 @@ function readManifest(path: string): Manifest {
  */
 function manifestPaths(): string[] {
   const paths = [join(repoRoot, "package.json")];
+  for (const dir of workspaceDirs()) {
+    const manifest = join(dir, "package.json");
+    if (existsSync(manifest)) paths.push(manifest);
+  }
+  return paths;
+}
 
+/** Every workspace package directory (`packages/<x>`, `apps/<x>`). */
+function workspaceDirs(): string[] {
+  const dirs: string[] = [];
   for (const workspaceRoot of workspaceRoots) {
     const dir = join(repoRoot, workspaceRoot);
     if (!existsSync(dir)) continue;
-
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      if (!entry.isDirectory()) continue;
-      const manifest = join(dir, entry.name, "package.json");
-      if (existsSync(manifest)) paths.push(manifest);
+      if (entry.isDirectory()) dirs.push(join(dir, entry.name));
     }
   }
-
-  return paths;
+  return dirs;
 }
 
 function descriptorName(entry: unknown[] | undefined): string | null {
@@ -153,28 +164,64 @@ function allVersions(lock: BunLock, name: string): string[] {
   return [...versions].sort();
 }
 
-/** Where `name@version` is installed. Bun's store dir may carry a peer hash. */
-function installDirs(name: string, version: string): string[] {
-  const dirs: string[] = [];
+/**
+ * Where `name@version` is actually reachable from. Bun's store keeps one dir per
+ * peer-hash variant (`<name>@<version>+<hash>`) and never prunes the ones a
+ * re-resolve leaves behind, so scanning the store would report unpatched
+ * orphans that no import can reach. Instead, follow every link that can lead
+ * to the package — the hoisted root copy, each workspace's copy, and each
+ * *other* store package's nested `node_modules/<name>` — and verify only those
+ * targets. Orphans are reported separately so they can be cleaned up.
+ */
+function installDirs(
+  name: string,
+  version: string,
+): { live: string[]; orphans: string[] } {
   const store = join(repoRoot, "node_modules", ".bun");
+  const segments = name.split("/");
   const escaped = name.replace(/\//g, "+");
+  const nested = (root: string) => join(root, "node_modules", ...segments);
+  const ownStoreDirs: string[] = [];
+  const candidates = [repoRoot, ...workspaceDirs()].map(nested);
 
   if (existsSync(store)) {
     for (const dir of readdirSync(store)) {
-      if (
-        dir !== `${escaped}@${version}` &&
-        !dir.startsWith(`${escaped}@${version}+`)
-      )
+      // `.bun/node_modules/<name>` is the store's own hoisted link dir, not a
+      // package — probe it directly rather than its (nonexistent) nested copy.
+      if (dir === "node_modules") {
+        candidates.push(join(store, ...segments));
         continue;
-      const candidate = join(store, dir, "node_modules", ...name.split("/"));
-      if (existsSync(candidate)) dirs.push(candidate);
+      }
+      const isOwn =
+        dir === `${escaped}@${version}` ||
+        dir.startsWith(`${escaped}@${version}+`);
+      // A store dir's own `node_modules/<name>` is the package itself, not a
+      // link to it — counting it would make every orphan look reachable.
+      if (isOwn) ownStoreDirs.push(join(store, dir));
+      else candidates.push(nested(join(store, dir)));
     }
   }
 
-  const hoisted = join(repoRoot, "node_modules", ...name.split("/"));
-  if (existsSync(hoisted)) dirs.push(hoisted);
+  const live = new Set<string>();
+  for (const candidate of candidates) {
+    if (!existsSync(candidate)) continue;
+    try {
+      const manifest = JSON.parse(
+        readFileSync(join(candidate, "package.json"), "utf8"),
+      ) as { version?: string };
+      if (manifest.version === version) live.add(realpathSync(candidate));
+    } catch {
+      // unreadable manifest: not a copy anything can import
+    }
+  }
 
-  return dirs;
+  // Report the store dir itself — that is the thing to `rm -rf`.
+  const orphans = ownStoreDirs.filter((dir) => {
+    const pkg = nested(dir);
+    return existsSync(pkg) && !live.has(realpathSync(pkg));
+  });
+
+  return { live: [...live].sort(), orphans };
 }
 
 type Hunk = {
@@ -250,7 +297,15 @@ function containsSequence(haystack: string[], needle: string[]): boolean {
 
 /** Verify the patch's effect is present in the installed package. */
 function checkApplied(entry: PatchEntry, patchText: string): void {
-  const dirs = installDirs(entry.name, entry.version);
+  const { live: dirs, orphans } = installDirs(entry.name, entry.version);
+
+  for (const orphan of orphans) {
+    const relative = orphan.slice(repoRoot.length + 1);
+    notes.push(
+      `- ${entry.key}: ${relative} is a store copy nothing links to (left by an earlier install), so it is not verified.\n` +
+        `  Cleanup: \`rm -rf ${relative}\``,
+    );
+  }
 
   if (dirs.length === 0) {
     errors.push(
@@ -477,14 +532,15 @@ if (existsSync(patchesDir)) {
   }
 }
 
+// Notes first, so the orphan/duplicate context is not lost behind a failure.
+for (const note of notes) console.warn(`warning: ${note.slice(2)}`);
+
 if (errors.length > 0) {
   console.error("Patched dependency check failed.");
   console.error("");
   for (const error of errors) console.error(error);
   process.exit(1);
 }
-
-for (const note of notes) console.warn(`warning: ${note.slice(2)}`);
 
 console.log(
   `Patched dependency check passed (${entries.length} patch(es) verified, applied in node_modules).`,

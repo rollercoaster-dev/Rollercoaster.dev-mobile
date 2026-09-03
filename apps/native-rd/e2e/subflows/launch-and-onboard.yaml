@@ -2,6 +2,10 @@ appId: dev.rollercoaster.app
 env:
   METRO_HOST: localhost
   METRO_PORT: "8081"
+  # Dev-client URL scheme. scripts/run-e2e.sh --android rewrites this default in
+  # its e2e/.android copy (the local `.dev` build registers `rollercoasterdev-dev`,
+  # app.config.js); a `-e` override does not beat a flow-level default.
+  DEV_CLIENT_SCHEME: exp+rollercoasterdev
   # Autism-Friendly (`Still Water`). One tap buys every determinism lever at
   # once: useAnimationPref.ts forces animationPref = "none" for this variant,
   # which renders the discrete ↑/↓/nest hierarchy controls (EditGoalStepList),
@@ -32,14 +36,38 @@ env:
 # actually pins the bundle to ${METRO_HOST}:${METRO_PORT}.
 - stopApp
 # Expo SDK 55 dev-client lands on its server picker after clearState instead of
-# auto-reloading the last bundle. Bypass via the dev-client deep-link scheme
-# `exp+<slug>://expo-development-client/?url=<bundle-url>`. Onboarding hint +
-# dev-menu modals are pre-disabled in run-e2e.sh.
+# auto-reloading the last bundle. Bypass via the dev-client deep-link
+# `<scheme>://expo-development-client/?url=<bundle-url>`. Onboarding hint +
+# dev-menu modals are pre-disabled in run-e2e.sh on iOS; see the Android block
+# below for why they cannot be on Android.
 #
 # Host AND port are parameterized: scripts/worktree-boot.sh puts a worktree's
 # Metro on a path-hashed port in 8080–8179, so a hardcoded 8081 cannot run
-# against one (#502 D22).
-- openLink: "exp+rollercoasterdev://expo-development-client/?url=http%3A%2F%2F${METRO_HOST}%3A${METRO_PORT}"
+# against one (#502 D22). The scheme is parameterized too: on a phone that also
+# carries the store build, `exp+rollercoasterdev://` raises an Android app
+# chooser (both builds register it) and the suite hangs on the launcher, so the
+# local `.dev` build registers its own `rollercoasterdev-dev` (app.config.js).
+- openLink: "${DEV_CLIENT_SCHEME}://expo-development-client/?url=http%3A%2F%2F${METRO_HOST}%3A${METRO_PORT}"
+# Android only: the expo-dev-menu onboarding sheet ("Continue") covers the app
+# on the first bundle load after every `clearState`. On iOS run-e2e.sh seeds
+# `EXDevMenuIsOnboardingFinished` once and Maestro's clearState leaves
+# UserDefaults alone (Maestro #1601), so the sheet never shows. On Android the
+# equivalent lives in the app's shared_prefs, which `pm clear` wipes on every
+# flow — and re-seeding it from the host races the app's own write. So the
+# sheet is treated as a deterministic fixture instead: it ALWAYS appears here,
+# and the flow dismisses it. Tapping Continue drops into the dev menu itself on
+# some launches, hence the optional Close.
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - extendedWaitUntil:
+          visible: "Continue"
+          timeout: 60000
+      - tapOn: "Continue"
+      - tapOn:
+          text: "Close"
+          optional: true
 # Boot barrier. This MUST be a positive wait, not `notVisible: app-loading`:
 # between the `clearState` reinstall and the dev client finishing its bundle
 # fetch there is no React root at all, so a negative assertion passes instantly

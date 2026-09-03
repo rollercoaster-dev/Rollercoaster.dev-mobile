@@ -4,6 +4,10 @@ tags:
 env:
   METRO_HOST: localhost
   METRO_PORT: "8081"
+  # Dev-client URL scheme. scripts/run-e2e.sh --android rewrites this default in
+  # its e2e/.android copy (the local `.dev` build registers `rollercoasterdev-dev`,
+  # app.config.js); a `-e` override does not beat a flow-level default.
+  DEV_CLIENT_SCHEME: exp+rollercoasterdev
 ---
 # ============================================================================
 # THE CANONICAL FULL RIDE (#502)
@@ -42,6 +46,7 @@ env:
     env:
       METRO_HOST: ${METRO_HOST}
       METRO_PORT: ${METRO_PORT}
+      DEV_CLIENT_SCHEME: ${DEV_CLIENT_SCHEME}
       THEME_SWATCH: light-autismFriendly
 
 # --- Bullet 1: create a goal with multiple planned evidence types -----------
@@ -99,6 +104,14 @@ env:
 # would cover both the evidence sheet's close button and the footer CTA. The
 # steps header is inert and lives inside the build ScrollView, whose
 # keyboardShouldPersistTaps="handled" turns a tap on it into a dismissal.
+# Scroll to it first: Android's adjustResize shrinks the ScrollView to the
+# space above the keyboard and auto-scrolls to the focused add-step input, which
+# leaves the header off-screen at tap time. On iOS it is already visible and
+# this is a no-op.
+- scrollUntilVisible:
+    element:
+      id: "edit-goal-steps-header"
+    direction: UP
 - tapOn:
     id: "edit-goal-steps-header"
 
@@ -157,17 +170,20 @@ env:
 - assertVisible:
     id: "edit-goal-step-hierarchy-actions-.*"
 
-# 13. EDIT: rename Alpha step. index 0 = the first root row (Alpha). Tapping
-#     the title opens the inline editor; the TextInput commits on submit.
-#     This is the only step exercising the "edit" third of bullet 2 and the
-#     only assertion behind EditModeScreen's 500ms title debounce.
-#     The step input is PREFILLED and Maestro's `inputText` appends at the
-#     cursor rather than replacing, so this leg appends a suffix; erase-then-
-#     retype is exercised on the goal title in step 14 instead.
+# 13. EDIT: rename Alpha step. The title Pressable's accessibilityLabel is the
+#     bare title, so id + text names the row (no index, see step 15). Tapping
+#     it opens the inline editor; the TextInput commits on submit. This is the
+#     only step exercising the "edit" third of bullet 2.
+#     Erase, then retype the full title. The inline input is PREFILLED with
+#     `selectTextOnFocus`, and the two platforms disagree about what typing
+#     into it does: iOS appends at the caret, Android replaces the selection —
+#     so a bare `inputText: " renamed"` produced a step called "renamed" on the
+#     first Android run. Erasing first makes the outcome the same everywhere.
 - tapOn:
     id: "edit-goal-step-title-.*"
-    index: 0
-- inputText: " renamed"
+    text: "Alpha step"
+- eraseText: 20
+- inputText: "Alpha step renamed"
 - pressKey: Enter
 
 # 14. EDIT: rename the goal itself — erase first, then retype. Regression leg
@@ -183,28 +199,36 @@ env:
 - inputText: "Alpha goal renamed"
 - pressKey: Enter
 
-# 15. REORDER: move Charlie up over Bravo. Up buttons render on rows 2–3 only
-#     (row 1 is `isFirst`), so index 0 = Bravo's up, index 1 = Charlie's up.
-#     Root order becomes Alpha, Charlie, Bravo. Alpha stays first so the
-#     multi-type step is still the one Focus resolves.
+# 15. REORDER: move Charlie up over Bravo. Root order becomes Alpha, Charlie,
+#     Bravo. Alpha stays first so the multi-type step is still the one Focus
+#     resolves.
+#     The up button is addressed RELATIVE to its row's title (`below:` the
+#     title Pressable, whose accessibilityLabel is the bare step title), not by
+#     `index:`. Index is hierarchy order, and on Android the hierarchy holds
+#     only what is on screen, so an index shifts with every scroll — the first
+#     Android run failed exactly there. The row's own controls are the nearest
+#     matches below its title on both platforms.
 #     Scroll first: the third root row is clipped below the ScrollView's
 #     viewport, and iOS still reports a frame for it — one that lands on the
-#     floating tab bar, so a bare tap navigates to Settings instead. Index is
-#     hierarchy order, not screen position, so scrolling does not perturb it.
+#     floating tab bar, so a bare tap navigates to Settings instead.
 - scrollUntilVisible:
     element:
       id: "edit-goal-step-up-.*"
-      index: 1
+      below:
+        id: "edit-goal-step-title-.*"
+        text: "Charlie step"
     direction: DOWN
     centerElement: true
 - tapOn:
     id: "edit-goal-step-up-.*"
-    index: 1
+    below:
+      id: "edit-goal-step-title-.*"
+      text: "Charlie step"
 
-# 16. REPARENT (demote): nest Bravo under Charlie. Nest-under triggers render
-#     on every root row, so index 2 = Bravo (now third). In the picker modal,
-#     targets render in list order with the dragged row excluded, so
-#     index 0 = Alpha, index 1 = Charlie.
+# 16. REPARENT (demote): nest Bravo under Charlie. Bravo is now the third root
+#     row; its nest-under trigger is addressed below its title, as in step 15.
+#     In the picker modal, targets render in list order with the dragged row
+#     excluded, so index 0 = Alpha, index 1 = Charlie.
 #     The picker row is matched by id + text and NOT by index: Maestro applies
 #     `index:` to the set that survives the other matchers, so pairing the
 #     already-unique text with `index: 1` selects the second of one match and
@@ -215,12 +239,16 @@ env:
 - scrollUntilVisible:
     element:
       id: "edit-goal-step-nest-under-.*"
-      index: 2
+      below:
+        id: "edit-goal-step-title-.*"
+        text: "Bravo step"
     direction: DOWN
     centerElement: true
 - tapOn:
     id: "edit-goal-step-nest-under-.*"
-    index: 2
+    below:
+      id: "edit-goal-step-title-.*"
+      text: "Bravo step"
 - tapOn:
     id: "edit-goal-step-nest-target-.*"
     text: "Nest this step under Charlie step"
@@ -567,8 +595,22 @@ env:
 #     Timeline with an originBadgeId retargets both back affordances, which is
 #     a separate flow's concern. The button is absent entirely when the goal is
 #     soft-deleted, so its presence is a real assertion.
+#     Barrier on the renderer first (top of Badge Detail), then an explicit
+#     mid-screen swipe: the bridge sits below the fold on a phone-sized screen,
+#     and Android's tree holds on-screen nodes only, so a bare visibility wait
+#     fails there. Not `scrollUntilVisible`: Maestro's scroll gesture starts
+#     near the bottom of the screen, which on this screen is the pinned Share
+#     footer, and the footer swallows it (verified on the phone — the screen
+#     never moved). On iOS the swipe is harmless and the assertion unchanged.
 - tapOn:
     id: "badges-wall-spotlight"
+- extendedWaitUntil:
+    visible:
+      id: "badge-renderer"
+    timeout: 15000
+- swipe:
+    start: "50%, 60%"
+    end: "50%, 20%"
 - extendedWaitUntil:
     visible:
       id: "badge-detail-view-timeline"

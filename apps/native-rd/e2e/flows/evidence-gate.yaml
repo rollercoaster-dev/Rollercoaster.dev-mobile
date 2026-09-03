@@ -4,6 +4,10 @@ tags:
 env:
   METRO_HOST: localhost
   METRO_PORT: "8081"
+  # Dev-client URL scheme. scripts/run-e2e.sh --android rewrites this default in
+  # its e2e/.android copy (the local `.dev` build registers `rollercoasterdev-dev`,
+  # app.config.js); a `-e` override does not beat a flow-level default.
+  DEV_CLIENT_SCHEME: exp+rollercoasterdev
 ---
 # ============================================================================
 # EVIDENCE GATE (#635, was bake-recovery.yaml #502)
@@ -35,6 +39,7 @@ env:
     env:
       METRO_HOST: ${METRO_HOST}
       METRO_PORT: ${METRO_PORT}
+      DEV_CLIENT_SCHEME: ${DEV_CLIENT_SCHEME}
       THEME_SWATCH: light-autismFriendly
 
 # --- A one-step goal with nothing captured ---------------------------------
@@ -99,12 +104,24 @@ env:
     id: "finish-design-bake-blocked"
 
 # --- 2. Capture the missing evidence ----------------------------------------
-# A downward drag, not `back`: CompletionFlow is `presentation: "modal"`
-# (GoalsStack.tsx:39), whose iOS dismiss gesture is a drag from the top —
-# Maestro's `back` is a left-edge swipe and does nothing to it.
-- swipe:
-    start: "50%, 15%"
-    end: "50%, 95%"
+# CompletionFlow is `presentation: "modal"` (GoalsStack.tsx:39) with no header,
+# so leaving it is a platform gesture. iOS: a downward drag from the top —
+# Maestro's `back` is a left-edge swipe there and does nothing to a modal.
+# Android: the drag does nothing (the sheet is not a pull-down card), but the
+# hardware back button pops the modal, which is what `back` sends.
+# `finish-design-back` is NOT an exit: it steps back to the celebrate stage.
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - swipe:
+          start: "50%, 15%"
+          end: "50%, 95%"
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - back
 # Dismissing returns to whatever pushed the modal — Timeline, not Focus.
 - tapOn:
     id: "timeline-back-button"

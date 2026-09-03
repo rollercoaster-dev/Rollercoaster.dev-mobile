@@ -6,9 +6,20 @@
 // untouched, so app.json stays the single source of truth for static config and
 // for release-please's version bump.
 //
-// APP_VARIANT contract (Android only):
-//   "development" → dev.rollercoaster.app.dev   (LOCAL `expo run` only — set by the run scripts)
-//   anything else → dev.rollercoaster.app       (ALL EAS builds: development, preview, production)
+// APP_VARIANT contract:
+//   "development" → android.package dev.rollercoaster.app.dev + an extra URL scheme
+//                   `rollercoasterdev-dev`   (LOCAL `expo run` only — set by the run scripts)
+//   anything else → dev.rollercoaster.app, no extra scheme (ALL EAS builds: development,
+//                   preview, production)
+//
+// Why the extra scheme: expo-dev-client registers `exp+<slug>` on EVERY build of
+// this app, so a phone carrying both the store build and the local `.dev` build
+// raises an Android app-chooser on `exp+rollercoasterdev://…`, and the Maestro
+// suite hangs on it (docs/plans/dev-plans/2026-09-03-android-device-e2e.md,
+// obstacle 6). `rollercoasterdev-dev://expo-development-client/?url=…` is
+// registered by the local variant alone, so the dev launcher opens without a
+// chooser. The flows default `DEV_CLIENT_SCHEME` to `exp+rollercoasterdev`;
+// scripts/run-e2e.sh --android rewrites that default (e2e/README.md → Android).
 //
 // Why only local is split: the INSTALL_FAILED_VERSION_DOWNGRADE error only occurs
 // between a local debug build (versionCode 1) and an EAS build (remote counter).
@@ -27,17 +38,25 @@
 // returned object doesn't carry it through. Object spread copies that symbol and
 // every app.json field. Do not drop it.
 const BASE_PACKAGE = "dev.rollercoaster.app";
-const packageName =
-  process.env.APP_VARIANT === "development"
-    ? `${BASE_PACKAGE}.dev`
-    : BASE_PACKAGE;
+const LOCAL_DEV_SCHEME = "rollercoasterdev-dev";
 
 // CommonJS export: the repo has no "type":"module" and eslint pins
 // **/*.config.js to sourceType "commonjs" (see eslint.config.js). Expo's
 // config loader accepts module.exports of a function just like a default export.
-module.exports = ({ config }) => ({
-  ...config,
-  android: { ...config.android, package: packageName },
-  // iOS unconditionally keeps the base bundle id — see header note.
-  ios: config.ios,
-});
+module.exports = ({ config }) => {
+  const isLocalDevVariant = process.env.APP_VARIANT === "development";
+  const packageName = isLocalDevVariant ? `${BASE_PACKAGE}.dev` : BASE_PACKAGE;
+  return {
+    ...config,
+    // Top-level `scheme` is the only place Expo accepts one, so the local iOS
+    // build picks it up too. Harmless there: the bundle id is unchanged and the
+    // dev launcher still answers `exp+rollercoasterdev://`. Appended to any
+    // scheme app.json already declares, never substituted for it.
+    ...(isLocalDevVariant
+      ? { scheme: [].concat(config.scheme ?? [], LOCAL_DEV_SCHEME) }
+      : {}),
+    android: { ...config.android, package: packageName },
+    // iOS unconditionally keeps the base bundle id — see header note.
+    ios: config.ios,
+  };
+};

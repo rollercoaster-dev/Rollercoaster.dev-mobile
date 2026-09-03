@@ -3,7 +3,7 @@ name: native-rd-build
 description: Build native-rd for any target — local iOS simulator/device, local Release builds, EAS development/preview/production, Android (when generated). Use when the user hits a build failure, asks how to produce a build of any kind, needs to diagnose runtime errors that look build-related ("No script URL provided", missing assets, signing issues), or wants to understand what `eas.json` / `app.json` / `Podfile.properties.json` settings actually do. Also use as a pre-flight checklist before starting a fresh build.
 metadata:
   author: rollercoaster.dev
-  version: "2.8.0"
+  version: "2.9.0"
 ---
 
 # native-rd Build Playbook
@@ -1004,6 +1004,23 @@ The "source of truth" for native config is `app.json` + Expo plugins. Anything i
 | `~/Library/Developer/Xcode/DerivedData/nativerd-*` | Xcode build cache                                                                     | n/a (outside repo)                      | n/a                        |
 | `~/Library/Android/sdk/`                           | Android SDK + NDK + system images. Managed by Studio's SDK Manager + `sdkmanager`     | n/a (outside repo)                      | n/a                        |
 | `~/.zshenv`                                        | Shell env vars for `ANDROID_HOME` etc. Chezmoi-managed (`chezmoi edit ~/.zshenv`)     | Yes                                     | Yes                        |
+
+## Gotcha 17 — Android: phantom `emulator-5554 offline` and a stale workspace `dist/`
+
+`[VERIFIED 2026-09-03]` Samsung SM-A165F over USB, OrbStack installed.
+
+Two unrelated traps hit on the same afternoon, both now handled by `scripts/run-android.sh`:
+
+**Phantom emulator.** `adb devices` lists `emulator-5554 offline` with no emulator running, and Expo's device enumeration trips over it. adb probes TCP 5555–5585 on localhost for emulators; OrbStack listens on 5555 and answers. The script restarts adb with the probe range collapsed when it sees an offline emulator and no `qemu`/`emulator` process:
+
+```bash
+adb kill-server
+ADB_LOCAL_TRANSPORT_MAX_PORT=5554 adb start-server
+```
+
+**Stale `packages/*/dist`.** `@rollercoaster-dev/openbadges-core` and `design-tokens` resolve through package.json `exports` to their built `dist/`; Metro never looks at their `src/`. Pull a commit that touches a package and run the app without `bun run build`, and the app serves last month's code — here `encodeP256DidKey` was missing and the bake died with `TypeError: undefined is not a function`, which reads as an app bug. Both run scripts now run `bun run build:packages` (root package.json) first (cached, sub-second when nothing changed). Metro does **not** pick up a rebuilt `dist/` while running — restart it after the build.
+
+While you're on a physical phone that also carries the Play Store build: never uninstall the store app to make room (user data), build the `.dev` variant instead (the run script default), and see `e2e/README.md` → Android for the E2E lane.
 
 ---
 

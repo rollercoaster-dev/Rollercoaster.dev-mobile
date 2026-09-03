@@ -101,6 +101,18 @@ if [ ! -f "${ANDROID_DIR}/local.properties" ]; then
   printf 'sdk.dir=%s\n' "${ANDROID_HOME}" > "${ANDROID_DIR}/local.properties"
 fi
 
+# Phantom `emulator-5554 offline` guard. adb probes TCP 5555–5585 on localhost
+# for emulators and lists anything that answers as an offline emulator —
+# OrbStack, for one, listens on 5555. Expo's device enumeration then trips over
+# the ghost. If an offline emulator is listed and no emulator process is
+# running, restart adb with the probe range collapsed to a single port.
+if adb devices | awk 'NR>1 && $1 ~ /^emulator-/ && $2=="offline" { found=1 } END { exit found ? 0 : 1 }' \
+  && ! pgrep -qf 'qemu-system-|/emulator/emulator' 2>/dev/null; then
+  echo "Phantom offline emulator in 'adb devices' with no emulator running — restarting adb with ADB_LOCAL_TRANSPORT_MAX_PORT=5554"
+  adb kill-server
+  ADB_LOCAL_TRANSPORT_MAX_PORT=5554 adb start-server
+fi
+
 # Require a connected emulator or device. `adb devices` lines after the
 # header look like "<id>\tdevice" once authorized.
 device_count="$(adb devices | awk 'NR>1 && $2=="device" { n++ } END { print n+0 }')"
@@ -115,6 +127,12 @@ if [ "${device_count}" -gt 1 ] && [ -z "${ANDROID_DEVICE_ID:-}" ]; then
   adb devices >&2 || true
   exit 1
 fi
+
+# Workspace packages are consumed through their built dist/ (see native-rd-build
+# skill Gotcha 17: a stale dist serves old code silently). Turbo caches, so this
+# is a no-op when nothing changed.
+echo "Building workspace packages..."
+(cd "${APP_DIR}/../.." && bun run build:packages)
 
 # Reverse the Metro port so the emulator/device can reach the host's bundler
 # via localhost. Scope to the target device when ANDROID_DEVICE_ID is set so

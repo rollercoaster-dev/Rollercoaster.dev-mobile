@@ -8,7 +8,7 @@ The suite is a **manual pre-merge gate**, not a CI job. See [The pre-merge gate]
 
 - **Maestro CLI**: `brew tap mobile-dev-inc/tap && brew install mobile-dev-inc/tap/maestro` (not in devDependencies — requires separate install). Do not use `brew install maestro`; that installs the wrong Homebrew cask for this runner.
 - **iOS Simulator**: booted with the app installed. Build it with **`bun run ios:e2e`**, not `bun run ios` — `EXPO_PUBLIC_*` is inlined by Metro at serve time, and `scripts/run-e2e.sh` neither sets nor verifies it. Only `evidence-viewer.yaml` strictly needs the flag today, but a single build for the whole suite beats a two-build matrix.
-- **App ID**: `dev.rollercoaster.app`
+- **App ID**: `dev.rollercoaster.app` on iOS. Local Android builds are `dev.rollercoaster.app.dev`; the Android lane rewrites `appId:` for you (see [Android](#android-device-or-emulator)).
 - **Simulator locale**: `scripts/run-e2e.sh` pins `AppleLanguages` to `en` on the booted simulator. Several flows assert interpolated English a11y labels, and `de` ships — a German simulator fails them in ways that read as product regressions. `test:e2e:single` bypasses the script, so pin it by hand for single-flow iteration (see below).
 
 ## Running Flows
@@ -26,6 +26,31 @@ xcrun simctl spawn booted defaults write dev.rollercoaster.app EXDevMenuIsOnboar
 xcrun simctl spawn booted defaults write dev.rollercoaster.app AppleLanguages -array en
 bun run test:e2e:single e2e/flows/full-ride.yaml
 ```
+
+### Android (device or emulator)
+
+```bash
+# Terminal 1 — build + install the .dev variant on the connected device, leave Metro up
+bun run android:e2e
+# Terminal 2 — warm Metro once (the first bundle build can exceed the 60s boot barrier),
+# then run the gate against the device
+bun run test:e2e:android          # = scripts/run-e2e.sh --android --include-tags required
+```
+
+What `--android` changes, and why each piece exists (the trail is in
+`docs/plans/dev-plans/2026-09-03-android-device-e2e.md`):
+
+- **`appId:` rewrite.** Local Android installs `dev.rollercoaster.app.dev` (`APP_VARIANT=development`, the run-script default) so it coexists with the store build — **never uninstall the store app** to make room, that is user data. Maestro cannot interpolate `appId:`, so the script copies `flows/` + `subflows/` to `e2e/.android/` (gitignored) with the id rewritten and runs that copy. `APP_VARIANT=<anything else>` targets the base package with no rewrite.
+- **`DEV_CLIENT_SCHEME` rewritten to `rollercoasterdev-dev`.** Both installed builds register `exp+rollercoasterdev`, so that deep link raises an app chooser and the suite hangs. The `.dev` build registers its own scheme (`app.config.js`); every flow reads `${DEV_CLIENT_SCHEME}` with `exp+rollercoasterdev` as its `env:` default. A flow-level default beats `maestro test -e`, so the lane rewrites the default in the same `e2e/.android/` copy rather than passing `-e`.
+- **English pinned in a loop, not a one-shot.** Per-app locale is set with `cmd locale set-app-locales`, but Maestro's `clearState` is `pm clear`, which deletes it before every flow. The script re-applies it every 0.5s for the whole run (an unchanged value is a framework-level no-op, so the app is not disturbed mid-flow) and kills the loop on exit.
+- **Dev-menu onboarding is dismissed in-flow.** There is no durable Android equivalent of the iOS UserDefaults seed (`pm clear` wipes shared_prefs; a `run-as` write races the app). The prologue has an Android-only block that waits for the sheet's "Continue", taps it, and taps an optional "Close". It is a `runFlow: when: platform: Android`, so iOS pays nothing.
+- **Existing `android/` checkouts need one re-prebuild.** The `rollercoasterdev-dev` scheme lands in `AndroidManifest.xml` at `expo prebuild` time, and `run-android.sh` only prebuilds when `android/` is missing. An `android/` generated before the scheme existed installs fine but answers no `rollercoasterdev-dev://`, so every flow would die at the boot barrier. The script checks `dumpsys package` for the scheme and refuses to run; the fix is `rm -rf android && bun run android:e2e`.
+- **Device selection.** One authorized device is picked up automatically; with several, set `ANDROID_DEVICE_ID` to the adb serial (Maestro's `--device` takes the serial).
+- **Expo's own post-install launch still uses `exp+rollercoasterdev://`**, so `bun run android:e2e` ends with an Android app chooser on a phone that also has the store build. Both entries are named "Rollercoaster.dev"; the right one opens the Expo "Development servers" screen. Picking "Always" is fine, and the suite does not depend on it either way.
+
+Platform-specific flow steps live behind `runFlow: when: platform:` blocks: `evidence-gate.yaml` leaves the CompletionFlow modal with a top-down swipe on iOS and hardware `back` on Android, and the two flows that dismiss the wizard keyboard by tapping `edit-goal-steps-header` scroll to it first because Android's `adjustResize` leaves it off-screen. `clearKeychain` is iOS-only; on Android the signing keys live in the app's SecureStore data and `pm clear` wipes them along with everything else.
+
+Artifacts: Maestro writes per-flow screenshots and hierarchies under `~/.local/state/maestro/tests/<timestamp>/`; `e2e/reports/junit.xml` is written as on iOS.
 
 **Never** invoke this via the repo root's `bun run test:e2e` alias in a way you'd trust — that is `turbo test:e2e`. The task is `cache: false` as of #502; before that it declared `outputs: ["coverage/**"]`, which Maestro never writes, so a FULL-TURBO hit could report green having launched nothing.
 
@@ -52,6 +77,7 @@ Every flow opens with:
     env:
       METRO_HOST: ${METRO_HOST}
       METRO_PORT: ${METRO_PORT}
+      DEV_CLIENT_SCHEME: ${DEV_CLIENT_SCHEME}
       THEME_SWATCH: light-autismFriendly
 ```
 
@@ -59,6 +85,7 @@ It performs isolation → dev-client boot → boot barrier → theme selection �
 
 - **Isolation is `launchApp: { clearState: true, clearKeychain: true }`, for every flow, no exceptions.** Onboarding, theme, density and `pinnedGoalId` all live in one Evolu SQLite file, so `clearState` resets them atomically — but Ed25519 signing keys live in Keychain and are **not** touched by it, so a repeatable bake needs `clearKeychain` too.
 - **`METRO_HOST` / `METRO_PORT` are parameterized** (`localhost` / `8081` defaults). `scripts/worktree-boot.sh` puts a worktree's Metro on a path-hashed port in 8080–8179, so a hardcoded port cannot run against one.
+- **`DEV_CLIENT_SCHEME` is parameterized** (`exp+rollercoasterdev` default). The Android lane rewrites it to `rollercoasterdev-dev`, the scheme only the local `.dev` build registers — see [Android](#android-device-or-emulator).
 - **`THEME_SWATCH` picks the theme during onboarding.** `light-autismFriendly` ("Still Water") is the default because it is the determinism lever: `useAnimationPref` forces `animationPref = "none"` for that variant, which renders the discrete ↑/↓/nest hierarchy controls (the only non-drag reorder path), suppresses `finish-reveal-sparkles`, zeroes `AnimatedSheet` exit timing, and makes the tab knob snap instead of animate. The theme flows override it to `light-default` so their switch is a real change.
 
 ### Boot barrier
@@ -90,6 +117,12 @@ Every EditMode row testID interpolates an **Evolu-generated** id (`edit-goal-ste
 
 `index:` is deterministic here because the flow authored the list order itself. Every such selector must carry an inline comment naming the expected row and the derivation — and the outcome should be asserted a step or two later (the Timeline's ordinal↔title matchers do this), so a mis-targeted tap fails loudly instead of passing quietly.
 
+**`index:` is only safe when every candidate is on screen.** Index is hierarchy order, and on Android the hierarchy holds only what is currently visible (UiAutomator), so in a list longer than the viewport the index of a control shifts with every scroll — the first Android run failed on exactly this in `full-ride.yaml` and `step-timing-editor.yaml`. iOS reports off-screen nodes too, which is why the suite never noticed. Prefer, in order:
+
+1. the control's own title-bearing a11y label (`id: "edit-goal-step-timing-.*"` + `text: 'Set when "Charlie step" is due'`);
+2. a relative anchor on the row's title, whose label is the bare step title (`id: "edit-goal-step-up-.*"` + `below: { id: "edit-goal-step-title-.*", text: "Charlie step" }`);
+3. `index:`, only for a set that fits on one screen (the in-picker targets, a single sub-step).
+
 **In-wizard rows are the exception**: `useNewGoalSteps` mints `step-<n>` / `sub-<n>` from a monotonic ref counter and there is no `StrictMode`, so `edit-goal-step-evidence-step-1` is knowable and literal ids are strictly better there.
 
 No index-alias testIDs are added to production components for the suite's benefit, and no screen-identity testIDs exist — screen arrival is asserted on an existing surface id (`goals-cockpit-new-goal`, `edit-goal-content`, `finish-celebrate-stage`, …). In particular, **never `assertVisible: "Goals"`**: `GoalsScreen` renders "Today" whenever a hero goal is pinned and "Goals" only when empty, so that assertion is silently conditional.
@@ -120,12 +153,14 @@ tags:
 env:
   METRO_HOST: localhost
   METRO_PORT: "8081"
+  DEV_CLIENT_SCHEME: exp+rollercoasterdev
 ---
 - runFlow:
     file: ../subflows/launch-and-onboard.yaml
     env:
       METRO_HOST: ${METRO_HOST}
       METRO_PORT: ${METRO_PORT}
+      DEV_CLIENT_SCHEME: ${DEV_CLIENT_SCHEME}
       THEME_SWATCH: light-autismFriendly
 - tapOn:
     id: "goals-cockpit-new-goal"
@@ -193,7 +228,7 @@ E2E is **not** in CI. It is a manual gate run on a local simulator before mergin
 **Every run record must carry the environment block**, because a green run only means anything against a named environment:
 
 - Maestro version
-- Simulator device + iOS runtime
+- Simulator device + iOS runtime, or the Android device model + OS version
 - **Locale** (the suite pins `en`; record what the run actually used)
 - Git SHA
 - `EXPO_PUBLIC_E2E_MODE`
