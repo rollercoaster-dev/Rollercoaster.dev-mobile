@@ -36,7 +36,7 @@
  * Drag orchestration lives in useEditGoalDrag; the row anatomy in
  * EditGoalStepRow; the ⋯ menu content in EditGoalOverflowMenu.
  */
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useCallback } from "react";
 import {
   View,
   Text as RNText,
@@ -47,6 +47,7 @@ import {
   type NativeScrollEvent,
   type NativeSyntheticEvent,
 } from "react-native";
+import { KeyboardAvoidingFrame } from "../KeyboardAvoidingFrame";
 import { DotsThree, Pencil } from "phosphor-react-native";
 import { useUnistyles } from "react-native-unistyles";
 import { IconButton } from "../IconButton";
@@ -63,6 +64,10 @@ import type {
 } from "../StepTimingEditor";
 import type { DragScrollController } from "../StepList/dragAutoScroll";
 import { EditGoalStepList } from "./EditGoalStepList";
+import Animated from "react-native-reanimated";
+import { PILL_LIFT } from "../../navigation/FocusPillTabBar";
+import { useKeyboardFooterPadding } from "../../utils/keyboard";
+import { useStickToScrollEnd } from "../../hooks/useStickToScrollEnd";
 import { styles } from "./EditGoalView.styles";
 
 /** Tone of one date/dependency truth-line on a step row's timing line (D5). */
@@ -472,6 +477,29 @@ export function EditGoalView({
   timingHost,
 }: EditGoalViewProps) {
   const { theme } = useUnistyles();
+  // The Done footer's tab-bar clearance (PILL_LIFT) tracks the keyboard: with
+  // the keys up the bar is under them, so the reservation collapses to the
+  // footer's own padding instead of opening a dead gap above the keyboard.
+  const footerPadding = useKeyboardFooterPadding(
+    theme.space[4] + PILL_LIFT,
+    theme.space[4],
+  );
+  // Keeps the add-step row visible as the keyboard shrinks the viewport and
+  // as Enter appends rows. Composed with the screen's optional drag
+  // instrumentation below, which needs the same ref and events.
+  const stick = useStickToScrollEnd();
+  const externalScrollRef = scrollInstrumentation?.ref;
+  const setScrollRef = useCallback(
+    (node: ScrollView | null) => {
+      stick.ref.current = node;
+      if (typeof externalScrollRef === "function") externalScrollRef(node);
+      else if (externalScrollRef && typeof externalScrollRef === "object")
+        (
+          externalScrollRef as React.MutableRefObject<ScrollView | null>
+        ).current = node;
+    },
+    [externalScrollRef, stick.ref],
+  );
 
   // Evidence-picker open state, lifted here from EditGoalStepList (#493/D8) so
   // the shared AnimatedSheet can render as a root-level sibling of the
@@ -590,121 +618,138 @@ export function EditGoalView({
           }
         />
 
-        {/* Scrollable content. Internal ScrollView (not the body View it replaced)
+        {/* [scroll][footer] ride inside a KeyboardAvoidingView so the Done
+          footer lifts above the soft keyboard instead of sitting under it. The
+          add-step input keeps the keyboard up between adds (blurOnSubmit={false}),
+          so without this a long list left Done unreachable — same fix as the
+          New Goal wizard. The header stays outside, so no vertical offset. */}
+        <KeyboardAvoidingFrame style={styles.keyboardFrame}>
+          {/* Scrollable content. Internal ScrollView (not the body View it replaced)
           so the flex:1 container splits into [header][scroll][footer] and the
           sheet's absolute overlay — a sibling below — fills the viewport rather
           than the scroll content (#493/D8). */}
-        <ScrollView
-          ref={scrollInstrumentation?.ref}
-          onLayout={scrollInstrumentation?.onLayout}
-          onScroll={scrollInstrumentation?.onScroll}
-          scrollEventThrottle={16}
-          onContentSizeChange={scrollInstrumentation?.onContentSizeChange}
-          scrollEnabled={!rowDragging}
-          style={styles.scroll}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          // Rename rows commit on blur, and the default ("never") swallows the
-          // first tap to dismiss the keyboard — which blurs the field and
-          // closes the editor. "handled" delivers taps to the row's own
-          // controls (the clear button, evidence chip) while an edit is in flight.
-          keyboardShouldPersistTaps="handled"
-        >
-          {/* Optional description (D3) — rendered only when the prop is supplied;
+          <ScrollView
+            ref={setScrollRef}
+            onLayout={(event) => {
+              stick.onLayout(event);
+              scrollInstrumentation?.onLayout?.(event);
+            }}
+            onScroll={(event) => {
+              stick.onScroll(event);
+              scrollInstrumentation?.onScroll?.(event);
+            }}
+            scrollEventThrottle={16}
+            onContentSizeChange={(width, height) => {
+              stick.onContentSizeChange(width, height);
+              scrollInstrumentation?.onContentSizeChange?.(width, height);
+            }}
+            scrollEnabled={!rowDragging}
+            style={styles.scroll}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            // Rename rows commit on blur, and the default ("never") swallows the
+            // first tap to dismiss the keyboard — which blurs the field and
+            // closes the editor. "handled" delivers taps to the row's own
+            // controls (the clear button, evidence chip) while an edit is in flight.
+            keyboardShouldPersistTaps="handled"
+          >
+            {/* Optional description (D3) — rendered only when the prop is supplied;
             no "add a description" affordance when absent. */}
-          {description !== undefined ? (
-            <View style={styles.descriptionBlock}>
+            {description !== undefined ? (
+              <View style={styles.descriptionBlock}>
+                <TextInput
+                  style={styles.descriptionInput}
+                  value={description}
+                  onChangeText={onDescriptionChange}
+                  placeholder={descriptionPlaceholder}
+                  placeholderTextColor={theme.colors.textMuted}
+                  multiline
+                  testID="edit-goal-description-input"
+                  accessibilityLabel={
+                    descriptionPlaceholder ?? descriptionSectionLabel
+                  }
+                />
+              </View>
+            ) : null}
+
+            <RNText style={styles.sectionLabel}>{goalSectionLabel}</RNText>
+            <View style={styles.titleCard}>
               <TextInput
-                style={styles.descriptionInput}
-                value={description}
-                onChangeText={onDescriptionChange}
-                placeholder={descriptionPlaceholder}
-                placeholderTextColor={theme.colors.textMuted}
-                multiline
-                testID="edit-goal-description-input"
-                accessibilityLabel={
-                  descriptionPlaceholder ?? descriptionSectionLabel
-                }
+                style={styles.titleInput}
+                value={goalTitle}
+                onChangeText={onGoalTitleChange}
+                onEndEditing={onGoalTitleEndEditing}
+                // Single-line rename; "done" blurs on submit so the keyboard
+                // never strands the Done button below it (#502).
+                returnKeyType="done"
+                testID="edit-goal-title-input"
+                accessibilityLabel={goalSectionLabel}
+              />
+              <Pencil
+                size={16}
+                weight="bold"
+                color={theme.colors.textSecondary}
               />
             </View>
-          ) : null}
 
-          <RNText style={styles.sectionLabel}>{goalSectionLabel}</RNText>
-          <View style={styles.titleCard}>
-            <TextInput
-              style={styles.titleInput}
-              value={goalTitle}
-              onChangeText={onGoalTitleChange}
-              onEndEditing={onGoalTitleEndEditing}
-              // Single-line rename; "done" blurs on submit so the keyboard
-              // never strands the Done button below it (#502).
-              returnKeyType="done"
-              testID="edit-goal-title-input"
-              accessibilityLabel={goalSectionLabel}
-            />
-            <Pencil
-              size={16}
-              weight="bold"
-              color={theme.colors.textSecondary}
-            />
-          </View>
-
-          {/* Step-row list layer (#489): "Steps" header + count, drag-reorderable
+            {/* Step-row list layer (#489): "Steps" header + count, drag-reorderable
             rows, sub-step blocks, add-step affordance, and the confirm-delete
             modal. It reports evidence-chip taps outward via onEvidenceChipPress;
             the picker sheet itself is owned here (#493/D8). */}
-          <EditGoalStepList
-            steps={steps}
-            onReorderSteps={onReorderSteps}
-            onReorderSubSteps={onReorderSubSteps}
-            onReparentStep={onReparentStep}
-            onAddStep={onAddStep}
-            onStepTitleChange={onStepTitleChange}
-            onEvidenceChipPress={handleEvidenceChipPress}
-            onAddSubStep={onAddSubStep}
-            onSubStepTitleChange={onSubStepTitleChange}
-            onDeleteSubStep={onDeleteSubStep}
-            onDeleteStep={onDeleteStep}
-            dragScrollController={dragScrollController}
-            onDragStateChange={setRowDragging}
-            stepsSectionLabel={stepsSectionLabel}
-            addStepPlaceholder={addStepPlaceholder}
-            stepCountLabel={stepCountLabel}
-            addSubStepLabel={addSubStepLabel}
-            breakIntoSubStepsLabel={breakIntoSubStepsLabel}
-            newSubStepTitle={newSubStepTitle}
-            addStepButtonLabel={addStepButtonLabel}
-            breakIntoSubStepsA11yLabel={breakIntoSubStepsA11yLabel}
-            addSubStepA11yLabel={addSubStepA11yLabel}
-            announceReorder={announceReorder}
-            deleteStepConfirmTitle={deleteStepConfirmTitle}
-            deleteStepConfirmMessage={deleteStepConfirmMessage}
-            deleteSubStepConfirmTitle={deleteSubStepConfirmTitle}
-            deleteSubStepConfirmMessage={deleteSubStepConfirmMessage}
-            nestUnderTriggerA11yLabel={nestUnderTriggerA11yLabel}
-            nestUnderPickerTitle={nestUnderPickerTitle}
-            nestUnderRowLabel={nestUnderRowLabel}
-            nestUnderRowA11yLabel={nestUnderRowA11yLabel}
-            nestUnderCancelLabel={nestUnderCancelLabel}
-            unNestA11yLabel={unNestA11yLabel}
-            announcePromote={announcePromote}
-            announceNestedUnder={announceNestedUnder}
-            onEditTiming={onEditTiming}
-            whenPromptLabel={whenPromptLabel}
-            editTimingUnsetA11yLabel={editTimingUnsetA11yLabel}
-            editTimingSetA11yLabel={editTimingSetA11yLabel}
-            timingHost={timingHost}
-          />
-        </ScrollView>
+            <EditGoalStepList
+              steps={steps}
+              onReorderSteps={onReorderSteps}
+              onReorderSubSteps={onReorderSubSteps}
+              onReparentStep={onReparentStep}
+              onAddStep={onAddStep}
+              onAddStepInputFocus={stick.scrollToEnd}
+              onStepTitleChange={onStepTitleChange}
+              onEvidenceChipPress={handleEvidenceChipPress}
+              onAddSubStep={onAddSubStep}
+              onSubStepTitleChange={onSubStepTitleChange}
+              onDeleteSubStep={onDeleteSubStep}
+              onDeleteStep={onDeleteStep}
+              dragScrollController={dragScrollController}
+              onDragStateChange={setRowDragging}
+              stepsSectionLabel={stepsSectionLabel}
+              addStepPlaceholder={addStepPlaceholder}
+              stepCountLabel={stepCountLabel}
+              addSubStepLabel={addSubStepLabel}
+              breakIntoSubStepsLabel={breakIntoSubStepsLabel}
+              newSubStepTitle={newSubStepTitle}
+              addStepButtonLabel={addStepButtonLabel}
+              breakIntoSubStepsA11yLabel={breakIntoSubStepsA11yLabel}
+              addSubStepA11yLabel={addSubStepA11yLabel}
+              announceReorder={announceReorder}
+              deleteStepConfirmTitle={deleteStepConfirmTitle}
+              deleteStepConfirmMessage={deleteStepConfirmMessage}
+              deleteSubStepConfirmTitle={deleteSubStepConfirmTitle}
+              deleteSubStepConfirmMessage={deleteSubStepConfirmMessage}
+              nestUnderTriggerA11yLabel={nestUnderTriggerA11yLabel}
+              nestUnderPickerTitle={nestUnderPickerTitle}
+              nestUnderRowLabel={nestUnderRowLabel}
+              nestUnderRowA11yLabel={nestUnderRowA11yLabel}
+              nestUnderCancelLabel={nestUnderCancelLabel}
+              unNestA11yLabel={unNestA11yLabel}
+              announcePromote={announcePromote}
+              announceNestedUnder={announceNestedUnder}
+              onEditTiming={onEditTiming}
+              whenPromptLabel={whenPromptLabel}
+              editTimingUnsetA11yLabel={editTimingUnsetA11yLabel}
+              editTimingSetA11yLabel={editTimingSetA11yLabel}
+              timingHost={timingHost}
+            />
+          </ScrollView>
 
-        <View style={styles.footer}>
-          <Button
-            label={doneLabel}
-            variant="secondary"
-            onPress={onDone}
-            testID="edit-goal-done-button"
-          />
-        </View>
+          <Animated.View style={[styles.footer, footerPadding]}>
+            <Button
+              label={doneLabel}
+              variant="secondary"
+              onPress={onDone}
+              testID="edit-goal-done-button"
+            />
+          </Animated.View>
+        </KeyboardAvoidingFrame>
       </View>
 
       {/* Evidence-type picker (D8/D12): the reused multi-select authoring grid

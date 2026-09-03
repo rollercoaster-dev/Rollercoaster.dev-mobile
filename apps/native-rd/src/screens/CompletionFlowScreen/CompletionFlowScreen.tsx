@@ -31,6 +31,7 @@ import {
   badgeByGoalQuery,
   createEvidence,
   EvidenceType,
+  GoalStatus,
   TEXT_EVIDENCE_PREFIX,
 } from "../../db";
 import type { GoalId } from "../../db";
@@ -98,7 +99,21 @@ function FinishFlowContent({ goalId }: { goalId: string }) {
   const badgeRows = useQuery(badgeByGoalQuery(goalId as GoalId));
   const badgeRow = badgeRows[0] ?? null;
 
-  const [stage, setStage] = useState<FinishStage>("celebrate");
+  // A goal that is already completed and already has a badge is sealed (#563):
+  // its credential was minted, and useCreateBadge's idempotent guard will never
+  // write again. Walking celebrate → design → Bake from here used to render the
+  // user's edits on the reveal and then drop them — nothing persisted, and
+  // BadgeDetail showed the old design. So a sealed goal opens on the reveal,
+  // which is read-only and offers View badge / Back to goals. Latched once on
+  // entry (useQuery suspends, so the rows are loaded on first render) so the
+  // normal path's own completion — goal flips, badge row lands — still goes
+  // through the baking success hold instead of jumping straight to reveal.
+  const [sealedOnEntry] = useState(
+    () => goal?.status === GoalStatus.completed && badgeRow !== null,
+  );
+  const [stage, setStage] = useState<FinishStage>(
+    sealedOnEntry ? "reveal" : "celebrate",
+  );
   const [closingNote, setClosingNote] = useState("");
   const [design, setDesign] = useState<BadgeDesign | null>(null);
   const [capturedPng, setCapturedPng] = useState<Buffer | undefined>(undefined);
@@ -110,11 +125,16 @@ function FinishFlowContent({ goalId }: { goalId: string }) {
   const goalTitle = (goal?.title as string | null) ?? "";
   const goalColor = (goal?.color as string | null) ?? null;
   const goalDesignJson = (goal?.design as string | null) ?? null;
+  const badgeDesignJson =
+    (badgeRow?.design as string | null | undefined) ?? null;
 
-  // Same precedence BadgeDesignerScreen's new-goal path uses: the persisted
-  // goal design wins, a synthesized default is the fallback. `design` state
-  // holds the user's in-flow edits and overrides both once they touch a control.
+  // The bake writes the design to badge.design (createBadge), and that is the
+  // column BadgeDetail renders — so it wins (#563). goal.design is the
+  // designer's pre-bake draft (BadgeDesignerScreen's new-goal path) and the
+  // synthesized default is the last resort. `design` state holds the user's
+  // in-flow edits and overrides all three once they touch a control.
   const seededDesign: BadgeDesign =
+    parseBadgeDesign(badgeDesignJson) ??
     parseBadgeDesign(goalDesignJson) ??
     createDefaultBadgeDesign(goalTitle, goalColor);
   const currentDesign = design ?? seededDesign;

@@ -46,6 +46,18 @@ const named = {
     return animation;
   },
   runOnJS: (fn: (...args: unknown[]) => unknown) => fn,
+  // Piecewise-linear, clamped to the output range — enough for the footer
+  // padding interpolation (useKeyboardFooterPadding) to evaluate at rest.
+  interpolate: (value: number, input: number[], output: number[]) => {
+    if (value <= input[0]) return output[0];
+    const last = input.length - 1;
+    if (value >= input[last]) return output[last];
+    let i = 0;
+    while (value > input[i + 1]) i += 1;
+    const t = (value - input[i]) / (input[i + 1] - input[i]);
+    return output[i] + t * (output[i + 1] - output[i]);
+  },
+  Extrapolation: { CLAMP: "clamp", EXTEND: "extend", IDENTITY: "identity" },
 };
 
 // default import (import Animated from ...) needs View at top level

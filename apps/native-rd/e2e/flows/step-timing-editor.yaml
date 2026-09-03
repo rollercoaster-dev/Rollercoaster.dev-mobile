@@ -72,10 +72,11 @@ env:
     id: "new-goal-next-button"
 
 # 3. Two more steps, both on the default [text] plan. Enter, not the + button:
-#    the add row sits under the keyboard and its input is blurOnSubmit={false}
-#    for rapid multi-add, so the keyboard never lifts off +. The steps header is
-#    inert and lives inside a keyboardShouldPersistTaps="handled" ScrollView, so
-#    tapping it dismisses.
+#    the input is blurOnSubmit={false} for rapid multi-add, so the keyboard
+#    stays up between adds. The steps header is inert and lives inside a
+#    keyboardShouldPersistTaps="handled" ScrollView, so tapping it dismisses.
+#    (The footer is keyboard-avoiding now — keyboard-cta-reachable.yaml pins
+#    that — so this dismissal is tidiness, not a requirement.)
 - tapOn:
     id: "edit-goal-add-step-input"
 - inputText: "Bravo step"

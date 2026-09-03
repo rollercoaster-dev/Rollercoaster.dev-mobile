@@ -1,5 +1,10 @@
 import React from "react";
-import { AccessibilityInfo, BackHandler } from "react-native";
+import {
+  AccessibilityInfo,
+  BackHandler,
+  Keyboard,
+  type ScrollView,
+} from "react-native";
 import {
   renderWithProviders,
   screen,
@@ -224,6 +229,37 @@ describe("EditGoalView", () => {
       renderWithProviders(<EditGoalView {...makeProps()} />);
       expect(screen.queryByText("Alex")).toBeNull();
       expect(screen.queryByText(/^after /)).toBeNull();
+    });
+
+    it("scrolls the list to its end when the add-step input gains focus", () => {
+      let scroll: ScrollView | null = null;
+      renderWithProviders(
+        <EditGoalView
+          {...makeProps({
+            scrollInstrumentation: {
+              ref: (node) => {
+                scroll = node;
+              },
+            },
+          })}
+        />,
+      );
+      expect(scroll).not.toBeNull();
+      const scrollToEnd = jest.spyOn(scroll!, "scrollToEnd");
+      fireEvent(screen.getByTestId("edit-goal-add-step-input"), "focus");
+      expect(scrollToEnd).toHaveBeenCalledWith({ animated: true });
+    });
+
+    it("dismisses the keyboard on an empty add-step submit", () => {
+      const dismiss = jest.spyOn(Keyboard, "dismiss");
+      const onAddStep = jest.fn();
+      renderWithProviders(<EditGoalView {...makeProps({ onAddStep })} />);
+      const input = screen.getByTestId("edit-goal-add-step-input");
+      fireEvent.changeText(input, "   ");
+      fireEvent(input, "submitEditing");
+      expect(onAddStep).not.toHaveBeenCalled();
+      expect(dismiss).toHaveBeenCalledTimes(1);
+      dismiss.mockRestore();
     });
 
     it("renders each date/dependency chip when present", () => {

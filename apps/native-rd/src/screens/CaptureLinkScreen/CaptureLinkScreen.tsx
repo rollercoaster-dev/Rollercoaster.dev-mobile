@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { View, Alert } from "react-native";
+import { KeyboardAvoidingFrame } from "../../components/KeyboardAvoidingFrame";
 import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { Text } from "../../components/Text";
@@ -85,73 +86,77 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
         onBack={() => navigation.goBack()}
       />
 
-      <View style={styles.content}>
-        <View style={styles.inputSection}>
-          <Input
-            label={t("captureLink:urlInput.label")}
-            placeholder={t("captureLink:urlInput.placeholder")}
-            value={url}
-            onChangeText={handleUrlChange}
-            error={urlError}
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="url"
-            returnKeyType="next"
-            textContentType="URL"
-            testID="capture-link-url"
-          />
+      {/* Keeps the Save/Cancel row above the keyboard while the URL or caption
+          has focus; header stays outside so no vertical offset is needed. */}
+      <KeyboardAvoidingFrame style={styles.keyboardFrame}>
+        <View style={styles.content}>
+          <View style={styles.inputSection}>
+            <Input
+              label={t("captureLink:urlInput.label")}
+              placeholder={t("captureLink:urlInput.placeholder")}
+              value={url}
+              onChangeText={handleUrlChange}
+              error={urlError}
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="url"
+              returnKeyType="next"
+              textContentType="URL"
+              testID="capture-link-url"
+            />
 
-          <Input
-            label={t("captureLink:captionInput.label")}
-            placeholder={t("captureLink:captionInput.placeholder")}
-            value={caption}
-            onChangeText={setCaption}
-            maxLength={1000}
-            returnKeyType="done"
-            testID="capture-link-caption"
-          />
+            <Input
+              label={t("captureLink:captionInput.label")}
+              placeholder={t("captureLink:captionInput.placeholder")}
+              value={caption}
+              onChangeText={setCaption}
+              maxLength={1000}
+              returnKeyType="done"
+              testID="capture-link-caption"
+            />
+          </View>
+
+          {hasValidUrl && (
+            <Card>
+              <View style={styles.previewCard}>
+                <Text style={styles.previewIcon} accessibilityElementsHidden>
+                  {"\u{1F517}"}
+                </Text>
+                <Text
+                  variant="body"
+                  style={styles.previewUrl}
+                  numberOfLines={2}
+                  accessibilityLabel={t("captureLink:preview.a11y", {
+                    url: trimmedUrl,
+                  })}
+                >
+                  {trimmedUrl}
+                </Text>
+                {caption.trim() ? (
+                  <Text variant="caption">{caption.trim()}</Text>
+                ) : null}
+              </View>
+            </Card>
+          )}
+
+          <View style={styles.actions}>
+            <Button
+              label={t("captureLink:actions.save")}
+              variant="primary"
+              onPress={handleSave}
+              disabled={saving}
+              loading={saving}
+              testID="capture-link-save"
+            />
+            <Button
+              label={t("common:actions.cancel")}
+              variant="secondary"
+              onPress={() => navigation.goBack()}
+              disabled={saving}
+            />
+          </View>
         </View>
-
-        {hasValidUrl && (
-          <Card>
-            <View style={styles.previewCard}>
-              <Text style={styles.previewIcon} accessibilityElementsHidden>
-                {"\u{1F517}"}
-              </Text>
-              <Text
-                variant="body"
-                style={styles.previewUrl}
-                numberOfLines={2}
-                accessibilityLabel={t("captureLink:preview.a11y", {
-                  url: trimmedUrl,
-                })}
-              >
-                {trimmedUrl}
-              </Text>
-              {caption.trim() ? (
-                <Text variant="caption">{caption.trim()}</Text>
-              ) : null}
-            </View>
-          </Card>
-        )}
-
-        <View style={styles.actions}>
-          <Button
-            label={t("captureLink:actions.save")}
-            variant="primary"
-            onPress={handleSave}
-            disabled={saving}
-            loading={saving}
-            testID="capture-link-save"
-          />
-          <Button
-            label={t("common:actions.cancel")}
-            variant="secondary"
-            onPress={() => navigation.goBack()}
-            disabled={saving}
-          />
-        </View>
-      </View>
+      </KeyboardAvoidingFrame>
     </View>
   );
 }

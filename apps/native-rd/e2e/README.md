@@ -107,7 +107,9 @@ This is verifiable, and should be verified, with `maestro hierarchy` — VoiceOv
 
 ### Soft keyboard occlusion
 
-`CaptureTextNote` lifts its footer above the keyboard (`useReanimatedKeyboardAnimation`). **`CaptureLinkScreen` does not** — no `KeyboardAvoidingView`, no keyboard-controller — so its Save button sits under the keyboard and the tap lands on the keyboard instead. Every link capture must dismiss first by tapping `capture-link-caption` (`returnKeyType="done"`) then `pressKey: Enter`. Don't dismiss from the URL field instead: it is labelled `returnKeyType="next"`, but nothing wires `onSubmitEditing` or a ref to the caption input, so the label is cosmetic — the key advances no focus and leaves the caption field unvisited. The production fix is filed separately.
+Every screen with a text input above a pinned footer CTA now lifts that footer above the keyboard: `CaptureTextNote` via `useReanimatedKeyboardAnimation`, and `NewGoalWizard`, `EditGoalView`, `CaptureLinkScreen`, `VoiceMemoScreen`, `FinishCelebrateStage` and `FinishDesignStage` via the shared `KeyboardAvoidingFrame` (keyboard-controller's view plus a self-measured window offset). `keyboard-cta-reachable.yaml` pins this for the two screens whose add-step input keeps the keyboard up between adds (`blurOnSubmit={false}`): it taps the footer CTA with the keyboard still showing and asserts arrival. Do not add a dismissal step before those taps.
+
+Older flows still dismiss before tapping `capture-link-save` (tap `capture-link-caption`, `pressKey: Enter`). That is now belt and braces, not load-bearing. If you do dismiss from Capture Link, do it from the caption: the URL input is labelled `returnKeyType="next"` but wires no `onSubmitEditing`/ref, so that key advances no focus.
 
 ### Flow structure
 
@@ -153,6 +155,7 @@ A flow is `optional` when it covers aspirational or partially-implemented featur
 | `settings-theme-switch.yaml`           | `required` | Settings → Night Ride, immediate selection                                                                                                                                                                                                                                                                               |
 | `settings-theme-persists-restart.yaml` | `required` | Night Ride survives a full app restart (Evolu-backed persistence)                                                                                                                                                                                                                                                        |
 | `step-timing-editor.yaml`              | `required` | In-row B/C authoring (#570): open StepTimingEditor on an Edit Goal row, name a `depends on`, read the chip back on the collapsed line and the same sentence on the Timeline. `depends on` only — no due-date tap (see below)                                                                                             |
+| `keyboard-cta-reachable.yaml`          | `required` | Footer CTAs stay reachable with the soft keyboard up: four wizard steps added via Enter, then "I'm ready" tapped without dismissing; a fifth step in Edit Goal, then Done tapped the same way. Pins the `KeyboardAvoidingFrame` wrap on both screens                                                                     |
 | `evidence-viewer.yaml`                 | `optional` | Mixed-type evidence (link + text) → Timeline card → EvidenceViewerScreen → thumbnail strip. **The only flow requiring `EXPO_PUBLIC_E2E_MODE=true`**                                                                                                                                                                      |
 
 Plus `subflows/launch-and-onboard.yaml`, which is not a flow.
@@ -174,7 +177,7 @@ Compensating coverage, all pure-Jest plus Storybook stories:
 
 **The bake-failure error alert and its retry.** `finish-baking-error-alert` / `finish-baking-retry-button` have no E2E coverage since #635. The only UI-reachable deterministic bake failure was the no-evidence gate, and that is now blocked upstream at the Bake CTA (`evidence-gate.yaml` asserts the block instead) — every remaining failure mode (`bakePNG` corruption, `saveBadgePNG`/`readBadgePNG` FS errors, `keyProvider.sign`) needs code-level fault injection Maestro cannot do. Covered at component level in `FinishBakingStage.test.tsx` and `CompletionFlowScreen.test.tsx`.
 
-**The `no-key` bake branch.** Logically unreachable: the hook sets it only when `isReady && !keyId`, but `isReady` already implies a `keyId`. The real no-key failure mode is an unbounded spinner with no alert, retry or exit — filed as a bug rather than asserted.
+**The `no-key` bake branch.** Reachable since #566 — the hook lands on it whenever `useUserKey` reports an error (SecureStore unavailable, keypair generation threw, verification failed). No E2E coverage because every trigger is a native-keystore fault Maestro cannot inject; covered in `useCreateBadge.test.ts`, `FinishBakingStage.test.tsx` and `CompletionFlowScreen.test.tsx`.
 
 ## The pre-merge gate
 

@@ -68,11 +68,11 @@
     "typescript": "^6.0.3",
     "eslint": "^9.39.5",
     "@eslint/js": "^10.0.1",
-    "typescript-eslint": "^8.65.0"
+    "typescript-eslint": "^8.68.0"
   },
   "dependencies": {
     "@rollercoaster-dev/rd-logger": "^0.4.0",
-    "jose": "6.2.3",
+    "jose": "6.2.10",
     "openbadges-types": "^4.0.0",
     "png-chunks-encode": "^1.0.0",
     "png-chunks-extract": "^1.0.0"

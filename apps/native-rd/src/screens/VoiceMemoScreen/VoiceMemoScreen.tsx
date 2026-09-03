@@ -6,6 +6,7 @@
  */
 import React, { useState } from "react";
 import { View, TextInput, Alert, Pressable, Linking } from "react-native";
+import { KeyboardAvoidingFrame } from "../../components/KeyboardAvoidingFrame";
 import { useUnistyles } from "react-native-unistyles";
 import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
@@ -156,206 +157,210 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
     <View style={styles.container}>
       <ScreenSubHeader label={t("captureVoice:title")} onBack={handleGoBack} />
 
-      <View style={styles.content}>
-        {/* Timer display */}
-        <Text
-          style={styles.timerText}
-          testID="voice-timer"
-          accessibilityLabel={t("captureVoice:a11y.timerLabel", {
-            time: formatDuration(
+      {/* Keeps the Save/Discard row above the keyboard while the caption has
+          focus; header stays outside so no vertical offset is needed. */}
+      <KeyboardAvoidingFrame style={styles.keyboardFrame}>
+        <View style={styles.content}>
+          {/* Timer display */}
+          <Text
+            style={styles.timerText}
+            testID="voice-timer"
+            accessibilityLabel={t("captureVoice:a11y.timerLabel", {
+              time: formatDuration(
+                status === "playing" ? playbackPositionMs : durationMs,
+              ),
+            })}
+            accessibilityLiveRegion="polite"
+          >
+            {formatDuration(
               status === "playing" ? playbackPositionMs : durationMs,
-            ),
-          })}
-          accessibilityLiveRegion="polite"
-        >
-          {formatDuration(
-            status === "playing" ? playbackPositionMs : durationMs,
-          )}
-        </Text>
-
-        {/* Status indicator */}
-        <View style={styles.statusRow}>
-          {status === "recording" && (
-            <View
-              style={styles.recordingIndicator}
-              accessibilityElementsHidden
-            />
-          )}
-          <Text variant="caption" style={styles.statusText}>
-            {status === "idle" && t("captureVoice:status.idle")}
-            {status === "requesting-permission" &&
-              t("captureVoice:status.requestingPermission")}
-            {status === "recording" && t("captureVoice:status.recording")}
-            {status === "paused" && t("captureVoice:status.paused")}
-            {status === "recorded" && t("captureVoice:status.recorded")}
-            {status === "playing" && t("captureVoice:status.playing")}
+            )}
           </Text>
-        </View>
 
-        {/* Error display */}
-        {error && (
-          <Card>
-            <Text variant="body" style={styles.errorText}>
-              {error}
-            </Text>
-            <Button
-              label={t("common:actions.dismiss")}
-              variant="ghost"
-              onPress={() => reset()}
-            />
-          </Card>
-        )}
-
-        {/* Recording controls */}
-        {(status === "idle" ||
-          status === "recording" ||
-          status === "paused") && (
-          <View style={styles.controls}>
+          {/* Status indicator */}
+          <View style={styles.statusRow}>
             {status === "recording" && (
-              <IconButton
-                icon={
-                  <View style={styles.pauseIcon}>
-                    <View style={styles.pauseIconBar} />
-                    <View style={styles.pauseIconBar} />
-                  </View>
-                }
-                onPress={pauseRecording}
-                tone="surface"
-                accessibilityLabel={t("captureVoice:a11y.pauseRecording")}
-                size="md"
-              />
-            )}
-            {status === "paused" && (
-              <IconButton
-                icon={<View style={styles.playIcon} />}
-                onPress={resumeRecording}
-                tone="surface"
-                accessibilityLabel={t("captureVoice:a11y.resumeRecording")}
-                size="md"
-              />
-            )}
-
-            <Pressable
-              onPress={status === "idle" ? startRecording : stopRecording}
-              accessible
-              accessibilityRole="button"
-              accessibilityLabel={
-                status === "idle"
-                  ? t("captureVoice:a11y.startRecording")
-                  : t("captureVoice:a11y.stopRecording")
-              }
-              style={({ pressed }) => [
-                styles.recordButton,
-                pressed && styles.recordButtonPressed,
-              ]}
-            >
-              {status === "idle" ? (
-                <View style={styles.recordButtonIdle} />
-              ) : (
-                <View style={styles.recordButtonInner} />
-              )}
-            </Pressable>
-          </View>
-        )}
-
-        {/* Playback controls (after recording) */}
-        {(status === "recorded" || status === "playing") && (
-          <>
-            <View style={styles.playbackControls}>
-              {status === "playing" ? (
-                <Button
-                  label={t("captureVoice:actions.stop")}
-                  variant="secondary"
-                  onPress={stopPlayback}
-                />
-              ) : (
-                <Button
-                  label={t("captureVoice:actions.play")}
-                  variant="secondary"
-                  onPress={startPlayback}
-                />
-              )}
-              <Button
-                label={t("captureVoice:actions.reRecord")}
-                variant="ghost"
-                onPress={reset}
-              />
-            </View>
-
-            {/* Playback progress bar */}
-            {status === "playing" && durationMs > 0 && (
               <View
-                style={styles.playbackProgress}
+                style={styles.recordingIndicator}
+                accessibilityElementsHidden
+              />
+            )}
+            <Text variant="caption" style={styles.statusText}>
+              {status === "idle" && t("captureVoice:status.idle")}
+              {status === "requesting-permission" &&
+                t("captureVoice:status.requestingPermission")}
+              {status === "recording" && t("captureVoice:status.recording")}
+              {status === "paused" && t("captureVoice:status.paused")}
+              {status === "recorded" && t("captureVoice:status.recorded")}
+              {status === "playing" && t("captureVoice:status.playing")}
+            </Text>
+          </View>
+
+          {/* Error display */}
+          {error && (
+            <Card>
+              <Text variant="body" style={styles.errorText}>
+                {error}
+              </Text>
+              <Button
+                label={t("common:actions.dismiss")}
+                variant="ghost"
+                onPress={() => reset()}
+              />
+            </Card>
+          )}
+
+          {/* Recording controls */}
+          {(status === "idle" ||
+            status === "recording" ||
+            status === "paused") && (
+            <View style={styles.controls}>
+              {status === "recording" && (
+                <IconButton
+                  icon={
+                    <View style={styles.pauseIcon}>
+                      <View style={styles.pauseIconBar} />
+                      <View style={styles.pauseIconBar} />
+                    </View>
+                  }
+                  onPress={pauseRecording}
+                  tone="surface"
+                  accessibilityLabel={t("captureVoice:a11y.pauseRecording")}
+                  size="md"
+                />
+              )}
+              {status === "paused" && (
+                <IconButton
+                  icon={<View style={styles.playIcon} />}
+                  onPress={resumeRecording}
+                  tone="surface"
+                  accessibilityLabel={t("captureVoice:a11y.resumeRecording")}
+                  size="md"
+                />
+              )}
+
+              <Pressable
+                onPress={status === "idle" ? startRecording : stopRecording}
                 accessible
-                accessibilityRole="progressbar"
-                accessibilityValue={{
-                  min: 0,
-                  max: 100,
-                  now: Math.round((playbackPositionMs / durationMs) * 100),
-                }}
+                accessibilityRole="button"
+                accessibilityLabel={
+                  status === "idle"
+                    ? t("captureVoice:a11y.startRecording")
+                    : t("captureVoice:a11y.stopRecording")
+                }
+                style={({ pressed }) => [
+                  styles.recordButton,
+                  pressed && styles.recordButtonPressed,
+                ]}
               >
-                <View
-                  style={[
-                    styles.playbackProgressFill,
-                    {
-                      width: `${Math.round((playbackPositionMs / durationMs) * 100)}%`,
-                    },
-                  ]}
+                {status === "idle" ? (
+                  <View style={styles.recordButtonIdle} />
+                ) : (
+                  <View style={styles.recordButtonInner} />
+                )}
+              </Pressable>
+            </View>
+          )}
+
+          {/* Playback controls (after recording) */}
+          {(status === "recorded" || status === "playing") && (
+            <>
+              <View style={styles.playbackControls}>
+                {status === "playing" ? (
+                  <Button
+                    label={t("captureVoice:actions.stop")}
+                    variant="secondary"
+                    onPress={stopPlayback}
+                  />
+                ) : (
+                  <Button
+                    label={t("captureVoice:actions.play")}
+                    variant="secondary"
+                    onPress={startPlayback}
+                  />
+                )}
+                <Button
+                  label={t("captureVoice:actions.reRecord")}
+                  variant="ghost"
+                  onPress={reset}
                 />
               </View>
-            )}
 
-            {/* Save section */}
-            <View style={styles.saveSection}>
-              <TextInput
-                style={styles.captionInput}
-                placeholder={t("captureVoice:caption.placeholder")}
-                placeholderTextColor={theme.colors.textMuted}
-                value={caption}
-                onChangeText={setCaption}
-                maxLength={200}
-                returnKeyType="done"
-                accessible
-                accessibilityLabel={t("captureVoice:caption.a11yLabel")}
-              />
-              <View style={styles.buttonRow}>
-                <View style={styles.buttonFlex}>
-                  <Button
-                    label={t("captureVoice:actions.attach")}
-                    variant="primary"
-                    onPress={handleSave}
+              {/* Playback progress bar */}
+              {status === "playing" && durationMs > 0 && (
+                <View
+                  style={styles.playbackProgress}
+                  accessible
+                  accessibilityRole="progressbar"
+                  accessibilityValue={{
+                    min: 0,
+                    max: 100,
+                    now: Math.round((playbackPositionMs / durationMs) * 100),
+                  }}
+                >
+                  <View
+                    style={[
+                      styles.playbackProgressFill,
+                      {
+                        width: `${Math.round((playbackPositionMs / durationMs) * 100)}%`,
+                      },
+                    ]}
                   />
                 </View>
-                <View style={styles.buttonFlex}>
-                  <Button
-                    label={t("captureVoice:actions.discard")}
-                    variant="destructive"
-                    onPress={() => {
-                      Alert.alert(
-                        t("captureVoice:discardConfirm.title"),
-                        t("captureVoice:discardConfirm.message"),
-                        [
-                          {
-                            text: t("captureVoice:discardConfirm.keep"),
-                            style: "cancel",
-                          },
-                          {
-                            text: t("captureVoice:discardConfirm.discard"),
-                            style: "destructive",
-                            onPress: () => {
-                              reset();
+              )}
+
+              {/* Save section */}
+              <View style={styles.saveSection}>
+                <TextInput
+                  style={styles.captionInput}
+                  placeholder={t("captureVoice:caption.placeholder")}
+                  placeholderTextColor={theme.colors.textMuted}
+                  value={caption}
+                  onChangeText={setCaption}
+                  maxLength={200}
+                  returnKeyType="done"
+                  accessible
+                  accessibilityLabel={t("captureVoice:caption.a11yLabel")}
+                />
+                <View style={styles.buttonRow}>
+                  <View style={styles.buttonFlex}>
+                    <Button
+                      label={t("captureVoice:actions.attach")}
+                      variant="primary"
+                      onPress={handleSave}
+                    />
+                  </View>
+                  <View style={styles.buttonFlex}>
+                    <Button
+                      label={t("captureVoice:actions.discard")}
+                      variant="destructive"
+                      onPress={() => {
+                        Alert.alert(
+                          t("captureVoice:discardConfirm.title"),
+                          t("captureVoice:discardConfirm.message"),
+                          [
+                            {
+                              text: t("captureVoice:discardConfirm.keep"),
+                              style: "cancel",
                             },
-                          },
-                        ],
-                      );
-                    }}
-                  />
+                            {
+                              text: t("captureVoice:discardConfirm.discard"),
+                              style: "destructive",
+                              onPress: () => {
+                                reset();
+                              },
+                            },
+                          ],
+                        );
+                      }}
+                    />
+                  </View>
                 </View>
               </View>
-            </View>
-          </>
-        )}
-      </View>
+            </>
+          )}
+        </View>
+      </KeyboardAvoidingFrame>
     </View>
   );
 }

@@ -256,6 +256,30 @@ describe("useCreateBadge", () => {
       expect(updatedCredentialArg()).toBe(bakedCredentialArg());
     });
 
+    it("passes the design through updateBadge on re-bake so badge.design tracks the new image (#563)", async () => {
+      mockUseQuery.mockImplementation((query: string) => {
+        if (query === "mock-goals-query") return [MOCK_GOAL]; // active
+        if (query === "mock-evidence-query")
+          return [{ id: "ev-1", type: "photo", goalId: GOAL_ID }];
+        if (query === "mock-badge-query")
+          return [
+            { id: "badge-01", goalId: GOAL_ID, imageUri: EXISTING_IMAGE_URI },
+          ];
+        return [];
+      });
+
+      const { result } = renderHook(() =>
+        useCreateBadge(GOAL_ID, { ...WITH_PNG, design: '{"shape":"star"}' }),
+      );
+      await act(async () => {});
+
+      expect(result.current.status).toBe("done");
+      expect(mockUpdateBadge).toHaveBeenCalledWith(
+        "badge-01",
+        expect.objectContaining({ design: '{"shape":"star"}' }),
+      );
+    });
+
     it("re-bakes using readBadgePNG of the existing imageUri when no freshCapturedPng is provided", async () => {
       mockUseQuery.mockImplementation((query: string) => {
         if (query === "mock-goals-query") return [MOCK_GOAL]; // active
@@ -507,12 +531,15 @@ describe("useCreateBadge", () => {
     });
   });
 
-  describe("when key is ready but keyId is null", () => {
-    it("returns status: no-key", () => {
+  describe("when useUserKey reports an error (#566)", () => {
+    // `isReady` implies a non-null keyId, so `{ keyId: null, isReady: true }`
+    // is a state useUserKey cannot produce. The real permanent-failure shape
+    // is `error` set with `isReady: false` — which must NOT read as "loading".
+    it("returns status: no-key and surfaces the key error, not an unbounded loading", () => {
       mockUseUserKey.mockReturnValue({
         keyId: null,
-        isReady: true,
-        error: null,
+        isReady: false,
+        error: "Secure storage is unavailable on this device",
       });
       mockUseQuery.mockImplementation((query: string) => {
         if (query === "mock-badge-query") return [];
@@ -521,6 +548,29 @@ describe("useCreateBadge", () => {
 
       const { result } = renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
       expect(result.current.status).toBe("no-key");
+      expect(result.current.error).toBe(
+        "Secure storage is unavailable on this device",
+      );
+    });
+
+    it("idempotent done still wins over no-key when a badge already exists", () => {
+      mockUseUserKey.mockReturnValue({
+        keyId: "key-001",
+        isReady: false,
+        error: "Key verification failed: boom",
+      });
+      mockUseQuery.mockImplementation((query: string) => {
+        if (query === "mock-goals-query")
+          return [{ ...MOCK_GOAL, status: GoalStatus.completed }];
+        if (query === "mock-badge-query")
+          return [
+            { id: "badge-01", goalId: GOAL_ID, imageUri: "file:///old.png" },
+          ];
+        return [];
+      });
+
+      const { result } = renderHook(() => useCreateBadge(GOAL_ID, WITH_PNG));
+      expect(result.current.status).toBe("done");
     });
   });
 
