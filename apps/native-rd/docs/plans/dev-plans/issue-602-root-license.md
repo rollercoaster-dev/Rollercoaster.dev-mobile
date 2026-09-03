@@ -53,7 +53,7 @@ Add a root `/LICENSE` file (AGPL-3.0-only text, matching `apps/native-rd/LICENSE
 **Changes**:
 
 - [x] Create `/LICENSE` at repo root
-- [x] First line: `This repository is multi-licensed; see LICENSING.md for the per-package map.` followed by a blank line
+- [x] Pointer line `This repository is multi-licensed; see LICENSING.md for the per-package map.` — appended after the license text (moved from the top; see Discovery Log)
 - [x] Below that, the full, unmodified AGPL-3.0-only text from `apps/native-rd/LICENSE` (661 lines) — copy verbatim, do not touch copyright/FSF boilerplate
 - [x] Do not remove or alter `apps/native-rd/LICENSE`, `packages/openbadges-core/LICENSE`, or `packages/design-tokens/LICENSE` — all three per-package files stay as-is
 
@@ -71,7 +71,7 @@ Add a root `/LICENSE` file (AGPL-3.0-only text, matching `apps/native-rd/LICENSE
 **Commit**: `fix: drop leading ./ from root package.json license field`
 **Changes**:
 
-- [x] Line 7: `"license": "SEE LICENSE IN ./LICENSING.md"` → `"license": "SEE LICENSE IN LICENSING.md"`
+- [x] Line 7: `"license": "SEE LICENSE IN ./LICENSING.md"` → `"license": "AGPL-3.0-only"` (revised from the bare `SEE LICENSE IN` form; see Discovery Log)
 
 ### Step 4: Reword LICENSING.md stale/aspirational claims
 
@@ -97,6 +97,7 @@ Add a root `/LICENSE` file (AGPL-3.0-only text, matching `apps/native-rd/LICENSE
 - [ ] Manual verification: `cat LICENSE` shows preamble + full AGPL-3.0-only text; `git diff` for each commit touches only the file(s) named in that step
 - [ ] Manual verification: `node -e "console.log(require('./package.json').license)"` prints `SEE LICENSE IN LICENSING.md`
 - [ ] Manual verification: `grep -A2 '## License' packages/openbadges-core/README.md` shows `Apache-2.0`
+- [x] Pre-merge verification: `licensee detect .` (licensee 10.1.0 via Homebrew Ruby 4.0.6, gem installed to scratchpad) reports `License: AGPL-3.0`, LICENSE matcher Exact 100%, package.json matcher NpmBower AGPL-3.0.
 - [ ] Post-merge verification: `gh repo view --json licenseInfo` on `main` returns AGPL-3.0 (GitHub's licensee scan runs server-side after the LICENSE file lands on the default branch; there is no local licensee gem in this repo/CI to run it pre-merge — note as a known gap, not a blocker)
 
 ## Not in Scope
@@ -110,6 +111,8 @@ Add a root `/LICENSE` file (AGPL-3.0-only text, matching `apps/native-rd/LICENSE
 _All other items: no items deferred beyond the above._
 
 ## Discovery Log
+
+- [2026-09-03 review] Empirical `licensee detect` (v10.1.0) contradicted the research estimate: a one-line preamble above the AGPL text gives 96.71% similarity, below licensee's 98% threshold, so the repo reports NOASSERTION. Appending the same line after the text keeps an Exact 100% match. Separately, a root `package.json` value of `SEE LICENSE IN LICENSING.md` resolves to NOASSERTION in licensee's npm matcher and vetoes the repo-level verdict even when LICENSE matches; `AGPL-3.0-only` (the issue's alternative) makes both matchers agree. Both changes applied in follow-up commits; LICENSING.md and ADR-0005 wording updated to match.
 
 - [2026-09-03 impl] Sweep at implementation time found one extra stale claim beyond the plan: `apps/native-rd/docs/decisions/ADR-0005-licensing-and-trademark.md:119` still listed the `./`-prefixed license field and predated the root LICENSE. Fixed in a fifth commit. The `license: MIT` hits in `apps/native-rd/.agents/skills/vercel-*/SKILL.md` and the relay mention in `docs/architecture/local-first-sync.md` describe third-party software, not this repo's packages — left alone.
 
