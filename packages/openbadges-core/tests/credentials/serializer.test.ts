@@ -179,14 +179,16 @@ describe("OpenBadges3Serializer", () => {
       expect(result["name"]).toBe(mockBadgeClass.name);
     });
 
-    it("should include issuanceDate alongside validFrom", () => {
+    it("carries the issuance instant as VC 2.0 validFrom, never VC 1.1 issuanceDate", () => {
       const result = serializer.serializeAssertion(
         mockAssertion,
         mockBadgeClass,
         mockIssuer,
       );
-      expect(result["issuanceDate"]).toBe(mockAssertion.issuedOn);
       expect(result["validFrom"]).toBe(mockAssertion.issuedOn);
+      // `issuanceDate` is undefined in the VC 2.0 + OB 3.0.3 contexts and the
+      // 1EdTech validator's JSON-LD probe rejects a credential carrying it (#625).
+      expect(result).not.toHaveProperty("issuanceDate");
     });
 
     it("should include credentialSubject with AchievementSubject", () => {

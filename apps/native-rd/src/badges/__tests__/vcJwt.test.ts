@@ -29,7 +29,7 @@ const UNSIGNED_CREDENTIAL: Record<string, unknown> = {
   type: ["VerifiableCredential", "OpenBadgeCredential"],
   name: "Learn React Native",
   issuer: { id: ISSUER_DID },
-  issuanceDate: ISSUED_ON,
+  validFrom: ISSUED_ON,
   credentialSubject: {
     id: ISSUER_DID,
     achievement: { id: "urn:ulid:goal-01" },

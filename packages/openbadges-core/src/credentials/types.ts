@@ -95,7 +95,6 @@ export interface VerifiableCredentialData {
   name?: string | Shared.MultiLanguageString;
   issuer: Shared.IRI | Partial<IssuerData>;
   validFrom: string;
-  issuanceDate?: string;
   validUntil?: string;
   credentialSubject: {
     id: Shared.IRI;

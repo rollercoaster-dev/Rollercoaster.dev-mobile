@@ -255,12 +255,12 @@ export class OpenBadges3Serializer implements BadgeSerializer {
       type: ["VerifiableCredential", "OpenBadgeCredential"],
       name: badgeClass.name,
       issuer: issuerObj,
+      // `validFrom` only — never `issuanceDate`. VC 1.1's `issuanceDate` is not a
+      // term in either @context above, and the 1EdTech OB30Inspector's JSON-LD
+      // probe rejects the credential outright on an undefined term (#625). The
+      // OB 3.0 schema the validator applies to a VC 2.0 credential does not
+      // require it; only the retired OB 3.0.0 / VC 1.1 schema did.
       validFrom: assertion.issuedOn,
-      // The OB3 `anyachievementcredential` JSON Schema requires `issuanceDate`;
-      // VC 2.0 itself uses `validFrom`, so both are emitted. Note `issuanceDate`
-      // is not a defined term in either @context above, so JSON-LD processors
-      // drop it — revisit when RDFC canonicalization lands (#598).
-      issuanceDate: assertion.issuedOn,
       credentialSubject: {
         id: assertion.recipient.identity,
         type: ["AchievementSubject"],
