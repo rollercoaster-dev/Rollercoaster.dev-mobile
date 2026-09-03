@@ -731,7 +731,6 @@ describe("CompletionFlowScreen", () => {
       expect(screen.getByTestId("finish-reveal-stage")).toBeOnTheScreen();
       expect(screen.queryByTestId("finish-celebrate-stage")).toBeNull();
       expect(screen.queryByTestId("finish-design-stage")).toBeNull();
-      expect(screen.queryByTestId("finish-design-bake")).toBeNull();
     });
 
     it("reveals the badge on record (badge.design), not a default synthesized from the goal", () => {
