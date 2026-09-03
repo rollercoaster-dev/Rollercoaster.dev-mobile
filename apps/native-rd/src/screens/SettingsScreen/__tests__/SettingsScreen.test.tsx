@@ -9,26 +9,13 @@ import {
 } from "../../../__tests__/test-utils";
 import { i18n } from "../../../i18n";
 import { themeA11yLabel } from "../../../i18n/labels";
-import { Logger } from "../../../shims/rd-logger";
+import { capturedLoggerFor } from "../../../__tests__/logger-helpers";
 
 import { isSentryDebugToolsEnabled, SettingsScreen } from "../SettingsScreen";
 
-// jest.config.js maps "../shims/rd-logger" to a mock that returns a fresh
-// `{ error, warn, info, debug }` instance per `new Logger(...)`. SettingsScreen
-// instantiates exactly one logger at module load. Capture that instance now —
-// `beforeEach(jest.clearAllMocks)` wipes the constructor's call history, but the
-// instance reference (and its `error` jest.fn() call history, also cleared) lives on.
-const MockLogger = Logger as unknown as jest.Mock;
-const settingsScreenLoggerIdx = MockLogger.mock.calls.findIndex(
-  (call: unknown[]) => call[0] === "SettingsScreen",
-);
-if (settingsScreenLoggerIdx < 0) {
-  throw new Error(
-    "SettingsScreen did not instantiate a Logger at module load — did the import order change?",
-  );
-}
-const settingsScreenLogger = MockLogger.mock.results[settingsScreenLoggerIdx]
-  .value as { error: jest.Mock };
+// Must be captured at module scope, before beforeEach's clearAllMocks — see the
+// helper's own note on why.
+const settingsScreenLogger = capturedLoggerFor("SettingsScreen");
 
 // RN's jest setup sets __DEV__ as a runtime global; TS doesn't see it here.
 const devGlobal = global as unknown as { __DEV__: boolean };
