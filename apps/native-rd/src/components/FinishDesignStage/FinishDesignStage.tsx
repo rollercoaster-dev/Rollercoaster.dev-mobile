@@ -1,5 +1,10 @@
 import React, { useState } from "react";
-import { ScrollView, TextInput, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  ScrollView,
+  TextInput,
+  View,
+} from "react-native";
 import { useUnistyles } from "react-native-unistyles";
 import { ArrowLeft } from "phosphor-react-native";
 
@@ -36,6 +41,7 @@ import {
   type BadgeShape,
   type FrameDataParams,
 } from "../../badges/types";
+import { KEYBOARD_AVOIDING_PROPS } from "../../utils/keyboard";
 import { styles } from "./FinishDesignStage.styles";
 
 /** The five accordion sections, in top-to-bottom order. */
@@ -365,150 +371,159 @@ export function FinishDesignStage({
         />
       </View>
 
-      <ScrollView
-        style={styles.sections}
-        contentContainerStyle={styles.sectionsContent}
-        keyboardShouldPersistTaps="handled"
+      {/* [sections][footer] inside a KeyboardAvoidingView: the inscription
+          inputs live deep in the sections list, so the list shrinks with the
+          keyboard (keeping the focused field scrollable into view) and the
+          Bake footer lifts above it. Header + preview stay put. */}
+      <KeyboardAvoidingView
+        style={styles.keyboardFrame}
+        {...KEYBOARD_AVOIDING_PROPS}
       >
-        <CollapsibleSection
-          title={shapeSectionTitle}
-          expanded={expandedSection === "shape"}
-          onExpandedChange={openSection("shape")}
-          testID="finish-design-shape"
+        <ScrollView
+          style={styles.sections}
+          contentContainerStyle={styles.sectionsContent}
+          keyboardShouldPersistTaps="handled"
         >
-          <ShapeSelector
-            selectedShape={design.shape}
-            onSelectShape={handleShapeChange}
-          />
-        </CollapsibleSection>
-
-        <CollapsibleSection
-          title={frameSectionTitle}
-          expanded={expandedSection === "frame"}
-          onExpandedChange={openSection("frame")}
-          testID="finish-design-frame"
-        >
-          <FrameSelector
-            selectedFrame={frame}
-            onSelectFrame={handleFrameChange}
-          />
-        </CollapsibleSection>
-
-        <CollapsibleSection
-          title={centerSectionTitle}
-          expanded={expandedSection === "center"}
-          onExpandedChange={openSection("center")}
-          testID="finish-design-center"
-        >
-          <View style={styles.centerStack}>
-            <CenterModeSelector
-              selectedMode={centerMode}
-              monogram={design.monogram ?? ""}
-              onSelectMode={handleCenterModeChange}
-              onChangeMonogram={handleMonogramChange}
+          <CollapsibleSection
+            title={shapeSectionTitle}
+            expanded={expandedSection === "shape"}
+            onExpandedChange={openSection("shape")}
+            testID="finish-design-shape"
+          >
+            <ShapeSelector
+              selectedShape={design.shape}
+              onSelectShape={handleShapeChange}
             />
-            {centerMode === BadgeCenterMode.icon && (
-              <IconPicker
-                selectedIcon={design.iconName}
-                selectedWeight={design.iconWeight}
-                onSelectIcon={handleIconChange}
-                onSelectWeight={handleWeightChange}
-                accentColor={design.color}
+          </CollapsibleSection>
+
+          <CollapsibleSection
+            title={frameSectionTitle}
+            expanded={expandedSection === "frame"}
+            onExpandedChange={openSection("frame")}
+            testID="finish-design-frame"
+          >
+            <FrameSelector
+              selectedFrame={frame}
+              onSelectFrame={handleFrameChange}
+            />
+          </CollapsibleSection>
+
+          <CollapsibleSection
+            title={centerSectionTitle}
+            expanded={expandedSection === "center"}
+            onExpandedChange={openSection("center")}
+            testID="finish-design-center"
+          >
+            <View style={styles.centerStack}>
+              <CenterModeSelector
+                selectedMode={centerMode}
+                monogram={design.monogram ?? ""}
+                onSelectMode={handleCenterModeChange}
+                onChangeMonogram={handleMonogramChange}
               />
-            )}
-          </View>
-        </CollapsibleSection>
+              {centerMode === BadgeCenterMode.icon && (
+                <IconPicker
+                  selectedIcon={design.iconName}
+                  selectedWeight={design.iconWeight}
+                  onSelectIcon={handleIconChange}
+                  onSelectWeight={handleWeightChange}
+                  accentColor={design.color}
+                />
+              )}
+            </View>
+          </CollapsibleSection>
 
-        <CollapsibleSection
-          title={colorSectionTitle}
-          expanded={expandedSection === "colors"}
-          onExpandedChange={openSection("colors")}
-          testID="finish-design-color"
-        >
-          <BadgeColorsAccordion
-            design={design}
-            goalColor={goalColor}
-            onChangeFill={handleColorChange}
-            onChangeBorder={handleBorderColorChange}
-            onChangeFrame={handleFrameColorChange}
-            onChangeIcon={handleIconColorChange}
-            onChangeIconDuotoneOpacity={handleIconDuotoneOpacityChange}
-            onOpenCustomPicker={setColorPickerTarget}
+          <CollapsibleSection
+            title={colorSectionTitle}
+            expanded={expandedSection === "colors"}
+            onExpandedChange={openSection("colors")}
+            testID="finish-design-color"
+          >
+            <BadgeColorsAccordion
+              design={design}
+              goalColor={goalColor}
+              onChangeFill={handleColorChange}
+              onChangeBorder={handleBorderColorChange}
+              onChangeFrame={handleFrameColorChange}
+              onChangeIcon={handleIconColorChange}
+              onChangeIconDuotoneOpacity={handleIconDuotoneOpacityChange}
+              onOpenCustomPicker={setColorPickerTarget}
+            />
+          </CollapsibleSection>
+
+          <CollapsibleSection
+            title={inscriptionsSectionTitle}
+            expanded={expandedSection === "inscriptions"}
+            onExpandedChange={openSection("inscriptions")}
+            testID="finish-design-inscriptions"
+          >
+            <View style={styles.centerStack}>
+              <TextInput
+                style={styles.bottomLabelInput}
+                value={design.bottomLabel ?? ""}
+                onChangeText={handleBottomLabelChange}
+                maxLength={BOTTOM_LABEL_INPUT_MAX_CHARS}
+                placeholder={bottomLabelPlaceholder}
+                placeholderTextColor={theme.colors.textSecondary}
+                accessibilityLabel={bottomLabelAccessibilityLabel}
+                testID="finish-design-bottom-label-input"
+              />
+              <PathTextEditor
+                enabled={
+                  design.pathText !== undefined ||
+                  design.pathTextPosition !== undefined
+                }
+                text={design.pathText ?? ""}
+                textBottom={design.pathTextBottom ?? ""}
+                position={design.pathTextPosition ?? PathTextPosition.top}
+                shape={design.shape}
+                goalTitle={goalTitle ?? design.title}
+                onToggle={handlePathTextToggle}
+                onChangeText={handlePathTextChange}
+                onChangeTextBottom={handlePathTextBottomChange}
+                onChangePosition={handlePathTextPositionChange}
+              />
+              <BannerEditor
+                enabled={design.banner != null}
+                text={design.banner?.text ?? ""}
+                position={design.banner?.position ?? BannerPosition.top}
+                onToggle={handleBannerToggle}
+                onChangeText={handleBannerTextChange}
+                onChangePosition={handleBannerPositionChange}
+              />
+            </View>
+          </CollapsibleSection>
+        </ScrollView>
+
+        <View style={styles.footer}>
+          <Button
+            label={bakeLabel}
+            icon={bakeIcon}
+            onPress={onBake}
+            variant="primary"
+            size="lg"
+            disabled={!canBake}
+            {...(canBake ? {} : { accessibilityHint: bakeBlockedMessage })}
+            testID="finish-design-bake"
           />
-        </CollapsibleSection>
-
-        <CollapsibleSection
-          title={inscriptionsSectionTitle}
-          expanded={expandedSection === "inscriptions"}
-          onExpandedChange={openSection("inscriptions")}
-          testID="finish-design-inscriptions"
-        >
-          <View style={styles.centerStack}>
-            <TextInput
-              style={styles.bottomLabelInput}
-              value={design.bottomLabel ?? ""}
-              onChangeText={handleBottomLabelChange}
-              maxLength={BOTTOM_LABEL_INPUT_MAX_CHARS}
-              placeholder={bottomLabelPlaceholder}
-              placeholderTextColor={theme.colors.textSecondary}
-              accessibilityLabel={bottomLabelAccessibilityLabel}
-              testID="finish-design-bottom-label-input"
-            />
-            <PathTextEditor
-              enabled={
-                design.pathText !== undefined ||
-                design.pathTextPosition !== undefined
-              }
-              text={design.pathText ?? ""}
-              textBottom={design.pathTextBottom ?? ""}
-              position={design.pathTextPosition ?? PathTextPosition.top}
-              shape={design.shape}
-              goalTitle={goalTitle ?? design.title}
-              onToggle={handlePathTextToggle}
-              onChangeText={handlePathTextChange}
-              onChangeTextBottom={handlePathTextBottomChange}
-              onChangePosition={handlePathTextPositionChange}
-            />
-            <BannerEditor
-              enabled={design.banner != null}
-              text={design.banner?.text ?? ""}
-              position={design.banner?.position ?? BannerPosition.top}
-              onToggle={handleBannerToggle}
-              onChangeText={handleBannerTextChange}
-              onChangePosition={handleBannerPositionChange}
-            />
-          </View>
-        </CollapsibleSection>
-      </ScrollView>
-
-      <View style={styles.footer}>
-        <Button
-          label={bakeLabel}
-          icon={bakeIcon}
-          onPress={onBake}
-          variant="primary"
-          size="lg"
-          disabled={!canBake}
-          {...(canBake ? {} : { accessibilityHint: bakeBlockedMessage })}
-          testID="finish-design-bake"
-        />
-        {/* One slot, two messages: the blocked reason replaces the subcopy
+          {/* One slot, two messages: the blocked reason replaces the subcopy
             rather than stacking under it, so the footer height doesn't jump
             and there is exactly one line to read below the CTA. */}
-        {canBake ? (
-          <Text variant="caption" style={styles.subcopy}>
-            {bakeSubcopy}
-          </Text>
-        ) : (
-          <Text
-            variant="caption"
-            style={styles.blockedMessage}
-            testID="finish-design-bake-blocked"
-          >
-            {bakeBlockedMessage}
-          </Text>
-        )}
-      </View>
+          {canBake ? (
+            <Text variant="caption" style={styles.subcopy}>
+              {bakeSubcopy}
+            </Text>
+          ) : (
+            <Text
+              variant="caption"
+              style={styles.blockedMessage}
+              testID="finish-design-bake-blocked"
+            >
+              {bakeBlockedMessage}
+            </Text>
+          )}
+        </View>
+      </KeyboardAvoidingView>
 
       {/* Custom-hex picker for whichever channel opened it. `Modal` portals
           regardless of tree position; confirmed hex flows out through the same
