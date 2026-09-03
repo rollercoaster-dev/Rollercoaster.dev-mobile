@@ -30,9 +30,9 @@ import {
   TextInput,
   Pressable,
   ScrollView,
-  KeyboardAvoidingView,
   type GestureResponderEvent,
 } from "react-native";
+import { KeyboardAvoidingFrame } from "../KeyboardAvoidingFrame";
 import { X } from "phosphor-react-native";
 import { useUnistyles } from "react-native-unistyles";
 import { IconButton } from "../IconButton";
@@ -44,8 +44,10 @@ import { EditGoalStepList, type EditGoalStep } from "../EditGoalView";
 import type { DragScrollController } from "../StepList/dragAutoScroll";
 import { EvidenceType } from "../../db";
 import { EVIDENCE_OPTIONS, type EvidenceTypeValue } from "../../types/evidence";
-import { KEYBOARD_AVOIDING_PROPS } from "../../utils/keyboard";
-import { styles } from "./NewGoalWizard.styles";
+import Animated from "react-native-reanimated";
+import { useKeyboardFooterPadding } from "../../utils/keyboard";
+import { useStickToScrollEnd } from "../../hooks/useStickToScrollEnd";
+import { QUICK_ADD_MIN_HEIGHT, styles } from "./NewGoalWizard.styles";
 
 /**
  * Ordered wizard positions — the single source of truth. Drives the progress
@@ -340,6 +342,21 @@ export function NewGoalWizard({
   startWorkingLabel = "Start Working",
 }: NewGoalWizardProps) {
   const { theme } = useUnistyles();
+  // Footer bottom padding tracks the keyboard: at rest it reserves the
+  // home-indicator clearance (the single-CTA steps also reserve the name step's
+  // quick-add row so the button sits at one height everywhere); with the
+  // keyboard up that space is under the keys, so it collapses to a tight gap.
+  const nameFooterPadding = useKeyboardFooterPadding(
+    theme.space[5],
+    theme.space[3],
+  );
+  const singleCtaFooterPadding = useKeyboardFooterPadding(
+    theme.space[5] + theme.space[3] + QUICK_ADD_MIN_HEIGHT,
+    theme.space[3],
+  );
+  // Build step: keeps the add-step row visible as the keyboard shrinks the
+  // list and as Enter appends rows.
+  const stick = useStickToScrollEnd();
   const currentStepIndex = STEP_ORDER.indexOf(currentStep);
   const plannedIcon = evidenceIcon(plannedEvidenceType);
   const plannedLabel = plannedEvidenceLabel(plannedEvidenceType);
@@ -510,17 +527,14 @@ export function NewGoalWizard({
           STEP_ORDER values — and is kept so every step stays an explicit
           `currentStep === …` test rather than a catch-all `else`.
 
-          The KeyboardAvoidingView is what keeps the footer CTA reachable while
+          The KeyboardAvoidingFrame is what keeps the footer CTA reachable while
           a step input has focus. The build step's add-step input deliberately
           keeps the keyboard up between adds (blurOnSubmit={false}), so without
           this the "I'm ready" button sat under the keyboard and, once the list
           outgrew the visible area, the tap-the-header dismissal from #502
-          scrolled out of reach too. Same props as FocusModeScreen; header +
-          progress bar stay outside it, so no vertical offset is needed. */}
-        <KeyboardAvoidingView
-          style={styles.stepFrame}
-          {...KEYBOARD_AVOIDING_PROPS}
-        >
+          scrolled out of reach too. Header + progress bar stay outside it, as on
+          every other consumer. */}
+        <KeyboardAvoidingFrame style={styles.stepFrame}>
           {currentStep === "name" ? (
             <>
               <View style={styles.stepBody}>
@@ -544,7 +558,7 @@ export function NewGoalWizard({
                 />
                 <RNText style={styles.hint}>{nameHint}</RNText>
               </View>
-              <View style={styles.footer}>
+              <Animated.View style={[styles.footer, nameFooterPadding]}>
                 <Button
                   label={nextLabel}
                   onPress={onNext}
@@ -568,7 +582,7 @@ export function NewGoalWizard({
                     <RNText style={styles.quickAddLink}>{quickAddLabel}</RNText>
                   </RNText>
                 </Pressable>
-              </View>
+              </Animated.View>
             </>
           ) : currentStep === "step" ? (
             <>
@@ -626,19 +640,30 @@ export function NewGoalWizard({
                   </Pressable>
                 </View>
               </View>
-              <View style={[styles.footer, styles.footerSingleCta]}>
+              <Animated.View
+                style={[
+                  styles.footer,
+                  styles.footerSingleCta,
+                  singleCtaFooterPadding,
+                ]}
+              >
                 <Button
                   label={nextLabel}
                   onPress={onNext}
                   disabled={!firstStepTitle.trim()}
                   testID="new-goal-next-button"
                 />
-              </View>
+              </Animated.View>
             </>
           ) : currentStep === "build" ? (
             <>
               <View style={styles.buildBody}>
                 <ScrollView
+                  ref={stick.ref}
+                  onLayout={stick.onLayout}
+                  onScroll={stick.onScroll}
+                  scrollEventThrottle={16}
+                  onContentSizeChange={stick.onContentSizeChange}
                   contentContainerStyle={styles.buildScrollContent}
                   showsVerticalScrollIndicator={false}
                   // See EditGoalView's scroll: inline rename commits on blur, so
@@ -661,6 +686,7 @@ export function NewGoalWizard({
                     onReorderSubSteps={onReorderSubSteps}
                     onReparentStep={onReparentStep}
                     onAddStep={onAddStep}
+                    onAddStepInputFocus={stick.scrollToEnd}
                     onStepTitleChange={onStepTitleChange}
                     onEvidenceChipPress={handleBuildEvidenceChipPress}
                     onAddSubStep={onAddSubStep}
@@ -693,7 +719,13 @@ export function NewGoalWizard({
                   />
                 </ScrollView>
               </View>
-              <View style={[styles.footer, styles.footerSingleCta]}>
+              <Animated.View
+                style={[
+                  styles.footer,
+                  styles.footerSingleCta,
+                  singleCtaFooterPadding,
+                ]}
+              >
                 {/* Same linear-advance onNext as name/step; only the label differs
                 (D7). Unconditionally enabled — the prototype gates nothing on
                 this screen. */}
@@ -702,7 +734,7 @@ export function NewGoalWizard({
                   onPress={onNext}
                   testID="new-goal-build-ready-button"
                 />
-              </View>
+              </Animated.View>
             </>
           ) : currentStep === "ready" ? (
             <>
@@ -727,16 +759,22 @@ export function NewGoalWizard({
                   <RNText style={styles.badgeNoteText}>{badgeNote}</RNText>
                 </View>
               </View>
-              <View style={[styles.footer, styles.footerSingleCta]}>
+              <Animated.View
+                style={[
+                  styles.footer,
+                  styles.footerSingleCta,
+                  singleCtaFooterPadding,
+                ]}
+              >
                 <Button
                   label={startWorkingLabel}
                   onPress={onStartWorking}
                   testID="new-goal-start-working-button"
                 />
-              </View>
+              </Animated.View>
             </>
           ) : null}
-        </KeyboardAvoidingView>
+        </KeyboardAvoidingFrame>
       </View>
 
       {/* Step 2 · planned-evidence picker — reuse #409's capture sheet whole

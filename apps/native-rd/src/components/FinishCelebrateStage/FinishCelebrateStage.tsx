@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { KeyboardAvoidingView, Pressable, TextInput, View } from "react-native";
+import { Pressable, TextInput, View } from "react-native";
+import { KeyboardAvoidingFrame } from "../KeyboardAvoidingFrame";
 import { useUnistyles } from "react-native-unistyles";
 
 import { Text } from "../Text";
 import { Button } from "../Button";
-import { KEYBOARD_AVOIDING_PROPS } from "../../utils/keyboard";
 import { styles } from "./FinishCelebrateStage.styles";
 
 export interface FinishCelebrateStageProps {
@@ -81,10 +81,7 @@ export function FinishCelebrateStage({
       {/* The closing note is a multiline input with no return-key dismissal,
           so without keyboard avoidance the CTA below it sat under the keyboard
           with no way out. Same shape as the New Goal wizard fix. */}
-      <KeyboardAvoidingView
-        style={styles.keyboardFrame}
-        {...KEYBOARD_AVOIDING_PROPS}
-      >
+      <KeyboardAvoidingFrame style={styles.keyboardFrame}>
         <View style={styles.content}>
           <Text variant="mono" style={styles.eyebrow}>
             {eyebrow}
@@ -148,7 +145,7 @@ export function FinishCelebrateStage({
             {ctaSubcopy}
           </Text>
         </View>
-      </KeyboardAvoidingView>
+      </KeyboardAvoidingFrame>
     </View>
   );
 }

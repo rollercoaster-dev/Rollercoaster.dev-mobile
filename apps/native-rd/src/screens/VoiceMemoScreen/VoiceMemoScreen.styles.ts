@@ -5,7 +5,7 @@ export const styles = StyleSheet.create((theme) => ({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
-  // KeyboardAvoidingView frame around the body: flex:1 so it owns the space
+  // KeyboardAvoidingFrame frame around the body: flex:1 so it owns the space
   // under the header and shrinks with the soft keyboard, lifting the Save row
   // above it instead of leaving it covered.
   keyboardFrame: {

@@ -3,9 +3,9 @@ import {
   View,
   ActivityIndicator,
   AccessibilityInfo,
-  KeyboardAvoidingView,
   ScrollView,
 } from "react-native";
+import { KeyboardAvoidingFrame } from "../../components/KeyboardAvoidingFrame";
 import { ScreenSubHeader } from "../../components/ScreenHeader";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -62,7 +62,6 @@ import { evidenceShortLabel } from "../../i18n/labels";
 import { formatDate } from "../../utils/format";
 import { Logger } from "../../shims/rd-logger";
 import { reportError, breadcrumb } from "../../services/sentry-report";
-import { KEYBOARD_AVOIDING_PROPS } from "../../utils/keyboard";
 import { runEvoluMutation } from "../../utils/evoluMutation";
 import { styles } from "./FocusModeScreen.styles";
 
@@ -641,10 +640,7 @@ export function FocusModeScreen({ route }: FocusModeNavProps) {
         label={t("focusMode:title")}
         onBack={() => navigation.goBack()}
       />
-      <KeyboardAvoidingView
-        style={styles.keyboardAvoidingView}
-        {...KEYBOARD_AVOIDING_PROPS}
-      >
+      <KeyboardAvoidingFrame style={styles.keyboardAvoidingView}>
         <ErrorBoundary>
           <Suspense
             fallback={
@@ -657,7 +653,7 @@ export function FocusModeScreen({ route }: FocusModeNavProps) {
             />
           </Suspense>
         </ErrorBoundary>
-      </KeyboardAvoidingView>
+      </KeyboardAvoidingFrame>
     </View>
   );
 }

@@ -1,5 +1,5 @@
 import React from "react";
-import { AccessibilityInfo, BackHandler } from "react-native";
+import { AccessibilityInfo, BackHandler, Keyboard } from "react-native";
 import {
   renderWithProviders,
   screen,
@@ -224,6 +224,17 @@ describe("EditGoalView", () => {
       renderWithProviders(<EditGoalView {...makeProps()} />);
       expect(screen.queryByText("Alex")).toBeNull();
       expect(screen.queryByText(/^after /)).toBeNull();
+    });
+
+    it("dismisses the keyboard on an empty add-step submit", () => {
+      const dismiss = jest.spyOn(Keyboard, "dismiss");
+      const onAddStep = jest.fn();
+      renderWithProviders(<EditGoalView {...makeProps({ onAddStep })} />);
+      const input = screen.getByTestId("edit-goal-add-step-input");
+      fireEvent.changeText(input, "   ");
+      fireEvent(input, "submitEditing");
+      expect(onAddStep).not.toHaveBeenCalled();
+      expect(dismiss).toHaveBeenCalledTimes(1);
     });
 
     it("renders each date/dependency chip when present", () => {

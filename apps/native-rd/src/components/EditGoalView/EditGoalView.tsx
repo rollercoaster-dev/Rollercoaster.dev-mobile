@@ -36,18 +36,18 @@
  * Drag orchestration lives in useEditGoalDrag; the row anatomy in
  * EditGoalStepRow; the ⋯ menu content in EditGoalOverflowMenu.
  */
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useCallback } from "react";
 import {
   View,
   Text as RNText,
   TextInput,
   ScrollView,
-  KeyboardAvoidingView,
   type GestureResponderEvent,
   type LayoutChangeEvent,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
 } from "react-native";
+import { KeyboardAvoidingFrame } from "../KeyboardAvoidingFrame";
 import { DotsThree, Pencil } from "phosphor-react-native";
 import { useUnistyles } from "react-native-unistyles";
 import { IconButton } from "../IconButton";
@@ -64,7 +64,10 @@ import type {
 } from "../StepTimingEditor";
 import type { DragScrollController } from "../StepList/dragAutoScroll";
 import { EditGoalStepList } from "./EditGoalStepList";
-import { KEYBOARD_AVOIDING_PROPS } from "../../utils/keyboard";
+import Animated from "react-native-reanimated";
+import { PILL_LIFT } from "../../navigation/FocusPillTabBar";
+import { useKeyboardFooterPadding } from "../../utils/keyboard";
+import { useStickToScrollEnd } from "../../hooks/useStickToScrollEnd";
 import { styles } from "./EditGoalView.styles";
 
 /** Tone of one date/dependency truth-line on a step row's timing line (D5). */
@@ -466,6 +469,29 @@ export function EditGoalView({
   timingHost,
 }: EditGoalViewProps) {
   const { theme } = useUnistyles();
+  // The Done footer's tab-bar clearance (PILL_LIFT) tracks the keyboard: with
+  // the keys up the bar is under them, so the reservation collapses to the
+  // footer's own padding instead of opening a dead gap above the keyboard.
+  const footerPadding = useKeyboardFooterPadding(
+    theme.space[4] + PILL_LIFT,
+    theme.space[4],
+  );
+  // Keeps the add-step row visible as the keyboard shrinks the viewport and
+  // as Enter appends rows. Composed with the screen's optional drag
+  // instrumentation below, which needs the same ref and events.
+  const stick = useStickToScrollEnd();
+  const externalScrollRef = scrollInstrumentation?.ref;
+  const setScrollRef = useCallback(
+    (node: ScrollView | null) => {
+      stick.ref.current = node;
+      if (typeof externalScrollRef === "function") externalScrollRef(node);
+      else if (externalScrollRef && typeof externalScrollRef === "object")
+        (
+          externalScrollRef as React.MutableRefObject<ScrollView | null>
+        ).current = node;
+    },
+    [externalScrollRef, stick.ref],
+  );
 
   // Evidence-picker open state, lifted here from EditGoalStepList (#493/D8) so
   // the shared AnimatedSheet can render as a root-level sibling of the
@@ -589,20 +615,26 @@ export function EditGoalView({
           add-step input keeps the keyboard up between adds (blurOnSubmit={false}),
           so without this a long list left Done unreachable — same fix as the
           New Goal wizard. The header stays outside, so no vertical offset. */}
-        <KeyboardAvoidingView
-          style={styles.keyboardFrame}
-          {...KEYBOARD_AVOIDING_PROPS}
-        >
+        <KeyboardAvoidingFrame style={styles.keyboardFrame}>
           {/* Scrollable content. Internal ScrollView (not the body View it replaced)
           so the flex:1 container splits into [header][scroll][footer] and the
           sheet's absolute overlay — a sibling below — fills the viewport rather
           than the scroll content (#493/D8). */}
           <ScrollView
-            ref={scrollInstrumentation?.ref}
-            onLayout={scrollInstrumentation?.onLayout}
-            onScroll={scrollInstrumentation?.onScroll}
+            ref={setScrollRef}
+            onLayout={(event) => {
+              stick.onLayout(event);
+              scrollInstrumentation?.onLayout?.(event);
+            }}
+            onScroll={(event) => {
+              stick.onScroll(event);
+              scrollInstrumentation?.onScroll?.(event);
+            }}
             scrollEventThrottle={16}
-            onContentSizeChange={scrollInstrumentation?.onContentSizeChange}
+            onContentSizeChange={(width, height) => {
+              stick.onContentSizeChange(width, height);
+              scrollInstrumentation?.onContentSizeChange?.(width, height);
+            }}
             scrollEnabled={!rowDragging}
             style={styles.scroll}
             contentContainerStyle={styles.scrollContent}
@@ -661,6 +693,7 @@ export function EditGoalView({
               onReorderSubSteps={onReorderSubSteps}
               onReparentStep={onReparentStep}
               onAddStep={onAddStep}
+              onAddStepInputFocus={stick.scrollToEnd}
               onStepTitleChange={onStepTitleChange}
               onEvidenceChipPress={handleEvidenceChipPress}
               onAddSubStep={onAddSubStep}
@@ -699,15 +732,15 @@ export function EditGoalView({
             />
           </ScrollView>
 
-          <View style={styles.footer}>
+          <Animated.View style={[styles.footer, footerPadding]}>
             <Button
               label={doneLabel}
               variant="secondary"
               onPress={onDone}
               testID="edit-goal-done-button"
             />
-          </View>
-        </KeyboardAvoidingView>
+          </Animated.View>
+        </KeyboardAvoidingFrame>
       </View>
 
       {/* Evidence-type picker (D8/D12): the reused multi-select authoring grid

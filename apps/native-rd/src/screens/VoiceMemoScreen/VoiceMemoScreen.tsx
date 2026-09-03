@@ -5,14 +5,8 @@
  * and saves the recording as evidence attached to a goal or step.
  */
 import React, { useState } from "react";
-import {
-  View,
-  TextInput,
-  Alert,
-  Pressable,
-  Linking,
-  KeyboardAvoidingView,
-} from "react-native";
+import { View, TextInput, Alert, Pressable, Linking } from "react-native";
+import { KeyboardAvoidingFrame } from "../../components/KeyboardAvoidingFrame";
 import { useUnistyles } from "react-native-unistyles";
 import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
@@ -27,7 +21,6 @@ import type { GoalId, StepId } from "../../db";
 import { reportError } from "../../services/sentry-report";
 import { Logger } from "../../shims/rd-logger";
 import type { CaptureVoiceMemoScreenProps } from "../../navigation/types";
-import { KEYBOARD_AVOIDING_PROPS } from "../../utils/keyboard";
 import { styles } from "./VoiceMemoScreen.styles";
 
 const logger = new Logger("VoiceMemoScreen");
@@ -166,10 +159,7 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
 
       {/* Keeps the Save/Discard row above the keyboard while the caption has
           focus; header stays outside so no vertical offset is needed. */}
-      <KeyboardAvoidingView
-        style={styles.keyboardFrame}
-        {...KEYBOARD_AVOIDING_PROPS}
-      >
+      <KeyboardAvoidingFrame style={styles.keyboardFrame}>
         <View style={styles.content}>
           {/* Timer display */}
           <Text
@@ -370,7 +360,7 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
             </>
           )}
         </View>
-      </KeyboardAvoidingView>
+      </KeyboardAvoidingFrame>
     </View>
   );
 }

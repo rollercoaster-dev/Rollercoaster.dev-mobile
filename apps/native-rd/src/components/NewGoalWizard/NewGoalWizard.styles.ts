@@ -14,7 +14,7 @@ import { shadowStyle } from "../../styles/shadows";
  * Quick-add press target height — the 44pt minimum tap target. Named because
  * `footerSingleCta` reserves this same height, so the two can't drift.
  */
-const QUICK_ADD_MIN_HEIGHT = 44;
+export const QUICK_ADD_MIN_HEIGHT = 44;
 
 export const styles = StyleSheet.create((theme) => ({
   container: {
@@ -53,7 +53,7 @@ export const styles = StyleSheet.create((theme) => ({
   },
 
   // --- Shared step body / footer frame ---
-  // KeyboardAvoidingView around the [body][footer] pair of every step. flex:1
+  // KeyboardAvoidingFrame around the [body][footer] pair of every step. flex:1
   // so it takes the space under the progress bar and shrinks with the keyboard,
   // lifting the footer CTA above it.
   stepFrame: {

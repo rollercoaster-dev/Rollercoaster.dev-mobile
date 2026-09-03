@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { View, Alert, KeyboardAvoidingView } from "react-native";
+import { View, Alert } from "react-native";
+import { KeyboardAvoidingFrame } from "../../components/KeyboardAvoidingFrame";
 import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { Text } from "../../components/Text";
@@ -13,7 +14,6 @@ import { reportError } from "../../services/sentry-report";
 import { useEvidenceStartBreadcrumb } from "../../hooks/useEvidenceStartBreadcrumb";
 import type { CaptureLinkScreenProps } from "../../navigation/types";
 import { isValidUrl, normalizeUrl } from "../../utils/url";
-import { KEYBOARD_AVOIDING_PROPS } from "../../utils/keyboard";
 import { styles } from "./CaptureLinkScreen.styles";
 
 export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
@@ -88,10 +88,7 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
 
       {/* Keeps the Save/Cancel row above the keyboard while the URL or caption
           has focus; header stays outside so no vertical offset is needed. */}
-      <KeyboardAvoidingView
-        style={styles.keyboardFrame}
-        {...KEYBOARD_AVOIDING_PROPS}
-      >
+      <KeyboardAvoidingFrame style={styles.keyboardFrame}>
         <View style={styles.content}>
           <View style={styles.inputSection}>
             <Input
@@ -159,7 +156,7 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
             />
           </View>
         </View>
-      </KeyboardAvoidingView>
+      </KeyboardAvoidingFrame>
     </View>
   );
 }

@@ -6,7 +6,7 @@ export const styles = StyleSheet.create((theme) => ({
     flexDirection: "column",
     backgroundColor: theme.colors.background,
   },
-  // KeyboardAvoidingView frame around the body + footer: flex:1 so it owns the
+  // KeyboardAvoidingFrame frame around the body + footer: flex:1 so it owns the
   // space under the header and shrinks with the soft keyboard, lifting the
   // footer CTA above it instead of leaving it covered.
   keyboardFrame: {

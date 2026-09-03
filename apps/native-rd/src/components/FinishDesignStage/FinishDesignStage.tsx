@@ -1,10 +1,6 @@
 import React, { useState } from "react";
-import {
-  KeyboardAvoidingView,
-  ScrollView,
-  TextInput,
-  View,
-} from "react-native";
+import { ScrollView, TextInput, View } from "react-native";
+import { KeyboardAvoidingFrame } from "../KeyboardAvoidingFrame";
 import { useUnistyles } from "react-native-unistyles";
 import { ArrowLeft } from "phosphor-react-native";
 
@@ -41,7 +37,6 @@ import {
   type BadgeShape,
   type FrameDataParams,
 } from "../../badges/types";
-import { KEYBOARD_AVOIDING_PROPS } from "../../utils/keyboard";
 import { styles } from "./FinishDesignStage.styles";
 
 /** The five accordion sections, in top-to-bottom order. */
@@ -375,10 +370,7 @@ export function FinishDesignStage({
           inputs live deep in the sections list, so the list shrinks with the
           keyboard (keeping the focused field scrollable into view) and the
           Bake footer lifts above it. Header + preview stay put. */}
-      <KeyboardAvoidingView
-        style={styles.keyboardFrame}
-        {...KEYBOARD_AVOIDING_PROPS}
-      >
+      <KeyboardAvoidingFrame style={styles.keyboardFrame}>
         <ScrollView
           style={styles.sections}
           contentContainerStyle={styles.sectionsContent}
@@ -523,7 +515,7 @@ export function FinishDesignStage({
             </Text>
           )}
         </View>
-      </KeyboardAvoidingView>
+      </KeyboardAvoidingFrame>
 
       {/* Custom-hex picker for whichever channel opened it. `Modal` portals
           regardless of tree position; confirmed hex flows out through the same
