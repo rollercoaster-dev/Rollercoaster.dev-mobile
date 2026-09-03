@@ -116,8 +116,7 @@ Concrete artifacts required before App Store submission:
    - `packages/openbadges-core`: `"license": "Apache-2.0"`
    - `packages/design-tokens`: `"license": "MIT"`
    - `apps/native-rd`: `"license": "AGPL-3.0-only"`
-5. Root `package.json` `license` field set to `"SEE LICENSE IN LICENSING.md"` (no leading `./` — npm and GitHub's licensee expect a bare path). Keep `"private": true` for the root meta-package (it's never published).
-   A root `LICENSE` carrying the AGPL-3.0-only text (the dominant product license) exists so GitHub's license detector populates the repository metadata; it does not override the per-package licenses (#602).
+5. Root `package.json` `license` field set to `"AGPL-3.0-only"`, matching a root `LICENSE` that carries the verbatim AGPL-3.0-only text (the dominant product license). Both exist so GitHub's license detector populates the repository metadata; a `SEE LICENSE IN …` value or any preamble in the LICENSE file makes licensee report NOASSERTION (#602). Keep `"private": true` for the root meta-package (it's never published). The root declaration does not override the per-package licenses.
 6. Top-level `LICENSING.md` explaining the per-package model and the CLA/DCO posture.
 7. SPDX headers on source files (optional but recommended; tools like `reuse` automate this).
 8. **DCO enforcement** via a GitHub Action that requires `Signed-off-by:` lines on all PRs (or a CLA bot if a full CLA is preferred later).
