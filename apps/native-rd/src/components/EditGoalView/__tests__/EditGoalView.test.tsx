@@ -259,6 +259,7 @@ describe("EditGoalView", () => {
       fireEvent(input, "submitEditing");
       expect(onAddStep).not.toHaveBeenCalled();
       expect(dismiss).toHaveBeenCalledTimes(1);
+      dismiss.mockRestore();
     });
 
     it("renders each date/dependency chip when present", () => {

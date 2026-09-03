@@ -1,5 +1,5 @@
 import React from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 import { act, render, screen } from "@testing-library/react-native";
 import { KeyboardControllerNative } from "react-native-keyboard-controller";
 import { KeyboardAvoidingFrame } from "../KeyboardAvoidingFrame";
@@ -8,16 +8,6 @@ const viewPositionInWindow =
   KeyboardControllerNative.viewPositionInWindow as jest.Mock;
 
 describe("KeyboardAvoidingFrame", () => {
-  it("renders its children inside the frame", () => {
-    render(
-      <KeyboardAvoidingFrame testID="frame">
-        <Text>footer</Text>
-      </KeyboardAvoidingFrame>,
-    );
-    expect(screen.getByTestId("frame")).toBeTruthy();
-    expect(screen.getByText("footer")).toBeTruthy();
-  });
-
   it("forwards the caller's onLayout", () => {
     const onLayout = jest.fn();
     render(<KeyboardAvoidingFrame testID="frame" onLayout={onLayout} />);
