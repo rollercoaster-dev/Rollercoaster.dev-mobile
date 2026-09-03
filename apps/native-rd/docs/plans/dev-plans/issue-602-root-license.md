@@ -68,7 +68,7 @@ Add a root `/LICENSE` file (AGPL-3.0-only text, matching `apps/native-rd/LICENSE
 ### Step 3: Fix root package.json license field
 
 **Files**: `package.json`
-**Commit**: `fix: drop leading ./ from root package.json license field (licensee-ignored)`
+**Commit**: `fix: drop leading ./ from root package.json license field`
 **Changes**:
 
 - [x] Line 7: `"license": "SEE LICENSE IN ./LICENSING.md"` → `"license": "SEE LICENSE IN LICENSING.md"`

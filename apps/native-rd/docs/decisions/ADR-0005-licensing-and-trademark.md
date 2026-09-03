@@ -8,7 +8,7 @@
 
 ## Context
 
-The repo currently has no LICENSE file and `package.json` declares `private: true`. By default that means **all rights reserved** — nobody but the copyright holder may legally use, modify, or redistribute the code. Before the App Store launch (`docs/launch/app-store-launch-plan.md`), and before any public OSS announcement, a deliberate licensing posture is needed.
+At the time of writing the repo had no LICENSE file and `package.json` declared `private: true` (per-package LICENSE files and a root LICENSE were added later; see Implementation notes). By default that means **all rights reserved** — nobody but the copyright holder may legally use, modify, or redistribute the code. Before the App Store launch (`docs/launch/app-store-launch-plan.md`), and before any public OSS announcement, a deliberate licensing posture is needed.
 
 The project has **two distinct surfaces** with different strategic value:
 
