@@ -1,0 +1,5 @@
+node_modules/
+.env
+# Written by `bun run spike` / `bun run didkey` — contains the last at:// URI + CID
+# so `observe`/`resolve` can pick them up. Local scratch, not evidence.
+.last-record.json

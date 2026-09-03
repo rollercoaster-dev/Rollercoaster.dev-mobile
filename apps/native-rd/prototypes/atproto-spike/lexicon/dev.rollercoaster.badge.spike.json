@@ -1,0 +1,37 @@
+{
+  "lexicon": 1,
+  "id": "dev.rollercoaster.badge.spike",
+  "description": "SPIKE-ONLY collection for issue #614. Deliberately distinct from the future production NSID dev.rollercoaster.badge.credential (see docs/research/atproto-evaluation.md) so throwaway test records can never be mistaken for real published badges. Reverse-DNS authority: rollercoaster.dev.",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "One published badge credential. The PDS stores this verbatim; it is not validated by any AppView because no AppView indexes this collection.",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["credential", "createdAt"],
+        "properties": {
+          "credential": {
+            "type": "string",
+            "description": "Compact VC-JWT (OB3 credential signed ES256). The JWT's `iss` is the credential issuer and may be a did:key that is NOT the repo's own did:plc — that decoupling is the question this spike answers.",
+            "maxLength": 20000
+          },
+          "issuer": {
+            "type": "string",
+            "format": "did",
+            "description": "Denormalised copy of the JWT `iss` claim so a firehose consumer can filter without decoding the JWT."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime"
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 300,
+            "description": "Free text for the spike run (which script wrote it, which question it tests)."
+          }
+        }
+      }
+    }
+  }
+}
