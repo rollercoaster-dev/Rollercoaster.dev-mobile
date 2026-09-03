@@ -50,18 +50,24 @@ export async function writeSpikeRecord(
   const res = await agent.com.atproto.repo.createRecord({
     repo: repoDid,
     collection: SPIKE_COLLECTION,
+    // spread: the XRPC type wants an index signature SpikeRecord lacks
     record: { ...record },
   });
   return { uri: res.data.uri, cid: res.data.cid, repoDid };
 }
 
-/** `com.atproto.repo.getRecord` back by AT-URI, through the same PDS. */
-export async function readSpikeRecord(agent: AtpAgent, uri: string) {
+/**
+ * `com.atproto.repo.getRecord` back by AT-URI, through the same PDS. When a
+ * `cid` is given the lookup is CID-addressed too: the PDS returns
+ * RecordNotFound if the record at that rkey no longer has that CID.
+ */
+export async function readSpikeRecord(agent: AtpAgent, uri: string, cid?: string) {
   const { authority, collection, rkey } = parseAtUri(uri);
   const res = await agent.com.atproto.repo.getRecord({
     repo: authority,
     collection,
     rkey,
+    ...(cid ? { cid } : {}),
   });
   return {
     uri: res.data.uri,
@@ -92,4 +98,31 @@ export async function loadLastRecord(): Promise<WrittenRecord | undefined> {
   const file = Bun.file(LAST_RECORD_FILE);
   if (!(await file.exists())) return undefined;
   return (await file.json()) as WrittenRecord;
+}
+
+export interface RoundTrip {
+  written: WrittenRecord;
+  value: SpikeRecord;
+  /** server CID on read-back === server CID on write === local recomputation */
+  cidConsistent: boolean;
+}
+
+/**
+ * The shared shape of every write in this spike: create, read back by
+ * AT-URI *and* CID, recompute the CID from the returned bytes, compare all
+ * three. Callers decide what else must hold before they persist the pointer.
+ */
+export async function writeReadVerify(
+  agent: AtpAgent,
+  record: SpikeRecord,
+): Promise<RoundTrip> {
+  const written = await writeSpikeRecord(agent, record);
+  const back = await readSpikeRecord(agent, written.uri, written.cid);
+  const local = await recomputeCid(back.value);
+  return {
+    written,
+    value: back.value,
+    cidConsistent:
+      back.uri === written.uri && back.cid === written.cid && local === written.cid,
+  };
 }

@@ -17,7 +17,7 @@ This is a spike, not milestone 4. No app integration, no UI, no key-management h
 | Write a record to a hosted PDS and read it back by AT-URI + CID                        | Code complete — **not yet run**; needs a test account (see Reproduce)   |
 | Host a did:key-issued credential in a did:plc repo, verify from read-back bytes        | Code complete — **not yet run**; same dependency                        |
 | Firehose propagation observed via Jetstream                                            | Code complete — **not yet run**; same dependency                        |
-| Absent from every Bluesky feed / search                                                | Code complete — **not yet run**; same dependency                        |
+| Invisible to the Bluesky AppView (author feed + post search), against a positive control | Code complete — **not yet run**; same dependency                        |
 | What creating the identity actually required (email token, rotation-key custody)       | **Not yet recorded** — filled in from the first real signup             |
 
 When the live runs happen, paste their output into [Run log](#run-log) below and flip the
@@ -31,13 +31,17 @@ src/pds.ts              login, createRecord, getRecord, local CID recomputation
 src/writeAndResolve.ts  bun run spike    — write one fixture record, read it back, check CIDs
 src/didKeyIssuer.ts     bun run didkey   — the ADR-0015 did:key question, answered by construction
 src/observeJetstream.ts bun run observe  — subscribe, write, catch the commit; then prove Bluesky shows nothing
-src/resolve.ts          bun run resolve  — the no-account reader path, pure fetch, three hops
+src/resolve.ts          bun run resolve  — the no-account reader path, plain fetch, three hops
 src/atUri.ts (+test)    AT-URI parse/build
 ```
 
 The did:key encoder and the ES256 VC-JWT signer are **imported from
 `packages/openbadges-core/src/crypto/`** by relative path — the same code the shipping app
 uses. The spike adds no crypto of its own.
+
+The lexicon JSON is **documentation of the record shape**, not enforcement: no script loads
+it, and the PDS validates only lexicons it knows. Milestone 4 gets schema validation when the
+real lexicon is published.
 
 ### NSID
 
@@ -90,10 +94,13 @@ filtered to the test DID and our collection **before** writing, then writes and 
 commit event. Custom collections are relayed like any other — Jetstream's `wantedCollections`
 takes arbitrary NSIDs.
 
-Then it asks the Bluesky AppView (`public.api.bsky.app`) three things about the same account:
-author feed, profile post count, and a post search for the record's unique note. All three
-must come back empty. The AppView indexes `app.bsky.*` only; our record exists in the repo and
-on the firehose, and nowhere in Bluesky.
+Then the Bluesky check — with a **positive control**, because an empty feed on a fresh account
+proves nothing on its own. The script posts one real `app.bsky.feed.post` carrying the same
+unique marker, waits a few seconds for indexing, and asks the AppView (`public.api.bsky.app`)
+for the author feed and a post search. The control post must appear; the spike record must not.
+The control post is deleted afterwards; the spike record stays so `bun run resolve` keeps
+working. If the control never shows up, the script reports the check as inconclusive and
+fails rather than passing on an empty result.
 
 ## What is stubbed
 
@@ -102,7 +109,8 @@ on the firehose, and nowhere in Bluesky.
 - The did:key private key is never persisted. Each `didkey` run is a fresh issuer.
 - One hosted PDS (`bsky.social`). No self-hosted PDS, no custom handle, no DNS.
 - No unpublish/delete flow — `com.atproto.repo.deleteRecord` exists; the spike doesn't call it.
-- No tests beyond `atUri.test.ts`. This tree is outside CI by design.
+- No tests beyond `atUri.test.ts`, run with Bun's own `bun test`. The app's "never `bun test`"
+  rule is about its Jest suite; this tree is outside CI and Jest by design.
 
 ## What milestone 4 still has to build
 
@@ -124,8 +132,10 @@ Needs Bun ≥ 1.3 and a **dedicated throwaway** account on a hosted PDS. Records
 propagate to the firehose the moment they are written; do not use a personal identity.
 
 ```sh
+bun install                     # repo root — didKeyIssuer.ts imports openbadges-core source,
+                                # whose `jose` resolves from the root install
 cd apps/native-rd/prototypes/atproto-spike
-bun install
+bun install                     # the spike's own deps (@atproto/*, jose)
 
 # no account needed:
 bun test                                                # AT-URI helpers
@@ -144,5 +154,6 @@ Every script exits non-zero on any mismatch. `.env` and `.last-record.json` are 
 
 ## Run log
 
-_Paste live output here, with the date. Until this section has entries, the Status table's
-"not yet run" rows stand._
+_Paste live output here, with the date, and keep the `at://` URIs in it. Do not delete the
+records afterwards — a reader verifies the trail by running `bun run resolve <uri>` against
+them. Until this section has entries, the Status table's "not yet run" rows stand._

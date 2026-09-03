@@ -31,18 +31,18 @@ import {
   verifyJWTProof,
   type JWTProofGenerationOptions,
 } from "../../../../../packages/openbadges-core/src/crypto/jwt-proof.ts";
+import type { JWK } from "jose";
+import { decodeJwt } from "jose";
+import {
+  SPIKE_COLLECTION,
+  loginAgent,
+  saveLastRecord,
+  writeReadVerify,
+  type SpikeRecord,
+} from "./pds.ts";
 
 /** openbadges-types brands IRIs; the spike only ever passes DID strings. */
 type IRI = JWTProofGenerationOptions["issuer"];
-import type { JWK } from "jose";
-import {
-  loginAgent,
-  readSpikeRecord,
-  recomputeCid,
-  saveLastRecord,
-  writeSpikeRecord,
-  type SpikeRecord,
-} from "./pds.ts";
 
 // 1. Keypair — the only "identity operation" the issuer ever performs.
 const keyPair = await crypto.subtle.generateKey(
@@ -102,29 +102,35 @@ if (!offline.isValid) {
 // 5. Host it in the atproto repo. The repo's DID is did:plc — not the issuer.
 const agent = await loginAgent();
 const record: SpikeRecord = {
-  $type: "dev.rollercoaster.badge.spike",
+  $type: SPIKE_COLLECTION,
   credential: proof.jws,
   issuer: issuerDid,
   createdAt: new Date().toISOString(),
   note: "didKeyIssuer.ts — iss is a did:key, repo is a did:plc (#614)",
 };
-const written = await writeSpikeRecord(agent, record);
+const { written, value, cidConsistent } = await writeReadVerify(agent, record);
 console.log(`\nrepo did:plc         ${written.repoDid}`);
 console.log(`record uri           ${written.uri}`);
 console.log(`record cid           ${written.cid}`);
 
-const back = await readSpikeRecord(agent, written.uri);
-const localCid = await recomputeCid(back.value);
-const hosted = await verifyJWTProof(
-  { ...proof, jws: back.value.credential },
-  { publicKey: decodeP256DidKey(back.value.issuer!) as JWK, expectedIssuer: issuerDid as IRI },
-);
-console.log(`read-back cid match  ${back.cid === written.cid && localCid === written.cid}`);
-console.log(`read-back verify     ${hosted.isValid} (issuer resolved from the record's own did:key, offline)`);
-console.log(`issuer ≠ repo        ${back.value.issuer !== written.repoDid}`);
+// Verify from the read-back bytes the way a reader must: take `iss` from the
+// JWT itself, not from the record's denormalised `issuer` field, and resolve
+// it offline. The denormalised field is a filter hint, never a trust anchor.
+const readBackIss = decodeJwt(value.credential).iss;
+const hosted =
+  typeof readBackIss === "string" && readBackIss.startsWith("did:key:z")
+    ? await verifyJWTProof(
+        { ...proof, jws: value.credential },
+        { publicKey: decodeP256DidKey(readBackIss) as JWK, expectedIssuer: issuerDid as IRI },
+      )
+    : { isValid: false, error: `unexpected iss in read-back JWT: ${String(readBackIss)}` };
 
-if (!hosted.isValid || back.cid !== written.cid) {
-  console.error("\nFAIL");
+console.log(`read-back cid match  ${cidConsistent}  (server round-trip + local recomputation)`);
+console.log(`read-back verify     ${hosted.isValid}  (key resolved offline from the JWT's own iss)`);
+console.log(`issuer ≠ repo        ${readBackIss !== written.repoDid}  (${String(readBackIss).slice(0, 12)}… vs ${written.repoDid.slice(0, 12)}…)`);
+
+if (!hosted.isValid || !cidConsistent) {
+  console.error(`\nFAIL ${hosted.error ?? ""}`);
   process.exit(1);
 }
 await saveLastRecord(written);

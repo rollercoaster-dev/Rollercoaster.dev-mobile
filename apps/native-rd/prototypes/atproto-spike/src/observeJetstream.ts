@@ -64,6 +64,10 @@ const seen = new Promise<JetstreamCommitEvent>((resolve, reject) => {
     () => reject(new Error(`no jetstream event for our write within ${TIMEOUT_MS / 1000}s`)),
     TIMEOUT_MS,
   );
+  ws.onerror = (e) => {
+    clearTimeout(timer);
+    reject(new Error(`jetstream socket error after open: ${String(e)}`));
+  };
   ws.onmessage = (msg) => {
     const ev = JSON.parse(String(msg.data)) as JetstreamCommitEvent;
     if (ev.kind === "commit" && ev.commit?.collection === SPIKE_COLLECTION && ev.did === did) {
@@ -88,24 +92,39 @@ console.log(`    cid        ${ev.commit?.cid}`);
 console.log(`    time_us    ${ev.time_us}`);
 
 // (b) Bluesky AppView — public, unauthenticated.
+//
+// A fresh account with no posts has an empty feed whatever the AppView does,
+// so an empty feed alone proves nothing. Positive control: post ONE real
+// app.bsky.feed.post carrying the same marker, then check that the AppView
+// shows the post and not the spike record. Give indexing a moment first.
+const control = await agent.post({ text: `spike control post — ${marker}` });
+console.log(`\ncontrol post  ${control.uri}`);
+await Bun.sleep(Number(process.env.APPVIEW_SETTLE_MS ?? 5_000));
+
 const appview = new AtpAgent({ service: "https://public.api.bsky.app" });
 const feed = await appview.app.bsky.feed.getAuthorFeed({ actor: did, limit: 50 });
-const profile = await appview.app.bsky.actor.getProfile({ actor: did });
-let searchHits = -1;
-try {
-  const search = await appview.app.bsky.feed.searchPosts({ q: marker, limit: 5 });
-  searchHits = search.data.posts.length;
-} catch (e) {
-  console.log(`    (searchPosts unavailable: ${(e as Error).message})`);
-}
-const feedMentions = feed.data.feed.filter((f) => JSON.stringify(f).includes(SPIKE_COLLECTION)).length;
-console.log(`\n(b) BLUESKY APPVIEW for ${did}:`);
-console.log(`    getAuthorFeed items                 ${feed.data.feed.length}  (items referencing our collection: ${feedMentions})`);
-console.log(`    getProfile.postsCount               ${profile.data.postsCount ?? 0}`);
-console.log(`    searchPosts("${marker.slice(0, 24)}…") hits  ${searchHits < 0 ? "n/a" : searchHits}`);
+const feedUris = feed.data.feed.map((f) => f.post.uri);
+const controlInFeed = feedUris.includes(control.uri);
+const spikeInFeed = feedUris.some((u) => u.includes(`/${SPIKE_COLLECTION}/`));
+const search = await appview.app.bsky.feed.searchPosts({ q: marker, limit: 10 });
+const searchUris = search.data.posts.map((p) => p.uri);
+const controlInSearch = searchUris.includes(control.uri);
+const spikeInSearch = searchUris.some((u) => u.includes(`/${SPIKE_COLLECTION}/`));
+
+console.log(`\n(b) BLUESKY APPVIEW for ${did}, ${feedUris.length} feed item(s), ${searchUris.length} search hit(s):`);
+console.log(`    control post in author feed   ${controlInFeed}`);
+console.log(`    spike record in author feed   ${spikeInFeed}`);
+console.log(`    control post in searchPosts   ${controlInSearch}`);
+console.log(`    spike record in searchPosts   ${spikeInSearch}`);
+
+// Clean up the control post; the spike record stays so `bun run resolve` works.
+await agent.deletePost(control.uri);
+console.log(`    (control post deleted)`);
 
 const propagated = sameRecord;
-const invisible = feedMentions === 0 && (profile.data.postsCount ?? 0) === 0 && searchHits <= 0;
-console.log(`\nfirehose propagation: ${propagated}   bluesky feed absence: ${invisible}`);
-if (!propagated || !invisible) process.exit(1);
+const controlSeen = controlInFeed; // search indexing can lag; the feed is the hard control
+const invisible = !spikeInFeed && !spikeInSearch;
+console.log(`\nfirehose propagation: ${propagated}   appview control visible: ${controlSeen}   spike record invisible: ${invisible}`);
+if (!controlSeen) console.error("control post never appeared in the author feed — AppView check is INCONCLUSIVE, not a pass");
+if (!propagated || !controlSeen || !invisible) process.exit(1);
 await saveLastRecord(written);

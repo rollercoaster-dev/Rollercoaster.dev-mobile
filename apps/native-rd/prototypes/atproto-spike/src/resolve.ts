@@ -1,5 +1,5 @@
 /**
- * The READER path: resolve an AT-URI with no account and no library, the
+ * The READER path: resolve an AT-URI with no account and no client SDK, the
  * way a verifier page or a jury member would. Pure fetch, three hops:
  *
  *   1. handle → DID        com.atproto.identity.resolveHandle (skipped if the
@@ -13,7 +13,8 @@
  *   bun run resolve            # falls back to .last-record.json
  *
  * Also recomputes the CID from the returned bytes, so "resolves by CID" is
- * checked, not assumed.
+ * checked, not assumed. (The CID recompute reuses @atproto/lex-cbor — the
+ * only atproto code on this path; the three hops are plain fetch.)
  */
 import { parseAtUri } from "./atUri.ts";
 import { loadLastRecord, recomputeCid } from "./pds.ts";
