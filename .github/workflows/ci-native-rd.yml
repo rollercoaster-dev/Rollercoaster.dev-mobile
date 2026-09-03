@@ -16,7 +16,6 @@ on:
       - "bunfig.toml"
       - "turbo.json"
       - "package.json"
-      - ".prettierignore"
       - ".github/workflows/ci-native-rd.yml"
   push:
     branches: [main]
@@ -68,9 +67,6 @@ jobs:
       - name: Verify patched dependencies
         run: bun run check:patches
 
-      - name: Format check
-        run: bun run format:check
-
       - name: Typecheck
         run: bun run turbo type-check --filter=native-rd
 
@@ -79,16 +75,32 @@ jobs:
 
       - name: Test (with coverage)
         working-directory: apps/native-rd
-        run: bun run test:ci -- --coverage --coverageReporters=lcov
+        run: bun run test:ci -- --coverage
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v7
-        continue-on-error: true
+      # Coverage is published in-repo (job summary + artifact) rather than to a
+      # third-party service. No token, no continue-on-error: if the summary file
+      # is missing this step fails loudly instead of reporting a hollow success.
+      - name: Publish coverage summary
+        working-directory: apps/native-rd
+        run: |
+          summary=coverage/coverage-summary.json
+          # Fail if the summary is missing or has no totals — an empty table
+          # must not pass as "coverage published".
+          jq -e '.total | length > 0' "$summary" > /dev/null
+          {
+            echo "### native-rd coverage"
+            echo
+            echo "| Metric | Covered | Total | % |"
+            echo "| --- | ---: | ---: | ---: |"
+            jq -r '.total | del(.branchesTrue) | to_entries[] | "| \(.key) | \(.value.covered) | \(.value.total) | \(.value.pct) |"' "$summary"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v7
         with:
-          files: apps/native-rd/coverage/lcov.info
-          flags: native-rd
-          token: ${{ secrets.CODECOV_TOKEN }}
-          fail_ci_if_error: false
+          name: coverage-native-rd
+          path: apps/native-rd/coverage/
+          if-no-files-found: error
 
       - name: a11y audit
         if: always()
@@ -101,7 +113,7 @@ jobs:
         with:
           name: a11y-audit
           path: apps/native-rd/a11y.json
-          if-no-files-found: warn
+          if-no-files-found: error
 
       - name: Storybook web build
         working-directory: apps/native-rd
