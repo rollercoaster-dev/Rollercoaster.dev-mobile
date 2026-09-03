@@ -247,6 +247,13 @@ export interface EditGoalViewProps {
   goalTitle: string;
   onGoalTitleChange: (title: string) => void;
   /**
+   * Fired when the title input loses focus or submits (#562). The host's
+   * commit point: `onGoalTitleChange` reports every keystroke, so this is
+   * where "the user left the field empty" can be told apart from "the user
+   * is mid-retype". Optional — the view stays presentational without it.
+   */
+  onGoalTitleEndEditing?: () => void;
+  /**
    * Optional goal description (D3). When `undefined` (the shipped default,
    * matching the canonical prototype) no description UI renders — absence is
    * silent. Supplying it opts the field back in for the [Integrate] issue.
@@ -401,6 +408,7 @@ export interface EditGoalViewProps {
 export function EditGoalView({
   goalTitle,
   onGoalTitleChange,
+  onGoalTitleEndEditing,
   description,
   onDescriptionChange,
   steps,
@@ -627,6 +635,7 @@ export function EditGoalView({
               style={styles.titleInput}
               value={goalTitle}
               onChangeText={onGoalTitleChange}
+              onEndEditing={onGoalTitleEndEditing}
               // Single-line rename; "done" blurs on submit so the keyboard
               // never strands the Done button below it (#502).
               returnKeyType="done"

@@ -161,24 +161,26 @@ env:
 #     the title opens the inline editor; the TextInput commits on submit.
 #     This is the only step exercising the "edit" third of bullet 2 and the
 #     only assertion behind EditModeScreen's 500ms title debounce.
-#     Both rename inputs are PREFILLED, and Maestro's `inputText` appends at the
-#     cursor rather than replacing — so the flow appends a suffix instead of
-#     erasing first. Erasing is not merely longer: `eraseText` leaves the field
-#     empty for longer than EditModeScreen's 500ms debounce, which fires
-#     `debouncedUpdateTitle("")` and pops the "Title cannot be empty" Alert
-#     mid-edit, stealing focus before the replacement can be typed.
+#     The step input is PREFILLED and Maestro's `inputText` appends at the
+#     cursor rather than replacing, so this leg appends a suffix; erase-then-
+#     retype is exercised on the goal title in step 14 instead.
 - tapOn:
     id: "edit-goal-step-title-.*"
     index: 0
 - inputText: " renamed"
 - pressKey: Enter
 
-# 14. EDIT: rename the goal itself. Asserted later in the Focus header, which
-#     re-proves the debounce committed across a navigation. Same append-don't-
-#     erase reasoning as step 13.
+# 14. EDIT: rename the goal itself — erase first, then retype. Regression leg
+#     for #562: `eraseText` leaves the field empty for longer than
+#     EditModeScreen's 500ms debounce, which used to pop a "Title cannot be
+#     empty" Alert mid-edit and steal focus before the replacement was typed.
+#     The empty tick is now a no-op, so the retyped title must commit. Asserted
+#     later in the Focus header, which re-proves the debounce committed across
+#     a navigation.
 - tapOn:
     id: "edit-goal-title-input"
-- inputText: " renamed"
+- eraseText
+- inputText: "Alpha goal renamed"
 - pressKey: Enter
 
 # 15. REORDER: move Charlie up over Bravo. Up buttons render on rows 2–3 only
