@@ -4,16 +4,17 @@
 
 ## Pipeline at a glance
 
-| Track                 | Trigger                                                                  | Workflow                  | EAS build profile | EAS submit profile | Destination                  |
-| --------------------- | ------------------------------------------------------------------------ | ------------------------- | ----------------- | ------------------ | ---------------------------- |
-| Direct install        | Manual: Actions → `build-internal` → "Run workflow"                      | `build-internal.yml`      | `preview`         | None               | EAS internal distribution    |
-| Play internal testing | Manual: Actions → `build-play-internal` → "Run workflow"                 | `build-play-internal.yml` | `production`      | `play-internal`    | Google Play internal testing |
-| Tagged tester release | GitHub Release published (release-please PR merge, or manual UI publish) | `build-production.yml`    | `production`      | `production`       | TestFlight + Play internal   |
-| Tagged tester release | Manual: Actions → `build-production` → "Run workflow" with `ref` input   | `build-production.yml`    | `production`      | `production`       | TestFlight + Play internal   |
+| Track                 | Trigger                                                                  | Workflow               | EAS build profile | EAS submit profile | Destination                |
+| --------------------- | ------------------------------------------------------------------------ | ---------------------- | ----------------- | ------------------ | -------------------------- |
+| Direct install        | Manual: Actions → `build-internal` → "Run workflow"                      | `build-internal.yml`   | `preview`         | None               | EAS internal distribution  |
+| Tagged tester release | GitHub Release published (release-please PR merge, or manual UI publish) | `build-production.yml` | `production`      | `production`       | TestFlight + Play internal |
+| Tagged tester release | Manual: Actions → `build-production` → "Run workflow" with `ref` input   | `build-production.yml` | `production`      | `production`       | TestFlight + Play internal |
 
-No release workflow auto-builds on a push to `main`. `build-internal` and
-`build-play-internal` are manual. `build-production` is human-gated either by
-publishing a draft GitHub Release or by manual dispatch. release-please runs on
+No release workflow auto-builds on a push to `main`. `build-internal` is
+manual. `build-production` is human-gated either by publishing a draft GitHub
+Release or by manual dispatch; an Android-only Play internal build is
+`build-production` with `platform: android` (the former `build-play-internal`
+workflow duplicated exactly that path and was removed). release-please runs on
 every push to `main` to keep the release PR up to date, but it never builds
 anything itself.
 
@@ -38,27 +39,28 @@ direct installation only.
 Use this for the current Android tester channel in Play Console:
 **Interner Test** / Google Play internal testing.
 
-1. Merge the workflow/config changes to the branch you want to build.
-2. Go to **Actions → build-play-internal → "Run workflow"**.
-3. Pick the ref you want to build. Leave blank to use the selected branch, or
-   enter `main`, a release branch, a tag, or a commit SHA.
-4. Click **Run workflow**.
-5. The workflow runs release validation, builds a fresh Android store AAB with
+1. Go to **Actions → build-production → "Run workflow"**.
+2. Enter the `ref` to build (a tag or commit SHA) and set `platform` to
+   `android`.
+3. Click **Run workflow**.
+4. The workflow runs release validation, builds a fresh Android store AAB with
    EAS `production`, then submits that exact build with submit profile
-   `play-internal`.
-6. On success, the build appears in Play Console → Testing → Internal testing.
+   `production`, whose Android track is `internal`.
+5. On success, the build appears in Play Console → Testing → Internal testing.
 
-Why this workflow exists:
+Notes:
 
 - Google Play version codes are single-use once uploaded anywhere in Play
-  Console.
-- Re-submitting the same EAS build can fail with
-  `Version code has already been used`.
-- This workflow always creates a fresh Android store build first, so EAS remote
-  auto-increment assigns the next version code before submit.
+  Console, and re-submitting the same EAS build can fail with
+  `Version code has already been used`. `build-production` always creates a
+  fresh Android store build first, so EAS remote auto-increment assigns the
+  next version code before submit.
 - It targets Play `internal`, matching the current tester channel. Do not use
   `alpha` / `beta` until the app is intentionally moved to a formal closed
   testing track.
+- A separate `build-play-internal` workflow used to duplicate this path with
+  its own `play-internal` submit profile. It never had a successful run and was
+  removed in #609.
 
 ## Cutting a tagged tester release
 
@@ -135,8 +137,8 @@ The store and EAS workflows use these GitHub repository secrets:
 | 2026-06-07 | `build-production` | `v0.1.14` | iOS      | [EAS build `01618bff-49be-4fe8-a748-7c9fc28e0163`](https://expo.dev/accounts/rollercoasterdev/projects/rollercoasterdev/builds/01618bff-49be-4fe8-a748-7c9fc28e0163); [Actions run `27096223782`](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/actions/runs/27096223782) | Success | Submitted to App Store Connect/TestFlight        |
 | 2026-06-07 | `build-production` | `v0.1.14` | Android  | [EAS build `22930d94-95b4-4039-9fd4-ceec910a81a5`](https://expo.dev/accounts/rollercoasterdev/projects/rollercoasterdev/builds/22930d94-95b4-4039-9fd4-ceec910a81a5); [Actions run `27096223782`](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/actions/runs/27096223782) | Success | Submitted to Play `internal`, status `COMPLETED` |
 
-Issue #90 remains open until a current `build-play-internal` run is recorded
-here.
+Issue #90 remains open until a current Android-only `build-production`
+(`platform: android`) run is recorded here.
 
 ## Tag rewriting is blocked — ship as N+1 instead
 
