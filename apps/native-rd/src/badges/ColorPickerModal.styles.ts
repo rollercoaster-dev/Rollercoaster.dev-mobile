@@ -12,7 +12,7 @@ export const styles = StyleSheet.create((theme) => ({
 
   headerTitle: {
     ...theme.textStyles.title,
-    color: theme.colors.accentPurpleFg,
+    color: theme.chrome.screenHeaderFg,
   },
   headerSpacer: {
     width: 48,
@@ -24,7 +24,7 @@ export const styles = StyleSheet.create((theme) => ({
     alignItems: "center",
   },
   closeIconFallback: {
-    color: theme.colors.accentPurpleFg,
+    color: theme.chrome.screenHeaderFg,
     fontSize: 18,
     fontWeight: "700",
   },

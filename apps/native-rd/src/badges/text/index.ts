@@ -18,6 +18,7 @@ export {
   getBottomLabelFontSize,
   getBottomLabelY,
   getBottomLabelBottomOverflow,
+  getBottomLabelPlateBox,
 } from "./BottomLabel";
 
 export { PathText } from "./PathText";

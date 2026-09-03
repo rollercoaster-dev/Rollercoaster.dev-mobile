@@ -81,8 +81,11 @@ export function resolveIconColor(
 ): string {
   switch (tone) {
     case "chrome":
-      // Foreground on the app's purple chrome band — same role as tab bar text.
-      return theme.chrome.chromeTabBarFg;
+      // Foreground on the screen-header band. Must follow screenHeaderFg, not
+      // chromeTabBarFg: the tab bar stays light purple in dark mode (dark ink)
+      // while the header band goes deep purple (light ink), so borrowing the
+      // tab-bar ink paints a dark arrow on a dark band.
+      return theme.chrome.screenHeaderFg;
     case "celebration":
       // Foreground on the yellow celebration band (Badge Detail hero). The
       // chromeTabBarFg used by "chrome" is contrast-computed on purple and
