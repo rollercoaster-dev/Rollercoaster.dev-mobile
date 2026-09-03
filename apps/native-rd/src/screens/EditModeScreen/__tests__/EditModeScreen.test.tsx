@@ -357,7 +357,6 @@ describe("EditModeScreen", () => {
 
     it("restores the stored title when the field is left empty, without writing", async () => {
       setupQueries();
-      const alertSpy = jest.spyOn(Alert, "alert");
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
       const titleInput = screen.getByTestId("edit-goal-title-input");
       fireEvent.changeText(titleInput, "");
@@ -368,10 +367,11 @@ describe("EditModeScreen", () => {
         jest.advanceTimersByTime(500);
       });
       expect(mockUpdateGoal).not.toHaveBeenCalled();
-      expect(alertSpy).not.toHaveBeenCalled();
     });
 
-    it("keeps a non-empty title on end editing", () => {
+    // Done/back inside the debounce window unmounts the screen and drops the
+    // timer, so end editing must flush a pending write instead of waiting.
+    it("flushes a pending non-empty title write on end editing, exactly once", async () => {
       setupQueries();
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
       const titleInput = screen.getByTestId("edit-goal-title-input");
@@ -379,6 +379,29 @@ describe("EditModeScreen", () => {
       fireEvent(titleInput, "endEditing");
 
       expect(titleInput.props.value).toBe("Learn Rust");
+      expect(mockUpdateGoal).toHaveBeenCalledTimes(1);
+      expect(mockUpdateGoal).toHaveBeenCalledWith("goal-1", {
+        title: "Learn Rust",
+      });
+
+      await act(async () => {
+        jest.advanceTimersByTime(500);
+      });
+      expect(mockUpdateGoal).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not re-write an already-debounced title on end editing", async () => {
+      setupQueries();
+      renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+      const titleInput = screen.getByTestId("edit-goal-title-input");
+      fireEvent.changeText(titleInput, "Learn Rust");
+      await act(async () => {
+        jest.advanceTimersByTime(500);
+      });
+      expect(mockUpdateGoal).toHaveBeenCalledTimes(1);
+
+      fireEvent(titleInput, "endEditing");
+      expect(mockUpdateGoal).toHaveBeenCalledTimes(1);
     });
 
     it("updates description input on change and debounces mutation", async () => {

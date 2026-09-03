@@ -145,38 +145,47 @@ function EditContent({ goalId }: { goalId: string }) {
     };
   }, []);
 
+  const writeTitle = useCallback(
+    (trimmed: string) => {
+      runEvoluMutation(
+        () => updateGoal(goalId as GoalId, { title: trimmed }),
+        (error) => {
+          console.error("[EditModeScreen] Failed to update title", {
+            goalId,
+            title: trimmed,
+            error,
+          });
+          reportError(error, { area: "goal.mutate", kind: "update" });
+          // Write failures still surface through Alert: EditGoalView's title
+          // card has no error slot, and inventing one would be un-storied UI.
+          // Same channel the description path has always used.
+          Alert.alert(
+            t("editGoal:errors.alertErrorTitle"),
+            t("editGoal:errors.updateTitleFailed"),
+          );
+        },
+      );
+    },
+    [goalId, t],
+  );
+
   const debouncedUpdateTitle = useCallback(
     (newTitle: string) => {
       if (titleTimer.current) clearTimeout(titleTimer.current);
       titleTimer.current = setTimeout(() => {
+        titleTimer.current = null;
         const trimmed = newTitle.trim();
         // An empty field surviving the debounce is not a submission (#562) —
         // the user cleared the title and is about to retype it. Skip the write
         // (an empty title is never persisted) and leave the decision to the
         // commit point, handleTitleEndEditing. The modal Alert that used to
         // fire here took first responder mid-edit and dropped the replacement
-        // text. Write failures still surface through Alert: EditGoalView's
-        // title card has no error slot, and inventing one would be un-storied
-        // UI. Same channel the description path has always used.
+        // text.
         if (!trimmed) return;
-        runEvoluMutation(
-          () => updateGoal(goalId as GoalId, { title: trimmed }),
-          (error) => {
-            console.error("[EditModeScreen] Failed to update title", {
-              goalId,
-              title: trimmed,
-              error,
-            });
-            reportError(error, { area: "goal.mutate", kind: "update" });
-            Alert.alert(
-              t("editGoal:errors.alertErrorTitle"),
-              t("editGoal:errors.updateTitleFailed"),
-            );
-          },
-        );
+        writeTitle(trimmed);
       }, DEBOUNCE_MS);
     },
-    [goalId, t],
+    [writeTitle],
   );
 
   const debouncedUpdateDescription = useCallback(
@@ -236,11 +245,19 @@ function EditContent({ goalId }: { goalId: string }) {
   // edit, not an error: drop any pending debounce write and fall back to the
   // stored title, the same "empty rename is a no-op" contract the step rows
   // keep in EditGoalStepList.commitEditing. No modal — the old title simply
-  // comes back, and the DB row was never touched.
+  // comes back, and the DB row was never touched. A non-empty title with a
+  // write still pending is flushed right here: Done/back inside the debounce
+  // window unmounts the screen, and the unmount cleanup drops the timer.
   function handleTitleEndEditing() {
-    if (title.trim()) return;
+    const pending = titleTimer.current !== null;
     if (titleTimer.current) clearTimeout(titleTimer.current);
-    setTitle(goal?.title ?? "");
+    titleTimer.current = null;
+    const trimmed = title.trim();
+    if (!trimmed) {
+      setTitle(goal?.title ?? "");
+      return;
+    }
+    if (pending) writeTitle(trimmed);
   }
 
   function handleDescriptionChange(text: string) {
