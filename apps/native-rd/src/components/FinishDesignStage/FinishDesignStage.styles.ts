@@ -37,6 +37,12 @@ export const styles = StyleSheet.create((theme) => ({
     alignItems: "center",
     paddingVertical: theme.space[5],
   },
+  // KeyboardAvoidingFrame frame around the body + footer: flex:1 so it owns the
+  // space under the header and shrinks with the soft keyboard, lifting the
+  // footer CTA above it instead of leaving it covered.
+  keyboardFrame: {
+    flex: 1,
+  },
   sections: {
     flex: 1,
   },

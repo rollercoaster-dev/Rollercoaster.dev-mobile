@@ -1,6 +1,7 @@
 import type { Preview } from "@storybook/react";
 import React from "react";
 import { Platform, ScrollView } from "react-native";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StyleSheet, UnistylesRuntime } from "react-native-unistyles";
 import { themeNames, type ThemeName } from "../src/themes";
@@ -43,14 +44,18 @@ const ThemeDecorator = (Story: React.ComponentType, context: any) => {
 
   return (
     <SafeAreaProvider>
-      <EvoluAppProvider>
-        <ScrollView
-          style={styles.container}
-          contentContainerStyle={styles.content}
-        >
-          <Story />
-        </ScrollView>
-      </EvoluAppProvider>
+      {/* Footers use keyboard-controller's KeyboardAvoidingView, whose hooks
+          warn in dev without a provider. */}
+      <KeyboardProvider>
+        <EvoluAppProvider>
+          <ScrollView
+            style={styles.container}
+            contentContainerStyle={styles.content}
+          >
+            <Story />
+          </ScrollView>
+        </EvoluAppProvider>
+      </KeyboardProvider>
     </SafeAreaProvider>
   );
 };

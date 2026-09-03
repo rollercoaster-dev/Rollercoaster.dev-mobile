@@ -1,0 +1,114 @@
+appId: dev.rollercoaster.app
+tags:
+  - required
+env:
+  METRO_HOST: localhost
+  METRO_PORT: "8081"
+---
+# ============================================================================
+# FOOTER CTA REACHABLE WITH THE KEYBOARD UP
+#
+# Pins the fix for the New Goal wizard and Edit Goal dead ends: both screens
+# have an add-step input that keeps the soft keyboard up between adds
+# (blurOnSubmit={false}) and a footer CTA pinned to the bottom. Before the
+# KeyboardAvoidingView wrap, that CTA sat UNDER the keyboard, and once the list
+# outgrew the viewport the "tap the inert steps header" escape hatch (#502)
+# scrolled out of reach too — three or more steps made the wizard unusable.
+#
+# The load-bearing shape, used twice below: add enough steps to fill the
+# viewport, leave the keyboard UP (no Enter-to-blur, no header tap), tap the
+# footer CTA directly, then assert the screen it leads to. Pre-fix, Maestro's
+# tap lands on the keyboard glyph occupying the CTA's frame and the arrival
+# assertion fails. Do NOT add a dismissal step before either CTA tap — that is
+# the regression this flow exists to catch.
+# ============================================================================
+
+# --- Prologue: isolation, boot, determinism lever ---------------------------
+- runFlow:
+    file: ../subflows/launch-and-onboard.yaml
+    env:
+      METRO_HOST: ${METRO_HOST}
+      METRO_PORT: ${METRO_PORT}
+      THEME_SWATCH: light-autismFriendly
+
+# --- Wizard: name + first step ----------------------------------------------
+# 1. These two steps are single-line inputs with returnKeyType="done", so Enter
+#    dismisses; they are not under test here.
+- tapOn:
+    id: "goals-cockpit-new-goal"
+- assertVisible:
+    id: "new-goal-wizard-content"
+- tapOn:
+    id: "new-goal-title-input"
+- inputText: "Keyboard goal"
+- pressKey: Enter
+- tapOn:
+    id: "new-goal-next-button"
+- tapOn:
+    id: "new-goal-first-step-input"
+- inputText: "Alpha step"
+- pressKey: Enter
+- tapOn:
+    id: "new-goal-next-button"
+
+# --- Wizard build step: the original report --------------------------------
+# 2. Three more steps via Enter. Each Enter adds a row and KEEPS the keyboard
+#    up; four rows exceed the visible area on every supported simulator, so the
+#    steps header is off-screen and the footer is the only way forward.
+- tapOn:
+    id: "edit-goal-add-step-input"
+- inputText: "Bravo step"
+- pressKey: Enter
+- inputText: "Charlie step"
+- pressKey: Enter
+- inputText: "Delta step"
+- pressKey: Enter
+
+# 3. Tap "I'm ready" with the keyboard still up. Arrival on the ready step is
+#    the assertion: it can only be reached if the footer sat above the keyboard.
+- tapOn:
+    id: "new-goal-build-ready-button"
+- assertVisible:
+    id: "new-goal-start-working-button"
+- tapOn:
+    id: "new-goal-start-working-button"
+- extendedWaitUntil:
+    visible:
+      id: "focus-current-task-add-text"
+    timeout: 15000
+
+# --- Edit Goal: same shape, real Evolu rows ---------------------------------
+# 4. Focus → Timeline → EditMode, the way a user gets there.
+- tapOn:
+    id: "focus-progress-strip"
+- tapOn:
+    id: "timeline-edit-button"
+- assertVisible:
+    id: "edit-goal-content"
+
+# 5. Add a fifth step and leave the keyboard up. The Edit Goal list already
+#    holds four rows plus the title card, so the add row is clipped below the
+#    ScrollView viewport and absent from the iOS hierarchy until scrolled into
+#    view (same clipping step-timing-editor.yaml scrolls past). centerElement
+#    matters: without it the scroll stops as soon as the row is "visible" while
+#    its frame still sits behind the floating tab bar, and the tap lands on the
+#    Badges tab. Scrolling here also puts the steps header off-screen, which is
+#    the shape under test.
+- scrollUntilVisible:
+    element:
+      id: "edit-goal-add-step-input"
+    direction: DOWN
+    centerElement: true
+- tapOn:
+    id: "edit-goal-add-step-input"
+- inputText: "Echo step"
+- pressKey: Enter
+
+# 6. Tap Done with the keyboard still up. Done navigates to Focus Mode, so the
+#    current-task card reappearing is the arrival assertion.
+- tapOn:
+    id: "edit-goal-done-button"
+- extendedWaitUntil:
+    visible:
+      id: "focus-current-task-add-text"
+    timeout: 15000

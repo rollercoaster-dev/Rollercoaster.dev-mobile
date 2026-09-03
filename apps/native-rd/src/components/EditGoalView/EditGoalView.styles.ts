@@ -24,6 +24,11 @@ export const styles = StyleSheet.create((theme) => ({
     flex: 1,
   },
   // The internal ScrollView claims the space between header and footer.
+  // KeyboardAvoidingFrame around [scroll][footer]; flex:1 so it owns the space
+  // under the header and shrinks with the keyboard.
+  keyboardFrame: {
+    flex: 1,
+  },
   scroll: {
     flex: 1,
   },
@@ -446,6 +451,8 @@ export const styles = StyleSheet.create((theme) => ({
   addRow: {
     flexDirection: "row" as const,
     gap: theme.space[2],
+    // Sits outside stepList, so it doesn't get the list's row gap; match it.
+    marginTop: theme.space[2],
   },
   addInputCard: {
     flex: 1,

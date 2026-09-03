@@ -1,17 +1,26 @@
-import { Platform } from "react-native";
+import { useReanimatedKeyboardAnimation } from "react-native-keyboard-controller";
+import { interpolate, useAnimatedStyle } from "react-native-reanimated";
 
 /**
- * Shared KeyboardAvoidingView props for screens with text inputs.
+ * Animated bottom padding for a footer pinned inside a KeyboardAvoidingFrame.
  *
- * No vertical offset is needed: every consumer renders ScreenSubHeader as a JS
- * sibling above the KAV (navigators use `headerShown: false`), so the KAV's
- * onLayout already reflects the post-header screen position. Setting a non-zero
- * offset would double-count the header and leave a visible white strip above
- * the keyboard.
+ * Such footers reserve bottom space at rest — the home indicator on the wizard,
+ * the floating tab bar's lift on Edit Goal. With the keyboard up that space is
+ * under the keys, so the reservation would open a dead gap between the CTA and
+ * the keyboard. This interpolates from `closed` to `open` on the keyboard's own
+ * progress, so the footer tracks the keyboard frame-for-frame instead of
+ * snapping after it has finished hiding (which is what switching on a
+ * keyboard-visible flag does). Apply on an `Animated.View` after the static
+ * footer style so it wins on `paddingBottom`.
  */
-export const KEYBOARD_AVOIDING_PROPS = {
-  behavior: (Platform.OS === "ios" ? "padding" : "height") as
-    | "padding"
-    | "height",
-  keyboardVerticalOffset: 0,
-};
+export function useKeyboardFooterPadding(closed: number, open: number) {
+  if (!Number.isFinite(closed) || !Number.isFinite(open)) {
+    throw new RangeError(
+      `useKeyboardFooterPadding: paddings must be finite, got ${closed}/${open}`,
+    );
+  }
+  const { progress } = useReanimatedKeyboardAnimation();
+  return useAnimatedStyle(() => ({
+    paddingBottom: interpolate(progress.value, [0, 1], [closed, open]),
+  }));
+}

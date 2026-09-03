@@ -29,6 +29,7 @@ import {
   TextInput,
   Pressable,
   AccessibilityInfo,
+  Keyboard,
   type GestureResponderEvent,
 } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -67,6 +68,12 @@ export interface EditGoalStepListProps {
    */
   onReparentStep?: (stepId: string, newParentStepId: string | null) => void;
   onAddStep: (title: string) => void;
+  /**
+   * The add-step input gained focus. The host owns the ScrollView this list
+   * sits in and scrolls it to the end, so the add row — the last thing in the
+   * content — sits at the bottom edge before the keyboard rises over it.
+   */
+  onAddStepInputFocus?: () => void;
   onStepTitleChange: (stepId: string, title: string) => void;
   /**
    * Fired when a step's or sub-step's evidence chip is tapped (#493/D8). The
@@ -169,6 +176,7 @@ export function EditGoalStepList({
   onReorderSubSteps,
   onReparentStep,
   onAddStep,
+  onAddStepInputFocus,
   onStepTitleChange,
   onEvidenceChipPress,
   onAddSubStep,
@@ -287,7 +295,13 @@ export function EditGoalStepList({
 
   function handleAddStep() {
     const trimmed = newStepTitle.trim();
-    if (!trimmed) return;
+    // The input keeps the keyboard up between adds (blurOnSubmit={false}), so
+    // the return key on an empty field would otherwise do nothing at all. Read
+    // an empty submit as "done adding" and put the keyboard away.
+    if (!trimmed) {
+      Keyboard.dismiss();
+      return;
+    }
     onAddStep(trimmed);
     setNewStepTitle("");
   }
@@ -560,6 +574,7 @@ export function EditGoalStepList({
             value={newStepTitle}
             onChangeText={setNewStepTitle}
             onSubmitEditing={handleAddStep}
+            onFocus={onAddStepInputFocus}
             placeholder={addStepPlaceholder}
             placeholderTextColor={theme.colors.textMuted}
             returnKeyType="done"
