@@ -79,16 +79,28 @@ jobs:
 
       - name: Test (with coverage)
         working-directory: apps/native-rd
-        run: bun run test:ci -- --coverage --coverageReporters=lcov
+        run: bun run test:ci -- --coverage --coverageReporters=lcov --coverageReporters=json-summary
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v7
-        continue-on-error: true
+      # Coverage is published in-repo (job summary + artifact) rather than to a
+      # third-party service. No token, no continue-on-error: if the summary file
+      # is missing this step fails loudly instead of reporting a hollow success.
+      - name: Publish coverage summary
+        working-directory: apps/native-rd
+        run: |
+          {
+            echo "### native-rd coverage"
+            echo
+            echo "| Metric | Covered | Total | % |"
+            echo "| --- | ---: | ---: | ---: |"
+            jq -r '.total | to_entries[] | "| \(.key) | \(.value.covered) | \(.value.total) | \(.value.pct) |"' coverage/coverage-summary.json
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v7
         with:
-          files: apps/native-rd/coverage/lcov.info
-          flags: native-rd
-          token: ${{ secrets.CODECOV_TOKEN }}
-          fail_ci_if_error: false
+          name: coverage-native-rd
+          path: apps/native-rd/coverage/
+          if-no-files-found: error
 
       - name: a11y audit
         if: always()
