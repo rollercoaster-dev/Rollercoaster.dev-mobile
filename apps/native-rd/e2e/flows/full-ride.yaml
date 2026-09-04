@@ -341,11 +341,9 @@ env:
 - assertNotVisible:
     id: "focus-current-task-mark-complete"
 
-# 21. Capture the Link. CaptureLinkScreen wraps its body in a
-#     KeyboardAvoidingFrame and a ScrollView (keyboardShouldPersistTaps=
-#     "handled"), so Save sits above the keyboard and the dismissal below is
-#     belt and braces, not load-bearing. Both inputs carry returnKeyType="done"
-#     (#565): Enter on either blurs and dismisses.
+# 21. Capture the Link. The Enter before Save is belt and braces, not
+#     load-bearing; both inputs are returnKeyType="done" (#565). See
+#     README.md → "Soft keyboard occlusion".
 - tapOn:
     id: "focus-current-task-add-link"
 - tapOn:

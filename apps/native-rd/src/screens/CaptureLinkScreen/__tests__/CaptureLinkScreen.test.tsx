@@ -4,7 +4,6 @@ import {
   renderWithProviders,
   screen,
   fireEvent,
-  waitFor,
   within,
 } from "../../../__tests__/test-utils";
 import { i18n } from "../../../i18n";
@@ -33,6 +32,13 @@ jest.mock("../../../db", () => {
     createEvidence: jest.fn(),
   };
 });
+
+// Pin a distinctive inset so the test proves the screen merges the hook's
+// value into the scroll content, not just that some padding exists.
+const TAB_INSET = 123;
+jest.mock("../../../navigation/useTabScreenContentInset", () => ({
+  useTabScreenContentInset: () => ({ paddingBottom: TAB_INSET }),
+}));
 
 const mockCreateEvidence = createEvidence as jest.MockedFunction<
   typeof createEvidence
@@ -75,19 +81,25 @@ describe("CaptureLinkScreen", () => {
 
   // #565: at large Dynamic Type the inputs + preview card + buttons outgrow
   // the viewport. The actions must live inside a scroll container that keeps
-  // taps alive with the keyboard up and clears the floating tab bar.
-  it("renders Save and Cancel inside a tap-persisting, tab-bar-inset scroll container", () => {
+  // taps alive with the keyboard up.
+  it("renders Save and Cancel inside a scroll container that persists taps", () => {
     renderScreen();
 
     const scroll = screen.getByTestId("capture-link-scroll");
     expect(scroll.props.keyboardShouldPersistTaps).toBe("handled");
 
-    const content = StyleSheet.flatten(scroll.props.contentContainerStyle);
-    expect(content.paddingBottom).toBeGreaterThan(0);
-
     const inside = within(scroll);
     expect(inside.getByTestId("capture-link-save")).toBeOnTheScreen();
     expect(inside.getByText(i18n.t("common:actions.cancel"))).toBeOnTheScreen();
+  });
+
+  it("pads the scroll content by the floating tab-bar inset", () => {
+    renderScreen();
+
+    const content = StyleSheet.flatten(
+      screen.getByTestId("capture-link-scroll").props.contentContainerStyle,
+    );
+    expect(content.paddingBottom).toBe(TAB_INSET);
   });
 
   // #565: the URL input wires no onSubmitEditing/ref, so its return key can

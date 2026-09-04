@@ -88,12 +88,10 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
         onBack={() => navigation.goBack()}
       />
 
-      {/* Keeps the Save/Cancel row above the keyboard while the URL or caption
-          has focus; header stays outside so no vertical offset is needed.
-          The body scrolls so the actions stay reachable at large text sizes,
-          where inputs + preview card + buttons outgrow the viewport; the
-          bottom inset clears the floating tab bar like the sibling capture
-          screens. */}
+      {/* The frame shrinks the scroll viewport to the space above the keyboard;
+          header stays outside so no vertical offset is needed. Save/Cancel
+          scroll with the body (not a pinned footer), so they are reachable at
+          any text size, and taps on them survive an open keyboard. */}
       <KeyboardAvoidingFrame style={styles.keyboardFrame}>
         <ScrollView
           style={styles.scroll}

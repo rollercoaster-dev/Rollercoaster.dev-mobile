@@ -85,11 +85,9 @@ env:
     id: "new-goal-start-working-button"
 
 # --- Capture the link first (older) -----------------------------------------
-# Per-type invites replace the old FAB → FABMenu path. `pressKey: Enter` after
-# the caption fires the keyboard's blue check (returnKeyType="done") to dismiss
-# the soft keyboard. Since #649/#565 that is belt and braces: CaptureLinkScreen
-# lifts Save above the keyboard (KeyboardAvoidingFrame) and its ScrollView keeps
-# taps alive with the keyboard up. Both inputs are returnKeyType="done".
+# Per-type invites replace the old FAB → FABMenu path. The `pressKey: Enter`
+# before Save is belt and braces, not load-bearing; both inputs are
+# returnKeyType="done" (#565). See README.md → "Soft keyboard occlusion".
 - extendedWaitUntil:
     visible:
       id: "focus-current-task-add-link"
