@@ -142,7 +142,7 @@ This is verifiable, and should be verified, with `maestro hierarchy` — VoiceOv
 
 Every screen with a text input above a pinned footer CTA now lifts that footer above the keyboard: `CaptureTextNote` via `useReanimatedKeyboardAnimation`, and `NewGoalWizard`, `EditGoalView`, `CaptureLinkScreen`, `VoiceMemoScreen`, `FinishCelebrateStage` and `FinishDesignStage` via the shared `KeyboardAvoidingFrame` (keyboard-controller's view plus a self-measured window offset). `keyboard-cta-reachable.yaml` pins this for the two screens whose add-step input keeps the keyboard up between adds (`blurOnSubmit={false}`): it taps the footer CTA with the keyboard still showing and asserts arrival. Do not add a dismissal step before those taps.
 
-Older flows still dismiss before tapping `capture-link-save` (tap `capture-link-caption`, `pressKey: Enter`). That is now belt and braces, not load-bearing. If you do dismiss from Capture Link, do it from the caption: the URL input is labelled `returnKeyType="next"` but wires no `onSubmitEditing`/ref, so that key advances no focus.
+Older flows still dismiss before tapping `capture-link-save` (tap `capture-link-caption`, `pressKey: Enter`). That is now belt and braces, not load-bearing. Both Capture Link inputs carry `returnKeyType="done"` (#565), so Enter on either one blurs and dismisses; the screen's body is also a `ScrollView` with `keyboardShouldPersistTaps="handled"`, so a tap on Save with the keyboard still up reaches the button.
 
 ### Flow structure
 
