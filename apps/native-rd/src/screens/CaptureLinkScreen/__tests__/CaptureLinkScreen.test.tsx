@@ -1,9 +1,11 @@
 import React from "react";
+import { StyleSheet } from "react-native";
 import {
   renderWithProviders,
   screen,
   fireEvent,
   waitFor,
+  within,
 } from "../../../__tests__/test-utils";
 import { i18n } from "../../../i18n";
 import { CaptureLinkScreen } from "../CaptureLinkScreen";
@@ -69,6 +71,33 @@ describe("CaptureLinkScreen", () => {
     ).toBeTruthy();
     expect(screen.getByText(i18n.t("captureLink:actions.save"))).toBeTruthy();
     expect(screen.getByText(i18n.t("common:actions.cancel"))).toBeTruthy();
+  });
+
+  // #565: at large Dynamic Type the inputs + preview card + buttons outgrow
+  // the viewport. The actions must live inside a scroll container that keeps
+  // taps alive with the keyboard up and clears the floating tab bar.
+  it("renders Save and Cancel inside a tap-persisting, tab-bar-inset scroll container", () => {
+    renderScreen();
+
+    const scroll = screen.getByTestId("capture-link-scroll");
+    expect(scroll.props.keyboardShouldPersistTaps).toBe("handled");
+
+    const content = StyleSheet.flatten(scroll.props.contentContainerStyle);
+    expect(content.paddingBottom).toBeGreaterThan(0);
+
+    const inside = within(scroll);
+    expect(inside.getByTestId("capture-link-save")).toBeOnTheScreen();
+    expect(inside.getByText(i18n.t("common:actions.cancel"))).toBeOnTheScreen();
+  });
+
+  // #565: the URL input wires no onSubmitEditing/ref, so its return key can
+  // only blur. Labelling it "next" promised focus advancement that never came.
+  it("labels the URL input's return key as done", () => {
+    renderScreen();
+
+    expect(screen.getByTestId("capture-link-url").props.returnKeyType).toBe(
+      "done",
+    );
   });
 
   it("shows validation error for empty URL on save", () => {

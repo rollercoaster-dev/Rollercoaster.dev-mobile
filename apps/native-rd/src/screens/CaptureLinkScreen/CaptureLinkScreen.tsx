@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Alert } from "react-native";
+import { View, Alert, ScrollView } from "react-native";
 import { KeyboardAvoidingFrame } from "../../components/KeyboardAvoidingFrame";
 import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
@@ -12,6 +12,7 @@ import { createEvidence, EvidenceType } from "../../db";
 import type { GoalId, StepId } from "../../db";
 import { reportError } from "../../services/sentry-report";
 import { useEvidenceStartBreadcrumb } from "../../hooks/useEvidenceStartBreadcrumb";
+import { useTabScreenContentInset } from "../../navigation/useTabScreenContentInset";
 import type { CaptureLinkScreenProps } from "../../navigation/types";
 import { isValidUrl, normalizeUrl } from "../../utils/url";
 import { styles } from "./CaptureLinkScreen.styles";
@@ -20,6 +21,7 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
   const navigation = useNavigation();
   const { t } = useTranslation(["captureLink", "common"]);
   const { goalId, stepId } = route.params;
+  const tabInset = useTabScreenContentInset();
 
   const [url, setUrl] = useState("");
   const [caption, setCaption] = useState("");
@@ -87,9 +89,18 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
       />
 
       {/* Keeps the Save/Cancel row above the keyboard while the URL or caption
-          has focus; header stays outside so no vertical offset is needed. */}
+          has focus; header stays outside so no vertical offset is needed.
+          The body scrolls so the actions stay reachable at large text sizes,
+          where inputs + preview card + buttons outgrow the viewport; the
+          bottom inset clears the floating tab bar like the sibling capture
+          screens. */}
       <KeyboardAvoidingFrame style={styles.keyboardFrame}>
-        <View style={styles.content}>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={[styles.content, tabInset]}
+          keyboardShouldPersistTaps="handled"
+          testID="capture-link-scroll"
+        >
           <View style={styles.inputSection}>
             <Input
               label={t("captureLink:urlInput.label")}
@@ -100,7 +111,9 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
               autoCapitalize="none"
               autoCorrect={false}
               keyboardType="url"
-              returnKeyType="next"
+              // "done", not "next": nothing is wired to advance focus to the
+              // caption (Input exposes no ref), so the key blurs and dismisses.
+              returnKeyType="done"
               textContentType="URL"
               testID="capture-link-url"
             />
@@ -155,7 +168,7 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
               disabled={saving}
             />
           </View>
-        </View>
+        </ScrollView>
       </KeyboardAvoidingFrame>
     </View>
   );
