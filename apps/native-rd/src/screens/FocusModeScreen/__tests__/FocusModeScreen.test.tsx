@@ -99,11 +99,13 @@ jest.mock("../../../db", () => {
       file: "file",
     },
     TEXT_EVIDENCE_PREFIX: "content:text;",
+    GoalStatus: { active: "active", completed: "completed" },
     goalsQuery: "goalsQuery",
     stepsByGoalQuery: jest.fn((id: string) => `stepsByGoalQuery-${id}`),
     stepEvidenceByGoalQuery: jest.fn(
       (id: string) => `stepEvidenceByGoalQuery-${id}`,
     ),
+    badgeByGoalQuery: jest.fn((id: string) => `badgeByGoalQuery-${id}`),
     userSettingsQuery: "userSettingsQuery",
     createUserSettings: jest.fn(),
     updateUserSettings: jest.fn(),
@@ -319,14 +321,19 @@ function setupQueries({
   steps = PHOTO_STEP,
   stepEvidence = [] as object[],
   settings = null as object | null,
+  badge = null as object | null,
 }: {
   goal?: object | null;
   steps?: object[];
   stepEvidence?: object[];
   settings?: object | null;
+  /** The goal's one badge row, once baked. */
+  badge?: object | null;
 } = {}) {
   mockUseQuery.mockImplementation((query: unknown) => {
     if (query === "goalsQuery") return goal ? [goal] : [];
+    if (typeof query === "string" && query.startsWith("badgeByGoalQuery"))
+      return badge ? [badge] : [];
     if (query === "userSettingsQuery") return settings ? [settings] : [];
     if (
       typeof query === "string" &&
@@ -526,6 +533,49 @@ describe("FocusModeScreen", () => {
       );
       expect(mockNavigate).toHaveBeenCalledWith("CompletionFlow", {
         goalId: "goal-1",
+      });
+    });
+
+    // A completed goal with a badge on record is sealed (#563): CompletionFlow
+    // opens on the read-only reveal, so the card offers "View badge" (#653).
+    describe("sealed goal (#653)", () => {
+      const COMPLETED_GOAL = { ...GOAL, status: "completed" };
+      const BADGE = { id: "badge-1", goalId: "goal-1", design: null };
+
+      it('offers "View badge" with its own body copy and still opens CompletionFlow', () => {
+        setupQueries({
+          goal: COMPLETED_GOAL,
+          steps: ALL_DONE_STEPS,
+          badge: BADGE,
+        });
+        renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+        expect(
+          screen.getByText(t("focusMode:currentTask.allComplete.sealedCta")),
+        ).toBeOnTheScreen();
+        expect(
+          screen.getByText(t("focusMode:currentTask.allComplete.sealedBody")),
+        ).toBeOnTheScreen();
+        fireEvent.press(
+          screen.getByLabelText(
+            t("focusMode:currentTask.allComplete.sealedCtaA11y"),
+          ),
+        );
+        expect(mockNavigate).toHaveBeenCalledWith("CompletionFlow", {
+          goalId: "goal-1",
+        });
+      });
+
+      it('keeps "Design your badge" for a completed goal with no badge row', () => {
+        // completeGoal succeeded but the badge write failed — not sealed, the
+        // flow stays walkable so the user can still bake (#563).
+        setupQueries({ goal: COMPLETED_GOAL, steps: ALL_DONE_STEPS });
+        renderWithProviders(<FocusModeScreen {...routeProps} />);
+        expect(
+          screen.getByText(
+            t("focusMode:currentTask.allComplete.designBadgeCta"),
+          ),
+        ).toBeOnTheScreen();
       });
     });
 

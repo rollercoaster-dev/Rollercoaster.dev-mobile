@@ -55,7 +55,10 @@
       "heading": "Every step done.",
       "body": "Now design the badge that marks it — the keepsake comes at the end.",
       "designBadgeCta": "Design your badge",
-      "designBadgeA11y": "Design your badge to celebrate completing this goal"
+      "designBadgeA11y": "Design your badge to celebrate completing this goal",
+      "sealedBody": "Your badge is on record — the keepsake is ready.",
+      "sealedCta": "View badge",
+      "sealedCtaA11y": "View the badge you earned for this goal"
     }
   },
   "evidencePlanSheet": {

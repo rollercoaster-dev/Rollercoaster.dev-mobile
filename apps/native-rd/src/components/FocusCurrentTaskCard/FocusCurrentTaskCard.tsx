@@ -369,7 +369,7 @@ function CompletedView({
 }
 
 /** All steps done: no pill, trophy callout box, single "design your badge" CTA. */
-function AllCompleteView({ onDesignBadge }: FocusAllCompleteCardProps) {
+function AllCompleteView({ onDesignBadge, sealed }: FocusAllCompleteCardProps) {
   const { t } = useTranslation(["common", "focusMode"]);
   return (
     <CardShell
@@ -384,7 +384,9 @@ function AllCompleteView({ onDesignBadge }: FocusAllCompleteCardProps) {
               {"🏆"}
             </Text>
             <Text style={styles.calloutText}>
-              {t("focusMode:currentTask.allComplete.body")}
+              {sealed
+                ? t("focusMode:currentTask.allComplete.sealedBody")
+                : t("focusMode:currentTask.allComplete.body")}
             </Text>
           </View>
         </>
@@ -395,13 +397,17 @@ function AllCompleteView({ onDesignBadge }: FocusAllCompleteCardProps) {
           style={styles.primaryCta}
           accessible
           accessibilityRole="button"
-          accessibilityLabel={t(
-            "focusMode:currentTask.allComplete.designBadgeA11y",
-          )}
+          accessibilityLabel={
+            sealed
+              ? t("focusMode:currentTask.allComplete.sealedCtaA11y")
+              : t("focusMode:currentTask.allComplete.designBadgeA11y")
+          }
           testID="focus-current-task-design-badge"
         >
           <Text style={styles.primaryCtaText}>
-            {t("focusMode:currentTask.allComplete.designBadgeCta")}
+            {sealed
+              ? t("focusMode:currentTask.allComplete.sealedCta")
+              : t("focusMode:currentTask.allComplete.designBadgeCta")}
           </Text>
         </Pressable>
       }

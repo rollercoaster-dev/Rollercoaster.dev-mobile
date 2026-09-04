@@ -196,7 +196,12 @@ export const Completed: Story = {
 export const AllComplete: Story = {
   render: () => (
     <PhoneWidth>
-      <FocusCurrentTaskCard status="all-complete" title="" {...handlers} />
+      <FocusCurrentTaskCard
+        status="all-complete"
+        title=""
+        sealed={false}
+        {...handlers}
+      />
     </PhoneWidth>
   ),
 };
