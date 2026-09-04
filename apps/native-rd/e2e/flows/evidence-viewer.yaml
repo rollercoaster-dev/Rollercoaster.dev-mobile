@@ -85,11 +85,9 @@ env:
     id: "new-goal-start-working-button"
 
 # --- Capture the link first (older) -----------------------------------------
-# Per-type invites replace the old FAB → FABMenu path. `pressKey: Enter` after
-# the caption fires the keyboard's blue check (returnKeyType="done") to dismiss
-# the soft keyboard so Save is tappable — CaptureLinkScreen has no
-# KeyboardAvoidingView, so without dismissing first the Save tap lands on the
-# keyboard. Enter on the URL field does not help: it is returnKeyType="next".
+# Per-type invites replace the old FAB → FABMenu path. The `pressKey: Enter`
+# before Save is belt and braces, not load-bearing; both inputs are
+# returnKeyType="done" (#565). See README.md → "Soft keyboard occlusion".
 - extendedWaitUntil:
     visible:
       id: "focus-current-task-add-link"
