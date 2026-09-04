@@ -55,7 +55,10 @@
       "heading": "Alle Schritte erledigt.",
       "body": "Gestalte jetzt das Abzeichen, das es markiert — das Andenken kommt zum Schluss.",
       "designBadgeCta": "Dein Abzeichen gestalten",
-      "designBadgeA11y": "Gestalte dein Abzeichen, um den Abschluss dieses Ziels zu feiern"
+      "designBadgeA11y": "Gestalte dein Abzeichen, um den Abschluss dieses Ziels zu feiern",
+      "sealedBody": "Dein Abzeichen ist gespeichert — das Andenken ist fertig.",
+      "sealedCta": "Abzeichen ansehen",
+      "sealedCtaA11y": "Sieh dir das Abzeichen an, das du für dieses Ziel verdient hast"
     }
   },
   "evidencePlanSheet": {

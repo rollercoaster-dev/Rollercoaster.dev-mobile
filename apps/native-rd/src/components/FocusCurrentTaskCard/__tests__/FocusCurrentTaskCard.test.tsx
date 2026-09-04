@@ -48,6 +48,7 @@ interface TestOverrides {
   onMarkComplete?: () => void;
   onReopen?: () => void;
   onDesignBadge?: () => void;
+  sealed?: boolean;
   onChangeEvidencePlan?: () => void;
   onAddEvidence?: (type?: string) => void;
   afterStep?: string;
@@ -65,6 +66,7 @@ function renderCard(overrides: TestOverrides = {}) {
     onMarkComplete: jest.fn(),
     onReopen: jest.fn(),
     onDesignBadge: jest.fn(),
+    sealed: false,
     onChangeEvidencePlan: jest.fn(),
     onAddEvidence: jest.fn(),
     ...overrides,
@@ -304,6 +306,20 @@ describe("FocusCurrentTaskCard", () => {
         screen.getByLabelText(
           "Design your badge to celebrate completing this goal",
         ),
+      );
+      expect(props.onDesignBadge).toHaveBeenCalledTimes(1);
+    });
+
+    // A completed goal with a badge on record is sealed (#563): the flow opens
+    // on the read-only reveal, so the card offers "View badge" instead (#653).
+    it("all-complete on a sealed goal offers View badge and still fires onDesignBadge", () => {
+      const props = renderCard({ status: "all-complete", sealed: true });
+      expect(screen.getByText("View badge")).toBeOnTheScreen();
+      expect(
+        screen.getByText("Your badge is on record — the keepsake is ready."),
+      ).toBeOnTheScreen();
+      fireEvent.press(
+        screen.getByLabelText("View the badge you earned for this goal"),
       );
       expect(props.onDesignBadge).toHaveBeenCalledTimes(1);
     });
