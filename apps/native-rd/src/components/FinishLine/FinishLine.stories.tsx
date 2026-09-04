@@ -99,6 +99,24 @@ export const AllStepsDoneCelebration: Story = {
   ),
 };
 
+// Sealed (#653): the goal is completed and its badge is on record, so the row
+// is a "View badge" entry into the read-only reveal — real preview, yellow star.
+export const SealedGoal: Story = {
+  render: () => (
+    <View style={storyStyles.container}>
+      <FinishLine
+        goalTitle="Read 12 books"
+        badgeDesign={makeDesign()}
+        allStepsComplete
+        onBadgePress={noop}
+        sealed
+        goalEvidence={mockEvidence}
+        onEvidencePress={noop}
+      />
+    </View>
+  ),
+};
+
 // Goal-star states × 7 product themes. Like TimelineNode's AllThemesMatrix,
 // unistyles' theme is a global runtime singleton, so each composed theme is
 // read statically and painted inline through goalNodeBg/Fg — proving the

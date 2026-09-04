@@ -24,8 +24,8 @@ import {
   resolveActionableIndex,
   resolveStepDependencyBand,
   StepStatus,
-  GoalStatus,
 } from "../../db";
+import { isGoalSealed } from "../../db/goalSeal";
 import { formatDate } from "../../utils/format";
 import { parseBadgeDesign } from "../../badges/types";
 import type { GoalId } from "../../db";
@@ -154,11 +154,11 @@ function TimelineContent({
   // FinishLine's preview seeds from the same chain as CompletionFlowScreen
   // (#653): badge.design is what the bake wrote and BadgeDetail renders, so it
   // wins; goal.design is the designer's pre-bake draft; null falls back to the
-  // monogram tile. A completed goal with a badge on record is sealed — its CTA
-  // opens the read-only reveal (#563), so the copy says "View badge".
+  // monogram tile. A sealed goal's CTA opens the read-only reveal (#563), so
+  // the copy says "View badge".
   const finishLineDesign =
     parseBadgeDesign(badgeRow?.design) ?? parseBadgeDesign(goal?.design);
-  const isSealed = goal?.status === GoalStatus.completed && badgeRow !== null;
+  const sealed = isGoalSealed(goal, badgeRow);
 
   // Goal evidence for FinishLine
   const goalEvidence: EvidenceItemData[] = goalEvidenceRows.map((row) => ({
@@ -303,7 +303,7 @@ function TimelineContent({
             goalTitle={goal.title ?? ""}
             badgeDesign={finishLineDesign}
             allStepsComplete={areAllStepsComplete(stepRows)}
-            sealed={isSealed}
+            sealed={sealed}
             onBadgePress={handleBadgePress}
             goalEvidence={goalEvidence}
             onEvidencePress={handleEvidencePress}

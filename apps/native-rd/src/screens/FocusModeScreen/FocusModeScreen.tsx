@@ -47,8 +47,8 @@ import {
   resolveStepDependencyBand,
   EvidenceType,
   StepStatus,
-  GoalStatus,
 } from "../../db";
+import { isGoalSealed } from "../../db/goalSeal";
 import type { GoalId, StepId } from "../../db";
 import { useToast } from "../../components/Toast";
 import type {
@@ -184,6 +184,9 @@ function FocusContent({
   // flow (#563) — the all-complete card's CTA then reads "View badge" (#653).
   const badgeRows = useQuery(badgeByGoalQuery(goalId as GoalId));
   const badgeRow = badgeRows[0] ?? null;
+  // Computed here, above the useCallbacks: the React Compiler lint refuses to
+  // preserve their manual memoization when this call sits inline in the JSX.
+  const sealed = isGoalSealed(goal, badgeRow);
 
   // The Timeline-return pin (D2): a one-shot override of the derived step,
   // holding whichever node the user tapped in TimelineJourney so they land on
@@ -604,7 +607,7 @@ function FocusContent({
             parkedRows={parkedRows}
             goalTitle={goal.title ?? ""}
             onDesignBadge={handleDesignBadge}
-            sealed={goal.status === GoalStatus.completed && badgeRow !== null}
+            sealed={sealed}
           />
         )}
       </View>

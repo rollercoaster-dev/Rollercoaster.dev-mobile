@@ -99,7 +99,6 @@ jest.mock("../../../db", () => {
       file: "file",
     },
     TEXT_EVIDENCE_PREFIX: "content:text;",
-    GoalStatus: { active: "active", completed: "completed" },
     goalsQuery: "goalsQuery",
     stepsByGoalQuery: jest.fn((id: string) => `stepsByGoalQuery-${id}`),
     stepEvidenceByGoalQuery: jest.fn(
@@ -567,8 +566,8 @@ describe("FocusModeScreen", () => {
       });
 
       it('keeps "Design your badge" for a completed goal with no badge row', () => {
-        // completeGoal succeeded but the badge write failed — not sealed, the
-        // flow stays walkable so the user can still bake (#563).
+        // Legacy data (the live bake writes the badge before it flips the goal)
+        // — not sealed, the flow stays walkable so the user can still bake.
         setupQueries({ goal: COMPLETED_GOAL, steps: ALL_DONE_STEPS });
         renderWithProviders(<FocusModeScreen {...routeProps} />);
         expect(

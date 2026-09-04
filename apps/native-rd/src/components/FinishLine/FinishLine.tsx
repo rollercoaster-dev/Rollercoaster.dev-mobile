@@ -10,7 +10,10 @@ import { styles, BADGE_PREVIEW_SIZE } from "./FinishLine.styles";
 
 export interface FinishLineProps {
   goalTitle: string;
-  /** Parsed badge design, or null when the goal has no design yet. */
+  /**
+   * Parsed badge design — the baked badge's, else the goal's pre-bake draft —
+   * or null when neither exists yet (the monogram tile renders instead).
+   */
   badgeDesign: BadgeDesign | null;
   /** Paints the goal star celebration-yellow once every step is complete. */
   allStepsComplete: boolean;

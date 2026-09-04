@@ -206,6 +206,21 @@ export const AllComplete: Story = {
   ),
 };
 
+// Sealed (#653): the goal is completed and its badge is on record, so the CTA
+// is "View badge" into the read-only reveal, not a design pass.
+export const AllCompleteSealed: Story = {
+  render: () => (
+    <PhoneWidth>
+      <FocusCurrentTaskCard
+        status="all-complete"
+        title=""
+        sealed
+        {...handlers}
+      />
+    </PhoneWidth>
+  ),
+};
+
 // The real card across all 7 product themes (#406). Unistyles' theme is a global
 // runtime singleton, but `ScopedTheme` scopes a subtree to one named theme, so we
 // render the actual FocusCurrentTaskCard once per theme — each card picks up its

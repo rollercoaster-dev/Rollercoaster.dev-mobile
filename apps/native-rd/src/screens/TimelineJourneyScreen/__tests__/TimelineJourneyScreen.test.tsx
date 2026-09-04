@@ -48,7 +48,6 @@ jest.mock("../../../db", () => ({
     link: "link",
     file: "file",
   },
-  GoalStatus: { active: "active", completed: "completed" },
   goalsQuery: "goalsQuery",
   stepsByGoalQuery: jest.fn((id: string) => `stepsByGoalQuery-${id}`),
   evidenceByGoalQuery: jest.fn((id: string) => `evidenceByGoalQuery-${id}`),
@@ -478,9 +477,16 @@ describe("TimelineJourneyScreen", () => {
       expect(tree).not.toContain("XW");
     });
 
+    it("falls back to goal.design (the pre-bake draft) when there is no badge row", () => {
+      setupQueries({ goal: { ...GOAL, design: monogramDesign("XW") } });
+      renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
+      expect(screen.getByTestId("finish-line-badge-preview")).toBeOnTheScreen();
+      expect(JSON.stringify(screen.toJSON())).toContain("XW");
+    });
+
     it('keeps "Finish & design badge" for a completed goal with no badge row', () => {
-      // completeGoal succeeded but the badge write failed — not sealed, the
-      // flow stays walkable so the user can still bake (#563).
+      // Legacy data (the live bake writes the badge before it flips the goal)
+      // — not sealed, the flow stays walkable so the user can still bake.
       setupQueries({ goal: COMPLETED_GOAL });
       renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
       expect(screen.getByText("Finish & design badge")).toBeOnTheScreen();

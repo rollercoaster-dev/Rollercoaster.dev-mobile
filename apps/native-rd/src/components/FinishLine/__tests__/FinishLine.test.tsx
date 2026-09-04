@@ -89,6 +89,16 @@ describe("FinishLine", () => {
       expect(screen.getByLabelText("View your badge")).toBeOnTheScreen();
     });
 
+    it("keeps the sealed subtitle even when the badge design cannot be parsed", () => {
+      // A badge row whose design column is null/corrupt still seals the goal;
+      // the monogram tile shows, but the copy must not say "until you design it".
+      renderFinishLine({ sealed: true, badgeDesign: null });
+      expect(screen.getByText("R")).toBeOnTheScreen();
+      expect(
+        screen.getByText("Your badge is on record — tap to see it."),
+      ).toBeOnTheScreen();
+    });
+
     it("still fires onBadgePress from the sealed CTA row", () => {
       const props = renderFinishLine({ sealed: true, badgeDesign: design });
       fireEvent.press(screen.getByLabelText("View your badge"));
