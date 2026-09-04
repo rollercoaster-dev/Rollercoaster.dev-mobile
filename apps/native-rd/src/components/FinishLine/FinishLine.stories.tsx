@@ -55,6 +55,7 @@ export const UndesignedBadge: Story = {
         badgeDesign={null}
         allStepsComplete={false}
         onBadgePress={noop}
+        sealed={false}
         goalEvidence={mockEvidence}
         onEvidencePress={noop}
       />
@@ -72,6 +73,7 @@ export const DesignedBadge: Story = {
         badgeDesign={makeDesign()}
         allStepsComplete={false}
         onBadgePress={noop}
+        sealed={false}
         goalEvidence={[]}
         onEvidencePress={noop}
       />
@@ -89,6 +91,7 @@ export const AllStepsDoneCelebration: Story = {
         badgeDesign={null}
         allStepsComplete
         onBadgePress={noop}
+        sealed={false}
         goalEvidence={mockEvidence}
         onEvidencePress={noop}
       />

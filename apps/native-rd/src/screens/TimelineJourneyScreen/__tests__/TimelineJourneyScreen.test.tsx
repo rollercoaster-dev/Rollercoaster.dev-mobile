@@ -48,9 +48,11 @@ jest.mock("../../../db", () => ({
     link: "link",
     file: "file",
   },
+  GoalStatus: { active: "active", completed: "completed" },
   goalsQuery: "goalsQuery",
   stepsByGoalQuery: jest.fn((id: string) => `stepsByGoalQuery-${id}`),
   evidenceByGoalQuery: jest.fn((id: string) => `evidenceByGoalQuery-${id}`),
+  badgeByGoalQuery: jest.fn((id: string) => `badgeByGoalQuery-${id}`),
   evidenceByStepQuery: jest.fn((id: string) => `evidenceByStepQuery-${id}`),
   stepEvidenceByGoalQuery: jest.fn(
     (id: string) => `stepEvidenceByGoalQuery-${id}`,
@@ -316,14 +318,19 @@ function setupQueries({
   steps = MIXED_STEPS,
   goalEvidence = [] as object[],
   stepEvidence = [] as object[],
+  badge = null as object | null,
 }: {
   goal?: object | null;
   steps?: object[];
   goalEvidence?: object[];
   stepEvidence?: object[];
+  /** The goal's one badge row, once baked. */
+  badge?: object | null;
 } = {}) {
   mockUseQuery.mockImplementation((query: unknown) => {
     if (query === "goalsQuery") return goal ? [goal] : [];
+    if (typeof query === "string" && query.startsWith("badgeByGoalQuery"))
+      return badge ? [badge] : [];
     if (typeof query === "string" && query.startsWith("stepsByGoalQuery"))
       return steps;
     if (typeof query === "string" && query.startsWith("evidenceByGoalQuery"))
@@ -410,6 +417,73 @@ describe("TimelineJourneyScreen", () => {
     fireEvent.press(screen.getByLabelText("Finish and design your badge"));
     expect(mockNavigate).toHaveBeenCalledWith("CompletionFlow", {
       goalId: "goal-1",
+    });
+  });
+
+  // A completed goal with a badge on record is sealed (#563): CompletionFlow
+  // opens on the read-only reveal, so the finish line is a "view your badge"
+  // entry and its preview must show the badge that was actually baked (#653).
+  describe("sealed goal (#653)", () => {
+    const COMPLETED_GOAL = { ...GOAL, status: "completed", design: null };
+    /**
+     * A design JSON whose center is a monogram, so which seed won is readable
+     * from the rendered tree. The monogram is SVG text, not an RN <Text>, so
+     * the assertions read the serialized tree the way BadgeRenderer's do.
+     */
+    const monogramDesign = (monogram: string) =>
+      JSON.stringify({
+        shape: "circle",
+        frame: "none",
+        color: "#a78bfa",
+        iconName: "Trophy",
+        iconWeight: "regular",
+        title: "Learn TypeScript",
+        centerMode: "monogram",
+        monogram,
+      });
+    const BADGE = {
+      id: "badge-1",
+      goalId: "goal-1",
+      design: monogramDesign("ZQ"),
+    };
+
+    it('reads "View badge" and still opens CompletionFlow', () => {
+      setupQueries({ goal: COMPLETED_GOAL, badge: BADGE });
+      renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
+      expect(screen.getByText("View badge")).toBeOnTheScreen();
+      fireEvent.press(screen.getByLabelText("View your badge"));
+      expect(mockNavigate).toHaveBeenCalledWith("CompletionFlow", {
+        goalId: "goal-1",
+      });
+    });
+
+    it("previews badge.design when goal.design is null", () => {
+      // Every goal finished through CompletionFlow looks like this: the bake
+      // writes badge.design only, so a goal-first seed showed the monogram
+      // tile ("L") instead of the badge on record.
+      setupQueries({ goal: COMPLETED_GOAL, badge: BADGE });
+      renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
+      expect(screen.getByTestId("finish-line-badge-preview")).toBeOnTheScreen();
+      expect(JSON.stringify(screen.toJSON())).toContain("ZQ");
+    });
+
+    it("prefers badge.design over goal.design when both are set", () => {
+      setupQueries({
+        goal: { ...COMPLETED_GOAL, design: monogramDesign("XW") },
+        badge: BADGE,
+      });
+      renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
+      const tree = JSON.stringify(screen.toJSON());
+      expect(tree).toContain("ZQ");
+      expect(tree).not.toContain("XW");
+    });
+
+    it('keeps "Finish & design badge" for a completed goal with no badge row', () => {
+      // completeGoal succeeded but the badge write failed — not sealed, the
+      // flow stays walkable so the user can still bake (#563).
+      setupQueries({ goal: COMPLETED_GOAL });
+      renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
+      expect(screen.getByText("Finish & design badge")).toBeOnTheScreen();
     });
   });
 

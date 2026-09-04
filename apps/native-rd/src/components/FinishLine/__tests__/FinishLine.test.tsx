@@ -34,6 +34,7 @@ function renderFinishLine(overrides: Partial<FinishLineProps> = {}) {
     badgeDesign: null,
     allStepsComplete: false,
     onBadgePress: jest.fn(),
+    sealed: false,
     goalEvidence: [],
     onEvidencePress: jest.fn(),
     ...overrides,
@@ -74,6 +75,25 @@ describe("FinishLine", () => {
     const props = renderFinishLine();
     fireEvent.press(screen.getByLabelText("Finish and design your badge"));
     expect(props.onBadgePress).toHaveBeenCalledTimes(1);
+  });
+
+  // A completed goal with a badge on record is sealed (#563): the CTA opens the
+  // read-only reveal, so it must not promise "Finish & design" (#653).
+  describe("sealed goal", () => {
+    it("reads View badge, with its own subtitle and a11y label", () => {
+      renderFinishLine({ sealed: true, badgeDesign: design });
+      expect(screen.getByText("View badge")).toBeOnTheScreen();
+      expect(
+        screen.getByText("Your badge is on record — tap to see it."),
+      ).toBeOnTheScreen();
+      expect(screen.getByLabelText("View your badge")).toBeOnTheScreen();
+    });
+
+    it("still fires onBadgePress from the sealed CTA row", () => {
+      const props = renderFinishLine({ sealed: true, badgeDesign: design });
+      fireEvent.press(screen.getByLabelText("View your badge"));
+      expect(props.onBadgePress).toHaveBeenCalledTimes(1);
+    });
   });
 
   it("shows evidence items", () => {

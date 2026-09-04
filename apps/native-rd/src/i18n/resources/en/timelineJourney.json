@@ -34,6 +34,9 @@
     "ctaSubtitleUndesigned": "The keepsake comes at the end — badge starts as '{{letter}}' until you design it.",
     "ctaSubtitleDesigned": "Tap to view or update your badge design.",
     "ctaA11yLabel": "Finish and design your badge",
+    "sealedCtaTitle": "View badge",
+    "sealedCtaSubtitle": "Your badge is on record — tap to see it.",
+    "sealedCtaA11yLabel": "View your badge",
     "a11yNode": "Goal finish line"
   }
 }
