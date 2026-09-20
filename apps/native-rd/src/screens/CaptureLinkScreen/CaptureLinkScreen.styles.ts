@@ -11,8 +11,13 @@ export const styles = StyleSheet.create((theme) => ({
   keyboardFrame: {
     flex: 1,
   },
-  content: {
+  scroll: {
     flex: 1,
+  },
+  // ScrollView content container: no `flex: 1` here, or the content would
+  // shrink to the viewport instead of overflowing into a scroll. The tab-bar
+  // inset is merged in at the call site and wins on paddingBottom.
+  content: {
     padding: theme.space[4],
     gap: theme.space[4],
   },
