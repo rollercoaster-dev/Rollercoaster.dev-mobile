@@ -34,6 +34,8 @@ Evidence must identify inspected paths/commits/PRs, unmet or satisfied criteria,
 
 After all issues are assessed, present competing outcomes and a recommended order, with impact, deadline, risk, effort and dependencies. Specifically resolve App Store launch vs funding submission priorities from current docs with Joe; do not inherit stale priority labels blindly. Separate work requiring human input (`hitl`), design (`needs:design`), and epics from autonomous implementation. Ask about them; never strip labels simply to pass the guard.
 
+For `hitl` issues, identify the exact human contribution and ask a concrete question through Telegram. Record the answer and Telegram update ID in the issue audit evidence or active plan. Never remove `hitl` merely to pass admission: after the human prerequisite is resolved, explicitly agree to reclassify the issue or split out an independently actionable child. Revalidate scope, dependencies and acceptance criteria before adding that work to the approved queue. If it blocks the next item, propose a queue change rather than silently skipping it.
+
 Use the board as the visible plan. Board Priority is canonical; reconcile issue labels after agreement. Ensure `Execution order` (NUMBER) and `In Review` status exist. After Joe agrees, put the selected independent implementation issues in Next, assign consecutive Execution order values, and show the exact ordered issue list back to him. Record that SAME list with `pm.py queue N ...`, then `approve-queue --approval-ref 'Telegram update N / task message and agreed list'`. Only explicit agreement to this concrete queue authorizes that command. General approval of the automation is not priority approval. Changing the queue clears its approval.
 
 ## Dispatch and maintenance

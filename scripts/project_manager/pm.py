@@ -81,7 +81,8 @@ class Manager:
 
     def _occupied(self, s):
         # A close without merge is deliberately retained until manually resolved.
-        prs = sum(not p.get('merged_at') for p in s['prs'].values())
+        prs = sum(not (p.get('merged_at') and (p.get('merged_by') or {}).get('login') == 'joeczar'
+                       and (p.get('merged_by') or {}).get('type') == 'User') for p in s['prs'].values())
         reservations = sum(r.get('pr') is None for r in s['reservations'].values())
         return prs + reservations
 

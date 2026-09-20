@@ -43,8 +43,8 @@ write transaction and reserves capacity before work. Claims persist through
 restarts and duplicates are rejected. Only one active implementation is allowed.
 
 Five occupied slots prohibit new issue work. Open issue PRs (including drafts),
-reservations and closed-unmerged PRs consume slots. A human merge releases the
-PR's slot. Existing third-party issue PRs count too. Only the real Dependabot
+reservations and closed-unmerged PRs consume slots. A verified merge by Joe's GitHub account (`joeczar`, type User) releases the
+PR's slot. A merge by another actor remains held for Joe's decision. Existing third-party issue PRs count too. Only the real Dependabot
 account and release-please branches from the GitHub Actions account are excluded.
 Labels or titles cannot exempt a PR. Unknown PR types count conservatively.
 There is no automatic timeout/release command: inspect stuck reservations and

@@ -8,7 +8,8 @@ from pm import Manager, GateError
 
 def pr(n, state='open', author='joeczar', branch=None, merged=False, draft=False):
     return dict(number=n, state=state, user={'login': author}, head={'ref': branch or f'codex/issue-{n}', 'repo': {'full_name': 'rollercoaster-dev/Rollercoaster.dev-mobile'}},
-                merged_at='2026-09-20T12:00:00Z' if merged else None, draft=draft,
+                merged_at='2026-09-20T12:00:00Z' if merged else None,
+                merged_by={'login': 'joeczar', 'type': 'User'} if merged else None, draft=draft,
                 body=f'Closes #{n}', html_url=f'https://github.com/x/y/pull/{n}')
 
 
@@ -65,6 +66,15 @@ class ManagerTests(unittest.TestCase):
         merged = snapshot([pr(1, state='closed', merged=True)] + [pr(n) for n in range(2,6)])
         self.m.claim(100, lambda: merged)
         self.assertEqual(self.m.status()['occupied'],5)
+
+    def test_another_actor_merge_does_not_release_joes_slot(self):
+        data = snapshot([pr(n) for n in range(1,6)])
+        self.ready(data)
+        merged = pr(1, state='closed', merged=True)
+        merged['merged_by'] = {'login': 'some-bot[bot]', 'type': 'Bot'}
+        with self.assertRaises(GateError):
+            self.m.claim(100, lambda: snapshot([merged] + [pr(n) for n in range(2,6)]))
+        self.assertEqual(self.m.status()['occupied'], 5)
 
     def test_no_claim_without_complete_audit_and_priority_approval(self):
         data = snapshot()
