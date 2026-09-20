@@ -8,4 +8,4 @@ Documents defining what the app is, who it's for, and how it should feel.
 | [design-principles.md](./design-principles.md)                                           | ND-first design rules, visual identity, 7 themes                                           | 2026-02-24    |
 | [user-stories.md](./user-stories.md)                                                     | Lina, Sam, Ava, Eva — real scenarios driving design                                        | 2026-02-24    |
 | [habit-formation.md](./habit-formation.md)                                               | Recurring practice vs finish-line goal; how to help ND users build habits                  | 2026-06-20    |
-| [community-learning-and-peer-validation.md](./community-learning-and-peer-validation.md) | Local learning groups, coaching, versioned step validation, and optional standalone badges | 2026-09-20    |
+| [community-learning-and-peer-validation.md](./community-learning-and-peer-validation.md) | In-person, one-to-one learning, coaching, versioned step validation, and standalone badges | 2026-09-20    |

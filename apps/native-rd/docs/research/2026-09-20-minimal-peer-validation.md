@@ -8,7 +8,7 @@
 
 ## Product source of truth
 
-[Community Learning and Peer Validation](../vision/community-learning-and-peer-validation.md) records the agreed direction: recurring local learning groups, coaching and iteration, validation of steps and whole badges, and optional standalone recognition for a step.
+[Community Learning and Peer Validation](../vision/community-learning-and-peer-validation.md) records the agreed direction: encourage in-person interaction through one learner and one invited peer meeting physically, each using their own app. This supports coaching and iteration, validation of steps and whole badges, and optional standalone recognition for a step. Group connections are future scope; the initial flow does not depend on them.
 
 This brief consolidates the initial exploration. File export/import, fixed media limits, and a final-badge-only flow were tentative suggestions, not accepted requirements. Transport, review screens, and exact protocol choices remain open.
 
@@ -45,7 +45,7 @@ The vision also does not change the funded scope recorded in [ADR-0015](../decis
 
 ## Next investigations
 
-1. Workshop the app-to-app encounter and review flow, then compare transfer options against that experience.
+1. Workshop the one-to-one, in-person app-to-app encounter and review flow, then compare transfer options against that experience. Both people use their own app; group connections are outside the initial scope.
 2. Design the step/credential/version model, including required-validation timing and reuse when a step becomes a standalone badge.
 3. Define endorsement scope, reviewer recognition, and how evidence-reviewed versus personally-witnessed bases are recorded.
 4. Test standards interoperability and device exchange with the chosen design; include revised claims, duplicate responses, interrupted reviews, and unavailable network checks.

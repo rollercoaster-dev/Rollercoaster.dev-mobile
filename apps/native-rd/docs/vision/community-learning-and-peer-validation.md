@@ -6,9 +6,13 @@
 
 ## Purpose
 
-Create reasons for people to come together locally, learn from one another, and recognize each other's progress. The motivating analogy is modern scouting: learners create their own achievements and validate them through live, in-person social interaction.
+**The main purpose is to encourage in-person interaction:** create reasons for people to come together locally, learn from one another, and recognize each other's progress. The motivating analogy is modern scouting: learners create their own achievements and validate them through live, in-person social interaction.
 
-Regularly meeting groups support an ongoing process. People can bring an idea, work in progress, an individual step, or a completed self-issued badge. Review can contribute to earning an achievement or add recognition afterward. The app supports that relationship and preserves its history.
+The initial experience is one-to-one: a learner invites a specific peer to review a step or badge while they are physically together, each using their own app. The app supports their conversation, shared learning, and recognition, and preserves the review history. Encouraging that face-to-face encounter is a core product goal.
+
+People can bring an idea, work in progress, an individual step, or a completed self-issued badge. Review can contribute to earning an achievement or add recognition afterward, and the same pair can meet again to iterate on feedback.
+
+Regularly meeting groups remain a longer-term aspiration. The app currently has no group connections; group membership, group invitations, and group-wide review requests are outside the initial scope. The one-to-one flow must work without them.
 
 ## Learner choice
 
@@ -58,7 +62,7 @@ OB3 provides achievement and endorsement models; the app must model coaching, re
 - Issuance timing when peer validation is required, including the distinction between a completion claim and an approved achievement.
 - Exact version identifiers, evidence binding, and portable review-history representation.
 - How two people connect their apps and exchange data during a meeting. File export/import, QR, nearby transfer, and hosted links have **not** been selected.
-- What group support belongs in the app, as distinct from the real-world group meeting regularly.
+- Future group support, beyond the initial one-to-one flow, as distinct from people organizing real-world meetings themselves.
 - Feedback capture, retention, disclosure, and the review-state model.
 - How optional badge presentation is separated from the signed credential in storage and export.
 - How linked achievements and badge trees should be represented. See [OB3 linked-achievement research](../research/2026-09-20-ob3-linked-achievements.md); it does not select an architecture.
