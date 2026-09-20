@@ -1,0 +1,36 @@
+{
+  "environment": "Node on one Mac, five loopback DHT nodes (three persistent testnet nodes + two peers); no public bootstrap configured; not a two-phone or external-OB3-conformance test",
+  "hyperdht": "6.34.0",
+  "results": [
+    {
+      "name": "image-and-audio",
+      "ok": true,
+      "wireBytes": 97543,
+      "elapsedMs": 40
+    },
+    {
+      "name": "plus-10MiB-synthetic-load",
+      "ok": true,
+      "wireBytes": 14078889,
+      "elapsedMs": 991
+    },
+    {
+      "name": "changed-evidence-rejected",
+      "ok": false,
+      "error": "evidence hash",
+      "wireBytes": 87675,
+      "elapsedMs": 51
+    },
+    {
+      "name": "changed-signature-rejected",
+      "ok": false,
+      "error": "signature",
+      "wireBytes": 97543,
+      "elapsedMs": 8
+    },
+    {
+      "name": "interrupted-transfer-not-accepted",
+      "pass": true
+    }
+  ]
+}
