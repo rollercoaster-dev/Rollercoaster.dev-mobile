@@ -60,6 +60,18 @@ against current main, status Next, and no human/design/dependency/epic blocker.
 Changing the ordered queue clears approval. Resume only clears pause; it cannot
 approve priorities. Issues stay open until Joe's agreed closure decision or merge.
 
+## Dependabot approval
+
+Joe authorizes the manager to approve dependency PRs after verifying compatibility,
+applicable tests and CI, independent review, and safe manual-only merging. Use
+`.agents/skills/dependabot-review/SKILL.md`. Submit a commit-pinned approval as soon
+as those gates pass; do not wait for the issue queue or another permission message.
+Failed checks, incompatibilities, conflicts, or unresolved review findings remain
+blockers. Record the tested head, base, evidence, and approval or blocker in state.
+Use current main/runtime instructions and the portable review workflow so an old
+PR checkout cannot reintroduce obsolete provider-specific review requirements.
+Only Joe merges.
+
 ## Telegram
 
 ```sh
