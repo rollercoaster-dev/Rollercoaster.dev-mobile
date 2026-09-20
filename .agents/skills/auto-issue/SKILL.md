@@ -1,93 +1,20 @@
 ---
 name: auto-issue
-description: Fully autonomous issue-to-PR workflow for Rollercoaster.dev-mobile. Use when a worker should execute one issue end-to-end without human gates.
-allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Skill, Task
+description: Use when executing one Rollercoaster.dev-mobile issue from research through a reviewed PR, manually or as a reserved manager worker.
 ---
 
-# Auto-Issue Skill
+# Execute one issue
 
-Run one issue from setup to PR.
+Canonical workflow for Codex and Claude. Read and follow the named skills as instructions using tools available in the current host; no vendor-specific skill or agent invocation API is required.
 
-## Contract
+Input: issue number, optional `dry_run`, and manager dispatch/reservation context when automated. Return issue, worktree, branch, plan path, current commit, validation, review findings, PR URL if created, and status (`dry_run`, `blocked`, or `awaiting_review`).
 
-### Input
+1. **Setup:** follow the setup skill. Automated work requires an existing manager claim and a successful `python3 ~/.local/share/rollercoaster-pm/current/scripts/project_manager/pm.py --state-dir ~/.local/state/rollercoaster-pm check-pr ISSUE` before starting. Workers never bypass the five-slot cap, agreed priorities, or audit gate. Ordinary direct manual issue work remains supported.
+2. **Research:** read the issue, relevant code, repository guidance, previous plans, and existing PRs. Verify the issue is still actionable. Write a plan under `apps/native-rd/docs/plans/dev-plans/issue-ISSUE-description.md` for app work or `docs/plans/` for cross-cutting work. Include scope, implementation steps, acceptance/Intent Verification criteria, validation commands, Decisions, Discovery Log, and Follow-ups. A real research blocker stops execution. `dry_run` ends here with the plan and no implementation or PR.
+3. **Implement:** follow the implement skill in the isolated worktree. Keep commits focused and DCO signed. Resolve failures before proceeding; unmet required acceptance criteria are blockers.
+4. **Review:** follow the review skill, including code quality, test coverage, error handling, and acceptance checks. Track deferred findings in the plan or GitHub issues. Automated runs never accept `skip_review`, `force_pr`, or equivalent bypasses. This canonical workflow requires review and passing gates for manual runs too; an explicitly requested alternate manual workflow must be described as such, never as a successful run of this skill.
+5. **Finalize:** follow the finalize skill with the exact plan, review findings, tested HEAD, and reservation context. Recheck the reservation immediately before publishing automated work. Return a PR awaiting human review; implementation completion is not issue closure or merge.
 
-| Field          | Type    | Required | Description                       |
-| -------------- | ------- | -------- | --------------------------------- |
-| `issue_number` | number  | Yes      | GitHub issue number               |
-| `dry_run`      | boolean | No       | Stop after research, output plan  |
-| `skip_review`  | boolean | No       | Skip review, continue to finalize |
-| `force_pr`     | boolean | No       | Allow PR with unresolved issues   |
+Continue between phases without routine approval prompts. If requirements are ambiguous enough to prevent safe implementation, review is unavailable, validation fails, or a gate denies progress, record the exact blocker and next action and notify through Telegram. Preserve work and reservation for resumption. Start, blocker, and final notifications use the project-manager durable route for automation or the telegram skill for manual work; surface delivery failures.
 
-### Output
-
-| Field          | Type   | Description                      |
-| -------------- | ------ | -------------------------------- |
-| `issue_number` | number | Processed issue                  |
-| `branch`       | string | Implementation branch            |
-| `plan_path`    | string | Dev plan path                    |
-| `pr_number`    | number | PR number (if created)           |
-| `pr_url`       | string | PR URL (if created)              |
-| `status`       | string | `dry_run`, `completed`, `failed` |
-
-## Workflow
-
-### Phase 1: Setup
-
-```text
-Skill(setup, args: { issue_number: <N> })
-```
-
-Capture `branch` and issue metadata.
-
-### Phase 2: Research
-
-Run `issue-researcher` via Agent tool — standalone (no `team_name`), `run_in_background: true`. Writes plan to `apps/native-rd/docs/plans/dev-plans/issue-<N>-<short-desc>.md`.
-
-Capture `plan_path`, pass through rest of workflow.
-
-If `dry_run=true`: return plan path, stop.
-
-### Phase 3: Implement
-
-```text
-Skill(implement, args: { issue_number: <N>, plan_path: "<path>" })
-```
-
-Incremental, atomic commits.
-
-### Phase 4: Review
-
-`skip_review=true` → skip.
-
-```text
-Skill(review, args: { workflow_id: "issue-<N>" })
-```
-
-Includes `/simplify` pass (Step 1.5) before review agents.
-
-Unresolved criticals + `force_pr=false` → stop, `failed` status.
-
-### Phase 5: Finalize
-
-```text
-Skill(finalize, args: { issue_number: <N>, plan_path: "<path>", force: <force_pr> })
-```
-
-Return PR details, `completed` status.
-
-## Error Handling
-
-| Condition                                    | Behavior                     |
-| -------------------------------------------- | ---------------------------- |
-| Setup fails                                  | Stop, return failure         |
-| Research fails                               | Stop, report blocker         |
-| Implement fails                              | Stop, report failing step    |
-| Review unresolved criticals + force_pr=false | Stop, escalate               |
-| Finalize fails                               | Stop, report push/PR failure |
-
-## Compatibility Notes
-
-- Supports worker prompts calling `Skill(auto-issue, args: "<issue>")`.
-- Canonical workflow lives at `.claude/commands/auto-issue.md`.
-- DCO mandatory — husky `prepare-commit-msg` adds `Signed-off-by` trailer. Never pass `--no-verify` to git commit.
+Never merge, enable auto-merge, enqueue a merge, approve your own PR, mark an unmerged issue Done, or close issues automatically. PRs remain on the board as In Review until human merge is observed.

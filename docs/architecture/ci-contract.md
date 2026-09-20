@@ -260,3 +260,10 @@ branch requires no status checks (it only blocks deletion and requests
 Copilot review). Enabling it is a repo-settings change tracked separately from
 this document. When it is enabled, use the job names above (the
 `ci-docs / Docs Format Check` name no longer exists).
+
+## Project manager automation
+
+`ci-project-manager / Project Manager Tests` runs Python 3.9 standard-library
+unit tests when `scripts/project_manager/**` or its workflow changes. It requires
+no GitHub write token, Telegram credential, network service, or native build.
+The guard, durable Telegram transport, and installer tests use temporary state.

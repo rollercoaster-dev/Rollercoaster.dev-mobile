@@ -106,9 +106,9 @@ Each `docs/` subdirectory has an `index.md` with a summary and links:
 
 ## Agent Workflow
 
-- **Planning**: graph-flow planning stack (`mcp__graph-flow__p-*`)
+- **Planning**: repository docs and issue acceptance criteria; graph-flow may be used when available. Automated prioritization uses `.agents/skills/project-manager/`.
 - **Issue tracking**: GitHub Issues + GitHub Project board
-- **Code review**: CodeRabbit + Claude review on every PR
+- **Code review**: independent code, test, and failure-handling review through `.agents/skills/review/`; CodeRabbit locally when available and on GitHub where configured.
 - **Skills**: See `.claude/skills/` (project skills) and `.agents/skills/` (shared agent skills)
 - **Dev plans**: `.claude/dev-plans/` for issue-specific implementation plans
 
@@ -119,7 +119,7 @@ Each `docs/` subdirectory has an `index.md` with a summary and links:
 ```
 
 1. `/implement` — execute the dev plan with atomic commits
-2. `/self-review` — pre-PR gate: local validation + CodeRabbit CLI + Claude agents. Blocks if unresolved critical findings.
+2. `/self-review` — pre-PR gate: local validation and independent reviewers. Codex uses the portable `.agents/skills/review/` workflow. Blocks on unresolved critical findings.
 3. `/accept-check` — validate diff against issue acceptance criteria. Flags gaps.
 4. `/finalize` — push branch, create PR, update board
 
