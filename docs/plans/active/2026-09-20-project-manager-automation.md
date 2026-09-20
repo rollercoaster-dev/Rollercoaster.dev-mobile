@@ -33,10 +33,10 @@ Files: `.agents/skills/project-manager/SKILL.md`, `.agents/skills/dependabot-rev
 
 ## Task 4: Activate and hand off
 
-- [ ] Review the integrated change, run relevant checks, commit and create a reviewable PR; never merge.
+- [x] Review the integrated change, run relevant checks, commit and create a reviewable PR; never merge.
 - [x] Install tested runtime in a stable local directory, initialize read-only GitHub snapshot, and start Telegram receiver.
 - [x] Create one heartbeat for audit, check-ins, and queue maintenance. Implementation stays disabled until priorities are agreed.
-- [ ] Verify running service, notification delivery, heartbeat configuration, unchanged user files, and report operational limits.
+- [x] Verify running service, notification delivery, heartbeat configuration, unchanged user files, and report operational limits.
 
 ## Decisions and progress
 
@@ -47,10 +47,13 @@ Files: `.agents/skills/project-manager/SKILL.md`, `.agents/skills/dependabot-rev
 
 ## Validation and deployment record
 
-- 32 Python tests passed, including concurrent admission, fork/history collision recovery, Telegram command ordering and installer state preservation.
+- 33 Python tests passed, including concurrent admission, fork/history collision recovery, Telegram command ordering and installer state preservation.
 - Independent integration review found four actionable issues; all were fixed and the scoped re-review found no blocking findings.
 - CodeRabbit CLI 0.3.5 lacks the current skill interface; no CodeRabbit review is claimed. Portable workflows retain required independent review coverage when the local CLI is unavailable.
 - Refreshed the isolated branch to GitHub main `0eb7d3c` before publication; preserved upstream board and CI guidance.
 - Installed Telegram LaunchAgent `dev.rollercoaster.project-manager-telegram`; observed running and successful inbound/outbound transport, no queued failed messages.
 - Heartbeat `rollercoaster-project-manager` is active every five minutes in the current task. Execution remains in audit mode with no approved queue.
 - Added board Execution order and In Review without replacing existing options. No priorities were assigned.
+
+- Implementation PR: https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/pull/671 (never merged by the manager). Hosted Project Manager Tests and DCO passed on the initial PR head; remaining CI is tracked on the PR.
+- Original checkout retains only the pre-existing plan/index edits; runtime shows audit mode and no approved queue.

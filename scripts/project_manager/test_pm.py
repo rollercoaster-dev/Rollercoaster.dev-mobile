@@ -105,6 +105,15 @@ class ManagerTests(unittest.TestCase):
         data['board'][0]['status'] = 'Blocked'
         with self.assertRaises(GateError): self.m.claim(100, lambda: data)
 
+    def test_human_design_dependency_and_epic_labels_block_autonomous_work(self):
+        data = snapshot()
+        self.ready(data)
+        for label in ('hitl', 'needs:design', 'dep:blocked', 'type:epic'):
+            with self.subTest(label=label):
+                data['issues'][0]['labels'] = [{'name': label}]
+                with self.assertRaises(GateError): self.m.claim(100, lambda: data)
+        self.assertEqual(self.m.status()['occupied'], 0)
+
     def test_changed_board_order_invalidates_dispatch(self):
         data = snapshot()
         self.ready(data)
