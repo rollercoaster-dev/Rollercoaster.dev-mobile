@@ -17,6 +17,7 @@ import {
   stepsByGoalQuery,
   evidenceByGoalQuery,
   stepEvidenceByGoalQuery,
+  badgeByGoalQuery,
   groupStepsByParent,
   areAllStepsComplete,
   resolveNextActionableStep,
@@ -24,6 +25,7 @@ import {
   resolveStepDependencyBand,
   StepStatus,
 } from "../../db";
+import { isGoalSealed } from "../../db/goalSeal";
 import { formatDate } from "../../utils/format";
 import { parseBadgeDesign } from "../../badges/types";
 import type { GoalId } from "../../db";
@@ -79,6 +81,8 @@ function TimelineContent({
   const goal = rows.find((r) => r.id === goalId);
   const stepRows = useQuery(stepsByGoalQuery(goalId as GoalId));
   const goalEvidenceRows = useQuery(evidenceByGoalQuery(goalId as GoalId));
+  const badgeRows = useQuery(badgeByGoalQuery(goalId as GoalId));
+  const badgeRow = badgeRows[0] ?? null;
 
   const evidenceFallbackLabel = t("timelineJourney:evidenceFallbackLabel");
 
@@ -146,6 +150,15 @@ function TimelineContent({
       })),
     };
   });
+
+  // FinishLine's preview seeds from the same chain as CompletionFlowScreen
+  // (#653): badge.design is what the bake wrote and BadgeDetail renders, so it
+  // wins; goal.design is the designer's pre-bake draft; null falls back to the
+  // monogram tile. A sealed goal's CTA opens the read-only reveal (#563), so
+  // the copy says "View badge".
+  const finishLineDesign =
+    parseBadgeDesign(badgeRow?.design) ?? parseBadgeDesign(goal?.design);
+  const sealed = isGoalSealed(goal, badgeRow);
 
   // Goal evidence for FinishLine
   const goalEvidence: EvidenceItemData[] = goalEvidenceRows.map((row) => ({
@@ -288,8 +301,9 @@ function TimelineContent({
           ))}
           <FinishLine
             goalTitle={goal.title ?? ""}
-            badgeDesign={parseBadgeDesign(goal.design)}
+            badgeDesign={finishLineDesign}
             allStepsComplete={areAllStepsComplete(stepRows)}
+            sealed={sealed}
             onBadgePress={handleBadgePress}
             goalEvidence={goalEvidence}
             onEvidencePress={handleEvidencePress}

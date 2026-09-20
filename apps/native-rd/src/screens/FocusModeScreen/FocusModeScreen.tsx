@@ -32,6 +32,7 @@ import {
   goalsQuery,
   stepsByGoalQuery,
   stepEvidenceByGoalQuery,
+  badgeByGoalQuery,
   completeStep,
   uncompleteStep,
   pauseStep,
@@ -47,6 +48,7 @@ import {
   EvidenceType,
   StepStatus,
 } from "../../db";
+import { isGoalSealed } from "../../db/goalSeal";
 import type { GoalId, StepId } from "../../db";
 import { useToast } from "../../components/Toast";
 import type {
@@ -118,12 +120,15 @@ function NoActionableBody({
   parkedRows,
   goalTitle,
   onDesignBadge,
+  sealed,
 }: {
   stepCount: number;
   allStepsComplete: boolean;
   parkedRows: readonly FocusParkedRow[];
   goalTitle: string;
   onDesignBadge: () => void;
+  /** Completed goal with a badge on record — the card offers "View badge". */
+  sealed: boolean;
 }) {
   if (stepCount === 0) return null;
   if (allStepsComplete) {
@@ -132,6 +137,7 @@ function NoActionableBody({
         status="all-complete"
         title={goalTitle}
         onDesignBadge={onDesignBadge}
+        sealed={sealed}
       />
     );
   }
@@ -174,6 +180,13 @@ function FocusContent({
   const allStepEvidenceRows = useQuery(
     stepEvidenceByGoalQuery(goalId as GoalId),
   );
+  // One badge per goal. Its presence on a completed goal seals the finishing
+  // flow (#563) — the all-complete card's CTA then reads "View badge" (#653).
+  const badgeRows = useQuery(badgeByGoalQuery(goalId as GoalId));
+  const badgeRow = badgeRows[0] ?? null;
+  // Computed here, above the useCallbacks: the React Compiler lint refuses to
+  // preserve their manual memoization when this call sits inline in the JSX.
+  const sealed = isGoalSealed(goal, badgeRow);
 
   // The Timeline-return pin (D2): a one-shot override of the derived step,
   // holding whichever node the user tapped in TimelineJourney so they land on
@@ -594,6 +607,7 @@ function FocusContent({
             parkedRows={parkedRows}
             goalTitle={goal.title ?? ""}
             onDesignBadge={handleDesignBadge}
+            sealed={sealed}
           />
         )}
       </View>

@@ -55,6 +55,7 @@ export const UndesignedBadge: Story = {
         badgeDesign={null}
         allStepsComplete={false}
         onBadgePress={noop}
+        sealed={false}
         goalEvidence={mockEvidence}
         onEvidencePress={noop}
       />
@@ -72,6 +73,7 @@ export const DesignedBadge: Story = {
         badgeDesign={makeDesign()}
         allStepsComplete={false}
         onBadgePress={noop}
+        sealed={false}
         goalEvidence={[]}
         onEvidencePress={noop}
       />
@@ -89,6 +91,25 @@ export const AllStepsDoneCelebration: Story = {
         badgeDesign={null}
         allStepsComplete
         onBadgePress={noop}
+        sealed={false}
+        goalEvidence={mockEvidence}
+        onEvidencePress={noop}
+      />
+    </View>
+  ),
+};
+
+// Sealed (#653): the goal is completed and its badge is on record, so the row
+// is a "View badge" entry into the read-only reveal — real preview, yellow star.
+export const SealedGoal: Story = {
+  render: () => (
+    <View style={storyStyles.container}>
+      <FinishLine
+        goalTitle="Read 12 books"
+        badgeDesign={makeDesign()}
+        allStepsComplete
+        onBadgePress={noop}
+        sealed
         goalEvidence={mockEvidence}
         onEvidencePress={noop}
       />

@@ -31,7 +31,6 @@ import {
   badgeByGoalQuery,
   createEvidence,
   EvidenceType,
-  GoalStatus,
   TEXT_EVIDENCE_PREFIX,
 } from "../../db";
 import type { GoalId } from "../../db";
@@ -42,6 +41,7 @@ import {
   countStepsMissingEvidence,
   isGoalEvidenceComplete,
 } from "../../db/evidenceGate";
+import { isGoalSealed } from "../../db/goalSeal";
 import { useCreateBadge } from "../../hooks/useCreateBadge";
 import { useAnimationPref } from "../../hooks/useAnimationPref";
 import type {
@@ -108,9 +108,7 @@ function FinishFlowContent({ goalId }: { goalId: string }) {
   // entry (useQuery suspends, so the rows are loaded on first render) so the
   // normal path's own completion — goal flips, badge row lands — still goes
   // through the baking success hold instead of jumping straight to reveal.
-  const [sealedOnEntry] = useState(
-    () => goal?.status === GoalStatus.completed && badgeRow !== null,
-  );
+  const [sealedOnEntry] = useState(() => isGoalSealed(goal, badgeRow));
   const [stage, setStage] = useState<FinishStage>(
     sealedOnEntry ? "reveal" : "celebrate",
   );

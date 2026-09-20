@@ -34,6 +34,9 @@
     "ctaSubtitleUndesigned": "Das Andenken kommt am Ende — das Abzeichen beginnt als '{{letter}}', bis du es gestaltest.",
     "ctaSubtitleDesigned": "Tippen, um dein Abzeichendesign anzusehen oder zu aktualisieren.",
     "ctaA11yLabel": "Schließ ab und gestalte dein Abzeichen",
+    "sealedCtaTitle": "Abzeichen ansehen",
+    "sealedCtaSubtitle": "Dein Abzeichen ist gespeichert — tippen, um es anzusehen.",
+    "sealedCtaA11yLabel": "Dein Abzeichen ansehen",
     "a11yNode": "Ziel-Zielgerade"
   }
 }

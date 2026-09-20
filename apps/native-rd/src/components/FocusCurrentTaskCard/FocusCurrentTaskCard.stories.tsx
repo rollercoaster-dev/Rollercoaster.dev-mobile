@@ -196,7 +196,27 @@ export const Completed: Story = {
 export const AllComplete: Story = {
   render: () => (
     <PhoneWidth>
-      <FocusCurrentTaskCard status="all-complete" title="" {...handlers} />
+      <FocusCurrentTaskCard
+        status="all-complete"
+        title=""
+        sealed={false}
+        {...handlers}
+      />
+    </PhoneWidth>
+  ),
+};
+
+// Sealed (#653): the goal is completed and its badge is on record, so the CTA
+// is "View badge" into the read-only reveal, not a design pass.
+export const AllCompleteSealed: Story = {
+  render: () => (
+    <PhoneWidth>
+      <FocusCurrentTaskCard
+        status="all-complete"
+        title=""
+        sealed
+        {...handlers}
+      />
     </PhoneWidth>
   ),
 };

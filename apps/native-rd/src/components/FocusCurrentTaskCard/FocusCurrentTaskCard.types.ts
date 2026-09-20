@@ -97,8 +97,14 @@ export interface FocusCompletedCardProps extends FocusCardBase {
 /** All steps done (goal-level): trophy callout + a single "design badge" CTA. */
 export interface FocusAllCompleteCardProps extends FocusCardBase {
   status: "all-complete";
-  /** Design the badge from the all-steps-complete state. */
+  /** Open the finishing flow from the all-steps-complete state. */
   onDesignBadge: () => void;
+  /**
+   * True once the goal is completed and its badge is on record. The card then
+   * offers "View badge": the flow opens on the read-only reveal (#563), so
+   * "Design your badge" would promise an edit that cannot happen (#653).
+   */
+  sealed: boolean;
 }
 
 /**
