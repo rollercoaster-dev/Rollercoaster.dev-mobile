@@ -103,3 +103,7 @@ apps/native-rd/play-service-account.json
 apps/native-rd/e2e/reports/junit.xml
 # appId-rewritten flow copy that scripts/run-e2e.sh --android materialises.
 apps/native-rd/e2e/.android/
+
+# Python automation bytecode
+__pycache__/
+*.pyc

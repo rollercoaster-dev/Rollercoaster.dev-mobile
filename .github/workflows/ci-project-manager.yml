@@ -1,0 +1,31 @@
+name: ci-project-manager
+
+on:
+  pull_request:
+    paths:
+      - "scripts/project_manager/**"
+      - ".github/workflows/ci-project-manager.yml"
+  push:
+    branches: [main]
+    paths:
+      - "scripts/project_manager/**"
+      - ".github/workflows/ci-project-manager.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: project-manager-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Project Manager Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.9"
+      - name: Test guard and Telegram transport without credentials
+        run: python3 -m unittest discover -s scripts/project_manager -p 'test_*.py'

@@ -1,126 +1,39 @@
 ---
 name: setup
-description: Prepares environment for issue work - creates branch and fetches issue details. Use at the start of any issue workflow in Rollercoaster.dev-mobile.
-allowed-tools: Bash, Read, Skill
+description: Use when starting manual or manager-dispatched issue work in Rollercoaster.dev-mobile.
 ---
 
-# Setup Skill
+# Set up issue work
 
-Prep before implementation.
+Input: issue number, optional branch name, and dispatch context. Return issue metadata, worktree path, branch, base SHA, and reservation context when automated.
 
-## Contract
+1. Read the repository and affected directory `AGENTS.md` files. Use explicit repository `rollercoaster-dev/Rollercoaster.dev-mobile` for GitHub operations:
 
-### Input
+   ```bash
+   gh issue view ISSUE --repo rollercoaster-dev/Rollercoaster.dev-mobile --json number,title,body,labels,milestone,assignees,state
+   ```
 
-| Field          | Type    | Required | Description                                |
-| -------------- | ------- | -------- | ------------------------------------------ |
-| `issue_number` | number  | Yes      | GitHub issue number                        |
-| `branch_name`  | string  | No       | Custom branch name (auto-generated if not) |
-| `skip_notify`  | boolean | No       | Skip Telegram notification (default false) |
+   Stop if missing, closed, or the requested work conflicts with current evidence.
 
-### Output
+2. For manager-dispatched work, require the manager's successful reservation before setup or implementation. The project-manager skill owns `claim`; workers must not create their own claim, approve a queue, or bypass audit, priority, pause, or slot gates. Verify the existing reservation:
 
-| Field          | Type     | Description     |
-| -------------- | -------- | --------------- |
-| `branch`       | string   | Git branch name |
-| `issue.number` | number   | Issue number    |
-| `issue.title`  | string   | Issue title     |
-| `issue.body`   | string   | Full issue body |
-| `issue.labels` | string[] | Issue labels    |
+   ```bash
+   python3 ~/.local/share/rollercoaster-pm/current/scripts/project_manager/pm.py --state-dir ~/.local/state/rollercoaster-pm check-pr ISSUE
+   ```
 
-### Side Effects
+   A missing guard, failed command, or denied reservation is a blocker. Direct manual issue requests can use this workflow without a manager reservation; automation must never relabel itself manual to evade the guard.
 
-1. Create git branch (or check out existing)
-2. Send Telegram notification (unless skip_notify)
+3. Inspect `git status --short`, `git worktree list`, and the origin URL. Preserve the user's active checkout and all unrelated changes. Fetch a fresh base with `git fetch origin main`; record `git rev-parse origin/main`.
+4. Create an isolated worktree with default branch `codex/issue-ISSUE` and a unique absolute path outside the active checkout:
 
-## Workflow
+   ```bash
+   git worktree add -b codex/issue-ISSUE /absolute/worktree/path origin/main
+   ```
 
-### Step 1: Fetch Issue
+   Use the host's worktree tool instead when it supports the same fresh base and branch. Never switch branches in the user's checkout. If the branch already exists, inspect its worktree and recorded reservation: resume only the same issue's verified work, otherwise report a collision. Do not reset, delete, or overwrite it. Run every subsequent command with the issue worktree as its explicit working directory.
 
-```bash
-gh issue view <issue_number> --json number,title,body,labels,milestone,assignees
-```
+5. Prepare dependencies using repository instructions and the lockfile; do not copy secrets or unrelated working files. Report installation failures before implementation.
+6. Add or locate the issue item on project 14 and set Status to **In Progress** after the reservation and worktree are confirmed. Read current field/option IDs with `gh project field-list`; do not guess them. Record failed board updates for retry and notify the manager.
+7. Send a Telegram start notification with issue, title, branch, and worktree. Automated runs use the project-manager's durable Telegram routing; manual runs use the available telegram skill. A delivery failure must be visible and retained for retry, never reported as delivered. A manual caller may explicitly suppress notifications.
 
-If not found: STOP, return error.
-
-Store `issue.number`, `issue.title`, `issue.body`, `issue.labels`.
-
-### Step 2: Generate Branch Name
-
-If `branch_name` absent:
-
-- Short description from title (lowercase, hyphenated, max 30 chars)
-- Format: `feat/issue-<number>-<short-description>`
-
-Example: "Add user authentication" → `feat/issue-123-add-user-auth`
-
-### Step 3: Create Branch
-
-```bash
-git branch --show-current
-```
-
-Not on target → `git checkout -b <branch_name>`. Exists → `git checkout <branch_name>`.
-
-### Step 4: Notify (unless skip_notify)
-
-Via `telegram` skill:
-
-```text
-Started: Issue #<number>
-Title: <title>
-Branch: <branch>
-```
-
-Notification fail → warn, continue (non-critical).
-
-### Step 5: Return
-
-```json
-{
-  "branch": "<branch_name>",
-  "issue": {
-    "number": <number>,
-    "title": "<title>",
-    "body": "<body>",
-    "labels": ["<label1>", "<label2>"]
-  }
-}
-```
-
-## Error Handling
-
-| Condition             | Behavior                      |
-| --------------------- | ----------------------------- |
-| Issue not found       | Return error, no side effects |
-| Branch checkout fails | Return error with git status  |
-| Notification fails    | Warn, continue                |
-
-## Example
-
-**Input:** `{ "issue_number": 487 }`
-
-**Output:**
-
-```json
-{
-  "branch": "feat/issue-487-agent-architecture",
-  "issue": {
-    "number": 487,
-    "title": "refactor(claude-tools): implement robust agent architecture",
-    "body": "## Problem\n\nThe current Claude tools architecture...",
-    "labels": ["enhancement", "priority:high"]
-  }
-}
-```
-
-## Output Format
-
-```text
-SETUP COMPLETE
-
-Issue: #<number> - <title>
-Branch: <branch>
-
-Ready for next phase.
-```
+On a blocker, preserve the worktree/reservation and send the blocker through the same notification route. Never merge, enable auto-merge, enqueue a merge, or approve a PR created by this workflow.

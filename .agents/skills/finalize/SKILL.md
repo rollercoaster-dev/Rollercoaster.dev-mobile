@@ -1,251 +1,33 @@
 ---
 name: finalize
-description: Completes issue workflow - pushes branch, creates PR, sends notification. Use at the end of any issue workflow in Rollercoaster.dev-mobile.
-allowed-tools: Bash, Read, Skill
+description: Use when publishing a validated and reviewed issue branch as a PR and updating its board and notification state.
 ---
 
-# Finalize Skill
+# Publish the reviewed PR
 
-Push, create PR, notify.
+Input: issue, exact plan path, review report, isolated worktree, tested/reviewed HEAD, and manager reservation context when automated. Return PR number/URL, head SHA, validation/CI state, board state, notification result, and outstanding blockers.
 
-## Contract
+1. Verify repository `rollercoaster-dev/Rollercoaster.dev-mobile`, issue branch, clean issue-owned state, plan acceptance checks, and review coverage. Preserve unrelated work. Inspect the complete diff and commits relative to `origin/main`; all commits need DCO trailers. Never publish from main or use `force` to bypass a failed gate.
+2. Run final applicable validation on the exact candidate HEAD: root `bun run type-check`, `bun run lint`, and `bun run test`, plus plan acceptance checks. Existing results may be reused only when they demonstrably cover the identical HEAD and environment. Inspect build scripts and run applicable package builds; do not assume native compilation is a no-op. A missing reviewer, failing check, or unmet acceptance criterion blocks finalization.
+3. For manager-dispatched work, run immediately before push/PR publication:
 
-### Input
+   ```bash
+   python3 ~/.local/share/rollercoaster-pm/current/scripts/project_manager/pm.py --state-dir ~/.local/state/rollercoaster-pm check-pr ISSUE
+   ```
 
-| Field              | Type    | Required | Description                                                                                                   |
-| ------------------ | ------- | -------- | ------------------------------------------------------------------------------------------------------------- |
-| `issue_number`     | number  | Yes      | GitHub issue number                                                                                           |
-| `plan_path`        | string  | No       | Exact dev plan path to read for Intent Verification, Decisions, and Discovery Log extraction into the PR body |
-| `findings_summary` | object  | No       | Summary from review phase                                                                                     |
-| `force`            | boolean | No       | Create PR even with unresolved issues (default false)                                                         |
-| `skip_notify`      | boolean | No       | Skip Telegram notification (default false)                                                                    |
+   Require success. Workers must not claim a slot themselves, relabel automated work manual, override priority approval, or bypass a denied audit/slot/pause gate. Direct manual issue work does not require a manager reservation.
 
-### Output
+4. Write a real temporary Markdown file for the PR body. Lead with the problem and resulting behavior; include acceptance/Intent Verification with truthful checkboxes, relevant Decisions and Discovery Log, actual validation commands and HEAD, and tracked follow-up links. Use `Closes #ISSUE` only when the PR satisfies the complete issue acceptance criteria, so Joe’s merge closes the implemented issue. Partial work uses `Refs #ISSUE`. This does not authorize closing stale or superseded issues. Derive the conventional title from the actual change, not the `codex/` branch prefix.
+5. Push the issue branch with `git push -u origin HEAD`. Check for an existing PR on that exact branch with explicit `--repo` before creating another; update/reuse it on resume. Create a new PR using the body file:
 
-| Field             | Type   | Description                            |
-| ----------------- | ------ | -------------------------------------- |
-| `pr.number`       | number | PR number                              |
-| `pr.url`          | string | PR URL                                 |
-| `pr.title`        | string | PR title                               |
-| `workflow_status` | string | "completed" or "completed_with_issues" |
+   ```bash
+   gh pr create --repo rollercoaster-dev/Rollercoaster.dev-mobile --base main --head codex/issue-ISSUE --title 'TYPE(SCOPE): DESCRIPTION' --body-file /absolute/path/pr-body.md
+   ```
 
-### Side Effects
+   Substitute the actual verified branch/title/path. Never interpolate the body into shell code. Capture the URL and number. In Codex call the available `mcp__codex_app__attach_artifact` tool with artifact type `pull_request` and the URL. For automated work, return the PR identity to the manager for immediate `bind` and reconciliation; retain the reservation if binding fails, notify, and never create a duplicate PR.
 
-1. Push branch to remote
-2. Create GitHub PR
-3. Send Telegram notification with PR link
+6. Observe the remote PR head and CI/checks using `gh pr view` and `gh pr checks` with explicit `--repo`. Tests and review evidence must match that head. Pending checks mean awaiting CI; failures mean blocked, not complete. If HEAD changes, validate/review again. Do not report full verification until required current-head CI and local checks pass.
+7. Find the issue item and current Status field/options on GitHub project 14 (owner `rollercoaster-dev`) and set it to **In Review**. Read field/option IDs rather than guessing. Do not mark it Done or close it; only an observed human merge can justify Done. A board update failure is reported for retry and does not justify creating another PR.
+8. Send the final Telegram notification with issue, PR link, HEAD, validation/CI state, board state, and next action. Automation uses the manager's durable route; manual runs use the telegram skill unless explicitly suppressed. Report delivery errors truthfully and retain them for retry. Surface any publishing, binding, CI, or board blocker through the same route.
 
-## Workflow
-
-### Step 1: Gather Context
-
-**Issue title for PR:**
-
-```bash
-gh issue view <issue_number> --json title -q .title
-```
-
-**Commit history:**
-
-```bash
-git log main..HEAD --oneline
-```
-
-**Diff stats:**
-
-```bash
-git diff main --stat
-```
-
-**Branch name:**
-
-```bash
-git branch --show-current
-```
-
-### Step 2: Run Final Validation
-
-Each separately:
-
-```bash
-bun run type-check
-```
-
-```bash
-bun run lint
-```
-
-```bash
-bun test
-```
-
-```bash
-bun run build
-```
-
-**Note:** `bun run build` safe — native-rd's `build` is `echo 'Expo app — no build step'`. If this changes, drop build step rather than running native compile.
-
-**Validation fails + `force=false`:** Return error with details.
-
-**Validation fails + `force=true`:** Note in PR body, continue.
-
-### Step 3: Push Branch
-
-```bash
-git push -u origin HEAD
-```
-
-Push fail → return error (critical).
-
-### Step 4: Read Dev Plan (if `plan_path` provided)
-
-Extract structured sections for PR body. Read file, extract:
-
-1. **Intent Verification** — every checkbox line (`- [ ]` or `- [x]`) between `## Intent Verification` heading and next `##`. Preserve check status verbatim.
-2. **Key Decisions** — markdown table under `## Decisions` (or `## Key Decisions`). Skip header/separator rows; re-emit as two-column `| Decision | Rationale |` in PR body. Empty/absent → omit section.
-3. **Discovery Log** — timestamped entries `- [YYYY-MM-DD HH:MM] <text>` under `## Discovery Log` (may be wrapped in `<!-- … -->`; strip delimiters before parsing). No entries → omit section.
-
-No plan file → omit Intent Verification, Key Decisions, Discovery Log sections.
-
-### Step 5: Create PR
-
-PR type from branch/commits:
-
-- `feat/` → "feat"
-- `fix/` → "fix"
-- `refactor/` → "refactor"
-- etc.
-
-Scope from primary package affected (`native-rd`, `openbadges-core`, `design-tokens`, `ci`).
-
-**Create PR:**
-
-```bash
-gh pr create --title "<type>(<scope>): <description> (#<issue_number>)" --body "$(cat <<'PRBODY'
-## Summary
-
-<1-3 bullet points from issue/commits>
-
-## Changes
-
-<bullet list of key changes>
-
-## Intent Verification
-
-<Copy from dev plan with check status. If no plan exists, omit this section.>
-
-- [x] <met criterion>
-- [x] <met criterion>
-- [ ] <unmet criterion, if any — explain why>
-
-## Key Decisions
-
-<Summarize from Decisions table. If no plan or no decisions, omit this section.>
-
-| Decision | Rationale |
-|----------|-----------|
-| <what> | <why> |
-
-## Discovery Log
-
-<Copy entries verbatim from dev plan. Omit section if no entries.>
-
-- [YYYY-MM-DD HH:MM] <entry>
-
-## Test Plan
-
-- [ ] Type-check passes
-- [ ] Lint passes
-- [ ] Tests pass
-- [ ] Build script (no-op for native-rd) returns successfully
-
-<any unresolved findings if force=true>
-
----
-
-Closes #<issue_number>
-
-Generated with [Claude Code](https://claude.ai/code)
-PRBODY
-)"
-```
-
-Extract PR number and URL from output.
-
-**DCO:** All branch commits should carry `Signed-off-by` from husky `prepare-commit-msg`. DCO workflow on GitHub verifies each commit. Missing trailer → PR fails DCO check. Fix locally with new commits (do **not** force-push amended history that strips trailers).
-
-### Step 6: Send Notification (unless skip_notify)
-
-Via `telegram` skill:
-
-```
-PR Created: #<pr_number>
-Issue: #<issue_number> - <title>
-URL: <pr_url>
-Commits: <count>
-Status: Awaiting review
-```
-
-Notification fail → warn, continue.
-
-### Step 7: Return Output
-
-```json
-{
-  "pr": {
-    "number": <pr_number>,
-    "url": "<pr_url>",
-    "title": "<pr_title>"
-  },
-  "workflow_status": "completed"
-}
-```
-
-## Error Handling
-
-| Condition                      | Behavior                  |
-| ------------------------------ | ------------------------- |
-| Validation fails (force=false) | Return error with details |
-| Push fails                     | Return error (critical)   |
-| PR creation fails              | Return error (critical)   |
-| Notification fails             | Warn, continue            |
-
-## Example
-
-**Input:**
-
-```json
-{
-  "issue_number": 487,
-  "plan_path": "apps/native-rd/docs/plans/dev-plans/issue-487-agent-architecture.md"
-}
-```
-
-**Output:**
-
-```json
-{
-  "pr": {
-    "number": 488,
-    "url": "https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/pull/488",
-    "title": "refactor(native-rd): implement robust agent architecture (#487)"
-  },
-  "workflow_status": "completed"
-}
-```
-
-## Output Format
-
-```
-FINALIZE COMPLETE
-
-PR: #<pr_number>
-URL: <pr_url>
-Title: <pr_title>
-
-Workflow: Marked as completed
-
-Commits: <count>
-
-Next: PR will be reviewed by CodeRabbit and team.
-```
+The result is **awaiting human review**, not merged or closed. Never approve your own PR, run a merge, enable auto-merge, or enqueue a merge. Pending CI remains explicit in the return status and handoff.
