@@ -6,7 +6,7 @@
 
 ## What is included
 
-- A standalone Expo 56 / React Native 0.85.3 app with Bare Kit 0.15.5 and HyperDHT 6.34.0, plus an npm lockfile.
+- A standalone Expo 56 / React Native 0.85.3 app with Bare Kit 0.15.5 and HyperDHT 6.34.0, plus a bun lockfile.
 - Synthetic PNG/WAV evidence and pre-signed credential/endorsement fixtures. No personal evidence, private keys or production app data.
 - A receiver that displays the transferred image and offers audio playback. Its return button sends the **pre-signed endorsement fixture**; it does not sign as the person using the phone.
 - A desktop probe that runs the same backend in two Node processes.
@@ -29,9 +29,13 @@ This is a transport test. The mobile receiver compares against known fixture byt
 
 [Desktop results](./desktop-results.json) describe the five-node loopback experiment. The initial simpler two-node attempt returned `PEER_NOT_FOUND`. The mobile candidate instead runs three local persistent DHT nodes and a serving endpoint on the hosting device; its counterpart joins that local network. It needs no external bootstrap in this configuration, but **this has not been proved on phones**.
 
+### Independent re-check — 2026-09-21
+
+Reproduced on a second Mac from a clean checkout using `bun install`, `bun run pack` and `bun run probe`: `bare-pack` produced the ios/android bundle and the probe finished `"ok":true`, transferring `fixture.png` and `tone.wav` and returning the endorsement fixture. Both fixture JWTs were also verified out-of-band with Node's own `crypto`: `ES256` signatures valid, credential typed `OpenBadgeCredential`, endorsement typed `EndorsementCredential`, and the endorsement subject matches the credential `jti`. Still desktop only; **no phone has run this**.
+
 ## Prepare the other machine
 
-Use a Mac for the iOS half, with Xcode, CocoaPods, Node/npm, JDK 17, and an Android SDK/NDK suitable for the repository's Expo 56 build. Follow the [native build playbook](../../../.claude/skills/native-rd-build/SKILL.md) for machine/device setup. Leave ample free startup-disk space for swap even if build output is external. Build one platform at a time; use two workers/jobs initially.
+Use a Mac for the iOS half, with Xcode, CocoaPods, Node, bun, JDK 17, and an Android SDK/NDK suitable for the repository's Expo 56 build. Follow the [native build playbook](../../../.claude/skills/native-rd-build/SKILL.md) for machine/device setup. Leave ample free startup-disk space for swap even if build output is external. Build one platform at a time; use two workers/jobs initially.
 
 Connect an authorized Android phone and a trusted iPhone with Developer Mode enabled. Both phones must be on the same Wi-Fi, with client isolation disabled. USB is for installing/debugging; it must not carry the peer-transfer traffic. No Metro server is needed for the Release builds below.
 
@@ -42,9 +46,9 @@ gh pr checkout 674
 mkdir -p ../peer-evidence-spike
 cp -R apps/native-rd/docs/research/peer-evidence-spike/. ../peer-evidence-spike/
 cd ../peer-evidence-spike
-npm ci
-npm run pack
-npm run probe
+bun install
+bun run pack
+bun run probe
 ```
 
 The probe should finish with `"ok":true` and `evidence received and endorsement fixture returned`. That checks the Node adaptation, not the Bare runtime. The copied app is separate from Rollercoaster: bundle/package ID `dev.rollercoaster.peerspike`.
@@ -53,7 +57,7 @@ Set your Apple development team before generating native projects (or select it 
 
 ```sh
 export PEER_SPIKE_APPLE_TEAM_ID=YOUR_TEAM_ID
-npm run prebuild
+bun run prebuild
 ```
 
 The script pins the native template to `expo-template-bare-minimum@56.0.36`. The first attempt accidentally picked the then-current SDK 57 template; the handoff corrects that and pins the direct `expo-asset` dependency to SDK 56. **Those setup corrections have not been rebuilt on this Mac.**
