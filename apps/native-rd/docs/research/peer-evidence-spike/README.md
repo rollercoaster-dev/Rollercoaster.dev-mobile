@@ -1,6 +1,6 @@
 # Peer evidence transfer: test on another machine
 
-**Status:** Throwaway feasibility spike. Native builds were stopped at the user's request because the first Mac was running out of memory and startup-disk space. Neither phone ran this app. Pear is still a candidate, not a selected architecture.
+**Status:** Throwaway feasibility spike. As of 2026-09-21 the app builds, installs and runs the Bare runtime on a real Android phone and a real iPhone (see [Device run](#device-run--2026-09-21)). No phone-to-phone transfer has completed yet: the test Wi-Fi blocks client-to-client traffic. Pear is still a candidate, not a selected architecture.
 
 **Purpose:** Find out whether two people together can transfer a selected credential, image and audio into the reviewer's own app, then return recognition over the same connection. This supports the [in-person learning vision](../../vision/community-learning-and-peer-validation.md) and continues the [Pear evaluation](../pear-p2p-evaluation.md).
 
@@ -22,7 +22,9 @@ This is a transport test. The mobile receiver compares against known fixture byt
 | Additional 10 MiB synthetic payload                                        | Passed on loopback; not a phone benchmark                                              |
 | Altered evidence, altered signature, incomplete transfer                   | Rejected by the desktop harness                                                        |
 | Same mobile backend in two Node processes using LAN addresses              | Passed; image/audio received and endorsement fixture returned                          |
-| Android and iOS native build/install/run                                   | **Not completed**                                                                      |
+| Android native build/install/run (Bare runtime, local DHT, invite)         | Passed on a Samsung Galaxy A16, Android 16                                             |
+| iOS native build/install/run (Bare runtime)                                | Passed on an iPhone 17 Pro, iOS 27, after the UIScene fix below                        |
+| Phone joins a phone or Mac over Wi-Fi                                      | **Blocked**: the test router isolates Wi-Fi clients; `PEER_NOT_FOUND` / timeout        |
 | Image rendering and audio playback on receiving phone                      | **Not tested**                                                                         |
 | Two phones with WAN unavailable                                            | **Not tested**                                                                         |
 | Official OB3 validation of these endorsement fixtures                      | **Not tested**                                                                         |
@@ -33,11 +35,22 @@ This is a transport test. The mobile receiver compares against known fixture byt
 
 Reproduced on a second Mac from a clean checkout using `bun install`, `bun run pack` and `bun run probe`: `bare-pack` produced the ios/android bundle and the probe finished `"ok":true`, transferring `fixture.png` and `tone.wav` and returning the endorsement fixture. Both fixture JWTs were also verified out-of-band with Node's own `crypto`: `ES256` signatures valid, credential typed `OpenBadgeCredential`, endorsement typed `EndorsementCredential`, and the endorsement subject matches the credential `jti`. Still desktop only; **no phone has run this**.
 
+### Device run — 2026-09-21
+
+Same Mac as the re-check, Xcode 27 / iOS 27 SDK, JDK 17, one Samsung Galaxy A16 (Android 16) and one iPhone 17 Pro (iOS 27), all on one Fritz!Box Wi-Fi.
+
+- **Android:** `assembleRelease` (arm64-v8a, two workers) built in under three minutes; `adb install` and launch worked. Logcat showed `Bare transport ready`, then after **Host**: three local DHT nodes, the server, `PEER_SPIKE_INVITE` and “Ready for a peer on the same Wi-Fi”. Bare, HyperDHT and the worklet run on a real Android phone.
+- **iOS:** `expo run:ios` failed with no provisioning profile (error 65); the direct `xcodebuild … -allowProvisioningUpdates` path in the iOS section worked and registered the App ID. The first build launched to a white screen and died after ~1 s with `SIGTRAP`. The crash report (pulled with `xcrun devicectl device copy from --domain-type systemCrashLogs`) put the main thread in UIKit's `___UIApplicationEvaluateRuntimeIssueForNoSceneLifecycleAdoption`: the iOS 27 SDK traps apps that have no `UIApplicationSceneManifest`, and the Expo 56 template still creates its window in `AppDelegate`. `plugins/with-ios-scene-lifecycle.js` now adds the manifest and a `SceneDelegate` during prebuild; with it the app launches and stays up. Attaching `lldb` hid the trap, so read the crash report rather than debugging live.
+- **Pairing token on iOS:** pasting into the invitation field did not update the field's value in this run (pressing Connect then reported `Unexpected end of JSON input`). The `--payload-url` deep link below did deliver the token and started the join. `xcrun devicectl device pasteboard copy --type public.utf8-plain-text --file invite.txt` can still place text on the iPhone clipboard.
+- **Network:** every join failed: Mac→Android and iPhone→Android `PEER_NOT_FOUND`, Android→Mac “connection timed out”. Diagnosis: with the Mac on Wi-Fi only, neither phone nor Mac could ping the other, and the Mac could not ping any other Wi-Fi client; the phone could ping the Mac only while the Mac was also on Ethernet. The router blocks Wi-Fi client ↔ Wi-Fi client traffic (on a Fritz!Box: WLAN → Sicherheit → “Die angezeigten aktiven WLAN-Geräte dürfen untereinander kommunizieren”). Verify with a plain `ping` between the two phones' addresses before blaming the transport.
+
+Not yet shown: any phone receiving evidence, image/audio rendering, the endorsement round-trip, role reversal, or the WAN-off run.
+
 ## Prepare the other machine
 
 Use a Mac for the iOS half, with Xcode, CocoaPods, Node, bun, JDK 17, and an Android SDK/NDK suitable for the repository's Expo 56 build. Follow the [native build playbook](../../../.claude/skills/native-rd-build/SKILL.md) for machine/device setup. Leave ample free startup-disk space for swap even if build output is external. Build one platform at a time; use two workers/jobs initially.
 
-Connect an authorized Android phone and a trusted iPhone with Developer Mode enabled. Both phones must be on the same Wi-Fi, with client isolation disabled. USB is for installing/debugging; it must not carry the peer-transfer traffic. No Metro server is needed for the Release builds below.
+Connect an authorized Android phone and a trusted iPhone with Developer Mode enabled. Both phones must be on the same Wi-Fi, with client isolation disabled: before testing, `ping` one phone from the other (or from a laptop on the same Wi-Fi, not on Ethernet) and expect replies. USB is for installing/debugging; it must not carry the peer-transfer traffic. No Metro server is needed for the Release builds below.
 
 Fetch the draft PR and copy the harness **outside the monorepo**, to keep its dependencies isolated:
 
@@ -60,7 +73,7 @@ export PEER_SPIKE_APPLE_TEAM_ID=YOUR_TEAM_ID
 bun run prebuild
 ```
 
-The script pins the native template to `expo-template-bare-minimum@56.0.36`. The first attempt accidentally picked the then-current SDK 57 template; the handoff corrects that and pins the direct `expo-asset` dependency to SDK 56. **Those setup corrections have not been rebuilt on this Mac.**
+The script pins the native template to `expo-template-bare-minimum@56.0.36` (the first attempt accidentally picked the SDK 57 template) and pins the direct `expo-asset` dependency to SDK 56. `app.config.js` also applies `plugins/with-ios-scene-lifecycle.js`, which the iOS 27 SDK requires (see the device run above). Both were rebuilt and run on devices on 2026-09-21.
 
 ## Android: build and install first
 
@@ -95,12 +108,12 @@ xcrun devicectl device process launch --device YOUR_IPHONE_UDID \
   dev.rollercoaster.peerspike
 ```
 
-Xcode needs a signed-in development account with permission to provision the test app. Allow the app's local-network prompt. If installation/launch fails, capture the actual error; no mobile compatibility claim has been made yet.
+Xcode needs a signed-in development account with permission to provision the test app; `-allowProvisioningUpdates` lets `xcodebuild` register the App ID and create the profile, which `bun run ios` (`expo run:ios`) does not do on a fresh account. Allow the app's local-network prompt. If the app shows a white screen and exits within a second, pull the crash report with `xcrun devicectl device info files --device UDID --domain-type systemCrashLogs` and `… device copy from …`; an `EXC_BREAKPOINT` in `___UIApplicationEvaluateRuntimeIssueForNoSceneLifecycleAdoption` means the scene-lifecycle plugin did not run. If installation/launch fails, capture the actual error; no mobile compatibility claim has been made yet.
 
 ## Run the encounter
 
 1. On Android, tap **Host evidence on this device**. Wait for “Ready for a peer on the same Wi-Fi.”
-2. Copy the invitation shown in the text field into the iPhone's invitation field; tap **Connect to invitation**. Moving this small pairing token through the test computer is acceptable for this spike; do not transfer the evidence that way.
+2. Copy the invitation shown in the text field into the iPhone's invitation field; tap **Connect to invitation**. If pasting does not take on iOS, use the `--payload-url` launch below instead. Moving this small pairing token through the test computer is acceptable for this spike; do not transfer the evidence that way.
 3. On the iPhone, verify that `fixture.png` appears as an image and **Play received test audio** plays the short tone. The receiver should say “Evidence received and matched the signed fixture.” Turn up playback volume if needed.
 4. Tap **Return signed endorsement fixture**. Android should say “Returned endorsement fixture received intact.” This is fixture transport, not the reviewer's personal validation.
 5. Force-close and reopen the test app on both phones, reverse the roles, and repeat. Restart between sessions; reconnect/session switching is not implemented.
@@ -113,7 +126,7 @@ For pairing-token extraction while Android is hosting:
 adb logcat -d -s ReactNativeJS:I '*:S'
 ```
 
-Look for `PEER_SPIKE_INVITE`. If Release logs omit it, use the displayed invitation field. The iOS test app also supports launching with a URL-encoded token:
+Look for `PEER_SPIKE_INVITE` (Release logs do include it). Android can be driven without touching it: `adb shell uiautomator dump` lists the buttons by `content-desc` with bounds, and `adb shell input tap X Y` / `input text` press and type. Host and Connect can each be pressed once per process; force-stop and relaunch to retry. The iOS test app also supports launching with a URL-encoded token:
 
 ```sh
 xcrun devicectl device process launch --device YOUR_IPHONE_UDID \
