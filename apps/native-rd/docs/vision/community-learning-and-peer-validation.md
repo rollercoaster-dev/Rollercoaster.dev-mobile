@@ -2,77 +2,105 @@
 
 **Date:** 2026-09-20
 
-**Status:** Agreed product direction; technical design remains open
+**Requirements workshop:** 2026-09-23
 
-## Purpose
+**Status:** Agreed product requirements; interaction details and technical design remain open
 
-**The main purpose is to encourage in-person interaction:** create reasons for people to come together locally, learn from one another, and recognize each other's progress. The motivating analogy is modern scouting: learners create their own achievements and validate them through live, in-person social interaction.
+## Purpose and first participants
 
-The initial experience is one-to-one: a learner invites a specific peer to review a step or badge while they are physically together, each using their own app. The app supports their conversation, shared learning, and recognition, and preserves the review history. Encouraging that face-to-face encounter is a core product goal.
+Encourage people to meet in person, learn from one another, and recognize each other's progress. Learning to communicate what you have done is itself part of learning. Conversations should start as early as an idea or question, before criteria, evidence, or work are complete.
 
-People can bring an idea, work in progress, an individual step, or a completed self-issued badge. Review can contribute to earning an achievement or add recognition afterward, and the same pair can meet again to iterate on feedback.
+The first experience is one learner and one invited peer, each using their own app. Initial groups organize themselves and bring their existing relationships; there are no users yet and the flow cannot depend on an established network. Help learners explain what help they want and choose a suitable person they already know or meet. In-app validator discovery, group membership, and group-wide requests are future possibilities, not initial requirements.
 
-Regularly meeting groups remain a longer-term aspiration. The app currently has no group connections; group membership, group invitations, and group-wide review requests are outside the initial scope. The one-to-one flow must work without them.
+## What counts as validation
 
-## Learner choice
+Witnessing an attempt, assessing it against criteria, and recognizing progress all count. Learners will have varying evidence and criteria; peers will have varying experience and knowledge. The app should help both sides improve the quality and clarity of recognition without imposing a universal authority hierarchy or score.
 
-- Learners choose whether peer validation is required for a step or the final badge.
-- Learners choose the review focus: their own question, the achievement's criteria, or both.
-- Validation can be based on reviewing evidence or personally witnessing the achievement. The basis must remain clear in the recognition.
-- Any peer can validate initially. Later, a validator's own badges and relevant information may provide context and weight. No scoring system or authority hierarchy has been selected.
+A validation is the peer's confirmed statement of what they recognize. It identifies the reviewed step or goal, the attempt, and relevant selected evidence or live observations. Optional prompts such as “What did you observe?” and “What helped you reach that judgment?” help explain its basis. Experience can provide context without becoming an eligibility threshold.
 
-The policy for validation should be explicit, without imposing one policy on every learner. Editing that policy does not rewrite historical reviews.
+The learner owns their completion claim; the peer owns their statement. A peer can recognize partial progress, describe uncertainty, or explain what they would need to see next without overruling the learner. Technical credential verification and a peer's judgment are distinct.
 
-## Coaching and iteration
+## A learner-prepared review view
 
-Feedback should guide learners toward discovering a solution, rather than prescribe specific changes. Reviewers can ask questions, identify a gap, and explain what they need to see to validate an achievement. The learner decides how to respond.
+The learner prepares a scoped view for a particular conversation:
 
-The code-review analogy applies to revisions and approval: a review concerns a particular version. Feedback may lead to another attempt and another review. Earlier feedback and validation remain attached to the version reviewed; changes do not silently inherit approval.
+- A selected step or entire goal, showing what they want help with or validated.
+- The relevant steps and criteria.
+- A brief summary of where they are, their question or review focus, and sources they are drawing from.
+- An evidence viewer containing only the evidence they select.
+- Space for general notes and comments attached to particular pieces or parts of evidence, with replies from both people, like a code review.
 
-Self-completion, feedback, and peer validation are distinct. A useful meeting need not produce an endorsement. The treatment of formally requesting changes, review outcomes, and feedback recording still needs design.
+Preparation must remain lightweight. An unfinished idea or question is enough to start coaching; polished evidence and finalized criteria are not prerequisites. Learner and peer can clarify criteria and identify useful evidence together.
+
+**A whole-goal review shows the complete goal definition, all its steps, and all its criteria.** Supporting evidence remains learner-selected. Privacy can narrow the claim being reviewed, but must not hide part of that claim: someone who wants to disclose only a step requests recognition of that step. A peer judges whether the selected evidence is sufficient and makes any limits explicit.
+
+A whole-goal review can produce recognition of individual steps, the whole goal, or both. Each statement has an explicit scope; step recognition never silently becomes whole-goal approval.
+
+## Conversation, coaching, and both voices
+
+In-person conversation is central. The app captures useful moments without requiring people to transcribe a meeting. Peers should ask questions, explain observations, and help the learner discover what to try, rather than simply provide answers.
+
+Both participants can comment and reply on evidence, explain their reasoning, and return to a question with another attempt. General notes capture points about the work as a whole. A useful conversation need not end in validation.
+
+Either person can record their own account. A summary entered on someone else's behalf becomes that person's attributed statement only after they confirm it. This applies to comments, summaries, and validation; an unconfirmed account must not appear as the other person's words or approval.
+
+## Keepsakes and private reflection
+
+Notes, realizations, questions, encouragement, and next steps can become important keepsakes along the learning path, even before anything is complete. Preserve their context: what was being explored and who contributed. A next step can remain an invitation rather than automatically becoming a task with a deadline.
+
+Either person can offer a keepsake; the recipient chooses whether to keep it on their path. Learner reflections are private first. Offering a thank-you or recognition to a peer is a separate choice from permitting that peer to share it further, and does not grant access to the underlying goal or evidence.
+
+Recognition is freely given, never owed. The app may gently offer an optional private reflection after an encounter. Skipping is easy, causes no reminders, and is not visible to the peer. Peers cannot request feedback through the app or see whether a learner wrote a private reflection. Lack of recognition must not imply someone was unhelpful.
+
+## Learner control and access
+
+The learner controls their data: what they disclose, to whom, and whether to add more context. Opening a review does not automatically authorize the peer to retain or reuse its evidence. A peer can recognize what they observed without needing a permanent copy of the underlying material.
+
+Access duration remains deliberately unresolved. Test brief meetings, interrupted encounters, and returning together later before choosing session expiry or continuing access. No automatic expiry, permanent peer copy, or ongoing-access default has been agreed. Technology evaluation must distinguish temporary viewing from retained copies and honestly explain limits such as screenshots; it must not promise that externally captured copies can be recalled.
+
+## Completion commitments and later attempts
+
+A learner can choose a commitment such as “I want someone to witness this before I consider it finished.” This is revisable by the learner, not a fixed external gate. Changing it does not rewrite historical peer statements or imply approval of the change.
+
+Comments and recognition stay attached to the attempt actually reviewed. Ongoing edits stay private until the learner chooses to share a new attempt. Earlier recognition remains meaningful history, but a changed claim does not silently inherit it. This is the required behavior; exact snapshots, version identifiers, and credential issuance timing remain design questions.
 
 ## Steps can become standalone badges
 
-Validating a step and making it a standalone badge are separate learner-controlled actions. “Make this a badge” recognizes that step as its own achievement; it does not mean expanding it into a new goal.
+Validating a step and making it a standalone badge are separate learner-controlled actions. A bowline recognized during a shelter-building goal can become its own badge even if the shelter is never completed. This does not expand the step into a new goal or imply validation of the shelter.
 
-A learner might receive validation for tying and testing a bowline while building a shelter. They can choose to make the bowline achievement a standalone badge, even if the shelter is never completed.
+Presenting an unchanged achievement as a standalone badge should preserve its existing recognition. Changing the actual claim requires a new review if recognition of that changed claim is wanted. The credential and presentation model must support these behaviors; its storage structure has not been selected.
 
-The agreed technical direction is to separate the underlying OB3 credential from its presentation:
+## Standards boundary and technology experiments
 
-| Moment                    | Intended behavior                                                                                                               |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| Working on a step         | Preserve attempts, coaching, and revisions in learning history.                                                                 |
-| Recording the achievement | Represent that version's learner, achievement, criteria, and evidence in an OB3 credential. Exact issuance timing remains open. |
-| Peer validation           | Use an OB3 EndorsementCredential targeting that specific achievement credential.                                                |
-| Make it a badge           | Reuse the unchanged credential and endorsement, presenting it as a standalone badge.                                            |
-| Change the reviewed claim | Preserve the earlier credential and review; the new version needs fresh validation.                                             |
+OB3 remains a requirement for portable credentials and endorsements, with independent verification. A proprietary signed statement is not a substitute. Ordinary coaching notes and keepsakes need not each become credentials.
 
-A presentation-only change can preserve signed content. Changing a signed title, criteria, or evidence is a credential change, even if the user sees it as cosmetic. Do not transfer a signature to a different claim or append content that invalidates an existing proof.
+Earlier research proposed an OB3 EndorsementCredential targeting a particular achievement credential and distinct credential IDs per reviewed version. These remain candidate mappings to investigate against the requirements above, not a settled issuance, versioning, or storage architecture. See the [implementation-gap brief](../research/2026-09-20-minimal-peer-validation.md) and [linked-achievement research](../research/2026-09-20-ob3-linked-achievements.md).
 
-Distinct credential IDs for distinct reviewed versions are the agreed direction to investigate, with app-level links preserving their history. This avoids relying on another wallet to retain every revision under a reused credential ID.
+A fully offline encounter is a **strong preference to investigate**, covering evidence viewing, both participants' contributions, and saved recognition. Feasibility and any connectivity boundaries must be established on devices before promising this experience. Existing local-first requirements remain in force; this uncertainty neither authorizes a network-dependent implementation nor amends an ADR.
 
-## OB3 is a requirement
+Pear, file exchange, QR, nearby transfer, and hosted links are not selected. The [evidence-transfer spike](../research/peer-evidence-spike/README.md) is an experiment, not the product flow or a decision to give peers copies. Its synthetic transfers and pre-signed fixtures do not demonstrate real peer validation, privacy behavior, or a completed offline encounter.
 
-The credentials and endorsements must follow OB3 and be independently verifiable. A proprietary signed statement is not a substitute. Technical validation and a peer's judgment are separate: the former checks the credential; the latter recognizes the achievement.
+## Open questions to test and design
 
-OB3 provides achievement and endorsement models; the app must model coaching, review rounds, learner policies, and how those records connect. A valid credential alone does not prove the truth of an observation or a person's legal identity. See the [OB3 specification](https://www.imsglobal.org/spec/ob/v3p0/).
+- Access duration, interruption recovery, and what returning to a review feels like.
+- How to prepare and preview a review with low effort, and deliberately add context during it.
+- How comments address different evidence media, and how attribution confirmation works in person.
+- Recognition editing or withdrawal, duplicate exchanges, and retention of each person's contributions.
+- Offline feasibility, device connection, and behavior when connectivity is unavailable.
+- Credential issuance timing, version and evidence binding, review-history portability, and standalone badge presentation.
+- Identity and key changes, legacy credentials, and independent endorsement interoperability. Existing new-badge compliance is documented in [current compliance status](../architecture/ob3-compliance-status.md).
+- Explicit alignment of revisable commitments with existing completion policies before implementation.
 
-## Still open
+These questions do not reopen the agreed scope, privacy, attribution, or recognition requirements.
 
-- Issuance timing when peer validation is required, including the distinction between a completion claim and an approved achievement.
-- Exact version identifiers, evidence binding, and portable review-history representation.
-- How two people connect their apps and exchange data during a meeting. File export/import, QR, nearby transfer, and hosted links have **not** been selected.
-- Future group support, beyond the initial one-to-one flow, as distinct from people organizing real-world meetings themselves.
-- Feedback capture, retention, disclosure, and the review-state model.
-- How optional badge presentation is separated from the signed credential in storage and export.
-- How linked achievements and badge trees should be represented. See [OB3 linked-achievement research](../research/2026-09-20-ob3-linked-achievements.md); it does not select an architecture.
-- How legacy non-standard credentials are handled, and how independent endorsement/exchange interoperability will be demonstrated. New-badge OB3 compliance has already shipped; see [current compliance status](../architecture/ob3-compliance-status.md).
-- How learner-selected validation requirements interact with the current Phase B completion rules. This vision does not silently amend accepted ADRs.
+## Separate future conversations
+
+A mentor path could recognize learning through helping others. Private mentor reflections belong there. Learner-offered accounts of helpful coaching could later contribute to mentor or subject-specific learning paths, but points, weighting, rewards, and skill-tree rules are not agreed. They must not create an expectation of positive feedback or reward easy approvals; helpful work can go unrecorded. This needs its own workshop.
+
+Validator discovery through the app, group features, and badge-tree architecture are also future work. Initial participants can organize real-world groups without those features.
 
 ## Relationship to existing documents
 
-This develops the community direction in [product vision](./product-vision.md) and follows [design principles](./design-principles.md). It expands the earlier final-badge-only framing to include steps and repeated review.
+This develops [product vision](./product-vision.md) and [design principles](./design-principles.md), expanding final-badge-only review into conversations throughout learning. This document is the product source of truth for the workshop; research supplies candidate solutions and evidence, not additional requirements.
 
-The [implementation-gap brief](../research/2026-09-20-minimal-peer-validation.md) consolidates the research against current main. This vision is the source of truth for the product choices agreed in this discussion; transport, media limits, and implementation sequencing remain open.
-
-The [current ADR positions](../decisions/index.md#current-positions) still govern implementation. In particular, this vision neither changes funded milestones nor treats existing Phase B personal reflection as peer review. Any necessary policy changes require their own explicit decision.
+The [current ADR positions](../decisions/index.md#current-positions) still govern implementation. This workshop does not change funded milestones, turn Phase B personal reflection into peer review, or select an implementation sequence. Any necessary policy amendment requires an explicit decision.

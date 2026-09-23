@@ -1,5 +1,7 @@
 # Pear (Holepunch P2P Runtime) — Evaluation for native-rd
 
+**Requirements update — 2026-09-23:** The [requirements workshop](../vision/community-learning-and-peer-validation.md) governs product behavior. This experiment does not select a transport, authorize permanent peer copies of evidence, or establish access duration. A fully offline encounter is a strong preference to investigate. The product now includes scoped review, both voices, confirmed attribution, and recognition of partial progress; this harness does not implement that experience.
+
 **Date:** 2026-07-01
 **Status:** Draft — research, not a decision
 **Owner:** Joe

@@ -1,5 +1,7 @@
 # Peer evidence transfer: test on another machine
 
+**Requirements update — 2026-09-23:** The [requirements workshop](../../vision/community-learning-and-peer-validation.md) governs product behavior. This experiment does not select a transport, authorize permanent peer copies of evidence, or establish access duration. A fully offline encounter is a strong preference to investigate. The product now includes scoped review, both voices, confirmed attribution, and recognition of partial progress; this harness does not implement that experience.
+
 **Status:** Throwaway feasibility spike. As of 2026-09-21 the app builds, installs and runs the Bare runtime on a real Android phone and a real iPhone (see [Device run](#device-run--2026-09-21)). No phone-to-phone transfer has completed yet: the test Wi-Fi blocks client-to-client traffic. Pear is still a candidate, not a selected architecture.
 
 **Purpose:** Find out whether two people together can transfer a selected credential, image and audio into the reviewer's own app, then return recognition over the same connection. This supports the [in-person learning vision](../../vision/community-learning-and-peer-validation.md) and continues the [Pear evaluation](../pear-p2p-evaluation.md).

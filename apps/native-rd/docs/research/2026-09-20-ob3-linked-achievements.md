@@ -27,12 +27,12 @@ These are recommendations inferred from the standards and the agreed product dir
 | “Knot tying contributes to shelter building” | App relationship that could map to CLR `isPartOf` | Containment does not establish sufficient evidence to earn the parent.       |
 | A tree exported with earned achievements     | Investigate CLR as an export envelope             | Supporting a standard does not guarantee every wallet renders the same tree. |
 | A group's reusable pathway                   | Investigate CASE-aligned achievement definitions  | Does not replace each learner's credentials or choices.                      |
-| “Validation required before completion”      | Learner policy in the app                         | A relationship edge alone cannot enforce this rule.                          |
+| “I want peer validation before completion”   | Learner policy in the app                         | A revisable learner commitment, not a fixed external gate.                   |
 | Layout, drafts, review rounds, and coaching  | App learning-history model                        | No claim that a generic OB3 wallet understands these.                        |
 
 For example, bowline and site-selection achievements could both contribute to a shelter achievement. The learner could use the same bowline achievement toward a sailing goal. That suggests a graph with reusable nodes rather than a strictly single-parent tree. This is a design possibility, not a new requirement.
 
-“Make this step a badge” need not change any of these edges. Under the agreed direction it changes the achievement's presentation while preserving its credential and validation. Recognition of the whole shelter remains a separate claim.
+“Make this step a badge” need not change any of these edges. The product requirement is to preserve recognition of the unchanged achievement; the credential and presentation mapping remains a design question. Recognition of the whole shelter remains a separate claim.
 
 ## Keep three kinds of links distinct
 
