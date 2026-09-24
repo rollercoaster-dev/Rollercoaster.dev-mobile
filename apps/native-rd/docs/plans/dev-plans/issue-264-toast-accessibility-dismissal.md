@@ -43,6 +43,7 @@ The issue reports eight Toast defects. Current main already fixes the dead exit 
 - [2026-09-24] The first full app test run found one missing explicit i18n namespace in the new dismiss label. Fixed to `common:actions.dismiss`; focused Toast, contrast, and namespace tests then passed (284/284).
 - [2026-09-24] Typed i18n requires the array form `useTranslation(["common"])` for a namespaced key. Corrected after the final type-check exposed the mismatch.
 - [2026-09-24] Root `bun run test` reported success even though native Jest could not access Watchman in the sandbox. The actual app suite is rerun directly with `--watchman=false` and its result recorded separately.
+- [2026-09-24] Independent code review found that action and dismiss controls could still receive a second tap while the toast stayed mounted for exit. Fixed with disabled controls and `pointerEvents="none"` during exit; a deferred-exit test covers both paths.
 
 ## Follow-ups
 

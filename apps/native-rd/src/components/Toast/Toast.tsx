@@ -115,6 +115,7 @@ export function Toast({
   return (
     <Animated.View
       style={[styles.container, animatedStyle]}
+      pointerEvents={visible ? "auto" : "none"}
       accessible={false}
       accessibilityElementsHidden={!visible}
       importantForAccessibility={visible ? "auto" : "no-hide-descendants"}
@@ -130,6 +131,7 @@ export function Toast({
       {action && (
         <Pressable
           style={styles.actionButton}
+          disabled={!visible}
           onPress={() => {
             try {
               action.onPress();
@@ -148,6 +150,7 @@ export function Toast({
       {action && (
         <Pressable
           style={styles.dismissButton}
+          disabled={!visible}
           onPress={onDismiss}
           accessibilityRole="button"
           accessibilityLabel={t("common:actions.dismiss")}

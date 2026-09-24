@@ -200,6 +200,44 @@ describe("Toast", () => {
     }
   });
 
+  it("does not accept a second action or dismiss tap during exit", () => {
+    const slideOut = deferSlideOut();
+    const onPress = jest.fn();
+    const onDismiss = jest.fn();
+    const action = { label: "Undo", onPress };
+    try {
+      const { rerender } = renderWithProviders(
+        <Toast
+          visible
+          message="Deleted"
+          action={action}
+          onDismiss={onDismiss}
+        />,
+      );
+      const actionButton = screen.getByRole("button", { name: "Undo" });
+      const dismissButton = screen.getByRole("button", { name: "Dismiss" });
+      act(() => {
+        rerender(
+          <Toast
+            visible={false}
+            message="Deleted"
+            action={action}
+            onDismiss={onDismiss}
+          />,
+        );
+      });
+      expect(
+        screen.UNSAFE_getByProps({ pointerEvents: "none" }),
+      ).toBeOnTheScreen();
+      fireEvent.press(actionButton);
+      fireEvent.press(dismissButton);
+      expect(onPress).not.toHaveBeenCalled();
+      expect(onDismiss).not.toHaveBeenCalled();
+    } finally {
+      slideOut.restore();
+    }
+  });
+
   it("does not unmount when the slide-out is interrupted (finished === false)", () => {
     // The finished guard (Toast.tsx) protects against an interrupted slide-out:
     // its callback fires with finished === false, and that stale callback must
