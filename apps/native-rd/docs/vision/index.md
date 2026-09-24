@@ -2,9 +2,10 @@
 
 Documents defining what the app is, who it's for, and how it should feel.
 
-| Document                                       | Summary                                                                   | Last Verified |
-| ---------------------------------------------- | ------------------------------------------------------------------------- | ------------- |
-| [product-vision.md](./product-vision.md)       | What the app is, iterations A-D, relationship to monorepo                 | 2026-02-24    |
-| [design-principles.md](./design-principles.md) | ND-first design rules, visual identity, 7 themes                          | 2026-02-24    |
-| [user-stories.md](./user-stories.md)           | Lina, Sam, Ava, Eva — real scenarios driving design                       | 2026-02-24    |
-| [habit-formation.md](./habit-formation.md)     | Recurring practice vs finish-line goal; how to help ND users build habits | 2026-06-20    |
+| Document                                                                                 | Summary                                                                                    | Last Verified |
+| ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------- |
+| [product-vision.md](./product-vision.md)                                                 | What the app is, iterations A-D, relationship to monorepo                                  | 2026-02-24    |
+| [design-principles.md](./design-principles.md)                                           | ND-first design rules, visual identity, 7 themes                                           | 2026-02-24    |
+| [user-stories.md](./user-stories.md)                                                     | Lina, Sam, Ava, Eva — real scenarios driving design                                        | 2026-02-24    |
+| [habit-formation.md](./habit-formation.md)                                               | Recurring practice vs finish-line goal; how to help ND users build habits                  | 2026-06-20    |
+| [community-learning-and-peer-validation.md](./community-learning-and-peer-validation.md) | Agreed review requirements: scoped evidence, coaching, privacy, keepsakes, and recognition | 2026-09-23    |

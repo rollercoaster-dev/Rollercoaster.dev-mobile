@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "Peer Evidence Spike",
+    "slug": "peer-evidence-spike",
+    "version": "1.0.0",
+    "newArchEnabled": true,
+    "orientation": "portrait",
+    "scheme": "dev.rollercoaster.peerspike",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "dev.rollercoaster.peerspike",
+      "infoPlist": {
+        "NSLocalNetworkUsageDescription": "Test an in-person evidence transfer between your devices."
+      }
+    },
+    "android": {
+      "package": "dev.rollercoaster.peerspike"
+    },
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 31,
+            "useLegacyPackaging": true
+          }
+        }
+      ],
+      "expo-audio"
+    ]
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "private": true,
+  "name": "peer-evidence-spike",
+  "description": "Throwaway peer evidence transport spike; not production peer validation",
+  "main": "index.js",
+  "scripts": {
+    "pack": "bare-pack --host ios --host android --linked --out backend.bundle.js backend.cjs",
+    "probe": "node node-backend-probe.cjs",
+    "prebuild": "expo prebuild --template expo-template-bare-minimum@56.0.36 --no-install",
+    "android": "expo run:android --variant release --no-bundler",
+    "ios": "expo run:ios --configuration Release --no-bundler"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/holepunchto/bare-expo.git"
+  },
+  "author": "Holepunch",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "b4a": "^1.6.7",
+    "expo": "~56.0.21",
+    "expo-asset": "~56.0.24",
+    "expo-audio": "~56.0.13",
+    "expo-build-properties": "~56.0.27",
+    "expo-file-system": "~56.0.8",
+    "hyperdht": "6.34.0",
+    "react": "19.2.3",
+    "react-native": "0.85.3",
+    "react-native-bare-kit": "0.15.5",
+    "sodium-universal": "^5.0.1"
+  },
+  "devDependencies": {
+    "babel-preset-expo": "~56.0.3",
+    "bare-pack": "latest"
+  }
+}

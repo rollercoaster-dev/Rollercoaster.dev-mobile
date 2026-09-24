@@ -1,5 +1,7 @@
 # Pear (Holepunch P2P Runtime) — Evaluation for native-rd
 
+**Requirements update — 2026-09-23:** The [requirements workshop](../vision/community-learning-and-peer-validation.md) governs product behavior. This experiment does not select a transport, authorize permanent peer copies of evidence, or establish access duration. A fully offline encounter is a strong preference to investigate. The product now includes scoped review, both voices, confirmed attribution, and recognition of partial progress; this harness does not implement that experience.
+
 **Date:** 2026-07-01
 **Status:** Draft — research, not a decision
 **Owner:** Joe
@@ -7,6 +9,12 @@
 **Scope reference:** [ADR-0001 §Iteration D](../decisions/ADR-0001-iteration-strategy.md#iteration-d--community), [ADR-0003 Sync Layer](../decisions/ADR-0003-sync-layer-decision.md)
 
 ---
+
+## Follow-up — 2026-09-20
+
+The [evidence-transfer test handoff](../../prototypes/peer-evidence-spike/README.md) continues this evaluation with a standalone harness and instructions for another machine. Desktop transport checks passed. On 2026-09-21 the harness built, installed and ran on an Android and an iOS phone, but no phone-to-phone transfer completed because the test Wi-Fi isolated clients. Pear remains a candidate.
+
+The July baseline below is historical: new-badge signing has since shipped as ES256 VC-JWT with a recorded official validator pass; see [current compliance status](../architecture/ob3-compliance-status.md). Default public-DHT discovery also must not be treated as proof of offline discovery. The local-network arrangement in the handoff still needs phone testing.
 
 ## TL;DR
 
