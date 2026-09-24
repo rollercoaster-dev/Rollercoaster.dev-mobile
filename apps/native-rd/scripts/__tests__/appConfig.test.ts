@@ -17,6 +17,15 @@ const baseConfig = {
 
 const originalVariant = process.env.APP_VARIANT;
 
+test("iOS prebuild adopts the scene lifecycle on every app variant", () => {
+  // The iOS 27 SDK traps at launch when the generated app has no scene manifest.
+
+  const staticConfig = require("../../app.json").expo as {
+    plugins: (string | unknown[])[];
+  };
+  expect(staticConfig.plugins).toContain("./plugins/with-ios-scene-lifecycle");
+});
+
 afterEach(() => {
   if (originalVariant === undefined) delete process.env.APP_VARIANT;
   else process.env.APP_VARIANT = originalVariant;

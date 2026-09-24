@@ -3,12 +3,12 @@ name: native-rd-build
 description: Build native-rd for any target — local iOS simulator/device, local Release builds, EAS development/preview/production, Android (when generated). Use when the user hits a build failure, asks how to produce a build of any kind, needs to diagnose runtime errors that look build-related ("No script URL provided", missing assets, signing issues), or wants to understand what `eas.json` / `app.json` / `Podfile.properties.json` settings actually do. Also use as a pre-flight checklist before starting a fresh build.
 metadata:
   author: rollercoaster.dev
-  version: "2.9.1"
+  version: "2.10.0"
 ---
 
 # native-rd Build Playbook
 
-Comprehensive build reference for `apps/native-rd`. Stack: **Expo SDK 56 + RN 0.85.3 + Hermes + new architecture (`newArchEnabled: true`)**, building with **Xcode 26.x** and EAS CLI ≥ 13.
+Comprehensive build reference for `apps/native-rd`. Stack: **Expo SDK 56 + RN 0.85.3 + Hermes + new architecture (`newArchEnabled: true`)**, building with **Xcode 26.x or 27** and EAS CLI ≥ 13. Xcode 27 needs Gotcha 18's scene-lifecycle fix.
 
 Android toolchain versions the Expo root project actually resolves (printed as `[ExpoRootProject] Using the following versions:` at the top of every Gradle run) — `[VERIFIED 2026-07-28]`:
 
@@ -1030,6 +1030,25 @@ ADB_LOCAL_TRANSPORT_MAX_PORT=5554 adb start-server
 **Stale `packages/*/dist`.** `@rollercoaster-dev/openbadges-core` and `design-tokens` resolve through package.json `exports` to their built `dist/`; Metro never looks at their `src/`. Pull a commit that touches a package and run the app without `bun run build`, and the app serves last month's code — here `encodeP256DidKey` was missing and the bake died with `TypeError: undefined is not a function`, which reads as an app bug. Both run scripts now run `bun run build:packages` (root package.json) first (cached, sub-second when nothing changed). Metro does **not** pick up a rebuilt `dist/` while running — restart it after the build.
 
 While you're on a physical phone that also carries the Play Store build: never uninstall the store app to make room (user data), build the `.dev` variant instead (the run script default), and see `e2e/README.md` → Android for the E2E lane.
+
+---
+
+## Gotcha 18 — Xcode 27 dev client crashes before React Native starts
+
+`[VERIFIED 2026-09-24]` iPhone 17e simulator, iOS 27.0, Xcode 27.0.
+
+**Symptom:** `bun run ios:e2e` reports `Build Succeeded` and installs the app, but the splash screen closes before `welcome-get-started` appears. Maestro times out at its first assertion. The `Rollercoasterdev-*.ips` crash report has `SIGTRAP` on the main thread in `___UIApplicationEvaluateRuntimeIssueForNoSceneLifecycleAdoption_block_invoke`; the generated Info.plist lacks `UIApplicationSceneManifest`. This happens before Metro loads JavaScript, so changing JS dependencies or restarting Metro will not resolve it.
+
+**Cause and fix:** The Expo 56 template creates its `UIWindow` in `AppDelegate`, while the iOS 27 SDK requires a scene lifecycle. The repo's peer-evidence prototype proved a config plugin that adds a scene manifest and `SceneDelegate`. The main app now registers `./plugins/with-ios-scene-lifecycle` in `app.json`, so clean prebuilds and EAS builds generate the same fix. The scene delegate forwards URL contexts through `AppDelegate.application(_:open:options:)`; forwarding only to React Native lets the Expo dev client stay open but strands it on “No development servers found” instead of loading Metro. The plugin fails visibly if Expo changes the Swift window block it patches. To verify the generated files after prebuild:
+
+```bash
+cd apps/native-rd
+bunx expo prebuild --platform ios --no-install
+plutil -p ios/Rollercoasterdev/Info.plist | rg 'UIApplicationSceneManifest|UISceneDelegateClassName'
+rg 'class SceneDelegate|Window creation moved' ios/Rollercoasterdev/AppDelegate.swift
+```
+
+The generated `ios/` directory is disposable; edit the plugin and app config, not its Info.plist or AppDelegate. The plugin is registered for local and EAS prebuilds; EAS was not run in this verification. See `prototypes/peer-evidence-spike/README.md` for the earlier physical-device reproduction.
 
 ---
 

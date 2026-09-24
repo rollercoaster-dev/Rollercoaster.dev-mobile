@@ -69,6 +69,7 @@
       ],
       "expo-asset",
       "@react-native-community/datetimepicker",
+      "./plugins/with-ios-scene-lifecycle",
       "./plugins/withResourceBundleDeploymentTarget",
       [
         "expo-build-properties",
