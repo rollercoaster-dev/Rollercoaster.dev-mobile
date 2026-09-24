@@ -59,7 +59,7 @@ Fetch the draft PR and copy the harness **outside the monorepo**, to keep its de
 ```sh
 gh pr checkout 674
 mkdir -p ../peer-evidence-spike
-cp -R apps/native-rd/docs/research/peer-evidence-spike/. ../peer-evidence-spike/
+cp -R apps/native-rd/prototypes/peer-evidence-spike/. ../peer-evidence-spike/
 cd ../peer-evidence-spike
 bun install
 bun run pack

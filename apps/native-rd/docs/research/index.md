@@ -24,4 +24,4 @@ Completed research documents. These informed ADRs but are not the decisions them
 | [2026-09-20-minimal-peer-validation.md](./2026-09-20-minimal-peer-validation.md)     | Peer-validation implementation gaps and open design questions against current main | 2026-09-23    |
 | [2026-09-20-ob3-linked-achievements.md](./2026-09-20-ob3-linked-achievements.md)     | Community-learning implications of OB3 links, CLR associations, and CASE pathways  | 2026-09-20    |
 
-- [Peer evidence transfer test handoff](./peer-evidence-spike/README.md) — standalone experimental harness, desktop results, and the 2026-09-21 device run: Android and iOS build, install and run; phone-to-phone transfer still blocked by Wi-Fi client isolation (2026-09-21).
+- [Peer evidence transfer test handoff](../../prototypes/peer-evidence-spike/README.md) — standalone experimental harness, desktop results, and the 2026-09-21 device run: Android and iOS build, install and run; phone-to-phone transfer still blocked by Wi-Fi client isolation (2026-09-21).

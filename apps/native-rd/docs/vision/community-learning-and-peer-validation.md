@@ -78,7 +78,7 @@ Earlier research proposed an OB3 EndorsementCredential targeting a particular ac
 
 A fully offline encounter is a **strong preference to investigate**, covering evidence viewing, both participants' contributions, and saved recognition. Feasibility and any connectivity boundaries must be established on devices before promising this experience. Existing local-first requirements remain in force; this uncertainty neither authorizes a network-dependent implementation nor amends an ADR.
 
-Pear, file exchange, QR, nearby transfer, and hosted links are not selected. The [evidence-transfer spike](../research/peer-evidence-spike/README.md) is an experiment, not the product flow or a decision to give peers copies. Its synthetic transfers and pre-signed fixtures do not demonstrate real peer validation, privacy behavior, or a completed offline encounter.
+Pear, file exchange, QR, nearby transfer, and hosted links are not selected. The [evidence-transfer spike](../../prototypes/peer-evidence-spike/README.md) is an experiment, not the product flow or a decision to give peers copies. Its synthetic transfers and pre-signed fixtures do not demonstrate real peer validation, privacy behavior, or a completed offline encounter.
 
 ## Open questions to test and design
 
