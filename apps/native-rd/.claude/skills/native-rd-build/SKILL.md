@@ -469,6 +469,15 @@ This error does **not** apply to Release builds — those embed `main.jsbundle` 
 
 Don't take expo-doctor warnings at face value. Cross-reference against the validation plan.
 
+`[VERIFIED 2026-09-24]` PR #679 dependency review: distinguish duplicate
+**versions** from duplicate installations of the same version. Bun 1.3.7
+accepted a frozen lockfile after removing the stale nested
+`expo-asset/expo-constants@56.0.25` entry; all consumers then resolved
+`expo-constants@56.0.26`. Expo Doctor still reported same-version installations
+from Bun's isolated workspace layout. Record the resolved versions and native
+build results rather than treating either a Doctor warning or autolinking
+exit code alone as proof of compatibility.
+
 ---
 
 ## Gotcha 6 — Metro resolver cache poisoned after `bun add` / `bunx expo install`
