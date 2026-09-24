@@ -3,7 +3,7 @@ name: native-rd-build
 description: Build native-rd for any target — local iOS simulator/device, local Release builds, EAS development/preview/production, Android (when generated). Use when the user hits a build failure, asks how to produce a build of any kind, needs to diagnose runtime errors that look build-related ("No script URL provided", missing assets, signing issues), or wants to understand what `eas.json` / `app.json` / `Podfile.properties.json` settings actually do. Also use as a pre-flight checklist before starting a fresh build.
 metadata:
   author: rollercoaster.dev
-  version: "2.9.0"
+  version: "2.9.1"
 ---
 
 # native-rd Build Playbook
@@ -468,6 +468,15 @@ This error does **not** apply to Release builds — those embed `main.jsbundle` 
 - SDK mismatches for **Jest** and **TypeScript** — **documented exceptions, do NOT downgrade** to satisfy the doctor
 
 Don't take expo-doctor warnings at face value. Cross-reference against the validation plan.
+
+`[VERIFIED 2026-09-24]` PR #679 dependency review: distinguish duplicate
+**versions** from duplicate installations of the same version. Bun 1.3.7
+accepted a frozen lockfile after removing the stale nested
+`expo-asset/expo-constants@56.0.25` entry; all consumers then resolved
+`expo-constants@56.0.26`. Expo Doctor still reported same-version installations
+from Bun's isolated workspace layout. Record the resolved versions and native
+build results rather than treating either a Doctor warning or autolinking
+exit code alone as proof of compatibility.
 
 ---
 
