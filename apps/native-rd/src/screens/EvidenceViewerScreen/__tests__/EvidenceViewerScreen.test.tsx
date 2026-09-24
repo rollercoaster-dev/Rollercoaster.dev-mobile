@@ -111,6 +111,19 @@ describe("EvidenceViewerScreen", () => {
     expect(screen.getByText("1 / 2")).toBeOnTheScreen();
   });
 
+  it("shows the complete active evidence title apart from the thumbnail", () => {
+    const title =
+      "A detailed photo of the community archive after several careful revisions";
+    mockUseAllEvidenceForGoal.mockReturnValue([
+      ITEMS[0],
+      { ...ITEMS[1], title },
+    ]);
+    renderWithProviders(<EvidenceViewerScreen {...routeProps} />);
+    const heading = screen.getByTestId("evidence-viewer-active-title");
+    expect(heading.props.children).toBe(title);
+    expect(heading.props.numberOfLines).toBeUndefined();
+  });
+
   it("hides counter and strip when only one item exists", () => {
     mockUseAllEvidenceForGoal.mockReturnValue([ITEMS[0]]);
     renderWithProviders(<EvidenceViewerScreen {...routeProps} />);

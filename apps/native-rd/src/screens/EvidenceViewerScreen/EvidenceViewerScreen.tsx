@@ -69,13 +69,21 @@ function ViewerContent({
 
   return (
     <View style={styles.container}>
-      {evidence.length > 1 ? (
-        <View style={styles.counterBar}>
+      <View style={styles.counterBar}>
+        <Text
+          variant="title"
+          style={styles.activeTitle}
+          testID="evidence-viewer-active-title"
+          accessibilityLiveRegion="polite"
+        >
+          {active.title}
+        </Text>
+        {evidence.length > 1 ? (
           <Text style={styles.counter} accessibilityLiveRegion="polite">
             {activeIndex + 1} / {evidence.length}
           </Text>
-        </View>
-      ) : null}
+        ) : null}
+      </View>
       <View style={styles.body}>
         <EvidenceContent evidence={active} />
       </View>

@@ -17,6 +17,11 @@ export const styles = StyleSheet.create((theme) => ({
     borderBottomWidth: theme.borderWidth.thin,
     borderBottomColor: theme.colors.border,
     alignItems: "center",
+    gap: theme.space[1],
+  },
+  activeTitle: {
+    color: theme.colors.text,
+    textAlign: "center",
   },
   counter: {
     fontSize: theme.size.sm,
