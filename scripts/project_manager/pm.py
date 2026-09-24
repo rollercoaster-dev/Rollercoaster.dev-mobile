@@ -25,7 +25,11 @@ def excluded(pr):
 
 
 def linked_issues(pr):
-    return {int(n) for n in re.findall(r'(?i)(?:closes?|fix(?:es)?|resolves?)\s+#(\d+)\b', pr.get('body') or '')}
+    body = pr.get('body') or ''
+    short = re.findall(r'(?i)(?:closes?|fix(?:es)?|resolves?|refs?|related\s+to)\s+#(\d+)\b', body)
+    full = re.findall(r'https://github\.com/rollercoaster-dev/Rollercoaster\.dev-mobile/issues/(\d+)\b', body, re.I)
+    owner = re.findall(r'(?i)rollercoaster-dev/Rollercoaster\.dev-mobile#(\d+)\b', body)
+    return {int(n) for n in short + full + owner}
 
 
 class Manager:
@@ -90,13 +94,42 @@ class Manager:
         return [i['number'] for i in (s['snapshot'] or {}).get('issues', [])
                 if s['audits'].get(str(i['number']), {}).get('issue_updated_at') != i['updated_at']]
 
+    def _next_auto_issue(self, s):
+        """The board's Next column is the autonomous queue; audit its first candidate."""
+        issues = {i['number']: i for i in s['snapshot']['issues']}
+        covered = set(s['reservations'])
+        for pr in s['prs'].values():
+            covered.update(str(n) for n in linked_issues(pr))
+        priority = {'High': 0, 'Medium': 1, 'Low': 2}
+        candidates = sorted(enumerate(s['snapshot']['board']),
+            key=lambda pair: (priority.get(pair[1].get('priority'), 3),
+                              pair[1].get('order') if pair[1].get('order') is not None else float('inf'),
+                              pair[0]))
+        for _, item in candidates:
+            n = item['number']
+            issue = issues.get(n)
+            if item['status'] != 'Next' or not issue or str(n) in covered:
+                continue
+            labels = {label['name'] for label in issue.get('labels', [])}
+            if labels & {'hitl', 'needs:design', 'dep:blocked', 'type:epic'}:
+                continue
+            audit = s['audits'].get(str(n), {})
+            if (audit.get('head') == s['snapshot']['head'] and
+                    audit.get('issue_updated_at') == issue['updated_at'] and
+                    audit.get('verdict') in {'implemented', 'superseded', 'duplicate', 'blocked', 'decision'}):
+                continue
+            return n
+        return None
+
     def status(self):
         with self.transaction() as s:
             covered = set(s['reservations'])
             for p in s['prs'].values():
                 covered.update(str(n) for n in linked_issues(p))
-            return dict(pending_queue=[n for n in s['queue'] if str(n) not in covered], paused=s['paused'], mode='execution' if s['approved'] else 'audit',
+            return dict(pending_queue=[n for n in s['queue'] if str(n) not in covered], paused=s['paused'],
+                mode='manual-queue' if s['approved'] else 'auto-dispatch' if not s['queue'] else 'awaiting-queue-approval',
                 queue_approved=bool(s['approved']), occupied=self._occupied(s), limit=5,
+                next_auto_issue=self._next_auto_issue(s) if s['snapshot'] and not s['queue'] else None,
                 prs=list(s['prs'].values()), reservations=s['reservations'], queue=s['queue'],
                 audits=s['audits'], unaudited=self._unaudited(s),
                 issue_count=len((s['snapshot'] or {}).get('issues', [])), synced_at=s['synced_at'])
@@ -132,12 +165,22 @@ class Manager:
             s['approved'] = None
         return {'queue': issues, 'approved': False}
 
+    def clear_queue(self):
+        """Return to board-driven dispatch without touching audits or reservations."""
+        with self.transaction() as s:
+            s['queue'] = []
+            s['approved'] = None
+        return {'queue': [], 'mode': 'auto-dispatch'}
+
     def approve_queue(self, reference):
         if not reference.strip(): raise GateError('Explicit user approval reference required')
         with self.transaction() as s:
-            if not s['snapshot'] or self._unaudited(s): raise GateError('Audit every open issue first')
+            if not s['snapshot']: raise GateError('Sync GitHub before approving a queue')
             if not s['queue']: raise GateError('Queue is empty')
-            if any(s['audits'].get(str(n), {}).get('verdict') != 'needed' for n in s['queue']):
+            issues = {i['number']: i for i in s['snapshot']['issues']}
+            if any(n not in issues or
+                   s['audits'].get(str(n), {}).get('issue_updated_at') != issues[n]['updated_at'] or
+                   s['audits'].get(str(n), {}).get('verdict') != 'needed' for n in s['queue']):
                 raise GateError('Queue includes issues not assessed as needed')
             board = {i['number']: i for i in s['snapshot']['board']}
             if any(n not in board or board[n]['status'] != 'Next' or board[n].get('order') is None for n in s['queue']):
@@ -151,29 +194,29 @@ class Manager:
 
     def _eligible(self, s, issue):
         if s['paused']: raise GateError('Dispatch is paused')
-        if not s['approved']: raise GateError('Awaiting agreed priorities')
-        if self._unaudited(s): raise GateError('Open issue audit is incomplete or changed')
+        if s['queue'] and not s['approved']: raise GateError('Awaiting agreed priorities for manual queue')
         if self._occupied(s) >= 5: raise GateError('Five slots occupied; wait for a human merge')
-        if any(r.get('pr') is None for r in s['reservations'].values()):
-            raise GateError('An implementation is already active; resume it')
         existing = set(s['reservations'])
         for p in s['prs'].values():
             existing.update(str(n) for n in linked_issues(p))
         pending = [n for n in s['queue'] if str(n) not in existing]
         if any(p['head']['ref'] == f'codex/issue-{issue}' and (p['head'].get('repo') or {}).get('full_name') == REPO for p in s['snapshot']['prs']):
             raise GateError('Issue branch already has PR history; inspect and resume existing work')
-        if not pending or issue != pending[0]: raise GateError('Issue is not next in the agreed queue')
-        current_board = {str(i['number']): i for i in s['snapshot']['board']}
-        for n in pending:
-            b = current_board.get(str(n), {})
-            if {'order': b.get('order'), 'priority': b.get('priority')} != s['approved']['board'].get(str(n)):
-                raise GateError('Board priorities/order changed; agree and approve the queue again')
+        if s['approved']:
+            if not pending or issue != pending[0]: raise GateError('Issue is not next in the agreed queue')
+            current_board = {str(i['number']): i for i in s['snapshot']['board']}
+            for n in pending:
+                b = current_board.get(str(n), {})
+                if {'order': b.get('order'), 'priority': b.get('priority')} != s['approved']['board'].get(str(n)):
+                    raise GateError('Board priorities/order changed; agree and approve the queue again')
+        elif issue != self._next_auto_issue(s):
+            raise GateError('Issue is not the next autonomous candidate in the board Next column')
         audit = s['audits'].get(str(issue), {})
-        if audit.get('verdict') != 'needed' or audit.get('head') != s['snapshot']['head']:
+        current = next((i for i in s['snapshot']['issues'] if i['number'] == issue), None)
+        if not current or audit.get('verdict') != 'needed' or audit.get('head') != s['snapshot']['head'] or audit.get('issue_updated_at') != current['updated_at']:
             raise GateError('Revalidate selected issue against current main before starting')
         board = next((i for i in s['snapshot']['board'] if i['number'] == issue), None)
         if not board or board['status'] != 'Next': raise GateError('Selected issue must be Next on the board')
-        current = next(i for i in s['snapshot']['issues'] if i['number'] == issue)
         labels = {label['name'] for label in current.get('labels', [])}
         if labels & {'hitl', 'needs:design', 'dep:blocked', 'type:epic'}:
             raise GateError('Issue requires human input, design, dependencies, or decomposition')
@@ -248,7 +291,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--state-dir', type=Path, default=DEFAULT_STATE)
     sub = parser.add_subparsers(dest='command', required=True)
-    for name in ('status', 'snapshot', 'sync', 'pause', 'resume'): sub.add_parser(name)
+    for name in ('status', 'snapshot', 'sync', 'pause', 'resume', 'clear-queue'): sub.add_parser(name)
     audit = sub.add_parser('audit'); audit.add_argument('issue', type=int)
     audit.add_argument('verdict'); audit.add_argument('--evidence', required=True); audit.add_argument('--head', required=True)
     queue = sub.add_parser('queue'); queue.add_argument('issues', type=int, nargs='+')
@@ -259,7 +302,8 @@ def main():
     args = parser.parse_args(); manager = Manager(args.state_dir)
     fetch = lambda: fetch_snapshot(manager, getattr(args, 'issue', None))
     try:
-        if args.command in ('status', 'snapshot', 'pause', 'resume'): result = getattr(manager, args.command)()
+        if args.command in ('status', 'snapshot', 'pause', 'resume', 'clear-queue'):
+            result = getattr(manager, args.command.replace('-', '_'))()
         elif args.command == 'sync': result = manager.sync(fetch())
         elif args.command == 'audit': result = manager.audit(args.issue, args.verdict, args.evidence, args.head)
         elif args.command == 'queue': result = manager.queue(args.issues)

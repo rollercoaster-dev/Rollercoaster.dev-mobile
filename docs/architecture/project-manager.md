@@ -1,7 +1,9 @@
 # Project manager operations
 
-The manager audits issue relevance, agrees priorities with Joe, and then implements
-that queue. It never merges. Dependency and release PRs have separate review queues.
+The manager audits the next eligible issue in the board's Next column and dispatches
+an agent to implement it. It continues the wider relevance audit in the background.
+An explicitly agreed queue may override board order. It never merges. Dependency
+and release PRs have separate review queues.
 
 ## Runtime
 
@@ -11,7 +13,8 @@ that queue. It never merges. Dependency and release PRs have separate review que
 - Guard: `scripts/project_manager/pm.py` (Python 3.9+, SQLite, authenticated `gh`).
 - Telegram: `scripts/project_manager/telegram_bridge.py` (Python stdlib).
 - Credentials: `~/.config/telegram/env`; never copied into a worktree or Git.
-- One Codex heartbeat returns to the manager task; one user LaunchAgent receives Telegram.
+- One Codex heartbeat runs at 09:00 and 21:00 Europe/Berlin; one user LaunchAgent receives Telegram.
+- Manual run: `$project-manager` in Codex, `/project-manager` in Claude, or `rollercoaster-pm` in a terminal. The terminal command starts an interactive Codex session so any necessary filesystem or network approval can be handled there.
 
 The machine must be awake, the repository mounted, and Codex running for the
 manager heartbeat to work. The receiver can answer cached status and pause/resume
@@ -29,6 +32,7 @@ python3 scripts/project_manager/pm.py status
 python3 scripts/project_manager/pm.py snapshot
 python3 scripts/project_manager/pm.py pause
 python3 scripts/project_manager/pm.py resume
+python3 scripts/project_manager/pm.py clear-queue
 python3 scripts/project_manager/pm.py audit 123 needed --head MAIN_SHA --evidence 'Inspected paths/commits and unmet acceptance criteria'
 python3 scripts/project_manager/pm.py queue 123 124
 python3 scripts/project_manager/pm.py approve-queue --approval-ref 'Joe explicitly agreed to 123 then 124 in message ...'
@@ -38,9 +42,12 @@ python3 scripts/project_manager/pm.py bind 123 700
 ```
 
 `sync` reads every open issue and PR plus every previously tracked PR, failing
-closed if API pagination is incomplete. `claim` refreshes GitHub inside a SQLite
-write transaction and reserves capacity before work. Claims persist through
-restarts and duplicates are rejected. Only one active implementation is allowed.
+closed if API pagination is incomplete. `status.next_auto_issue` identifies the
+first unclaimed, ungated Next item by board Priority, Execution order if set, and
+board order. Audit this issue against current main, then `claim` refreshes GitHub
+inside a SQLite write transaction and reserves capacity before worker dispatch.
+Claims persist through restarts and duplicates are rejected. Distinct independent
+issues may have active workers concurrently while capacity remains.
 
 Five occupied slots prohibit new issue work. Open issue PRs (including drafts),
 reservations and closed-unmerged PRs consume slots. A verified merge by Joe's GitHub account (`joeczar`, type User) releases the
@@ -54,11 +61,13 @@ This guard coordinates cooperating manager runs; it cannot prevent a human or
 unrelated bot from creating an additional GitHub PR. A final pre-publication check
 holds the worker if external changes already put the queue over capacity.
 
-Queue approval requires a complete current issue audit. A new or edited issue
-needs assessment before more dispatch. The selected issue also needs an audit
-against current main, status Next, and no human/design/dependency/epic blocker.
-Changing the ordered queue clears approval. Resume only clears pause; it cannot
-approve priorities. Issues stay open until Joe's agreed closure decision or merge.
+Automatic dispatch uses Joe's Next column without a separate queue approval.
+The selected issue needs a fresh audit against current main, status Next, and no
+human/design/dependency/epic blocker. Unrelated unaudited issues do not block it.
+An explicitly ordered manual queue still requires Joe's approval of that exact
+list, Next status, and Execution order for its entries. Changing that queue clears
+approval. Resume only clears pause; it cannot approve a manual queue. Issues stay
+open until Joe's agreed closure decision or merge.
 
 ## Dependabot approval
 
