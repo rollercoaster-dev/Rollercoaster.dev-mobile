@@ -9,8 +9,14 @@ jest.mock("../../../services/sentry-report", () => ({
   reportError: jest.fn(),
 }));
 
-function ThrowingChild({ shouldThrow }: { shouldThrow: boolean }) {
-  if (shouldThrow) throw new Error("Test error");
+function ThrowingChild({
+  shouldThrow,
+  message = "Test error",
+}: {
+  shouldThrow: boolean;
+  message?: string;
+}) {
+  if (shouldThrow) throw new Error(message);
   return <Text>Child content</Text>;
 }
 
@@ -51,13 +57,32 @@ describe("ErrorBoundary", () => {
     );
 
     expect(screen.getByText(i18n.t("common:errorBoundary.title"))).toBeTruthy();
-    expect(screen.getByText("Test error")).toBeTruthy();
+    expect(
+      screen.getByText(i18n.t("common:errorBoundary.message")),
+    ).toBeTruthy();
+    expect(screen.queryByText("Test error")).toBeNull();
     expect(
       screen.getByRole("button", {
         name: i18n.t("common:errorBoundary.retry"),
       }),
     ).toBeTruthy();
   });
+
+  it.each(["/Users/someone/private/path", ""])(
+    "never displays exception detail in the default fallback (message: %j)",
+    (message) => {
+      render(
+        <ErrorBoundary>
+          <ThrowingChild shouldThrow={true} message={message} />
+        </ErrorBoundary>,
+      );
+
+      expect(
+        screen.getByText(i18n.t("common:errorBoundary.message")),
+      ).toBeTruthy();
+      if (message) expect(screen.queryByText(message)).toBeNull();
+    },
+  );
 
   it("has accessible alert role and label on fallback container", () => {
     render(
@@ -132,7 +157,7 @@ describe("ErrorBoundary", () => {
       if (i18n.language !== "en") await i18n.changeLanguage("en");
     });
 
-    it("renders the fallback title + retry as bracketed pseudo copy", async () => {
+    it("renders the fallback title, message, and retry as pseudo copy", async () => {
       await i18n.changeLanguage("pseudo");
       render(
         <ErrorBoundary>
@@ -140,9 +165,13 @@ describe("ErrorBoundary", () => {
         </ErrorBoundary>,
       );
       const title = i18n.t("common:errorBoundary.title");
+      const message = i18n.t("common:errorBoundary.message");
       const retry = i18n.t("common:errorBoundary.retry");
       expect(title.startsWith("[")).toBe(true);
+      expect(message.startsWith("[")).toBe(true);
       expect(screen.getByText(title)).toBeTruthy();
+      expect(screen.getByText(message)).toBeTruthy();
+      expect(screen.queryByText("Test error")).toBeNull();
       expect(screen.getByRole("button", { name: retry })).toBeTruthy();
     });
   });
