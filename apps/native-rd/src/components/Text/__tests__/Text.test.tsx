@@ -4,12 +4,15 @@ import { Text, type TextVariant } from "../Text";
 
 describe("Text", () => {
   const variants: TextVariant[] = [
+    "screenTitle",
+    "taskTitle",
     "display",
     "headline",
     "title",
     "body",
     "caption",
     "label",
+    "metadata",
     "mono",
   ];
 

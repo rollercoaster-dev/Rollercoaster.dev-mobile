@@ -277,7 +277,7 @@ export function CapturedEvidenceRail({
                   {icon}
                 </Text>
               ) : null}
-              <Text style={styles.evidenceChipText} numberOfLines={1}>
+              <Text style={styles.evidenceChipText} numberOfLines={2}>
                 {hasCaption ? caption : typeLabel}
               </Text>
             </View>

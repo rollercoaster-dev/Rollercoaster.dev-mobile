@@ -123,6 +123,21 @@ describe("BadgesWall", () => {
       ).toBeOnTheScreen();
     });
 
+    it("does not truncate a long spotlight goal title", () => {
+      const goalTitle =
+        "Document every step of the accessible community archive project";
+      renderWithProviders(
+        <BadgesWall
+          count={1}
+          spotlight={{ ...SPOTLIGHT, goalTitle }}
+          gallery={[]}
+          onOpenBadge={noop}
+          onSeeGoals={noop}
+        />,
+      );
+      expect(screen.getByText(goalTitle).props.numberOfLines).toBeUndefined();
+    });
+
     it("renders the spotlight badge art via BadgeRenderer when a design is set", () => {
       const design: BadgeDesign = {
         shape: BadgeShape.star,

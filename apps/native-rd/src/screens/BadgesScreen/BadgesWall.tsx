@@ -250,9 +250,7 @@ export function BadgesWall({
               <Text style={styles.spotlightOverline}>
                 {t("badges:wall.justEarned")}
               </Text>
-              <Text style={styles.spotlightTitle} numberOfLines={2}>
-                {spotlight.goalTitle}
-              </Text>
+              <Text style={styles.spotlightTitle}>{spotlight.goalTitle}</Text>
               {spotlight.earnedAt ? (
                 <Text style={styles.spotlightDate}>
                   {formatDate(spotlight.earnedAt, i18n.language)}
