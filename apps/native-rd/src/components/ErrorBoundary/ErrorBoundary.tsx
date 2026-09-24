@@ -55,7 +55,7 @@ export class ErrorBoundary extends Component<
               {i18n.t("common:errorBoundary.title")}
             </Text>
             <Text variant="body" style={styles.message}>
-              {error.message || i18n.t("common:errorBoundary.message")}
+              {i18n.t("common:errorBoundary.message")}
             </Text>
             <View style={styles.action}>
               <Button
