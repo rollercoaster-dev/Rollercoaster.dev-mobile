@@ -15,6 +15,7 @@ import { useUnistyles } from "react-native-unistyles";
 import { Text } from "../../components/Text";
 import { Button } from "../../components/Button";
 import { Input } from "../../components/Input";
+import { FieldError } from "../../components/FieldError";
 import { ScreenSubHeader } from "../../components/ScreenHeader";
 import { createEvidence, EvidenceType, TEXT_EVIDENCE_PREFIX } from "../../db";
 import type { GoalId, StepId } from "../../db";
@@ -26,9 +27,6 @@ import { styles } from "./CaptureTextNote.styles";
 
 /** Maximum characters for note content (NonEmptyString1000 constraint) */
 const MAX_CONTENT_LENGTH = 1000;
-
-/** Character count threshold to show warning color */
-const WARNING_THRESHOLD = 900;
 
 export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
   const navigation = useNavigation();
@@ -64,8 +62,11 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
   const canSave =
     trimmedContent.length > 0 && trimmedContent.length <= MAX_CONTENT_LENGTH;
   const charCount = trimmedContent.length;
-  const isNearLimit = charCount >= WARNING_THRESHOLD;
   const isOverLimit = charCount > MAX_CONTENT_LENGTH;
+  const noteError = isOverLimit
+    ? t("captureText:validation.tooLong", { max: MAX_CONTENT_LENGTH })
+    : undefined;
+  const emptyReason = t("captureText:validation.noteRequired");
 
   function handleSave() {
     if (!canSave || saving) return;
@@ -113,7 +114,11 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
         <TextInput
           ref={textInputRef}
           testID="capture-text-body"
-          style={[styles.textInput, isFocused && styles.textInputFocused]}
+          style={[
+            styles.textInput,
+            isFocused && styles.textInputFocused,
+            noteError && styles.textInputError,
+          ]}
           placeholder={t("captureText:input.placeholder")}
           placeholderTextColor={theme.colors.textMuted}
           value={content}
@@ -126,8 +131,16 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
           maxLength={MAX_CONTENT_LENGTH + 100}
           accessible
           accessibilityLabel={t("captureText:input.label")}
-          accessibilityHint={t("captureText:input.hint")}
+          accessibilityHint={noteError ?? t("captureText:input.hint")}
         />
+
+        {noteError ? (
+          <FieldError message={noteError} testID="capture-text-error" />
+        ) : !trimmedContent ? (
+          <Text variant="caption" style={styles.emptyHint}>
+            {emptyReason}
+          </Text>
+        ) : null}
 
         <View style={styles.captionContainer}>
           <Input
@@ -144,10 +157,7 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
         <View style={styles.footer}>
           <Text
             variant="caption"
-            style={[
-              styles.charCount,
-              (isNearLimit || isOverLimit) && styles.charCountWarning,
-            ]}
+            style={styles.charCount}
             accessibilityLabel={t("captureText:charCount.a11y", {
               count: charCount,
               max: MAX_CONTENT_LENGTH,
@@ -159,6 +169,13 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
             label={t("captureText:actions.save")}
             onPress={handleSave}
             disabled={!canSave}
+            accessibilityHint={
+              isOverLimit
+                ? noteError
+                : !trimmedContent
+                  ? emptyReason
+                  : undefined
+            }
             loading={saving}
             testID="capture-text-save"
           />

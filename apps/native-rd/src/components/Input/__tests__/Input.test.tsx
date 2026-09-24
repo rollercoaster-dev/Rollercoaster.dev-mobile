@@ -34,6 +34,25 @@ describe("Input", () => {
   it("renders error message when error prop is set", () => {
     renderWithProviders(<Input placeholder="Field" error="Required field" />);
     expect(screen.getByText("Required field")).toBeOnTheScreen();
+    expect(screen.getByPlaceholderText("Field")).toHaveProp(
+      "accessibilityHint",
+      "Required field",
+    );
+  });
+
+  it("restores the normal accessibility hint when the error clears", () => {
+    const { rerender } = renderWithProviders(
+      <Input label="Field" error="Required field" accessibilityHint="Help" />,
+    );
+    expect(screen.getByLabelText("Field")).toHaveProp(
+      "accessibilityHint",
+      "Required field",
+    );
+    rerender(<Input label="Field" accessibilityHint="Help" />);
+    expect(screen.getByLabelText("Field")).toHaveProp(
+      "accessibilityHint",
+      "Help",
+    );
   });
 
   it("does not render error element when no error", () => {

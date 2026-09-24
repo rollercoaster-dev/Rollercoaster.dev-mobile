@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet } from "react-native";
+import { StyleSheet, TextInput } from "react-native";
 import {
   renderWithProviders,
   screen,
@@ -113,6 +113,7 @@ describe("CaptureLinkScreen", () => {
   });
 
   it("shows validation error for empty URL on save", () => {
+    const focus = jest.spyOn(TextInput.prototype, "focus");
     renderScreen();
 
     fireEvent.press(screen.getByText(i18n.t("captureLink:actions.save")));
@@ -121,6 +122,12 @@ describe("CaptureLinkScreen", () => {
       screen.getByText(i18n.t("captureLink:validation.urlRequired")),
     ).toBeTruthy();
     expect(mockCreateEvidence).not.toHaveBeenCalled();
+    expect(screen.getByTestId("capture-link-url")).toHaveProp(
+      "accessibilityHint",
+      i18n.t("captureLink:validation.urlRequired"),
+    );
+    expect(focus).toHaveBeenCalled();
+    focus.mockRestore();
   });
 
   it("shows validation error for invalid URL", () => {
@@ -138,7 +145,7 @@ describe("CaptureLinkScreen", () => {
     expect(mockCreateEvidence).not.toHaveBeenCalled();
   });
 
-  it("clears validation error when user types", () => {
+  it("keeps the explanation until the URL is corrected", () => {
     renderScreen();
 
     // Trigger the error first
@@ -147,15 +154,28 @@ describe("CaptureLinkScreen", () => {
       screen.getByText(i18n.t("captureLink:validation.urlRequired")),
     ).toBeTruthy();
 
-    // Start typing to clear error
+    // One character changes the reason, but does not make the URL valid.
     fireEvent.changeText(
       screen.getByLabelText(i18n.t("captureLink:urlInput.label")),
       "h",
     );
-
     expect(
       screen.queryByText(i18n.t("captureLink:validation.urlRequired")),
     ).toBeNull();
+    expect(
+      screen.getByText(i18n.t("captureLink:validation.urlInvalid")),
+    ).toBeOnTheScreen();
+
+    fireEvent.changeText(
+      screen.getByLabelText(i18n.t("captureLink:urlInput.label")),
+      "https://example.com",
+    );
+    expect(
+      screen.queryByText(i18n.t("captureLink:validation.urlInvalid")),
+    ).toBeNull();
+    expect(
+      screen.getByTestId("capture-link-url").props.accessibilityHint,
+    ).toBeUndefined();
   });
 
   it("saves link evidence with goalId and navigates back", () => {

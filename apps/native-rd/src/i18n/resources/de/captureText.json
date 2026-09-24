@@ -12,6 +12,10 @@
   "charCount": {
     "a11y": "{{count}} von {{max}} Zeichen verwendet"
   },
+  "validation": {
+    "noteRequired": "Schreibe eine Notiz, um Speichern zu aktivieren.",
+    "tooLong": "Diese Notiz ist zu lang. Kürze sie auf höchstens {{max}} Zeichen, um sie zu speichern."
+  },
   "actions": {
     "save": "Notiz speichern"
   },

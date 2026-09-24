@@ -1,5 +1,12 @@
-import React, { useState } from "react";
-import { View, Alert, ScrollView } from "react-native";
+import React, { useRef, useState } from "react";
+import {
+  AccessibilityInfo,
+  Alert,
+  Platform,
+  ScrollView,
+  TextInput,
+  View,
+} from "react-native";
 import { KeyboardAvoidingFrame } from "../../components/KeyboardAvoidingFrame";
 import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
@@ -27,6 +34,7 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
   const [caption, setCaption] = useState("");
   const [urlError, setUrlError] = useState<string | undefined>();
   const [saving, setSaving] = useState(false);
+  const urlInputRef = useRef<TextInput>(null);
 
   useEvidenceStartBreadcrumb("link");
 
@@ -35,22 +43,40 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
 
   function handleUrlChange(text: string) {
     setUrl(text);
-    // Clear error when the user starts typing
+    // Once validation has failed, keep the explanation current until the URL
+    // is actually valid. A single typed character must not hide the reason.
     if (urlError) {
-      setUrlError(undefined);
+      const normalized = normalizeUrl(text);
+      setUrlError(
+        !normalized
+          ? t("captureLink:validation.urlRequired")
+          : isValidUrl(normalized)
+            ? undefined
+            : t("captureLink:validation.urlInvalid"),
+      );
     }
   }
 
   function validateUrl(): boolean {
     if (!trimmedUrl) {
-      setUrlError(t("captureLink:validation.urlRequired"));
+      showUrlError(t("captureLink:validation.urlRequired"));
       return false;
     }
     if (!hasValidUrl) {
-      setUrlError(t("captureLink:validation.urlInvalid"));
+      showUrlError(t("captureLink:validation.urlInvalid"));
       return false;
     }
     return true;
+  }
+
+  function showUrlError(message: string) {
+    // A repeated Save does not remount FieldError, so VoiceOver needs a fresh
+    // announcement. The first failure is announced when FieldError appears.
+    if (urlError === message && Platform.OS === "ios") {
+      AccessibilityInfo.announceForAccessibility(message);
+    }
+    setUrlError(message);
+    urlInputRef.current?.focus();
   }
 
   function handleSave() {
@@ -101,6 +127,7 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
         >
           <View style={styles.inputSection}>
             <Input
+              ref={urlInputRef}
               label={t("captureLink:urlInput.label")}
               placeholder={t("captureLink:urlInput.placeholder")}
               value={url}

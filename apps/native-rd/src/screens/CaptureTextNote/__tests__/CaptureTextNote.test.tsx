@@ -110,6 +110,39 @@ describe("CaptureTextNote", () => {
       i18n.t("captureText:actions.save"),
     );
     expect(saveButton.props.accessibilityState?.disabled).toBe(true);
+    expect(
+      screen.getByText(i18n.t("captureText:validation.noteRequired")),
+    ).toBeOnTheScreen();
+    expect(saveButton.props.accessibilityHint).toBe(
+      i18n.t("captureText:validation.noteRequired"),
+    );
+  });
+
+  it("explains an overlong note and clears the error when corrected", () => {
+    renderWithProviders(
+      <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
+    );
+    const body = screen.getByTestId("capture-text-body");
+    fireEvent.changeText(body, "a".repeat(1001));
+
+    const message = i18n.t("captureText:validation.tooLong", { max: 1000 });
+    expect(screen.getByTestId("capture-text-error")).toHaveTextContent(message);
+    expect(body.props.accessibilityHint).toBe(message);
+    expect(
+      screen.getByTestId("capture-text-save").props.accessibilityState
+        ?.disabled,
+    ).toBe(true);
+    expect(
+      screen.getByTestId("capture-text-save").props.accessibilityHint,
+    ).toBe(message);
+    expect(createEvidence).not.toHaveBeenCalled();
+
+    fireEvent.changeText(body, "a".repeat(1000));
+    expect(screen.queryByTestId("capture-text-error")).toBeNull();
+    expect(
+      screen.getByTestId("capture-text-save").props.accessibilityState
+        ?.disabled,
+    ).not.toBe(true);
   });
 
   it("enables Save button when content is entered", () => {
@@ -283,6 +316,22 @@ describe("CaptureTextNote", () => {
       });
       expect(pseudo.startsWith("[")).toBe(true);
       expect(screen.getByLabelText(pseudo)).toBeOnTheScreen();
+    });
+
+    it("renders the over-limit explanation under pseudo locale", async () => {
+      await i18n.changeLanguage("pseudo");
+      renderWithProviders(
+        <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
+      );
+      fireEvent.changeText(
+        screen.getByTestId("capture-text-body"),
+        "a".repeat(1001),
+      );
+      const pseudo = i18n.t("captureText:validation.tooLong", { max: 1000 });
+      expect(pseudo.startsWith("[")).toBe(true);
+      expect(screen.getByTestId("capture-text-error")).toHaveTextContent(
+        pseudo,
+      );
     });
   });
 });
