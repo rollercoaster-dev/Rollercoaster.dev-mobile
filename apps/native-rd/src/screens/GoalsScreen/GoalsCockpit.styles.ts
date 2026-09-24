@@ -124,7 +124,9 @@ export const styles = StyleSheet.create((theme) => ({
   // Bespoke empty state — reticle in a dashed frame + warm "prove something"
   // copy + a single blue CTA (prototype's Goals · Empty).
   empty: {
-    flex: 1,
+    // Keep the empty state centered when it fits, but let it grow beyond the
+    // ScrollView viewport when the OS text size makes the CTA taller.
+    flexGrow: 1,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: theme.space[6],
