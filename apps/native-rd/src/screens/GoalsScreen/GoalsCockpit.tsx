@@ -203,7 +203,6 @@ export function GoalsCockpit({
           <Text
             variant="headline"
             style={styles.nextStep}
-            numberOfLines={2}
             testID="goals-cockpit-next-step"
           >
             {hero.nextStepTitle}
