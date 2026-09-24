@@ -25,8 +25,8 @@ import { useTabScreenContentInset } from "../../navigation/useTabScreenContentIn
 import type { CaptureTextNoteScreenProps } from "../../navigation/types";
 import { styles } from "./CaptureTextNote.styles";
 
-/** Maximum characters for note content (NonEmptyString1000 constraint) */
-const MAX_CONTENT_LENGTH = 1000;
+/** The stored URI includes this prefix and must fit NonEmptyString1000. */
+const MAX_CONTENT_LENGTH = 1000 - TEXT_EVIDENCE_PREFIX.length;
 
 export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
   const navigation = useNavigation();

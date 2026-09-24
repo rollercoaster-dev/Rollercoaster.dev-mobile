@@ -16,7 +16,7 @@ Give link URL and text note length failures a consistent visible inline message,
 ## Intent Verification
 
 - [x] Invalid/empty link: readable inline explanation, input association, announcement, and focus on failed Save; correction clears the error in component tests.
-- [x] Note over 1000 characters: readable inline explanation and disabled Save reason, announced once on crossing; correction clears it and re-enables Save in component tests.
+- [x] Note over 987 characters: readable inline explanation and disabled Save reason, announced once on crossing; correction clears it and re-enables Save in component tests. The 13-character storage prefix counts toward the 1000-character URI limit.
 - [x] Color is supplemental. Error text and semantic rail meet contrast floors across the seven runtime themes. English, German, and generated pseudo locale remain complete.
 - [x] Link and note successful saves still work in component tests; #685's exit-path handling is untouched.
 
@@ -34,10 +34,13 @@ Targeted Jest for `Input`, `CaptureLinkScreen`, and `CaptureTextNote`; theme con
 
 - Source at a7628ddf: `Input` paints errors with `accentPrimary`, while note count uses the same accent without explanatory text. URL Save already validates but has no focus control.
 - #685 is In Progress and covers navigation-discard protection on both capture screens. This branch will not change Back/Cancel behavior.
-- GitHub project field query hit an API rate limit during setup; board update needs retry.
+- GitHub project field query briefly hit an API rate limit during setup; retry succeeded and #693 moved to In Progress.
 - Workspace packages need a build after a fresh install before Jest can resolve design tokens.
+- Independent error-handling review found that notes of 988–1000 characters previously passed the UI limit but failed `createEvidence`, because `content:text;` counts toward the 1000-character URI constraint. The UI now derives a 987-character content limit from the prefix; a DB boundary test pins the actual constraint.
 - `xcrun simctl list devices booted` found no booted iOS device; native VoiceOver and TalkBack behavior was not tested on device.
+- Independent reviews found three actionable gaps: the note storage boundary and repeated link announcement are fixed in the follow-up commit; URL focus targeting, announcement transitions, and field border tokens now have direct tests. The stale URL return-key comment was corrected.
+- Local CodeRabbit was authenticated, but automatic approval review rejected transmitting the private diff to that external service. Local independent code, test, and error-handling reviews provide the required coverage.
 
 ## Follow-ups
 
-- None yet.
+- `CompletionFlowScreen` also prefixes its closing note before `createEvidence` without checking the stored URI length. Audit its note length and feedback separately; this issue's acceptance is scoped to link and text capture.

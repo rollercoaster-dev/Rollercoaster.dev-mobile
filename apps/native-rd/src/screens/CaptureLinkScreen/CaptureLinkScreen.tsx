@@ -2,7 +2,6 @@ import React, { useRef, useState } from "react";
 import {
   AccessibilityInfo,
   Alert,
-  Platform,
   ScrollView,
   TextInput,
   View,
@@ -70,13 +69,13 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
   }
 
   function showUrlError(message: string) {
-    // A repeated Save does not remount FieldError, so VoiceOver needs a fresh
-    // announcement. The first failure is announced when FieldError appears.
-    if (urlError === message && Platform.OS === "ios") {
-      AccessibilityInfo.announceForAccessibility(message);
-    }
     setUrlError(message);
     urlInputRef.current?.focus();
+    // An unchanged message does not retrigger the live region or FieldError's
+    // effect. Announce a repeated failed Save after moving focus to its field.
+    if (urlError === message) {
+      AccessibilityInfo.announceForAccessibility(message);
+    }
   }
 
   function handleSave() {
@@ -136,8 +135,8 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
               autoCapitalize="none"
               autoCorrect={false}
               keyboardType="url"
-              // "done", not "next": nothing is wired to advance focus to the
-              // caption (Input exposes no ref), so the key blurs and dismisses.
+              // "done", not "next": the return key is not wired to advance
+              // focus to caption, so it blurs and dismisses the keyboard.
               returnKeyType="done"
               textContentType="URL"
               testID="capture-link-url"
