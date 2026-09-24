@@ -14,6 +14,7 @@ import type { Result } from "@evolu/common";
 import { Pencil } from "phosphor-react-native";
 import { useTranslation } from "react-i18next";
 import { Text } from "../../components/Text";
+import { Button } from "../../components/Button";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { IconButton } from "../../components/IconButton";
 import {
@@ -112,13 +113,14 @@ function resolveFocusStepId(rows: readonly StepRowLike[]): string | null {
  * "every step that's left is set aside", so the tie-break lives here (D5). The
  * stepless goal is checked *first*: `areAllStepsComplete([])` is `false`, so it
  * would otherwise land in the parked state as a nonsensical "Nothing in
- * progress. 0 set aside" — a goal with no steps stays chrome-only (D6).
+ * progress. 0 set aside". Give that goal a route into step entry instead.
  */
 function NoActionableBody({
   stepCount,
   allStepsComplete,
   parkedRows,
   goalTitle,
+  onAddFirstStep,
   onDesignBadge,
   sealed,
 }: {
@@ -126,11 +128,36 @@ function NoActionableBody({
   allStepsComplete: boolean;
   parkedRows: readonly FocusParkedRow[];
   goalTitle: string;
+  onAddFirstStep: () => void;
   onDesignBadge: () => void;
   /** Completed goal with a badge on record — the card offers "View badge". */
   sealed: boolean;
 }) {
-  if (stepCount === 0) return null;
+  const { t } = useTranslation(["focusMode"]);
+  if (stepCount === 0) {
+    return (
+      <ScrollView contentContainerStyle={styles.zeroStepContent}>
+        <Text
+          variant="headline"
+          style={styles.zeroStepTitle}
+          accessibilityRole="header"
+        >
+          {t("focusMode:zeroStep.title")}
+        </Text>
+        <Text variant="body" style={styles.zeroStepBody}>
+          {t("focusMode:zeroStep.body")}
+        </Text>
+        <View style={styles.zeroStepAction}>
+          <Button
+            label={t("focusMode:zeroStep.action")}
+            onPress={onAddFirstStep}
+            size="lg"
+            testID="focus-add-first-step"
+          />
+        </View>
+      </ScrollView>
+    );
+  }
   if (allStepsComplete) {
     return (
       <FocusCurrentTaskCard
@@ -606,6 +633,7 @@ function FocusContent({
             allStepsComplete={areAllStepsComplete(stepRows)}
             parkedRows={parkedRows}
             goalTitle={goal.title ?? ""}
+            onAddFirstStep={handleEditPress}
             onDesignBadge={handleDesignBadge}
             sealed={sealed}
           />

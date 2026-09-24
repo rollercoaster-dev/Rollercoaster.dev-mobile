@@ -45,6 +45,25 @@ export const styles = StyleSheet.create((theme) => ({
     justifyContent: "center",
     paddingBottom: theme.space[3],
   },
+  zeroStepContent: {
+    flexGrow: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    gap: theme.space[4],
+    paddingBottom: theme.space[3],
+  },
+  zeroStepTitle: {
+    color: theme.colors.text,
+    textAlign: "center",
+  },
+  zeroStepBody: {
+    color: theme.colors.textSecondary,
+    textAlign: "center",
+  },
+  zeroStepAction: {
+    alignSelf: "stretch",
+    marginTop: theme.space[2],
+  },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",

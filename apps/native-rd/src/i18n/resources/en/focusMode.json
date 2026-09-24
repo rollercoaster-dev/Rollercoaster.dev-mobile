@@ -1,5 +1,10 @@
 {
   "title": "Focus Mode",
+  "zeroStep": {
+    "title": "Every goal starts with a step.",
+    "body": "Add a first step to give this goal a place to begin.",
+    "action": "Add your first step"
+  },
   "evidenceFallback": "Evidence",
   "evidenceRail": {
     "zoneLabel": "Evidence",
