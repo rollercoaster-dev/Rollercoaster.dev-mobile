@@ -80,7 +80,28 @@ describe("Toast", () => {
     renderWithProviders(
       <Toast visible message="Deleted" action={{ label: "Undo", onPress }} />,
     );
-    expect(screen.getByLabelText("Undo")).toBeOnTheScreen();
+    expect(screen.getByRole("button", { name: "Undo" })).toBeOnTheScreen();
+  });
+
+  it("exposes the alert and action as separate screen-reader elements", () => {
+    renderWithProviders(
+      <Toast
+        visible
+        message="Deleted"
+        action={{ label: "Undo", onPress: jest.fn() }}
+      />,
+    );
+    const alert = screen.getByRole("alert");
+    const action = screen.getByRole("button", { name: "Undo" });
+    expect(alert).toHaveTextContent("Deleted");
+    expect(action).toBeOnTheScreen();
+    expect(screen.getByRole("button", { name: "Dismiss" })).toBeOnTheScreen();
+    // A grouping ancestor would collapse its children into one native element.
+    let ancestor = alert.parent;
+    while (ancestor && ancestor.props.accessible === undefined) {
+      ancestor = ancestor.parent;
+    }
+    expect(ancestor?.props.accessible).toBe(false);
   });
 
   it("calls action onPress when button is pressed", () => {
@@ -94,7 +115,45 @@ describe("Toast", () => {
 
   it("has accessible alert role", () => {
     renderWithProviders(<Toast visible message="Evidence deleted" />);
-    expect(screen.getByLabelText("Evidence deleted")).toBeOnTheScreen();
+    expect(screen.getByRole("alert")).toHaveTextContent("Evidence deleted");
+  });
+
+  it("keeps actionable toasts visible until action or dismiss, regardless of duration", () => {
+    jest.useFakeTimers();
+    try {
+      const onDismiss = jest.fn();
+      const onPress = jest.fn();
+      renderWithProviders(
+        <Toast
+          visible
+          message="Deleted"
+          duration={1000}
+          action={{ label: "Undo", onPress }}
+          onDismiss={onDismiss}
+        />,
+      );
+      act(() => jest.advanceTimersByTime(10000));
+      expect(onDismiss).not.toHaveBeenCalled();
+      fireEvent.press(screen.getByRole("button", { name: "Undo" }));
+      expect(onPress).toHaveBeenCalledTimes(1);
+      expect(onDismiss).toHaveBeenCalledTimes(1);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it("lets users explicitly dismiss an actionable toast", () => {
+    const onDismiss = jest.fn();
+    renderWithProviders(
+      <Toast
+        visible
+        message="Deleted"
+        action={{ label: "Undo", onPress: jest.fn() }}
+        onDismiss={onDismiss}
+      />,
+    );
+    fireEvent.press(screen.getByRole("button", { name: "Dismiss" }));
+    expect(onDismiss).toHaveBeenCalledTimes(1);
   });
 
   it("calls onDismiss after duration", () => {
@@ -120,16 +179,22 @@ describe("Toast", () => {
     const slideOut = deferSlideOut();
     try {
       const { rerender } = renderWithProviders(<Toast visible message="Bye" />);
-      expect(screen.getByText("Bye")).toBeOnTheScreen();
+      expect(
+        screen.getByText("Bye", { includeHiddenElements: true }),
+      ).toBeOnTheScreen();
       act(() => {
         rerender(<Toast visible={false} message="Bye" />);
       });
       // Completion callback not yet fired: still mounted through the exit.
-      expect(screen.getByText("Bye")).toBeOnTheScreen();
+      expect(
+        screen.getByText("Bye", { includeHiddenElements: true }),
+      ).toBeOnTheScreen();
       act(() => {
         slideOut.flush(true);
       });
-      expect(screen.queryByText("Bye")).toBeNull();
+      expect(
+        screen.queryByText("Bye", { includeHiddenElements: true }),
+      ).toBeNull();
     } finally {
       slideOut.restore();
     }
@@ -153,7 +218,9 @@ describe("Toast", () => {
       });
       // mounted stays true (guard skipped setMounted(false)), so the toast is
       // still rendered despite visible being false.
-      expect(screen.getByText("Bye")).toBeOnTheScreen();
+      expect(
+        screen.getByText("Bye", { includeHiddenElements: true }),
+      ).toBeOnTheScreen();
     } finally {
       slideOut.restore();
     }
@@ -301,5 +368,79 @@ describe("ToastContext", () => {
       render(<TestConsumer />);
     }).toThrow("useToast must be used within a ToastProvider");
     consoleError.mockRestore();
+  });
+
+  it("shows rapid toasts in order without losing either action", () => {
+    const firstAction = jest.fn();
+    const secondAction = jest.fn();
+    function QueueConsumer() {
+      const { showToast } = useToast();
+      return (
+        <Pressable
+          testID="enqueue"
+          onPress={() => {
+            showToast({
+              message: "First",
+              action: { label: "Undo", onPress: firstAction },
+            });
+            showToast({
+              message: "Second",
+              action: { label: "Retry", onPress: secondAction },
+            });
+          }}
+        >
+          <Text>Enqueue</Text>
+        </Pressable>
+      );
+    }
+    renderWithProviders(
+      <ToastProvider>
+        <QueueConsumer />
+      </ToastProvider>,
+    );
+    fireEvent.press(screen.getByTestId("enqueue"));
+    expect(screen.getByRole("alert")).toHaveTextContent("First");
+    expect(screen.queryByText("Second")).toBeNull();
+    fireEvent.press(screen.getByRole("button", { name: "Undo" }));
+    expect(firstAction).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("alert")).toHaveTextContent("Second");
+    fireEvent.press(screen.getByRole("button", { name: "Retry" }));
+    expect(secondAction).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("gives each queued plain toast its own full timer", () => {
+    jest.useFakeTimers();
+    try {
+      function QueueConsumer() {
+        const { showToast } = useToast();
+        return (
+          <Pressable
+            testID="enqueue"
+            onPress={() => {
+              showToast({ message: "First", duration: 1000 });
+              showToast({ message: "Second", duration: 3000 });
+            }}
+          >
+            <Text>Enqueue</Text>
+          </Pressable>
+        );
+      }
+      renderWithProviders(
+        <ToastProvider>
+          <QueueConsumer />
+        </ToastProvider>,
+      );
+      fireEvent.press(screen.getByTestId("enqueue"));
+      expect(screen.getByRole("alert")).toHaveTextContent("First");
+      act(() => jest.advanceTimersByTime(1000));
+      expect(screen.getByRole("alert")).toHaveTextContent("Second");
+      act(() => jest.advanceTimersByTime(2999));
+      expect(screen.getByRole("alert")).toHaveTextContent("Second");
+      act(() => jest.advanceTimersByTime(1));
+      expect(screen.queryByRole("alert")).toBeNull();
+    } finally {
+      jest.useRealTimers();
+    }
   });
 });

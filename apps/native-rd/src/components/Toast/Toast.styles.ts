@@ -24,17 +24,29 @@ export const styles = StyleSheet.create((theme) => ({
     fontWeight: theme.fontWeight.bold,
   },
   actionButton: {
-    backgroundColor: theme.colors.warning,
+    backgroundColor: theme.action.actionSecondaryBg,
     borderWidth: theme.borderWidth.thin,
     borderColor: theme.colors.border,
     borderRadius: theme.radius.sm,
     paddingVertical: theme.space[1],
     paddingHorizontal: theme.space[3],
     minHeight: 44,
+    minWidth: 44,
     alignItems: "center" as const,
     justifyContent: "center" as const,
   },
   actionLabel: {
     fontWeight: theme.fontWeight.bold,
+    color: theme.action.actionSecondaryFg,
+  },
+  dismissButton: {
+    minHeight: 44,
+    minWidth: 44,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
+  dismissLabel: {
+    color: theme.colors.text,
+    fontSize: theme.size.lg,
   },
 }));

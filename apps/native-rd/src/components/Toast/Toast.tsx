@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { AccessibilityInfo, Platform, Pressable } from "react-native";
+import { useTranslation } from "react-i18next";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -36,6 +37,7 @@ export function Toast({
   onDismiss,
   onExitComplete,
 }: ToastProps) {
+  const { t } = useTranslation(["common"]);
   const { shouldAnimate } = useAnimationPref();
   const translateY = useSharedValue(SLIDE_DISTANCE);
   const opacity = useSharedValue(0);
@@ -71,9 +73,13 @@ export function Toast({
         AccessibilityInfo.announceForAccessibility(message);
       }
 
-      timerRef.current = setTimeout(() => {
-        onDismissRef.current?.();
-      }, duration);
+      // An action must remain available until the user chooses it or dismisses
+      // the toast. A timer can expire before a screen reader finishes speaking.
+      if (!action) {
+        timerRef.current = setTimeout(() => {
+          onDismissRef.current?.();
+        }, duration);
+      }
     } else {
       const dur = shouldAnimate ? 150 : 0;
       // Unmount only after the slide-out finishes, so the exit plays instead of
@@ -93,7 +99,7 @@ export function Toast({
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [visible, message, duration, shouldAnimate, translateY, opacity]);
+  }, [visible, message, action, duration, shouldAnimate, translateY, opacity]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],
@@ -109,26 +115,45 @@ export function Toast({
   return (
     <Animated.View
       style={[styles.container, animatedStyle]}
-      accessible
-      accessibilityRole="alert"
-      accessibilityLiveRegion="assertive"
-      accessibilityLabel={message}
+      accessible={false}
+      accessibilityElementsHidden={!visible}
+      importantForAccessibility={visible ? "auto" : "no-hide-descendants"}
     >
-      <Text variant="body" style={styles.message}>
+      <Text
+        variant="body"
+        style={styles.message}
+        accessibilityRole="alert"
+        accessibilityLiveRegion="assertive"
+      >
         {message}
       </Text>
       {action && (
         <Pressable
           style={styles.actionButton}
           onPress={() => {
-            if (timerRef.current) clearTimeout(timerRef.current);
-            action.onPress();
+            try {
+              action.onPress();
+            } finally {
+              onDismissRef.current?.();
+            }
           }}
           accessibilityRole="button"
           accessibilityLabel={action.label}
         >
           <Text variant="label" style={styles.actionLabel}>
             {action.label}
+          </Text>
+        </Pressable>
+      )}
+      {action && (
+        <Pressable
+          style={styles.dismissButton}
+          onPress={onDismiss}
+          accessibilityRole="button"
+          accessibilityLabel={t("common:actions.dismiss")}
+        >
+          <Text variant="label" style={styles.dismissLabel}>
+            ×
           </Text>
         </Pressable>
       )}
