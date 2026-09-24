@@ -3,7 +3,7 @@ name: native-rd-build
 description: Build native-rd for any target — local iOS simulator/device, local Release builds, EAS development/preview/production, Android (when generated). Use when the user hits a build failure, asks how to produce a build of any kind, needs to diagnose runtime errors that look build-related ("No script URL provided", missing assets, signing issues), or wants to understand what `eas.json` / `app.json` / `Podfile.properties.json` settings actually do. Also use as a pre-flight checklist before starting a fresh build.
 metadata:
   author: rollercoaster.dev
-  version: "2.9.0"
+  version: "2.9.1"
 ---
 
 # native-rd Build Playbook
