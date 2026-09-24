@@ -18,6 +18,9 @@ class InstallTests(unittest.TestCase):
             self.assertNotEqual(Path(link).resolve(), old)
             self.assertEqual((state / 'existing-state').read_text(), 'keep')
             self.assertTrue((Path(link) / 'scripts/project_manager/pm.py').is_file())
+            command = home / '.local/bin/rollercoaster-pm'
+            self.assertTrue(command.is_symlink())
+            self.assertEqual(command.resolve(), (Path(link) / 'scripts/project_manager/run-manager.sh').resolve())
             config = plistlib.loads(Path(agent).read_bytes())
             self.assertEqual(config['ProgramArguments'][1], str(Path(link) / 'scripts/project_manager/telegram_bridge.py'))
             self.assertNotIn(str(source), str(config))

@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from pm import Manager, GateError
+from pm import Manager, GateError, linked_issues
 
 
 def pr(n, state='open', author='joeczar', branch=None, merged=False, draft=False):
@@ -76,27 +76,89 @@ class ManagerTests(unittest.TestCase):
             self.m.claim(100, lambda: snapshot([merged] + [pr(n) for n in range(2,6)]))
         self.assertEqual(self.m.status()['occupied'], 5)
 
-    def test_no_claim_without_complete_audit_and_priority_approval(self):
+    def test_manual_queue_requires_only_queued_issues_audited_and_approval(self):
         data = snapshot()
         self.m.sync(data)
         self.m.audit(100, 'needed', 'Evidence', 'abc')
         self.m.queue([100])
-        with self.assertRaises(GateError): self.m.approve_queue('Approved')
         with self.assertRaises(GateError): self.m.claim(100, lambda: data)
+        self.m.approve_queue('User approved issue 100')
+        self.m.claim(100, lambda: data)
+        self.assertEqual(self.m.status()['occupied'], 1)
+
+    def test_auto_dispatch_needs_selected_issue_audit_not_entire_backlog(self):
+        data = snapshot()
+        self.m.sync(data)
+        self.assertEqual(self.m.status()['next_auto_issue'], 100)
+        with self.assertRaisesRegex(GateError, 'Revalidate selected issue'):
+            self.m.claim(100, lambda: data)
+        self.m.audit(100, 'needed', 'Inspected current code and acceptance', 'abc')
+        self.m.claim(100, lambda: data)
+        self.assertEqual(self.m.status()['occupied'], 1)
+        self.assertEqual(self.m.status()['next_auto_issue'], 101)
+
+    def test_auto_dispatch_skips_human_gate_and_audited_obsolete_work(self):
+        data = snapshot(issues=range(100, 103))
+        data['issues'][0]['labels'] = [{'name': 'hitl'}]
+        self.m.sync(data)
+        self.assertEqual(self.m.status()['next_auto_issue'], 101)
+        self.m.audit(101, 'superseded', 'Current implementation supersedes it', 'abc')
+        self.assertEqual(self.m.status()['next_auto_issue'], 102)
+        self.m.sync(dict(data, head='new'))
+        self.assertEqual(self.m.status()['next_auto_issue'], 101)
+        self.m.sync(data)
+        self.m.audit(102, 'needed', 'Current code lacks acceptance behavior', 'abc')
+        self.m.claim(102, lambda: data)
+
+    def test_auto_dispatch_allows_independent_workers_up_to_cap(self):
+        data = snapshot(issues=range(100, 106))
+        self.m.sync(data)
+        for n in range(100, 105):
+            self.m.audit(n, 'needed', f'Issue {n} remains needed', 'abc')
+            self.m.claim(n, lambda: data)
+        self.assertEqual(self.m.status()['occupied'], 5)
+        self.m.audit(105, 'needed', 'Issue 105 remains needed', 'abc')
+        with self.assertRaisesRegex(GateError, 'Five slots occupied'):
+            self.m.claim(105, lambda: data)
+
+    def test_existing_issue_url_in_pr_prevents_duplicate_auto_dispatch(self):
+        p = pr(999, branch='codex/other-work')
+        p['body'] = 'Implements https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/100'
+        self.assertEqual(linked_issues(p), {100})
+        data = snapshot(prs=[p])
+        self.m.sync(data)
+        self.assertEqual(self.m.status()['next_auto_issue'], 101)
 
     def test_pause_resume_does_not_grant_priority_approval(self):
         self.m.pause()
         self.m.resume()
         self.assertFalse(self.m.status()['queue_approved'])
 
+    def test_clear_stale_manual_queue_returns_to_auto_without_losing_reservations(self):
+        data = snapshot()
+        self.m.sync(data)
+        self.m.queue([101])
+        self.assertEqual(self.m.status()['mode'], 'awaiting-queue-approval')
+        self.m.clear_queue()
+        self.assertEqual(self.m.status()['next_auto_issue'], 100)
+        self.m.audit(100, 'needed', 'Current code lacks behavior', 'abc')
+        self.m.claim(100, lambda: data)
+        self.m.queue([101])
+        self.m.clear_queue()
+        self.assertIn('100', self.m.status()['reservations'])
+
     def test_changed_head_requires_selected_issue_revalidation(self):
         data = snapshot()
         self.ready(data)
         with self.assertRaises(GateError): self.m.claim(100, lambda: snapshot(head='new'))
 
-    def test_changed_issue_or_new_issue_requires_audit(self):
+    def test_changed_selected_issue_requires_reaudit_but_new_unrelated_issue_does_not(self):
         self.ready(snapshot())
-        with self.assertRaises(GateError): self.m.claim(100, lambda: snapshot(issues=range(100,109)))
+        self.m.claim(100, lambda: snapshot(issues=range(100,109)))
+        data = snapshot(issues=range(100,109))
+        data['issues'][1]['updated_at'] = 'tomorrow'
+        with self.assertRaisesRegex(GateError, 'Revalidate selected issue'):
+            self.m.claim(101, lambda: data)
 
     def test_board_status_blocks_dispatch_and_order_is_enforced(self):
         data = snapshot()
@@ -120,11 +182,12 @@ class ManagerTests(unittest.TestCase):
         data['board'][0]['order'] = 99
         with self.assertRaises(GateError): self.m.claim(100, lambda: data)
 
-    def test_one_active_worker_even_with_free_slots(self):
+    def test_another_worker_may_claim_next_independent_issue(self):
         data = snapshot()
         self.ready(data)
         self.m.claim(100, lambda: data)
-        with self.assertRaises(GateError): self.m.claim(101, lambda: data)
+        self.m.claim(101, lambda: data)
+        self.assertEqual(self.m.status()['occupied'], 2)
 
     def test_bind_converts_reservation_to_pr_without_double_counting(self):
         data = snapshot()

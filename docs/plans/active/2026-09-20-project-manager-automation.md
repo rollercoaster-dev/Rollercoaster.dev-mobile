@@ -2,7 +2,9 @@
 
 **Goal:** Audit every open issue, agree priorities with Joe on project 14, execute in order with at most five issue-work slots, and support Telegram check-ins. Never merge.
 
-**Architecture:** A Codex heartbeat reads a repository skill. A Python/SQLite guard owns reservations and observes GitHub PR state. A single local Telegram receiver owns updates and durable messages. Runtime state is outside worktrees. The manager begins in audit mode; issue implementation requires the agreed board queue.
+**Architecture:** A Codex heartbeat reads a repository skill. A Python/SQLite guard owns reservations and observes GitHub PR state. A single local Telegram receiver owns updates and durable messages. Runtime state is outside worktrees. As of 2026-09-24, the manager audits the next eligible Next issue and dispatches independent workers without waiting for a complete backlog audit; an explicitly agreed manual queue remains available.
+
+**2026-09-24 operational revision:** Joe clarified that the manager must start coding agents that deliver PRs, run at 09:00 and 21:00 Europe/Berlin, and support an on-demand command. The earlier five-minute, audit-only launch was unable to dispatch because every open issue required an audit and Next items lacked Execution order. Those historic setup notes below describe the initial deployment, not the current dispatch contract. The installed runtime, recurring heartbeat, and manual `rollercoaster-pm` command are being updated under this revision.
 
 **Constraints:** Dependency/release PRs excluded from the five-slot cap. Drafts count. Reservations count before any implementation begins. At capacity, wait for a human merge; closed-unmerged PRs hold capacity. Never merge, enable auto-merge, or enqueue a merge. Review approvals allowed on third-party PRs only after current-head verification. No automatic issue closures until a closure policy is agreed. Existing user edits remain untouched.
 
@@ -40,9 +42,9 @@ Files: `.agents/skills/project-manager/SKILL.md`, `.agents/skills/dependabot-rev
 
 ## Decisions and progress
 
-- Initial audit covers all open issues, including issues absent from the board. Unknown relevance blocks dispatch.
+- Audit the chosen Next issue before dispatch; continue auditing all open issues in the background. Unrelated unaudited issues do not block dispatch.
 - User did not choose automatic closure authority: propose evidence-backed closures; do not close automatically.
-- Keep one active implementation reservation initially; five includes all existing non-dependency/non-release open PRs.
+- Dispatch independent issues concurrently when agent capacity permits; five includes all existing non-dependency/non-release open PRs and reservations.
 - Telegram service answers simple status/pause/resume immediately; natural-language requests are answered on the next manager heartbeat.
 
 ## Validation and deployment record
@@ -52,7 +54,7 @@ Files: `.agents/skills/project-manager/SKILL.md`, `.agents/skills/dependabot-rev
 - CodeRabbit CLI 0.3.5 lacks the current skill interface; no CodeRabbit review is claimed. Portable workflows retain required independent review coverage when the local CLI is unavailable.
 - Refreshed the isolated branch to GitHub main `0eb7d3c` before publication; preserved upstream board and CI guidance.
 - Installed Telegram LaunchAgent `dev.rollercoaster.project-manager-telegram`; observed running and successful inbound/outbound transport, no queued failed messages.
-- Heartbeat `rollercoaster-project-manager` is active every five minutes in the current task. Execution remains in audit mode with no approved queue.
+- Historical deployment: the first heartbeat ran every five minutes and remained in audit mode with no approved queue. Superseded by the twice-daily, Next-driven 2026-09-24 revision above.
 - Added board Execution order and In Review without replacing existing options. No priorities were assigned.
 
 - Implementation PR: https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/pull/671 (never merged by the manager). Hosted Project Manager Tests and DCO passed on the initial PR head; remaining CI is tracked on the PR.

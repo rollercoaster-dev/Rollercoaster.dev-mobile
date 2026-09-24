@@ -28,6 +28,14 @@ def install(source, home, python, start=False):
     temporary = base / f'.current-{os.getpid()}'
     temporary.symlink_to(release.name)
     temporary.replace(link)
+    bin_dir = home / '.local/bin'
+    bin_dir.mkdir(parents=True, exist_ok=True)
+    command = bin_dir / 'rollercoaster-pm'
+    if command.exists() and not command.is_symlink():
+        raise RuntimeError(f'Refusing to replace existing command: {command}')
+    command_tmp = bin_dir / f'.rollercoaster-pm-{os.getpid()}'
+    command_tmp.symlink_to(link / 'scripts/project_manager/run-manager.sh')
+    command_tmp.replace(command)
     agent = home / 'Library/LaunchAgents' / f'{LABEL}.plist'
     agent.parent.mkdir(parents=True, exist_ok=True)
     values = dict(Label=LABEL, ProgramArguments=[str(Path(python).resolve()),

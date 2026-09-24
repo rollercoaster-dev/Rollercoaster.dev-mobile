@@ -34,6 +34,6 @@ Input: issue number, optional branch name, and dispatch context. Return issue me
 
 5. Prepare dependencies using repository instructions and the lockfile; do not copy secrets or unrelated working files. Report installation failures before implementation.
 6. Add or locate the issue item on project 14 and set Status to **In Progress** after the reservation and worktree are confirmed. Read current field/option IDs with `gh project field-list`; do not guess them. Record failed board updates for retry and notify the manager.
-7. Send a Telegram start notification with issue, title, branch, and worktree. Automated runs use the project-manager's durable Telegram routing; manual runs use the available telegram skill. A delivery failure must be visible and retained for retry, never reported as delivered. A manual caller may explicitly suppress notifications.
+7. Send a Telegram start notification with issue, title, branch, and worktree only when that external send is allowed. Automated runs use the project-manager's durable Telegram routing; manual runs use the available telegram skill. If automatic approval review rejects the send, do not retry it or treat it as delivered. Report the rejection in the Codex task and continue the authorized issue work. A manual caller may explicitly suppress notifications.
 
 On a blocker, preserve the worktree/reservation and send the blocker through the same notification route. Never merge, enable auto-merge, enqueue a merge, or approve a PR created by this workflow.
