@@ -6,6 +6,7 @@
 - Worker worktree: `/Users/hailmary/.codex/worktrees/issue-684/Rollercoaster.dev-mobile`
 - Reserved branch: `codex/issue-684` (PM guard claim exists; do not claim again)
 - Initial base: `b70382290001bf31f14690ccfe48be2b352be3aa` (`origin/main`, 2026-09-24)
+- Current base: `a7628ddff68851863355133d726e51bba3031d8a` (merged iOS 27 scene-lifecycle fix, #705)
 - Scope: composed typography and the cited Focus card, Goals cockpit, Badges wall, and evidence viewer strip. Preserve all seven runtime themes and existing localized strings.
 
 ## Intent Verification
@@ -67,9 +68,10 @@
 - [2026-09-24] Independent review found default-only style assertions, untested enlarged-type layout, and long badge/evidence titles still truncated. Added direct theme-isolated stylesheet checks, enlarged-type layout test, wrapping badge title, and a full selected evidence title above the viewer body. The existing Focus mono date suffix remains intentionally mono at a 14pt semantic metadata size.
 - [2026-09-24] CodeRabbit CLI review could not connect: service returned HTTP 403 `Invalid organization`. Two local read-only reviewers completed, and their in-scope findings were addressed.
 - [2026-09-24] After review fixes, root type-check, lint, and all 222 Jest suites (10,471 tests) passed. Package build had passed before the review fixes; no package source changed. Lint/Jest retain existing unrelated warnings.
+- [2026-09-24] PR #705 merged as `a7628dd`; rebased this branch cleanly onto fresh `origin/main` before starting native verification. The exact candidate HEAD will be recorded in the ignored native report.
 
 ## Review findings and follow-ups
 
 - **Resolved:** theme-specific UI style tests for Warm Studio/Loud & Clear and `fontScale >= 1.3` cockpit layout.
 - **Resolved:** long spotlight badge title wraps; selected evidence title is visible in full outside the truncated thumbnail.
-- **Pending:** native before/after observations and any layout issues found there. PR #705 is the iOS 27 scene-lifecycle dependency until it merges into main.
+- **Pending:** native before/after observations and any layout issues found there. PR #705 is now included in the branch base.
