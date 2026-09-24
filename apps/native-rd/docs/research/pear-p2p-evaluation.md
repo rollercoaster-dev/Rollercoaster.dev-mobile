@@ -12,7 +12,7 @@
 
 ## Follow-up — 2026-09-20
 
-The [evidence-transfer test handoff](./peer-evidence-spike/README.md) continues this evaluation with a standalone harness and instructions for another machine. Desktop transport checks passed; physical-device builds and tests were stopped before completion. Pear remains a candidate.
+The [evidence-transfer test handoff](./peer-evidence-spike/README.md) continues this evaluation with a standalone harness and instructions for another machine. Desktop transport checks passed. On 2026-09-21 the harness built, installed and ran on an Android and an iOS phone, but no phone-to-phone transfer completed because the test Wi-Fi isolated clients. Pear remains a candidate.
 
 The July baseline below is historical: new-badge signing has since shipped as ES256 VC-JWT with a recorded official validator pass; see [current compliance status](../architecture/ob3-compliance-status.md). Default public-DHT discovery also must not be treated as proof of offline discovery. The local-network arrangement in the handoff still needs phone testing.
 

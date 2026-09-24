@@ -10,6 +10,8 @@ This repository is a multi-package workspace. Different packages are licensed di
 | `packages/design-tokens`   | **MIT**           | [`packages/design-tokens/LICENSE`](packages/design-tokens/LICENSE)     | Design tokens. Maximally permissive.                                                         |
 | `apps/native-rd`           | **AGPL-3.0-only** | [`apps/native-rd/LICENSE`](apps/native-rd/LICENSE)                     | Differentiated product. Strong copyleft: any commercial fork or SaaS clone must remain open. |
 
+One directory inside `apps/native-rd` is an exception: `apps/native-rd/docs/research/peer-evidence-spike/` is a throwaway research harness derived from Holepunch's `bare-expo` template. It ships its own Apache-2.0 [`LICENSE`](apps/native-rd/docs/research/peer-evidence-spike/LICENSE) and [`NOTICE`](apps/native-rd/docs/research/peer-evidence-spike/NOTICE), is not a workspace package, and is not part of the shipped app. The AGPL-3.0-only license of `apps/native-rd` does not cover it.
+
 The root `package.json` is a private, unpublished workspace meta-package. Its `license` field and the root [`LICENSE`](LICENSE) file both say **AGPL-3.0-only** (the dominant product license) so GitHub's license detector can populate the repository's license metadata. That root declaration does not change any package's license: the per-package `LICENSE` files above are authoritative for the code they cover.
 
 ## Copyright
