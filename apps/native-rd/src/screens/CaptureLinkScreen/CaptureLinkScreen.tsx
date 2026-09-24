@@ -12,6 +12,7 @@ import { createEvidence, EvidenceType } from "../../db";
 import type { GoalId, StepId } from "../../db";
 import { reportError } from "../../services/sentry-report";
 import { useEvidenceStartBreadcrumb } from "../../hooks/useEvidenceStartBreadcrumb";
+import { useUnsavedExitGuard } from "../../hooks/useUnsavedExitGuard";
 import { useTabScreenContentInset } from "../../navigation/useTabScreenContentInset";
 import type { CaptureLinkScreenProps } from "../../navigation/types";
 import { isValidUrl, normalizeUrl } from "../../utils/url";
@@ -27,6 +28,15 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
   const [caption, setCaption] = useState("");
   const [urlError, setUrlError] = useState<string | undefined>();
   const [saving, setSaving] = useState(false);
+  const { requestExit, exitAfterSave } = useUnsavedExitGuard({
+    isDirty: url.length > 0 || caption.length > 0,
+    copy: {
+      title: t("common:unsavedChanges.title"),
+      message: t("common:unsavedChanges.message"),
+      keep: t("common:unsavedChanges.keep"),
+      discard: t("common:unsavedChanges.discard"),
+    },
+  });
 
   useEvidenceStartBreadcrumb("link");
 
@@ -66,7 +76,7 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
         uri: trimmedUrl,
         description: caption.trim() || undefined,
       });
-      navigation.goBack();
+      exitAfterSave(() => navigation.goBack());
     } catch (error) {
       console.error("[CaptureLinkScreen] Failed to save link evidence", {
         error,
@@ -83,10 +93,7 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
 
   return (
     <View style={styles.container}>
-      <ScreenSubHeader
-        label={t("captureLink:title")}
-        onBack={() => navigation.goBack()}
-      />
+      <ScreenSubHeader label={t("captureLink:title")} onBack={requestExit} />
 
       {/* The frame shrinks the scroll viewport to the space above the keyboard;
           header stays outside so no vertical offset is needed. Save/Cancel
@@ -162,7 +169,7 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
             <Button
               label={t("common:actions.cancel")}
               variant="secondary"
-              onPress={() => navigation.goBack()}
+              onPress={requestExit}
               disabled={saving}
             />
           </View>

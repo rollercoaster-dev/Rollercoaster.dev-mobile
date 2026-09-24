@@ -1,8 +1,11 @@
 import React from "react";
+import { Alert } from "react-native";
+import { usePreventRemove } from "@react-navigation/native";
 import {
   renderWithProviders,
   screen,
   fireEvent,
+  act,
 } from "../../../__tests__/test-utils";
 import { i18n } from "../../../i18n";
 import { CaptureTextNote } from "../CaptureTextNote";
@@ -100,6 +103,56 @@ describe("CaptureTextNote", () => {
     );
     fireEvent.press(screen.getByLabelText("Go back"));
     expect(mockGoBack).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps an unfinished note intact until Discard", () => {
+    const alert = jest
+      .spyOn(Alert, "alert")
+      .mockImplementation(() => undefined);
+    try {
+      renderWithProviders(
+        <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
+      );
+      fireEvent.changeText(
+        screen.getByTestId("capture-text-body"),
+        "Draft note",
+      );
+      fireEvent.press(screen.getByLabelText("Go back"));
+
+      expect(mockGoBack).not.toHaveBeenCalled();
+      expect(usePreventRemove).toHaveBeenLastCalledWith(
+        true,
+        expect.any(Function),
+      );
+      const buttons = alert.mock.calls.at(-1)?.[2] ?? [];
+      expect(buttons.map((button) => button.text)).toEqual([
+        i18n.t("common:unsavedChanges.keep"),
+        i18n.t("common:unsavedChanges.discard"),
+      ]);
+      act(() => buttons[0]?.onPress?.());
+      expect(screen.getByTestId("capture-text-body").props.value).toBe(
+        "Draft note",
+      );
+      expect(mockGoBack).not.toHaveBeenCalled();
+      act(() => buttons[1]?.onPress?.());
+      expect(mockGoBack).toHaveBeenCalledTimes(1);
+    } finally {
+      alert.mockRestore();
+    }
+  });
+
+  it("protects a caption-only draft", () => {
+    renderWithProviders(
+      <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
+    );
+    fireEvent.changeText(
+      screen.getByLabelText(i18n.t("captureText:caption.label")),
+      "Useful context",
+    );
+    expect(usePreventRemove).toHaveBeenLastCalledWith(
+      true,
+      expect.any(Function),
+    );
   });
 
   it("disables Save button when content is empty", () => {

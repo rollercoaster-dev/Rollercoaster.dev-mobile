@@ -16,6 +16,7 @@ import { Button } from "../../components/Button";
 import { IconButton } from "../../components/IconButton";
 import { ScreenSubHeader } from "../../components/ScreenHeader";
 import { useAudioRecorder } from "../../hooks/useAudioRecorder";
+import { useUnsavedExitGuard } from "../../hooks/useUnsavedExitGuard";
 import { createEvidence, EvidenceType } from "../../db";
 import type { GoalId, StepId } from "../../db";
 import { reportError } from "../../services/sentry-report";
@@ -54,33 +55,21 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
     stopPlayback,
     reset,
   } = useAudioRecorder();
-
-  function handleGoBack() {
-    if (
+  const { requestExit, exitAfterSave } = useUnsavedExitGuard({
+    isDirty:
       status === "recording" ||
       status === "paused" ||
       status === "recorded" ||
-      status === "playing"
-    ) {
-      Alert.alert(
-        t("captureVoice:discardUnsaved.title"),
-        t("captureVoice:discardUnsaved.message"),
-        [
-          { text: t("captureVoice:discardUnsaved.keep"), style: "cancel" },
-          {
-            text: t("captureVoice:discardUnsaved.discard"),
-            style: "destructive",
-            onPress: async () => {
-              await reset();
-              navigation.goBack();
-            },
-          },
-        ],
-      );
-    } else {
-      navigation.goBack();
-    }
-  }
+      status === "playing" ||
+      caption.length > 0,
+    copy: {
+      title: t("captureVoice:discardUnsaved.title"),
+      message: t("captureVoice:discardUnsaved.message"),
+      keep: t("common:unsavedChanges.keep"),
+      discard: t("common:unsavedChanges.discard"),
+    },
+    onDiscard: reset,
+  });
 
   async function handleSave() {
     if (!uri) return;
@@ -101,7 +90,7 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
         metadata,
       });
 
-      navigation.goBack();
+      exitAfterSave(() => navigation.goBack());
     } catch (err) {
       logger.error("Failed to save voice memo", { error: err });
       reportError(err, { area: "evidence.capture", kind: "voice_memo" });
@@ -120,10 +109,7 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
   if (status === "permission-denied") {
     return (
       <View style={styles.container}>
-        <ScreenSubHeader
-          label={t("captureVoice:title")}
-          onBack={() => navigation.goBack()}
-        />
+        <ScreenSubHeader label={t("captureVoice:title")} onBack={requestExit} />
         <View style={styles.content}>
           <Card>
             <View style={styles.permissionContent}>
@@ -155,7 +141,7 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
 
   return (
     <View style={styles.container}>
-      <ScreenSubHeader label={t("captureVoice:title")} onBack={handleGoBack} />
+      <ScreenSubHeader label={t("captureVoice:title")} onBack={requestExit} />
 
       {/* Keeps the Save/Discard row above the keyboard while the caption has
           focus; header stays outside so no vertical offset is needed. */}

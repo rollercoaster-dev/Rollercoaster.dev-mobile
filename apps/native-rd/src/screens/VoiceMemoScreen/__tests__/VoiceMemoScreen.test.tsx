@@ -8,6 +8,9 @@
  * - Save flow (evidence creation)
  */
 import React from "react";
+import { Alert } from "react-native";
+import { usePreventRemove } from "@react-navigation/native";
+import { createEvidence } from "../../../db";
 import {
   renderWithProviders,
   screen,
@@ -17,6 +20,20 @@ import {
 import { i18n } from "../../../i18n";
 import { VoiceMemoScreen } from "../VoiceMemoScreen";
 import type { CaptureVoiceMemoScreenProps } from "../../../navigation/types";
+
+const mockGoBack = jest.fn();
+const mockDispatch = jest.fn();
+jest.mock("@react-navigation/native", () => {
+  const actual = jest.requireActual("../../../__tests__/mocks/navigation");
+  return {
+    ...actual,
+    useNavigation: jest.fn(() => ({
+      ...actual.useNavigation(),
+      goBack: mockGoBack,
+      dispatch: mockDispatch,
+    })),
+  };
+});
 
 // Mock the useAudioRecorder hook
 const mockStartRecording = jest.fn();
@@ -70,6 +87,7 @@ function renderScreen(route = mockRoute) {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockReset.mockResolvedValue(undefined);
   mockStatus = "idle";
   mockDurationMs = 0;
   mockUri = null;
@@ -78,6 +96,89 @@ beforeEach(() => {
 });
 
 describe("VoiceMemoScreen", () => {
+  it("leaves an idle, clean recorder immediately", () => {
+    renderScreen();
+    fireEvent.press(screen.getByLabelText("Go back"));
+    expect(mockGoBack).toHaveBeenCalledTimes(1);
+  });
+
+  it.each(["recording", "paused", "recorded", "playing"])(
+    "guards a %s recording from native removal",
+    (status) => {
+      mockStatus = status;
+      renderScreen();
+      expect(usePreventRemove).toHaveBeenLastCalledWith(
+        true,
+        expect.any(Function),
+      );
+    },
+  );
+
+  it("keeps or discards a recorded memo after a clear choice", async () => {
+    mockStatus = "recorded";
+    mockUri = "file:///recording.m4a";
+    const alert = jest
+      .spyOn(Alert, "alert")
+      .mockImplementation(() => undefined);
+    try {
+      renderScreen();
+      fireEvent.press(screen.getByLabelText("Go back"));
+      expect(mockGoBack).not.toHaveBeenCalled();
+      const buttons = alert.mock.calls.at(-1)?.[2] ?? [];
+      expect(buttons.map((button) => button.text)).toEqual([
+        i18n.t("common:unsavedChanges.keep"),
+        i18n.t("common:unsavedChanges.discard"),
+      ]);
+      act(() => buttons[0]?.onPress?.());
+      expect(mockReset).not.toHaveBeenCalled();
+      expect(mockGoBack).not.toHaveBeenCalled();
+      await act(async () => {
+        buttons[1]?.onPress?.();
+        await Promise.resolve();
+      });
+      expect(mockReset).toHaveBeenCalledTimes(1);
+      expect(mockGoBack).toHaveBeenCalledTimes(1);
+    } finally {
+      alert.mockRestore();
+    }
+  });
+
+  it("continues protecting a caption draft after the recording is reset", () => {
+    mockStatus = "recorded";
+    mockUri = "file:///recording.m4a";
+    const { rerender } = renderScreen();
+    fireEvent.changeText(
+      screen.getByLabelText(i18n.t("captureVoice:caption.a11yLabel")),
+      "Why this mattered",
+    );
+    mockStatus = "idle";
+    mockUri = null;
+    rerender(
+      <VoiceMemoScreen route={mockRoute} navigation={undefined as never} />,
+    );
+    expect(usePreventRemove).toHaveBeenLastCalledWith(
+      true,
+      expect.any(Function),
+    );
+  });
+
+  it("leaves after Attach without a discard prompt", () => {
+    mockStatus = "recorded";
+    mockUri = "file:///recording.m4a";
+    const alert = jest
+      .spyOn(Alert, "alert")
+      .mockImplementation(() => undefined);
+    try {
+      renderScreen();
+      fireEvent.press(screen.getByText(i18n.t("captureVoice:actions.attach")));
+      expect(createEvidence).toHaveBeenCalledTimes(1);
+      expect(mockGoBack).toHaveBeenCalledTimes(1);
+      expect(alert).not.toHaveBeenCalled();
+    } finally {
+      alert.mockRestore();
+    }
+  });
+
   describe("idle state", () => {
     it("renders the screen title", () => {
       renderScreen();

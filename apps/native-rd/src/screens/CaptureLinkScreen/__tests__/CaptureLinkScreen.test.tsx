@@ -1,9 +1,11 @@
 import React from "react";
-import { StyleSheet } from "react-native";
+import { Alert, StyleSheet } from "react-native";
+import { usePreventRemove } from "@react-navigation/native";
 import {
   renderWithProviders,
   screen,
   fireEvent,
+  act,
   within,
 } from "../../../__tests__/test-utils";
 import { i18n } from "../../../i18n";
@@ -20,7 +22,9 @@ jest.mock("@react-navigation/native", () => {
     useNavigation: () => ({
       goBack: mockGoBack,
       navigate: mockNavigate,
+      dispatch: jest.fn(),
     }),
+    usePreventRemove: jest.fn(),
   };
 });
 
@@ -223,6 +227,46 @@ describe("CaptureLinkScreen", () => {
     fireEvent.press(screen.getByText(i18n.t("common:actions.cancel")));
 
     expect(mockGoBack).toHaveBeenCalled();
+  });
+
+  it("confirms Cancel on a partial link and retains it after Keep editing", () => {
+    const alert = jest
+      .spyOn(Alert, "alert")
+      .mockImplementation(() => undefined);
+    try {
+      renderScreen();
+      fireEvent.changeText(screen.getByTestId("capture-link-url"), "example");
+      fireEvent.press(screen.getByText(i18n.t("common:actions.cancel")));
+
+      expect(mockGoBack).not.toHaveBeenCalled();
+      expect(usePreventRemove).toHaveBeenLastCalledWith(
+        true,
+        expect.any(Function),
+      );
+      const buttons = alert.mock.calls.at(-1)?.[2] ?? [];
+      expect(buttons.map((button) => button.text)).toEqual([
+        i18n.t("common:unsavedChanges.keep"),
+        i18n.t("common:unsavedChanges.discard"),
+      ]);
+      act(() => buttons[0]?.onPress?.());
+      expect(screen.getByTestId("capture-link-url").props.value).toBe(
+        "example",
+      );
+      expect(mockGoBack).not.toHaveBeenCalled();
+      act(() => buttons[1]?.onPress?.());
+      expect(mockGoBack).toHaveBeenCalledTimes(1);
+    } finally {
+      alert.mockRestore();
+    }
+  });
+
+  it("protects a caption-only link draft", () => {
+    renderScreen();
+    fireEvent.changeText(screen.getByTestId("capture-link-caption"), "Why");
+    expect(usePreventRemove).toHaveBeenLastCalledWith(
+      true,
+      expect.any(Function),
+    );
   });
 
   it("navigates back when back button is pressed", () => {

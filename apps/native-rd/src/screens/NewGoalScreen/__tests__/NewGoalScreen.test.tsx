@@ -1,5 +1,6 @@
 import React from "react";
 import { Alert } from "react-native";
+import { usePreventRemove } from "@react-navigation/native";
 import {
   renderWithProviders,
   screen,
@@ -549,15 +550,36 @@ describe("NewGoalScreen", () => {
     });
   });
 
-  it("writes nothing and pops when closed", () => {
+  it("keeps a dirty draft intact until the user chooses Discard", () => {
     renderWithProviders(<NewGoalScreen />);
     advanceToReady();
 
     fireEvent.press(screen.getByTestId("new-goal-close-button"));
 
+    expect(mockGoBack).not.toHaveBeenCalled();
+    expect(usePreventRemove).toHaveBeenLastCalledWith(
+      true,
+      expect.any(Function),
+    );
+    const buttons = alertSpy.mock.calls.at(-1)?.[2] ?? [];
+    expect(buttons.map((button: { text?: string }) => button.text)).toEqual([
+      t("common:unsavedChanges.keep"),
+      t("common:unsavedChanges.discard"),
+    ]);
+    act(() => buttons[0]?.onPress?.());
+    expect(screen.getByText(GOAL_TITLE)).toBeOnTheScreen();
+    expect(mockGoBack).not.toHaveBeenCalled();
+    act(() => buttons[1]?.onPress?.());
     expect(mockGoBack).toHaveBeenCalledTimes(1);
     expect(mockCreateGoal).not.toHaveBeenCalled();
     expect(mockCreateStep).not.toHaveBeenCalled();
     expect(mockCreateSubStep).not.toHaveBeenCalled();
+  });
+
+  it("closes an untouched wizard without prompting", () => {
+    renderWithProviders(<NewGoalScreen />);
+    fireEvent.press(screen.getByTestId("new-goal-close-button"));
+    expect(mockGoBack).toHaveBeenCalledTimes(1);
+    expect(alertSpy).not.toHaveBeenCalled();
   });
 });

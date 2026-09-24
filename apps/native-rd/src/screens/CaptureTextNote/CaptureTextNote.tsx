@@ -20,6 +20,7 @@ import { createEvidence, EvidenceType, TEXT_EVIDENCE_PREFIX } from "../../db";
 import type { GoalId, StepId } from "../../db";
 import { reportError } from "../../services/sentry-report";
 import { useEvidenceStartBreadcrumb } from "../../hooks/useEvidenceStartBreadcrumb";
+import { useUnsavedExitGuard } from "../../hooks/useUnsavedExitGuard";
 import { useTabScreenContentInset } from "../../navigation/useTabScreenContentInset";
 import type { CaptureTextNoteScreenProps } from "../../navigation/types";
 import { styles } from "./CaptureTextNote.styles";
@@ -32,7 +33,7 @@ const WARNING_THRESHOLD = 900;
 
 export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
   const navigation = useNavigation();
-  const { t } = useTranslation(["captureText"]);
+  const { t } = useTranslation(["captureText", "common"]);
   const { theme } = useUnistyles();
   const { goalId, stepId } = route.params;
   const textInputRef = useRef<TextInput>(null);
@@ -57,6 +58,15 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
   const [caption, setCaption] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const [saving, setSaving] = useState(false);
+  const { requestExit, exitAfterSave } = useUnsavedExitGuard({
+    isDirty: content.length > 0 || caption.length > 0,
+    copy: {
+      title: t("common:unsavedChanges.title"),
+      message: t("common:unsavedChanges.message"),
+      keep: t("common:unsavedChanges.keep"),
+      discard: t("common:unsavedChanges.discard"),
+    },
+  });
 
   useEvidenceStartBreadcrumb("text");
 
@@ -84,7 +94,7 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
       AccessibilityInfo.announceForAccessibility(
         t("captureText:a11y.noteSaved"),
       );
-      navigation.goBack();
+      exitAfterSave(() => navigation.goBack());
     } catch (error) {
       console.error("[CaptureTextNote] Failed to save text note", {
         goalId,
@@ -103,10 +113,7 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
 
   return (
     <View style={styles.container}>
-      <ScreenSubHeader
-        label={t("captureText:title")}
-        onBack={() => navigation.goBack()}
-      />
+      <ScreenSubHeader label={t("captureText:title")} onBack={requestExit} />
 
       <Animated.View style={[styles.content, contentAnimatedStyle]}>
         {/* eslint-disable-next-line local/no-shared-component-reimplementation */}
