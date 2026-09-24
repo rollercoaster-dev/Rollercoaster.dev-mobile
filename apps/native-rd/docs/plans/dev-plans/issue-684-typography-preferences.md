@@ -69,6 +69,8 @@
 - [2026-09-24] CodeRabbit CLI review could not connect: service returned HTTP 403 `Invalid organization`. Two local read-only reviewers completed, and their in-scope findings were addressed.
 - [2026-09-24] After review fixes, root type-check, lint, and all 222 Jest suites (10,471 tests) passed. Package build had passed before the review fixes; no package source changed. Lint/Jest retain existing unrelated warnings.
 - [2026-09-24] PR #705 merged as `a7628dd`; rebased this branch cleanly onto fresh `origin/main` before starting native verification. The exact candidate HEAD will be recorded in the ignored native report.
+- [2026-09-24] A disposable iPhone 17e / iOS 27 baseline build succeeded on `a7628dd`. The matched long-text default-size flow reached Focus, Goals, and empty Badges. At `accessibility-large`, the Goals empty state CTA was below the viewport and could not be reached by scrolling; its `flex: 1` child prevented the ScrollView content from growing. Changed it to `flexGrow: 1` and will recheck natively.
+- [2026-09-24] An independent error-handling review of `342723f` found no new failure path; the change adds no mutation/network/save/exception path. Recheck the small subsequent empty-state style change before publication.
 
 ## Review findings and follow-ups
 
