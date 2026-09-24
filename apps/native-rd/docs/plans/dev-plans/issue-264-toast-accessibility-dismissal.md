@@ -44,6 +44,7 @@ The issue reports eight Toast defects. Current main already fixes the dead exit 
 - [2026-09-24] Typed i18n requires the array form `useTranslation(["common"])` for a namespaced key. Corrected after the final type-check exposed the mismatch.
 - [2026-09-24] Root `bun run test` reported success even though native Jest could not access Watchman in the sandbox. The actual app suite is rerun directly with `--watchman=false` and its result recorded separately.
 - [2026-09-24] Independent code review found that action and dismiss controls could still receive a second tap while the toast stayed mounted for exit. Fixed with disabled controls and `pointerEvents="none"` during exit; a deferred-exit test covers both paths.
+- [2026-09-24] Independent test review found missing deferred queue, stale callback, per-entry announcement, actual re-show, and 44×44 style assertions. Added each test. Jest verifies the React Native accessibility tree contract; hands-on VoiceOver/TalkBack focus remains a manual PR review check.
 
 ## Follow-ups
 

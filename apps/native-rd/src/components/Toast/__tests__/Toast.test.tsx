@@ -94,8 +94,16 @@ describe("Toast", () => {
     const alert = screen.getByRole("alert");
     const action = screen.getByRole("button", { name: "Undo" });
     expect(alert).toHaveTextContent("Deleted");
+    expect(alert.props.accessibilityLiveRegion).toBe("assertive");
     expect(action).toBeOnTheScreen();
-    expect(screen.getByRole("button", { name: "Dismiss" })).toBeOnTheScreen();
+    const dismiss = screen.getByRole("button", { name: "Dismiss" });
+    expect(dismiss).toBeOnTheScreen();
+    expect(action.props.style).toEqual(
+      expect.objectContaining({ minHeight: 44, minWidth: 44 }),
+    );
+    expect(dismiss.props.style).toEqual(
+      expect.objectContaining({ minHeight: 44, minWidth: 44 }),
+    );
     // A grouping ancestor would collapse its children into one native element.
     let ancestor = alert.parent;
     while (ancestor && ancestor.props.accessible === undefined) {
@@ -264,6 +272,57 @@ describe("Toast", () => {
     }
   });
 
+  it("re-shows after an interrupted exit with a fresh timer and announcement", () => {
+    jest.useFakeTimers();
+    const originalPlatform = Platform.OS;
+    setPlatform("ios");
+    const announce = jest
+      .spyOn(AccessibilityInfo, "announceForAccessibility")
+      .mockImplementation(() => {});
+    announce.mockClear();
+    const slideOut = deferSlideOut();
+    const onDismiss = jest.fn();
+    try {
+      const { rerender } = renderWithProviders(
+        <Toast visible message="Again" duration={1000} onDismiss={onDismiss} />,
+      );
+      act(() => jest.advanceTimersByTime(500));
+      act(() => {
+        rerender(
+          <Toast
+            visible={false}
+            message="Again"
+            duration={1000}
+            onDismiss={onDismiss}
+          />,
+        );
+      });
+      announce.mockClear();
+      act(() => {
+        rerender(
+          <Toast
+            visible
+            message="Again"
+            duration={1000}
+            onDismiss={onDismiss}
+          />,
+        );
+        slideOut.flush(false);
+      });
+      expect(screen.getByRole("alert")).toHaveTextContent("Again");
+      expect(announce).toHaveBeenCalledWith("Again");
+      act(() => jest.advanceTimersByTime(999));
+      expect(onDismiss).not.toHaveBeenCalled();
+      act(() => jest.advanceTimersByTime(1));
+      expect(onDismiss).toHaveBeenCalledTimes(1);
+    } finally {
+      slideOut.restore();
+      announce.mockRestore();
+      setPlatform(originalPlatform as "ios" | "android");
+      jest.useRealTimers();
+    }
+  });
+
   it("fires onExitComplete once the slide-out finishes (finished === true)", () => {
     // The owner releases its toast state on this callback, so it must fire only
     // after the exit animation actually completes — not on `visible` flipping.
@@ -326,6 +385,7 @@ describe("Toast", () => {
     const announce = jest
       .spyOn(AccessibilityInfo, "announceForAccessibility")
       .mockImplementation(() => {});
+    announce.mockClear();
     try {
       renderWithProviders(<Toast visible message="Evidence deleted" />);
       expect(announce).toHaveBeenCalledWith("Evidence deleted");
@@ -479,6 +539,60 @@ describe("ToastContext", () => {
       expect(screen.queryByRole("alert")).toBeNull();
     } finally {
       jest.useRealTimers();
+    }
+  });
+
+  it("waits for exit before showing the next toast and ignores a stale completion", () => {
+    const slideOut = deferSlideOut();
+    const originalPlatform = Platform.OS;
+    setPlatform("ios");
+    const announce = jest
+      .spyOn(AccessibilityInfo, "announceForAccessibility")
+      .mockImplementation(() => {});
+    announce.mockClear();
+    try {
+      function QueueConsumer() {
+        const { showToast } = useToast();
+        return (
+          <Pressable
+            testID="enqueue"
+            onPress={() => {
+              showToast({
+                message: "First",
+                action: { label: "Undo", onPress: jest.fn() },
+              });
+              showToast({
+                message: "Second",
+                action: { label: "Retry", onPress: jest.fn() },
+              });
+            }}
+          >
+            <Text>Enqueue</Text>
+          </Pressable>
+        );
+      }
+      renderWithProviders(
+        <ToastProvider>
+          <QueueConsumer />
+        </ToastProvider>,
+      );
+      fireEvent.press(screen.getByTestId("enqueue"));
+      expect(screen.getByRole("alert")).toHaveTextContent("First");
+      expect(announce).toHaveBeenCalledWith("First");
+      expect(announce).not.toHaveBeenCalledWith("Second");
+      fireEvent.press(screen.getByRole("button", { name: "Dismiss" }));
+      expect(screen.queryByText("Second")).toBeNull();
+      expect(announce).not.toHaveBeenCalledWith("Second");
+      const staleCompletion = mockSlideOutQueue?.[0];
+      act(() => slideOut.flush(true));
+      expect(screen.getByRole("alert")).toHaveTextContent("Second");
+      expect(announce).toHaveBeenNthCalledWith(2, "Second");
+      act(() => staleCompletion?.(true));
+      expect(screen.getByRole("alert")).toHaveTextContent("Second");
+    } finally {
+      slideOut.restore();
+      announce.mockRestore();
+      setPlatform(originalPlatform as "ios" | "android");
     }
   });
 });
