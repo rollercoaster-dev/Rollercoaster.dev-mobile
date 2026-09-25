@@ -574,7 +574,6 @@ function FocusContent({
         <Text
           variant="title"
           style={styles.title}
-          numberOfLines={2}
           accessible
           accessibilityRole="header"
         >
