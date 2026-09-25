@@ -46,8 +46,13 @@ closed if API pagination is incomplete. `status.next_auto_issue` identifies the
 first unclaimed, ungated Next item by board Priority, Execution order if set, and
 board order. Audit this issue against current main, then `claim` refreshes GitHub
 inside a SQLite write transaction and reserves capacity before worker dispatch.
-Claims persist through restarts and duplicates are rejected. Distinct independent
-issues may have active workers concurrently while capacity remains.
+Claims persist through restarts and duplicates are rejected. The five-slot limit
+bounds outstanding issue work and PRs, while this machine has one local execution
+lane: one PM worker or validation job at a time. Existing reservations can wait
+in their worktrees, but the manager does not dispatch or resume another worker
+until the current one finishes or is parked without a running local process.
+Reviews and local checks run sequentially, with one simulator and Metro server
+only when native verification needs them.
 
 Five occupied slots prohibit new issue work. Open issue PRs (including drafts),
 reservations and closed-unmerged PRs consume slots. A verified merge by Joe's GitHub account (`joeczar`, type User) releases the
