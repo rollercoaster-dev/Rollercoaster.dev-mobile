@@ -4,6 +4,7 @@ import {
   ActivityIndicator,
   AccessibilityInfo,
   ScrollView,
+  useWindowDimensions,
 } from "react-native";
 import { KeyboardAvoidingFrame } from "../../components/KeyboardAvoidingFrame";
 import { ScreenSubHeader } from "../../components/ScreenHeader";
@@ -68,6 +69,8 @@ import { runEvoluMutation } from "../../utils/evoluMutation";
 import { styles } from "./FocusModeScreen.styles";
 
 const logger = new Logger("FocusModeScreen");
+// Keep arbitrarily long goal names scrollable without displacing the task card.
+const GOAL_TITLE_MAX_VIEWPORT_FRACTION = 0.28;
 
 const EVIDENCE_ROUTE_MAP: Partial<
   Record<EvidenceTypeValue, CaptureScreenName>
@@ -160,6 +163,7 @@ function FocusContent({
   routeStepId?: string;
 }) {
   const { t, i18n } = useTranslation(["focusMode", "common"]);
+  const { height: windowHeight } = useWindowDimensions();
   // Route-scoped so `setParams` is typed against FocusMode's own params (D10).
   const navigation =
     useNavigation<
@@ -544,14 +548,17 @@ function FocusContent({
   return (
     <View style={styles.content}>
       <View style={styles.headerRow}>
-        <Text
-          variant="title"
-          style={styles.title}
-          accessible
-          accessibilityRole="header"
+        <ScrollView
+          style={[
+            styles.titleScroll,
+            { maxHeight: windowHeight * GOAL_TITLE_MAX_VIEWPORT_FRACTION },
+          ]}
+          nestedScrollEnabled
         >
-          {goal.title}
-        </Text>
+          <Text variant="title" accessible accessibilityRole="header">
+            {goal.title}
+          </Text>
+        </ScrollView>
         <IconButton
           icon={<Pencil size={20} weight="bold" />}
           onPress={handleEditPress}

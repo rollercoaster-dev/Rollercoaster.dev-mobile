@@ -35,6 +35,7 @@
 | D2  | Apply theme semantic presets (with local color/weight only where needed) to the cited UI text, and eliminate literal sizes below 14pt for required copy. | Native `Text` does not inherit a sibling font; semantic presets carry family, size, and line height together. |
 | D3  | Let the cockpit goal context wrap as readable text and enlarge evidence strip tiles with its exported width kept in sync.                                | Essential identities cannot fit in one tiny/truncated line under OS scaling.                                  |
 | D4  | Keep badges' fixed dark-surface color treatment.                                                                                                         | This issue concerns typography; theme colors/contrast are handled elsewhere.                                  |
+| D5  | Bound the Focus goal title and viewer selected-title scroll regions to a fraction of the viewport.                                                       | Valid long titles remain fully readable by scrolling without displacing the task action or evidence strip.    |
 
 ## Implementation Plan
 
@@ -73,9 +74,10 @@
 - [2026-09-24] An independent error-handling review of `342723f` found no new failure path; the change adds no mutation/network/save/exception path. Recheck the small subsequent layout changes before publication.
 - [2026-09-24] The candidate default-size native flow passed, but screenshot inspection found the long next-step title in Goals still ended in an ellipsis because `numberOfLines={2}` remained. Removed that cap; rerun the exact-head native comparison before publication.
 - [2026-09-25] Native inspection found a second two-line cap on the Focus header: the long goal title ended in an ellipsis even at default OS text. Removed that cap; native Focus flows passed with the full title in Warm Studio/Loud & Clear and at `accessibility-large`. The full-ride flow also passed and baked a real signed badge. A long-title badge fixture passed, with the entire title wrapping in the spotlight at normal OS size and remaining reachable by scrolling at `accessibility-large`. At that extreme size, persistent tab chrome truncates the visible Badges label; this is a constrained-chrome follow-up for #694, not a reading-font or small-label regression. The native report records the exact scope and screenshots. Metro and the dedicated simulator were stopped before static checks.
+- [2026-09-25] Sequential code-quality review found two P1 long-content risks: an uncapped Focus goal title could consume the viewport, and an uncapped viewer selected title could hide its body/strip. Reproduced both on the iPhone 17e at `accessibility-large` with valid long strings. Bounded each title's own scroll region; native green captures show the Focus Add Note action and viewer strip remain usable while the title can be scrolled to its final words. Focused Jest passed 87/87. The independent test review requires exact-HEAD rerun after commit; the failure-path review found no new mutation/network/exception path. CodeRabbit remained unavailable (earlier HTTP 403).
 
 ## Review findings and follow-ups
 
 - **Resolved:** theme-specific UI style tests for Warm Studio/Loud & Clear and `fontScale >= 1.3` cockpit layout.
 - **Resolved:** long spotlight badge title wraps; selected evidence title is visible in full outside the truncated thumbnail.
-- **Pending:** final commit/rebase, exact-head checks, and native proof refresh. PR #705 is included in the branch base. The `accessibility-large` Badges tab label overflow is documented for the constrained-chrome follow-up #694.
+- **Pending:** final commit, exact-head checks, and native proof refresh after the scroll bounds. PR #705 is included in the branch base. The `accessibility-large` Badges tab label and screen-heading overflow are documented for the constrained-chrome follow-up #694.
