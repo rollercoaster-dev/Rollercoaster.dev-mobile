@@ -42,7 +42,7 @@
 2. [x] Fix shared `textStyles` composition to use the selected line-height scale and add/adjust semantic roles only where the current variants do not express screen title/task title/metadata.
 3. [x] Add failing component/style assertions for essential Focus, cockpit, badge, and viewer text; update their styles and wrapping/layout. Keep translations and seven-theme behavior intact.
 4. [x] Run focused tests, type-check, lint, full Jest suite, and applicable package build. Inspect complete diff and perform review. Record noncritical findings in this plan.
-5. [ ] Run `verify-native` in bug mode using a disposable iOS simulator: baseline and fix on the same long-text fixture, default/Warm Studio/Loud & Clear, increased OS text, Goals/Focus/Badges/evidence strip where reachable. Capture literal observations and screenshots in `tmp/native-verify/issue-684/`. If iOS scene lifecycle prevents launch, mark precise states Not checked and await #705.
+5. [x] Run `verify-native` in bug mode using a disposable iOS simulator: baseline and fix on the same long-text fixture, default/Warm Studio/Loud & Clear, increased OS text, Goals/Focus/Badges/evidence strip where reachable. Capture literal observations and screenshots in `tmp/native-verify/issue-684/`; rerun targeted states after the final rebase to attribute the verdict to the published HEAD.
 6. [ ] Rebase onto fresh main if #705 lands, rerun exact-head checks/native proof, then pass PM `check-pr 684` and publish/bind one PR without merge.
 
 ## Native state matrix
@@ -72,9 +72,10 @@
 - [2026-09-24] A disposable iPhone 17e / iOS 27 baseline build succeeded on `a7628dd`. The matched long-text default-size flow reached Focus, Goals, and empty Badges. At `accessibility-large`, the Goals empty state CTA was below the viewport and could not be reached by scrolling; its `flex: 1` child prevented the ScrollView content from growing. Changed it to `flexGrow: 1` and will recheck natively.
 - [2026-09-24] An independent error-handling review of `342723f` found no new failure path; the change adds no mutation/network/save/exception path. Recheck the small subsequent layout changes before publication.
 - [2026-09-24] The candidate default-size native flow passed, but screenshot inspection found the long next-step title in Goals still ended in an ellipsis because `numberOfLines={2}` remained. Removed that cap; rerun the exact-head native comparison before publication.
+- [2026-09-25] Native inspection found a second two-line cap on the Focus header: the long goal title ended in an ellipsis even at default OS text. Removed that cap; native Focus flows passed with the full title in Warm Studio/Loud & Clear and at `accessibility-large`. The full-ride flow also passed and baked a real signed badge. A long-title badge fixture passed, with the entire title wrapping in the spotlight at normal OS size and remaining reachable by scrolling at `accessibility-large`. At that extreme size, persistent tab chrome truncates the visible Badges label; this is a constrained-chrome follow-up for #694, not a reading-font or small-label regression. The native report records the exact scope and screenshots. Metro and the dedicated simulator were stopped before static checks.
 
 ## Review findings and follow-ups
 
 - **Resolved:** theme-specific UI style tests for Warm Studio/Loud & Clear and `fontScale >= 1.3` cockpit layout.
 - **Resolved:** long spotlight badge title wraps; selected evidence title is visible in full outside the truncated thumbnail.
-- **Pending:** native before/after observations and any layout issues found there. PR #705 is now included in the branch base.
+- **Pending:** final commit/rebase, exact-head checks, and native proof refresh. PR #705 is included in the branch base. The `accessibility-large` Badges tab label overflow is documented for the constrained-chrome follow-up #694.
