@@ -79,6 +79,14 @@ describe("GoalsCockpit", () => {
         i18n.t("goals:cockpit.doThisNext", { title: hero.title }),
       ),
     ).toBeOnTheScreen();
+    expect(
+      screen.getByTestId("goals-cockpit-next-step").props.numberOfLines,
+    ).toBe(2);
+    fireEvent.press(screen.getByTestId("goals-hero-read-full-step-title"));
+    expect(
+      screen.getByTestId("goals-hero-read-full-step-title-full-title").props
+        .children,
+    ).toBe(hero.nextStepTitle);
   });
 
   it("renders every keep-warm goal it is given", () => {
@@ -87,6 +95,33 @@ describe("GoalsCockpit", () => {
     );
     expect(screen.getByText("Build a component library")).toBeOnTheScreen();
     expect(screen.getByText("Understand local-first sync")).toBeOnTheScreen();
+  });
+
+  it("reads complete hero and keep-warm titles from compact cards", () => {
+    const hero = makeHero();
+    renderWithProviders(
+      <GoalsCockpit hero={hero} keepWarm={keepWarm} {...handlers()} />,
+    );
+
+    fireEvent.press(screen.getByTestId("goals-hero-read-full-title"));
+    expect(
+      screen.getByTestId("goals-hero-read-full-title-full-title").props
+        .children,
+    ).toBe(hero.title);
+    fireEvent.press(screen.getByTestId("goals-hero-read-full-title-close"));
+
+    fireEvent.press(screen.getByTestId("keep-warm-read-full-title-kw-1"));
+    expect(
+      screen.getByTestId("keep-warm-read-full-title-kw-1-full-title").props
+        .children,
+    ).toBe(keepWarm[0].title);
+    fireEvent.press(screen.getByTestId("keep-warm-read-full-title-kw-1-close"));
+
+    fireEvent.press(screen.getByTestId("keep-warm-read-full-step-title-kw-1"));
+    expect(
+      screen.getByTestId("keep-warm-read-full-step-title-kw-1-full-title").props
+        .children,
+    ).toBe(keepWarm[0].nextStepTitle);
   });
 
   it("uses a full-width keep-warm card when OS text is enlarged", () => {
@@ -108,7 +143,7 @@ describe("GoalsCockpit", () => {
       );
       expect(
         screen.getByText("Build a component library").props.numberOfLines,
-      ).toBeUndefined();
+      ).toBe(2);
     } finally {
       dimensions.mockRestore();
     }

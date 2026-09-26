@@ -1,11 +1,5 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
-import {
-  AccessibilityInfo,
-  ActivityIndicator,
-  ScrollView,
-  useWindowDimensions,
-  View,
-} from "react-native";
+import { AccessibilityInfo, ActivityIndicator, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
@@ -18,11 +12,10 @@ import { useAllEvidenceForGoal } from "../../hooks/useAllEvidenceForGoal";
 import type { GoalId } from "../../db";
 import type { EvidenceViewerScreenProps } from "../../navigation/types";
 import { styles } from "./EvidenceViewerScreen.styles";
+import { FullTitleButton } from "../../components/FullTitleButton";
 
 // Hardcoded; useBottomTabBarHeight requires extra Jest ESM transform config.
 const TAB_BAR_HEIGHT = 12;
-// Leave the evidence body and thumbnail strip usable for long captions.
-const TITLE_MAX_VIEWPORT_FRACTION = 0.22;
 
 function ViewerContent({
   goalId,
@@ -32,7 +25,6 @@ function ViewerContent({
   initialEvidenceId: string;
 }) {
   const { t } = useTranslation(["evidenceViewer"]);
-  const { height: windowHeight } = useWindowDimensions();
   const evidence = useAllEvidenceForGoal(goalId as GoalId);
 
   const initialIndex = useMemo(() => {
@@ -79,22 +71,20 @@ function ViewerContent({
   return (
     <View style={styles.container}>
       <View style={styles.counterBar}>
-        <ScrollView
-          style={[
-            styles.activeTitleScroll,
-            { maxHeight: windowHeight * TITLE_MAX_VIEWPORT_FRACTION },
-          ]}
-          nestedScrollEnabled
+        <Text
+          variant="title"
+          style={styles.activeTitle}
+          numberOfLines={2}
+          testID="evidence-viewer-active-title"
+          accessibilityLiveRegion="polite"
         >
-          <Text
-            variant="title"
-            style={styles.activeTitle}
-            testID="evidence-viewer-active-title"
-            accessibilityLiveRegion="polite"
-          >
-            {active.title}
-          </Text>
-        </ScrollView>
+          {active.title}
+        </Text>
+        <FullTitleButton
+          title={active.title}
+          kind="evidence"
+          testID="evidence-viewer-read-full-title"
+        />
         {evidence.length > 1 ? (
           <Text style={styles.counter} accessibilityLiveRegion="polite">
             {activeIndex + 1} / {evidence.length}

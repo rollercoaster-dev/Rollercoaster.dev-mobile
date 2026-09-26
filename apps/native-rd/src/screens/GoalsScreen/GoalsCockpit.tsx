@@ -9,6 +9,7 @@ import { ProgressBar } from "../../components/ProgressBar";
 import { Button } from "../../components/Button";
 import { IconButton, type IconButtonTone } from "../../components/IconButton";
 import { Text } from "../../components/Text";
+import { FullTitleButton } from "../../components/FullTitleButton";
 import { styles } from "./GoalsCockpit.styles";
 
 export interface CockpitHeroGoal {
@@ -196,17 +197,30 @@ export function GoalsCockpit({
           centerLabel={`${percent}%`}
           centerSublabel={ringSublabel}
         />
-        <Text variant="metadata" style={styles.overline}>
+        <Text variant="metadata" style={styles.overline} numberOfLines={1}>
           {t("goals:cockpit.doThisNext", { title: hero.title })}
         </Text>
+        <FullTitleButton
+          title={hero.title}
+          kind="goal"
+          testID="goals-hero-read-full-title"
+        />
         {hero.nextStepTitle ? (
-          <Text
-            variant="headline"
-            style={styles.nextStep}
-            testID="goals-cockpit-next-step"
-          >
-            {hero.nextStepTitle}
-          </Text>
+          <>
+            <Text
+              variant="headline"
+              style={styles.nextStep}
+              numberOfLines={2}
+              testID="goals-cockpit-next-step"
+            >
+              {hero.nextStepTitle}
+            </Text>
+            <FullTitleButton
+              title={hero.nextStepTitle}
+              kind="step"
+              testID="goals-hero-read-full-step-title"
+            />
+          </>
         ) : null}
         {/* S3 coherence: single resume affordance — see #381. No FAB or header
             button duplicates this control anywhere on the Goals screen. */}
@@ -267,16 +281,36 @@ export function GoalsCockpit({
                     pressed && styles.keepWarmPressed,
                   ]}
                 >
-                  <Text variant="title" style={styles.keepWarmTitle}>
+                  <Text
+                    variant="title"
+                    style={styles.keepWarmTitle}
+                    numberOfLines={2}
+                  >
                     {goal.title}
                   </Text>
                   {goal.nextStepTitle ? (
-                    <Text variant="body" style={styles.keepWarmNextStep}>
+                    <Text
+                      variant="body"
+                      style={styles.keepWarmNextStep}
+                      numberOfLines={1}
+                    >
                       {goal.nextStepTitle}
                     </Text>
                   ) : null}
                   <ProgressBar progress={goal.progress} />
                 </Pressable>
+                <FullTitleButton
+                  title={goal.title}
+                  kind="goal"
+                  testID={`keep-warm-read-full-title-${goal.id}`}
+                />
+                {goal.nextStepTitle ? (
+                  <FullTitleButton
+                    title={goal.nextStepTitle}
+                    kind="step"
+                    testID={`keep-warm-read-full-step-title-${goal.id}`}
+                  />
+                ) : null}
                 {/* Outside the Pressable above, which is `accessible` and so
                     collapses its subtree into a single screen-reader node — a
                     nested pin would be announced-and-activated as part of the

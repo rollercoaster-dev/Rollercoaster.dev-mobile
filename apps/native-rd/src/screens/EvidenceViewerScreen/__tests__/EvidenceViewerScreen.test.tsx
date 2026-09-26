@@ -111,7 +111,7 @@ describe("EvidenceViewerScreen", () => {
     expect(screen.getByText("1 / 2")).toBeOnTheScreen();
   });
 
-  it("shows the complete active evidence title apart from the thumbnail", () => {
+  it("keeps a compact evidence title with a full-title reader", () => {
     const title =
       "A detailed photo of the community archive after several careful revisions";
     mockUseAllEvidenceForGoal.mockReturnValue([
@@ -121,7 +121,12 @@ describe("EvidenceViewerScreen", () => {
     renderWithProviders(<EvidenceViewerScreen {...routeProps} />);
     const heading = screen.getByTestId("evidence-viewer-active-title");
     expect(heading.props.children).toBe(title);
-    expect(heading.props.numberOfLines).toBeUndefined();
+    expect(heading.props.numberOfLines).toBe(2);
+    fireEvent.press(screen.getByTestId("evidence-viewer-read-full-title"));
+    expect(
+      screen.getByTestId("evidence-viewer-read-full-title-full-title").props
+        .children,
+    ).toBe(title);
   });
 
   it("hides counter and strip when only one item exists", () => {

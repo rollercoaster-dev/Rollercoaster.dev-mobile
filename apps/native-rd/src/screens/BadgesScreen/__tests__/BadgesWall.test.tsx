@@ -123,7 +123,7 @@ describe("BadgesWall", () => {
       ).toBeOnTheScreen();
     });
 
-    it("does not truncate a long spotlight goal title", () => {
+    it("keeps a compact spotlight title with a full-title reader", () => {
       const goalTitle =
         "Document every step of the accessible community archive project";
       renderWithProviders(
@@ -135,7 +135,12 @@ describe("BadgesWall", () => {
           onSeeGoals={noop}
         />,
       );
-      expect(screen.getByText(goalTitle).props.numberOfLines).toBeUndefined();
+      expect(screen.getByText(goalTitle).props.numberOfLines).toBe(2);
+      fireEvent.press(screen.getByTestId("badges-spotlight-read-full-title"));
+      expect(
+        screen.getByTestId("badges-spotlight-read-full-title-full-title").props
+          .children,
+      ).toBe(goalTitle);
     });
 
     it("renders the spotlight badge art via BadgeRenderer when a design is set", () => {

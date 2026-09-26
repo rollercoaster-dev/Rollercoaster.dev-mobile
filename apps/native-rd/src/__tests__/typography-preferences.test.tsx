@@ -110,7 +110,7 @@ describe("essential text follows typography preferences", () => {
       />,
     );
     const context = screen.getByText(/Learn accessible interface design/);
-    expect(context.props.numberOfLines).toBeUndefined();
+    expect(context.props.numberOfLines).toBe(1);
     expect(
       StyleSheet.flatten(context.props.style).fontSize,
     ).toBeGreaterThanOrEqual(mockTheme.size.sm);

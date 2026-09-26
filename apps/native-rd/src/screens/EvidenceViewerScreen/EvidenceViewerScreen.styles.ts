@@ -19,9 +19,6 @@ export const styles = StyleSheet.create((theme) => ({
     alignItems: "center",
     gap: theme.space[1],
   },
-  activeTitleScroll: {
-    width: "100%",
-  },
   activeTitle: {
     color: theme.colors.text,
     textAlign: "center",

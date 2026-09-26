@@ -7,6 +7,7 @@ import {
   validateEvidenceType,
 } from "../../types/evidence";
 import { getMissingQuickEvidenceOptions } from "../StepCard/StepCardEvidenceCapture";
+import { FullTitleButton } from "../FullTitleButton";
 import { styles } from "./FocusCurrentTaskCard.styles";
 import {
   StateWordPill,
@@ -33,6 +34,27 @@ export type {
   FocusCompletedCardProps,
   FocusAllCompleteCardProps,
 };
+
+function StepTitlePreview({ title }: { title: string }) {
+  return (
+    <>
+      <Text
+        style={styles.title}
+        numberOfLines={2}
+        accessible
+        accessibilityRole="header"
+        testID="focus-current-task-title"
+      >
+        {title}
+      </Text>
+      <FullTitleButton
+        title={title}
+        kind="step"
+        testID="focus-current-task-read-full-title"
+      />
+    </>
+  );
+}
 
 /**
  * Focus Mode hero card. Pure presentational, prop-driven; not wired to any
@@ -165,14 +187,7 @@ function InProgressView({
     <CardShell
       body={
         <>
-          <Text
-            style={styles.title}
-            accessible
-            accessibilityRole="header"
-            testID="focus-current-task-title"
-          >
-            {title}
-          </Text>
+          <StepTitlePreview title={title} />
           <MetadataBand
             afterStep={afterStep}
             waitingOn={waitingOn}
@@ -291,14 +306,7 @@ function PausedView({ title, onPickUp }: FocusPausedCardProps) {
       body={
         <>
           <StateWordPill status="paused" />
-          <Text
-            style={styles.title}
-            accessible
-            accessibilityRole="header"
-            testID="focus-current-task-title"
-          >
-            {title}
-          </Text>
+          <StepTitlePreview title={title} />
           <Text style={styles.bodyText}>
             {t("focusMode:currentTask.paused.body")}
           </Text>
@@ -336,14 +344,7 @@ function CompletedView({
       body={
         <>
           <StateWordPill status="completed" />
-          <Text
-            style={styles.title}
-            accessible
-            accessibilityRole="header"
-            testID="focus-current-task-title"
-          >
-            {title}
-          </Text>
+          <StepTitlePreview title={title} />
           <CapturedEvidenceRail
             items={captured}
             label={t("focusMode:evidenceRail.zoneLabel")}

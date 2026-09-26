@@ -4,7 +4,6 @@ import {
   ActivityIndicator,
   AccessibilityInfo,
   ScrollView,
-  useWindowDimensions,
 } from "react-native";
 import { KeyboardAvoidingFrame } from "../../components/KeyboardAvoidingFrame";
 import { ScreenSubHeader } from "../../components/ScreenHeader";
@@ -68,10 +67,9 @@ import { Logger } from "../../shims/rd-logger";
 import { reportError, breadcrumb } from "../../services/sentry-report";
 import { runEvoluMutation } from "../../utils/evoluMutation";
 import { styles } from "./FocusModeScreen.styles";
+import { FullTitleButton } from "../../components/FullTitleButton";
 
 const logger = new Logger("FocusModeScreen");
-// Keep arbitrarily long goal names scrollable without displacing the task card.
-const GOAL_TITLE_MAX_VIEWPORT_FRACTION = 0.28;
 
 const EVIDENCE_ROUTE_MAP: Partial<
   Record<EvidenceTypeValue, CaptureScreenName>
@@ -190,7 +188,6 @@ function FocusContent({
   routeStepId?: string;
 }) {
   const { t, i18n } = useTranslation(["focusMode", "common"]);
-  const { height: windowHeight } = useWindowDimensions();
   // Route-scoped so `setParams` is typed against FocusMode's own params (D10).
   const navigation =
     useNavigation<
@@ -575,17 +572,15 @@ function FocusContent({
   return (
     <View style={styles.content}>
       <View style={styles.headerRow}>
-        <ScrollView
-          style={[
-            styles.titleScroll,
-            { maxHeight: windowHeight * GOAL_TITLE_MAX_VIEWPORT_FRACTION },
-          ]}
-          nestedScrollEnabled
+        <Text
+          variant="title"
+          style={styles.title}
+          numberOfLines={2}
+          accessible
+          accessibilityRole="header"
         >
-          <Text variant="title" accessible accessibilityRole="header">
-            {goal.title}
-          </Text>
-        </ScrollView>
+          {goal.title}
+        </Text>
         <IconButton
           icon={<Pencil size={20} weight="bold" />}
           onPress={handleEditPress}
@@ -594,6 +589,11 @@ function FocusContent({
           size="sm"
         />
       </View>
+      <FullTitleButton
+        title={goal.title ?? ""}
+        kind="goal"
+        testID="focus-read-full-title"
+      />
 
       {/* The one way to see everything: progress + "See all steps ›" in a
           single tap target, replacing the old MiniTimeline/ProgressDots pair. */}
