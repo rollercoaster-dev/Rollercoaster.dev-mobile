@@ -134,7 +134,10 @@ describe("CaptureTextNote", () => {
         "Draft note",
       );
       expect(mockGoBack).not.toHaveBeenCalled();
-      act(() => buttons[1]?.onPress?.());
+      fireEvent.press(screen.getByLabelText("Go back"));
+      const secondButtons = alert.mock.calls.at(-1)?.[2] ?? [];
+      expect(alert).toHaveBeenCalledTimes(2);
+      act(() => secondButtons[1]?.onPress?.());
       expect(mockGoBack).toHaveBeenCalledTimes(1);
     } finally {
       alert.mockRestore();

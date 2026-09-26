@@ -132,8 +132,11 @@ describe("VoiceMemoScreen", () => {
       act(() => buttons[0]?.onPress?.());
       expect(mockReset).not.toHaveBeenCalled();
       expect(mockGoBack).not.toHaveBeenCalled();
+      fireEvent.press(screen.getByLabelText("Go back"));
+      const secondButtons = alert.mock.calls.at(-1)?.[2] ?? [];
+      expect(alert).toHaveBeenCalledTimes(2);
       await act(async () => {
-        buttons[1]?.onPress?.();
+        secondButtons[1]?.onPress?.();
         await Promise.resolve();
       });
       expect(mockReset).toHaveBeenCalledTimes(1);

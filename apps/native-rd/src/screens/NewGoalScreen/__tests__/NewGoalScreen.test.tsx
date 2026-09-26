@@ -569,7 +569,10 @@ describe("NewGoalScreen", () => {
     act(() => buttons[0]?.onPress?.());
     expect(screen.getByText(GOAL_TITLE)).toBeOnTheScreen();
     expect(mockGoBack).not.toHaveBeenCalled();
-    act(() => buttons[1]?.onPress?.());
+    fireEvent.press(screen.getByTestId("new-goal-close-button"));
+    const secondButtons = alertSpy.mock.calls.at(-1)?.[2] ?? [];
+    expect(alertSpy).toHaveBeenCalledTimes(2);
+    act(() => secondButtons[1]?.onPress?.());
     expect(mockGoBack).toHaveBeenCalledTimes(1);
     expect(mockCreateGoal).not.toHaveBeenCalled();
     expect(mockCreateStep).not.toHaveBeenCalled();
