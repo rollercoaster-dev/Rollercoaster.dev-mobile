@@ -72,7 +72,7 @@ export const styles = StyleSheet.create((theme) => ({
     paddingVertical: theme.space[2],
     gap: theme.space[3],
   },
-  title: {
+  titleScroll: {
     flex: 1,
   },
 }));

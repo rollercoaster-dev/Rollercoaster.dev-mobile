@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, View } from "react-native";
+import { Pressable, View, useWindowDimensions } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useUnistyles } from "react-native-unistyles";
 import Svg, { Circle } from "react-native-svg";
@@ -121,6 +121,7 @@ export function GoalsCockpit({
 }: GoalsCockpitProps) {
   const { t } = useTranslation(["goals", "common"]);
   const { theme } = useUnistyles();
+  const { fontScale } = useWindowDimensions();
 
   if (!hero) {
     return (
@@ -129,7 +130,7 @@ export function GoalsCockpit({
           <TargetIcon color={theme.colors.text} />
         </View>
         <Text
-          variant="display"
+          variant="screenTitle"
           style={styles.emptyTitle}
           accessibilityRole="header"
         >
@@ -195,14 +196,13 @@ export function GoalsCockpit({
           centerLabel={`${percent}%`}
           centerSublabel={ringSublabel}
         />
-        <Text variant="mono" style={styles.overline} numberOfLines={1}>
+        <Text variant="metadata" style={styles.overline}>
           {t("goals:cockpit.doThisNext", { title: hero.title })}
         </Text>
         {hero.nextStepTitle ? (
           <Text
             variant="headline"
             style={styles.nextStep}
-            numberOfLines={2}
             testID="goals-cockpit-next-step"
           >
             {hero.nextStepTitle}
@@ -236,12 +236,19 @@ export function GoalsCockpit({
 
       {keepWarm.length > 0 ? (
         <View style={styles.keepWarmSection}>
-          <Text variant="mono" style={styles.sectionLabel}>
+          <Text variant="label" style={styles.sectionLabel}>
             {t("goals:cockpit.keepWarm")}
           </Text>
           <View style={styles.keepWarmGrid}>
             {keepWarm.map((goal) => (
-              <View key={goal.id} style={styles.keepWarmCell}>
+              <View
+                key={goal.id}
+                testID={`keep-warm-cell-${goal.id}`}
+                style={[
+                  styles.keepWarmCell,
+                  fontScale >= 1.3 && { width: "100%" },
+                ]}
+              >
                 <Pressable
                   onPress={() => onOpenGoal(goal.id)}
                   onLongPress={() => onDeleteGoal(goal.id)}
@@ -260,19 +267,11 @@ export function GoalsCockpit({
                     pressed && styles.keepWarmPressed,
                   ]}
                 >
-                  <Text
-                    variant="title"
-                    style={styles.keepWarmTitle}
-                    numberOfLines={1}
-                  >
+                  <Text variant="title" style={styles.keepWarmTitle}>
                     {goal.title}
                   </Text>
                   {goal.nextStepTitle ? (
-                    <Text
-                      variant="caption"
-                      style={styles.keepWarmNextStep}
-                      numberOfLines={1}
-                    >
+                    <Text variant="body" style={styles.keepWarmNextStep}>
                       {goal.nextStepTitle}
                     </Text>
                   ) : null}

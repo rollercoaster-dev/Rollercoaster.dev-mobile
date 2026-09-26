@@ -3,12 +3,15 @@ import { Text as RNText, type TextProps as RNTextProps } from "react-native";
 import { textStylesheet } from "./Text.styles";
 
 export type TextVariant =
+  | "screenTitle"
+  | "taskTitle"
   | "display"
   | "headline"
   | "title"
   | "body"
   | "caption"
   | "label"
+  | "metadata"
   | "mono";
 
 export interface TextProps extends RNTextProps {

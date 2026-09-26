@@ -1,4 +1,5 @@
 import React from "react";
+import * as ReactNative from "react-native";
 import {
   renderWithProviders,
   screen,
@@ -86,6 +87,31 @@ describe("GoalsCockpit", () => {
     );
     expect(screen.getByText("Build a component library")).toBeOnTheScreen();
     expect(screen.getByText("Understand local-first sync")).toBeOnTheScreen();
+  });
+
+  it("uses a full-width keep-warm card when OS text is enlarged", () => {
+    const dimensions = jest
+      .spyOn(ReactNative, "useWindowDimensions")
+      .mockReturnValue({
+        width: 320,
+        height: 640,
+        scale: 2,
+        fontScale: 1.5,
+      });
+    try {
+      renderWithProviders(
+        <GoalsCockpit hero={makeHero()} keepWarm={keepWarm} {...handlers()} />,
+      );
+      const cell = screen.getByTestId("keep-warm-cell-kw-1");
+      expect(ReactNative.StyleSheet.flatten(cell.props.style).width).toBe(
+        "100%",
+      );
+      expect(
+        screen.getByText("Build a component library").props.numberOfLines,
+      ).toBeUndefined();
+    } finally {
+      dimensions.mockRestore();
+    }
   });
 
   it("fires onStartResume with the hero id", () => {
