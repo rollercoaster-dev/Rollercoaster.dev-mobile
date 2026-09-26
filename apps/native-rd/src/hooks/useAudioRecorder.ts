@@ -65,6 +65,15 @@ export function useAudioRecorder(): AudioRecorderState & AudioRecorderActions {
   const [playbackPositionMs, setPlaybackPositionMs] = useState(0);
   const [uri, setUri] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const startGenerationRef = useRef(0);
+
+  useEffect(
+    () => () => {
+      // A permission or native preparation promise may settle after unmount.
+      startGenerationRef.current += 1;
+    },
+    [],
+  );
 
   const recorder = useExpoRecorder(
     RecordingPresets.HIGH_QUALITY,
@@ -117,11 +126,13 @@ export function useAudioRecorder(): AudioRecorderState & AudioRecorderActions {
   }, [status]);
 
   const startRecording = useCallback(async () => {
+    const generation = ++startGenerationRef.current;
     try {
       setError(null);
       setStatus("requesting-permission");
 
       const permission = await requestRecordingPermissionsAsync();
+      if (generation !== startGenerationRef.current) return;
       if (!permission.granted) {
         setStatus("permission-denied");
         setError(i18n.t("permissions:microphone.message"));
@@ -133,12 +144,15 @@ export function useAudioRecorder(): AudioRecorderState & AudioRecorderActions {
         allowsRecording: true,
         playsInSilentMode: true,
       });
+      if (generation !== startGenerationRef.current) return;
 
       await recorder.prepareToRecordAsync();
+      if (generation !== startGenerationRef.current) return;
       recorder.record();
       setStatus("recording");
       setDurationMs(0);
     } catch (err) {
+      if (generation !== startGenerationRef.current) return;
       setStatus("idle");
       setError(
         err instanceof Error
@@ -243,6 +257,7 @@ export function useAudioRecorder(): AudioRecorderState & AudioRecorderActions {
   }, [player]);
 
   const reset = useCallback(async () => {
+    startGenerationRef.current += 1;
     try {
       if (recorder.isRecording) {
         await recorder.stop().catch(() => {});

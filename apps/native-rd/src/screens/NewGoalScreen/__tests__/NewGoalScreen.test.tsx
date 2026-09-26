@@ -1,5 +1,6 @@
 import React from "react";
 import { Alert } from "react-native";
+import { usePreventRemove } from "@react-navigation/native";
 import {
   renderWithProviders,
   screen,
@@ -215,6 +216,31 @@ describe("NewGoalScreen", () => {
   });
 
   describe("quick add", () => {
+    it("includes an unfinished add-row step when advancing to Start Working", () => {
+      renderWithProviders(<NewGoalScreen />);
+      fireEvent.changeText(
+        screen.getByTestId("new-goal-title-input"),
+        GOAL_TITLE,
+      );
+      fireEvent.press(screen.getByTestId("new-goal-quick-add"));
+      fireEvent.changeText(
+        screen.getByTestId("edit-goal-add-step-input"),
+        "Paint the wood",
+      );
+      fireEvent.press(screen.getByTestId("new-goal-build-ready-button"));
+
+      expect(
+        screen.getByText(t("newGoal:ready.stepCountSummary", { count: 1 })),
+      ).toBeOnTheScreen();
+      fireEvent.press(screen.getByTestId("new-goal-start-working-button"));
+      expect(mockCreateStep).toHaveBeenCalledWith(
+        "goal-1",
+        "Paint the wood",
+        0,
+        ["text"],
+      );
+    });
+
     it("jumps to an empty build list with no phantom placeholder row", () => {
       renderWithProviders(<NewGoalScreen />);
       fireEvent.changeText(
@@ -549,15 +575,66 @@ describe("NewGoalScreen", () => {
     });
   });
 
-  it("writes nothing and pops when closed", () => {
+  it("keeps a dirty draft intact until the user chooses Discard", () => {
     renderWithProviders(<NewGoalScreen />);
     advanceToReady();
 
     fireEvent.press(screen.getByTestId("new-goal-close-button"));
 
+    expect(mockGoBack).not.toHaveBeenCalled();
+    expect(usePreventRemove).toHaveBeenLastCalledWith(
+      true,
+      expect.any(Function),
+    );
+    const buttons = alertSpy.mock.calls.at(-1)?.[2] ?? [];
+    expect(buttons.map((button: { text?: string }) => button.text)).toEqual([
+      t("common:unsavedChanges.keep"),
+      t("common:unsavedChanges.discard"),
+    ]);
+    act(() => buttons[0]?.onPress?.());
+    expect(screen.getByText(GOAL_TITLE)).toBeOnTheScreen();
+    expect(mockGoBack).not.toHaveBeenCalled();
+    fireEvent.press(screen.getByTestId("new-goal-close-button"));
+    const secondButtons = alertSpy.mock.calls.at(-1)?.[2] ?? [];
+    expect(alertSpy).toHaveBeenCalledTimes(2);
+    act(() => secondButtons[1]?.onPress?.());
     expect(mockGoBack).toHaveBeenCalledTimes(1);
     expect(mockCreateGoal).not.toHaveBeenCalled();
     expect(mockCreateStep).not.toHaveBeenCalled();
     expect(mockCreateSubStep).not.toHaveBeenCalled();
+  });
+
+  it("protects an unfinished Quick Add step and retains it across wizard back", () => {
+    renderWithProviders(<NewGoalScreen />);
+    fireEvent.press(screen.getByTestId("new-goal-quick-add"));
+    fireEvent.changeText(
+      screen.getByTestId("edit-goal-add-step-input"),
+      "An unfinished step",
+    );
+
+    fireEvent.press(screen.getByTestId("new-goal-close-button"));
+    expect(mockGoBack).not.toHaveBeenCalled();
+    expect(alertSpy).toHaveBeenCalledWith(
+      t("common:unsavedChanges.title"),
+      t("common:unsavedChanges.message"),
+      expect.any(Array),
+    );
+    const buttons = alertSpy.mock.calls.at(-1)?.[2] ?? [];
+    act(() => buttons[0]?.onPress?.());
+    fireEvent.press(
+      screen.getByLabelText(t("common:screenHeader.a11y.goBack")),
+    );
+    fireEvent.press(screen.getByTestId("new-goal-quick-add"));
+    expect(screen.getByTestId("edit-goal-add-step-input")).toHaveProp(
+      "value",
+      "An unfinished step",
+    );
+  });
+
+  it("closes an untouched wizard without prompting", () => {
+    renderWithProviders(<NewGoalScreen />);
+    fireEvent.press(screen.getByTestId("new-goal-close-button"));
+    expect(mockGoBack).toHaveBeenCalledTimes(1);
+    expect(alertSpy).not.toHaveBeenCalled();
   });
 });

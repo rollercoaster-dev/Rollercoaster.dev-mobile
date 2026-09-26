@@ -121,6 +121,9 @@ export interface NewGoalWizardProps {
   onReparentStep?: (stepId: string, newParentStepId: string | null) => void;
   /** Appends a step titled from EditGoalStepList's inline "Add step..." input (D3). */
   onAddStep?: (title: string) => void;
+  /** Optional controlled add-row draft, retained while the wizard changes steps. */
+  addStepDraft?: string;
+  onAddStepDraftChange?: (title: string) => void;
   onStepTitleChange?: (stepId: string, title: string) => void;
   /** Toggles a step's planned evidence types (multi-select, min 1). */
   onStepEvidenceChange?: (stepId: string, types: EvidenceTypeValue[]) => void;
@@ -278,6 +281,8 @@ export function NewGoalWizard({
   onReorderSubSteps = noop,
   onReparentStep,
   onAddStep = noop,
+  addStepDraft,
+  onAddStepDraftChange,
   onStepTitleChange = noop,
   onStepEvidenceChange = noop,
   onAddSubStep = noop,
@@ -686,6 +691,8 @@ export function NewGoalWizard({
                     onReorderSubSteps={onReorderSubSteps}
                     onReparentStep={onReparentStep}
                     onAddStep={onAddStep}
+                    addStepDraft={addStepDraft}
+                    onAddStepDraftChange={onAddStepDraftChange}
                     onAddStepInputFocus={stick.scrollToEnd}
                     onStepTitleChange={onStepTitleChange}
                     onEvidenceChipPress={handleBuildEvidenceChipPress}
