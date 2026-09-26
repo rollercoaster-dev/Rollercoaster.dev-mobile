@@ -30,6 +30,9 @@ export const styles = StyleSheet.create((theme) => ({
   textInputFocused: {
     borderColor: theme.colors.focusRing,
   },
+  textInputError: {
+    borderColor: theme.colors.error,
+  },
   footer: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -38,8 +41,8 @@ export const styles = StyleSheet.create((theme) => ({
   charCount: {
     color: theme.colors.textMuted,
   },
-  charCountWarning: {
-    color: theme.colors.accentPrimary,
+  emptyHint: {
+    color: theme.colors.textSecondary,
   },
   captionContainer: {
     gap: theme.space[1],

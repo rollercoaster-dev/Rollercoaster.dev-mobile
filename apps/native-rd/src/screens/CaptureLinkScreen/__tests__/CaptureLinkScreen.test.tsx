@@ -1,5 +1,10 @@
 import React from "react";
-import { StyleSheet } from "react-native";
+import {
+  AccessibilityInfo,
+  Platform,
+  StyleSheet,
+  TextInput,
+} from "react-native";
 import {
   renderWithProviders,
   screen,
@@ -9,6 +14,7 @@ import {
 import { i18n } from "../../../i18n";
 import { CaptureLinkScreen } from "../CaptureLinkScreen";
 import { createEvidence, EvidenceType } from "../../../db";
+import { mockTheme } from "../../../__tests__/mocks/unistyles";
 
 // Mock navigation
 const mockGoBack = jest.fn();
@@ -113,6 +119,7 @@ describe("CaptureLinkScreen", () => {
   });
 
   it("shows validation error for empty URL on save", () => {
+    const focus = jest.spyOn(TextInput.prototype, "focus");
     renderScreen();
 
     fireEvent.press(screen.getByText(i18n.t("captureLink:actions.save")));
@@ -121,9 +128,23 @@ describe("CaptureLinkScreen", () => {
       screen.getByText(i18n.t("captureLink:validation.urlRequired")),
     ).toBeTruthy();
     expect(mockCreateEvidence).not.toHaveBeenCalled();
+    expect(screen.getByTestId("capture-link-url")).toHaveProp(
+      "accessibilityHint",
+      i18n.t("captureLink:validation.urlRequired"),
+    );
+    expect(focus).toHaveBeenCalled();
+    expect(
+      (focus.mock.contexts.at(-1) as TextInput | undefined)?.props.testID,
+    ).toBe("capture-link-url");
+    expect(
+      StyleSheet.flatten(screen.getByTestId("capture-link-url").props.style)
+        .borderColor,
+    ).toBe(mockTheme.colors.error);
+    focus.mockRestore();
   });
 
   it("shows validation error for invalid URL", () => {
+    const focus = jest.spyOn(TextInput.prototype, "focus");
     renderScreen();
 
     fireEvent.changeText(
@@ -136,9 +157,35 @@ describe("CaptureLinkScreen", () => {
       screen.getByText(i18n.t("captureLink:validation.urlInvalid")),
     ).toBeTruthy();
     expect(mockCreateEvidence).not.toHaveBeenCalled();
+    expect(
+      (focus.mock.contexts.at(-1) as TextInput | undefined)?.props.testID,
+    ).toBe("capture-link-url");
+    focus.mockRestore();
   });
 
-  it("clears validation error when user types", () => {
+  it.each(["ios", "android"] as const)(
+    "reannounces a repeated invalid Save on %s",
+    (platform) => {
+      const platformStub = jest.replaceProperty(Platform, "OS", platform);
+      const announce = jest
+        .spyOn(AccessibilityInfo, "announceForAccessibility")
+        .mockImplementation(() => {});
+      renderScreen();
+      const message = i18n.t("captureLink:validation.urlRequired");
+
+      fireEvent.press(screen.getByTestId("capture-link-save"));
+      const firstCount = announce.mock.calls.length;
+      expect(firstCount).toBe(platform === "ios" ? 1 : 0);
+      fireEvent.press(screen.getByTestId("capture-link-save"));
+      expect(announce).toHaveBeenLastCalledWith(message);
+      expect(announce).toHaveBeenCalledTimes(firstCount + 1);
+
+      announce.mockRestore();
+      platformStub.restore();
+    },
+  );
+
+  it("keeps the explanation until the URL is corrected", () => {
     renderScreen();
 
     // Trigger the error first
@@ -147,15 +194,32 @@ describe("CaptureLinkScreen", () => {
       screen.getByText(i18n.t("captureLink:validation.urlRequired")),
     ).toBeTruthy();
 
-    // Start typing to clear error
+    // One character changes the reason, but does not make the URL valid.
     fireEvent.changeText(
       screen.getByLabelText(i18n.t("captureLink:urlInput.label")),
       "h",
     );
-
     expect(
       screen.queryByText(i18n.t("captureLink:validation.urlRequired")),
     ).toBeNull();
+    expect(
+      screen.getByText(i18n.t("captureLink:validation.urlInvalid")),
+    ).toBeOnTheScreen();
+
+    fireEvent.changeText(
+      screen.getByLabelText(i18n.t("captureLink:urlInput.label")),
+      "https://example.com",
+    );
+    expect(
+      screen.queryByText(i18n.t("captureLink:validation.urlInvalid")),
+    ).toBeNull();
+    expect(
+      screen.getByTestId("capture-link-url").props.accessibilityHint,
+    ).toBeUndefined();
+    expect(
+      StyleSheet.flatten(screen.getByTestId("capture-link-url").props.style)
+        .borderColor,
+    ).toBe(mockTheme.colors.border);
   });
 
   it("saves link evidence with goalId and navigates back", () => {

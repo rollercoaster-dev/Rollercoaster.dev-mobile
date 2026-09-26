@@ -12,6 +12,7 @@ import {
   canCompleteGoal,
 } from "../queries";
 import type { GoalId, StepId, EvidenceId } from "../schema";
+import { TEXT_EVIDENCE_PREFIX } from "../schema";
 
 const mockGoalId = "goal_test_123" as GoalId;
 const mockStepId = "step_test_456" as StepId;
@@ -115,6 +116,24 @@ describe("Evidence CRUD Operations", () => {
         metadata: '{"width": 1920, "height": 1080}',
       }),
     ).not.toThrow();
+  });
+
+  test("text evidence accepts 987 content characters and rejects 988", () => {
+    const maxContent = 1000 - TEXT_EVIDENCE_PREFIX.length;
+    expect(() =>
+      createEvidence({
+        goalId: mockGoalId,
+        type: "text",
+        uri: TEXT_EVIDENCE_PREFIX + "a".repeat(maxContent),
+      }),
+    ).not.toThrow();
+    expect(() =>
+      createEvidence({
+        goalId: mockGoalId,
+        type: "text",
+        uri: TEXT_EVIDENCE_PREFIX + "a".repeat(maxContent + 1),
+      }),
+    ).toThrow("Evidence URI must be 1-1000 characters");
   });
 
   test.each([
