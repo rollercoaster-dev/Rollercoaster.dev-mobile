@@ -1,4 +1,10 @@
-import React, { createContext, useCallback, useContext, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useRef,
+  useState,
+} from "react";
 import { Toast, type ToastAction } from "./Toast";
 
 export interface ToastOptions {
@@ -13,44 +19,45 @@ interface ToastContextValue {
 }
 
 const ToastContext = createContext<ToastContextValue | null>(null);
+type ToastEntry = ToastOptions & { id: number; visible: boolean };
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
-  const [toastState, setToastState] = useState<
-    (ToastOptions & { visible: boolean }) | null
-  >(null);
+  const [toastQueue, setToastQueue] = useState<ToastEntry[]>([]);
+  const nextId = useRef(0);
+  const active = toastQueue[0];
 
   const showToast = useCallback((options: ToastOptions) => {
-    setToastState({ ...options, visible: true });
+    const id = ++nextId.current;
+    setToastQueue((queue) => [...queue, { ...options, id, visible: true }]);
   }, []);
 
   const hideToast = useCallback(() => {
-    // Only flip `visible: false`; keep `toastState` so the Toast stays in the
-    // tree and can play its slide-out exit animation. `toastState` is released
-    // in `handleExitComplete` once that animation finishes. No-op (same ref) if
-    // already hidden or absent, so redundant calls don't re-render the provider.
-    setToastState((prev) =>
-      prev?.visible ? { ...prev, visible: false } : prev,
-    );
+    setToastQueue((queue) => {
+      if (!queue[0]?.visible) return queue;
+      return [{ ...queue[0], visible: false }, ...queue.slice(1)];
+    });
   }, []);
 
-  const handleExitComplete = useCallback(() => {
-    // Slide-out finished: drop the toast so its message/action closure isn't
-    // retained for the rest of the app's lifetime. Guarded on `!visible` so a
-    // re-show mid-exit (which flips `visible` back to true) isn't torn down.
-    setToastState((prev) => (prev && !prev.visible ? null : prev));
+  const handleExitComplete = useCallback((id: number) => {
+    // Only the exiting entry may advance the queue. A late animation callback
+    // from a previous toast must not remove the one now on screen.
+    setToastQueue((queue) =>
+      queue[0]?.id === id && !queue[0].visible ? queue.slice(1) : queue,
+    );
   }, []);
 
   return (
     <ToastContext.Provider value={{ showToast, hideToast }}>
       {children}
-      {toastState && (
+      {active && (
         <Toast
-          visible={toastState.visible}
-          message={toastState.message}
-          action={toastState.action}
-          duration={toastState.duration}
+          key={active.id}
+          visible={active.visible}
+          message={active.message}
+          action={active.action}
+          duration={active.duration}
           onDismiss={hideToast}
-          onExitComplete={handleExitComplete}
+          onExitComplete={() => handleExitComplete(active.id)}
         />
       )}
     </ToastContext.Provider>
