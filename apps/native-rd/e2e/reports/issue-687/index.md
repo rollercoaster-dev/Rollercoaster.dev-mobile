@@ -2,7 +2,7 @@
 
 Issue: https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/687
 
-Mode: feature. PR: pending publication.
+Mode: feature. PR: https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/pull/710
 
 Base: `64d09ab4d18593d56e712bf698a77166989ad513`
 

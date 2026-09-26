@@ -30,7 +30,7 @@
 2. [x] Add localized copy and the minimal zero-step view/styles to FocusModeScreen.
 3. [x] Run focused tests, type-check, lint, full Jest suite, and package build; inspect the diff and obtain independent review. The final suite passed 221/221 suites and 10,459/10,459 tests.
 4. [x] Run `verify-native` in feature mode against the exact branch app SHA. Capture zero-step, editor, and first-step Focus states in English, and the zero-step state in German. See `e2e/reports/issue-687/index.md`.
-5. [ ] Rebase on fresh main, rerun affected checks, pass PM `check-pr 687`, then publish and bind one PR without merge.
+5. [x] Rebase on fresh main, rerun affected checks, pass PM `check-pr 687`, then publish and bind [PR #710](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/pull/710) without merge; the board is In Review.
 
 ## Native state matrix
 
