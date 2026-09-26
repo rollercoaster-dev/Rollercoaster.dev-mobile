@@ -216,6 +216,31 @@ describe("NewGoalScreen", () => {
   });
 
   describe("quick add", () => {
+    it("includes an unfinished add-row step when advancing to Start Working", () => {
+      renderWithProviders(<NewGoalScreen />);
+      fireEvent.changeText(
+        screen.getByTestId("new-goal-title-input"),
+        GOAL_TITLE,
+      );
+      fireEvent.press(screen.getByTestId("new-goal-quick-add"));
+      fireEvent.changeText(
+        screen.getByTestId("edit-goal-add-step-input"),
+        "Paint the wood",
+      );
+      fireEvent.press(screen.getByTestId("new-goal-build-ready-button"));
+
+      expect(
+        screen.getByText(t("newGoal:ready.stepCountSummary", { count: 1 })),
+      ).toBeOnTheScreen();
+      fireEvent.press(screen.getByTestId("new-goal-start-working-button"));
+      expect(mockCreateStep).toHaveBeenCalledWith(
+        "goal-1",
+        "Paint the wood",
+        0,
+        ["text"],
+      );
+    });
+
     it("jumps to an empty build list with no phantom placeholder row", () => {
       renderWithProviders(<NewGoalScreen />);
       fireEvent.changeText(

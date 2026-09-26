@@ -82,6 +82,12 @@ export function NewGoalScreen() {
   });
 
   function handleNext() {
+    // "I'm ready" commits any step still in the add row. Otherwise the ready
+    // summary and Start Working would silently omit text the user just typed.
+    if (currentStep === "build" && addStepDraft.trim()) {
+      stepProps.onAddStep?.(addStepDraft.trim());
+      setAddStepDraft("");
+    }
     setStack((prev) => {
       const next = NEXT_STEP[prev[prev.length - 1]];
       return next ? [...prev, next] : prev;
