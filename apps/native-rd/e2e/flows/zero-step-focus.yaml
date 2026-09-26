@@ -1,0 +1,59 @@
+appId: dev.rollercoaster.app
+tags:
+  - required
+env:
+  METRO_HOST: localhost
+  METRO_PORT: "8081"
+  DEV_CLIENT_SCHEME: exp+rollercoasterdev
+---
+# A Quick Add goal has no steps. Focus must make step entry reachable and
+# replace the empty state once the first step has actually been saved.
+- runFlow:
+    file: ../subflows/launch-and-onboard.yaml
+    env:
+      METRO_HOST: ${METRO_HOST}
+      METRO_PORT: ${METRO_PORT}
+      DEV_CLIENT_SCHEME: ${DEV_CLIENT_SCHEME}
+      THEME_SWATCH: light-autismFriendly
+- tapOn:
+    id: "goals-cockpit-new-goal"
+- tapOn:
+    id: "new-goal-title-input"
+- inputText: "First step goal"
+- pressKey: Enter
+- tapOn:
+    id: "new-goal-quick-add"
+- assertVisible:
+    id: "new-goal-build-ready-button"
+- tapOn:
+    id: "new-goal-build-ready-button"
+- tapOn:
+    id: "new-goal-start-working-button"
+- extendedWaitUntil:
+    visible:
+      id: "focus-add-first-step"
+    timeout: 15000
+- assertVisible: "Every goal starts with a step."
+- assertVisible: "Add your first step"
+- assertNotVisible:
+    id: "focus-current-task-title"
+- takeScreenshot: issue-687-zero-step
+- tapOn:
+    id: "focus-add-first-step"
+- assertVisible:
+    id: "edit-goal-add-step-input"
+- takeScreenshot: issue-687-editor
+- tapOn:
+    id: "edit-goal-add-step-input"
+- inputText: "Read docs"
+- pressKey: Enter
+- tapOn:
+    id: "edit-goal-done-button"
+- extendedWaitUntil:
+    visible:
+      id: "focus-current-task-title"
+      text: "Read docs"
+    timeout: 15000
+- assertNotVisible:
+    id: "focus-add-first-step"
+- takeScreenshot: issue-687-first-step

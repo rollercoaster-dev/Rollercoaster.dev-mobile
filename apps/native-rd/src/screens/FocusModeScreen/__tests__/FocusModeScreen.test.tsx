@@ -415,23 +415,44 @@ describe("FocusModeScreen", () => {
       ).toBeNull();
     });
 
-    it("renders nothing but chrome when the goal has no steps", () => {
+    it("offers step entry for an empty goal and shows the first saved step on return", () => {
       setupQueries({ steps: [] });
-      renderWithProviders(<FocusModeScreen {...routeProps} />);
+      const { rerender } = renderWithProviders(
+        <FocusModeScreen {...routeProps} />,
+      );
 
       expect(screen.getByText("Learn TypeScript")).toBeOnTheScreen();
       expect(
         screen.getByText(t("focusMode:progressStrip.doneCount", { done: 0, total: 0 })), // prettier-ignore
       ).toBeOnTheScreen();
       expect(
-        screen.queryByText(t("focusMode:currentTask.inProgress.evidenceRequired")), // prettier-ignore
-      ).toBeNull();
-      // Neither the parked nor the all-done state: "0 set aside" and "every step
-      // done" are both nonsense for a goal with no steps at all (#467 D6).
+        screen.getByText("Every goal starts with a step."),
+      ).toBeOnTheScreen();
+      expect(
+        screen.getByText(
+          "Add a first step to give this goal a place to begin.",
+        ),
+      ).toBeOnTheScreen();
+      expect(
+        screen.getByRole("button", { name: "Add your first step" }),
+      ).toBeOnTheScreen();
+      fireEvent.press(screen.getByTestId("focus-add-first-step"));
+      expect(mockNavigate).toHaveBeenCalledWith("EditMode", {
+        goalId: "goal-1",
+      });
+      // Zero steps is neither parked nor all done.
       expect(screen.queryByText(t("focusMode:parked.heading"))).toBeNull();
       expect(
         screen.queryByText(t("focusMode:currentTask.allComplete.heading")),
       ).toBeNull();
+
+      setupQueries({ steps: [step("step-1", { title: "Read docs" })] });
+      rerender(<FocusModeScreen {...routeProps} />);
+      expect(currentCardTitle()).toBe("Read docs");
+      expect(screen.queryByTestId("focus-add-first-step")).toBeNull();
+      expect(
+        screen.queryByText(t("focusMode:currentTask.inProgress.evidenceRequired")), // prettier-ignore
+      ).toBeOnTheScreen();
     });
 
     it("shows the goal-not-found message when the goal is missing", () => {

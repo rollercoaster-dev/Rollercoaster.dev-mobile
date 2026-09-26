@@ -1,5 +1,10 @@
 {
   "title": "Fokus-Modus",
+  "zeroStep": {
+    "title": "Jedes Ziel beginnt mit einem Schritt.",
+    "body": "Füge einen ersten Schritt hinzu, damit du mit diesem Ziel beginnen kannst.",
+    "action": "Ersten Schritt hinzufügen"
+  },
   "evidenceFallback": "Nachweis",
   "evidenceRail": {
     "zoneLabel": "Nachweis",

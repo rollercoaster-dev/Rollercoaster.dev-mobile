@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<testsuites>
+  <testsuite name="Test Suite" device="Codex-Issue-685 - iOS 27.0 - 7231E415-959E-4C22-97A7-1E1A512502B8" tests="1" failures="0" time="37.0">
+    <testcase id="zero-step-focus" name="zero-step-focus" classname="zero-step-focus" time="37.0" status="SUCCESS">
+      <properties>
+        <property name="tags" value="required"/>
+      </properties>
+    </testcase>
+  </testsuite>
+</testsuites>
