@@ -1,0 +1,24 @@
+# Issue #687 — zero-step Focus native verification
+
+Issue: https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/687
+
+Mode: feature. PR: pending publication.
+
+Base: `64d09ab4d18593d56e712bf698a77166989ad513`
+
+Tested app source: `3b4d703479c016e7636fb3d600dd5c53569fb140`, clean worktree except the new focused Maestro flow and evidence files. The subsequent evidence commit changes no app source.
+
+Device: disposable `Codex-Issue-685` iPhone 17e simulator, iOS 27.0, `7231E415-959E-4C22-97A7-1E1A512502B8`. App ID `dev.rollercoaster.app`. English and German, Still Water theme, default OS text size.
+Metro: port 8081, process cwd in this issue's worktree, `EXPO_PUBLIC_E2E_MODE=true`. Xcode build: `APP_VARIANT=development EXPO_PUBLIC_E2E_MODE=true NODE_BINARY=$(which node) REACT_NATIVE_PACKAGER_HOSTNAME=localhost xcodebuild -workspace ios/Rollercoasterdev.xcworkspace -scheme Rollercoasterdev -configuration Debug -destination id=7231E415-959E-4C22-97A7-1E1A512502B8 -jobs 2 CLANG_ENABLE_EXPLICIT_MODULES=NO COMPILER_INDEX_STORE_ENABLE=NO build` — **BUILD SUCCEEDED**. CocoaPods installed successfully; generated Info.plist includes the scene manifest. The simulator and Metro were shut down after testing.
+
+| Criterion and state                                               | Expected                                                                        | Observed                                                                                      | Verdict              | Evidence                                                                           |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | -------------------- | ---------------------------------------------------------------------------------- |
+| New Quick Add goal, 0 steps, English                              | Focus explains the empty state and offers an obvious Add your first step action | Literal heading/action assertions passed; CTA fully visible                                   | Verified             | [English empty state](issue-687-zero-step.png), [English JUnit](ios-en-junit.xml)  |
+| CTA from zero-step Focus                                          | Edit Mode for the same goal, with add-step input                                | Editor displayed the same goal title, 0 steps, and add input                                  | Verified             | [Editor](issue-687-editor.png), English JUnit                                      |
+| Save first step and tap Done                                      | Focus shows the saved step as current work; empty CTA disappears                | Literal `Read docs` current-card assertion passed; screenshot shows 0/1 done and no empty CTA | Verified             | [First step](issue-687-first-step.png), English JUnit                              |
+| New Quick Add goal, 0 steps, German                               | Translated explanation and CTA fit and route to editor                          | Literal German heading/action assertions and editor-input assertion passed                    | Verified             | [German empty state](issue-687-zero-step-de.png), [German JUnit](ios-de-junit.xml) |
+| Existing-step adjacent state                                      | Existing current-step card remains usable                                       | First-step Focus shows the existing card with evidence action                                 | Verified             | First-step screenshot                                                              |
+| Parked and all-complete variants                                  | Existing branches remain unchanged                                              | Focus Jest coverage passed; no separate native state created                                  | Not checked natively | `FocusModeScreen.test.tsx`                                                         |
+| VoiceOver, physical devices, alternate text sizes/themes, Android | No issue-specific claim                                                         | Not exercised in this iOS run                                                                 | Not checked          | Requires those environments                                                        |
+
+Overall verdict: **verified on the named iOS simulator for issue #687's required journey**, in English and German. The four screenshots are illustrative; the Maestro assertions and JUnit results establish the transitions. The German run used a temporary local flow after setting `AppleLanguages=de`, separate from the English required flow. Only the reusable English flow is committed.
