@@ -434,6 +434,23 @@ describe("EditModeScreen", () => {
       expect(mockCreateStep).toHaveBeenCalledWith("goal-1", "New step", 3);
     });
 
+    it("adds the first step to an empty goal before returning to Focus Mode", () => {
+      setupQueries(GOAL, []);
+      renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+
+      fireEvent.changeText(
+        screen.getByTestId("edit-goal-add-step-input"),
+        "Read docs",
+      );
+      fireEvent.press(screen.getByTestId("edit-goal-add-step-button"));
+      expect(mockCreateStep).toHaveBeenCalledWith("goal-1", "Read docs", 0);
+
+      fireEvent.press(screen.getByTestId("edit-goal-done-button"));
+      expect(mockNavigate).toHaveBeenCalledWith("FocusMode", {
+        goalId: "goal-1",
+      });
+    });
+
     it("calls updateStep with the title only when a step is renamed inline", () => {
       setupQueries();
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);

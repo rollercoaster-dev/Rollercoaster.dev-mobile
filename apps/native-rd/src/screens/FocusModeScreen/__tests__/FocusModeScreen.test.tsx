@@ -433,6 +433,9 @@ describe("FocusModeScreen", () => {
           "Add a first step to give this goal a place to begin.",
         ),
       ).toBeOnTheScreen();
+      expect(
+        screen.getByRole("button", { name: "Add your first step" }),
+      ).toBeOnTheScreen();
       fireEvent.press(screen.getByTestId("focus-add-first-step"));
       expect(mockNavigate).toHaveBeenCalledWith("EditMode", {
         goalId: "goal-1",
