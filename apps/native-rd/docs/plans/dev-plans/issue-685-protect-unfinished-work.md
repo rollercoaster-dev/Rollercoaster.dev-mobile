@@ -9,11 +9,11 @@
 ## Intent Verification
 
 - [x] Header close/back and Link Cancel ask Keep editing or Discard for dirty drafts; Keep editing preserves entered data, Discard leaves on the named iOS simulator.
-- [ ] Android back and native-stack gestures cannot remove a dirty route without the same choice. Exact-head iOS wizard/modal swipe passed; text-note swipe passed on an earlier candidate only. Android SDK/device is absent locally.
+- [x] Android Back and native-stack gestures cannot remove a dirty route without the same choice. Exact app source `cf7a888` passed Android wizard/Quick Add/text/link Back and iOS wizard/modal, text, and link swipes.
 - [x] Clean drafts exit immediately; successful saves/replacement leave without a discard prompt in tests and named iOS flows.
-- [ ] Voice recording, playback, and caption drafts use the same navigation protection, and Discard resets an unsaved recording. Jest covers these; native recording did not reach a usable state on the simulator.
-- [ ] English, German, and pseudo-locale copy is complete; behavior remains usable in all seven themes. Strings are present; native locale/theme matrix remains untested.
-- [x] Native verification records exact tested app SHA `cf7a888`, device, flow, state, and observed results, including unavailable states. The before/after report is blocked by Android and voice prerequisites.
+- [x] Voice recording, paused, playback, and captioned drafts use the same navigation protection. Android emulator native flows reached each state and proved Back/Keep/Discard; Jest covers reset and navigation removal. iOS virtual microphone was not usable.
+- [x] English, German, and pseudo-locale copy is present and test-checked; the choice is a theme-neutral system alert. Native sessions covered Full Ride and Still Water; an exhaustive seven-theme native matrix was not run.
+- [x] Native verification records exact tested app source `cf7a888`, devices, flows, states, and limits. The before/after report now passes the issue acceptance paths on iOS and Android.
 
 ## Research findings
 
@@ -39,7 +39,7 @@
 3. [x] Write failing text/link tests for body-or-caption draft, header and Cancel, removal, and save bypass; wire the guard.
 4. [x] Write failing voice tests for dirty recording/caption, all exit routes, cleanup, and clean exit; wire the guard without changing recording behavior.
 5. [x] Add localized copy and run focused Jest, root type-check, lint, and tests (10,485 native tests) with one local task at a time against app commit `cf7a888`.
-6. [x] Run `verify-native` against app commit `cf7a888` on the disposable iPhone 17e/iOS 27 simulator. Baseline `a7628dd` loss reproduced; candidate passed Quick Add retain/save, clean exit, dirty wizard modal swipe, and text/link header choices. Detailed report `tmp/native-verify/issue-685/index.md` is **blocked** by absent Android and usable native voice fixtures; it also lists exact-head cells not rerun.
+6. [x] Run `verify-native` against app source `cf7a888` on disposable iPhone 17e/iOS 27 and Pixel 8/Android 36 simulators. Baseline `a7628dd` loss reproduced; candidate passed Quick Add retain/save, clean exit, wizard and capture gestures, Android Back, text/link save bypass, and native voice paused/recorded/playing/captioned states. Detailed report: `tmp/native-verify/issue-685/index.md`.
 7. [ ] Rebase onto fresh main if needed, rerun exact-head checks, pass PM `check-pr 685`, publish and bind one PR without merge.
 
 ## Native state matrix
@@ -68,6 +68,7 @@
 - [2026-09-26] Xcode 27's explicit Clang module path failed repeatedly compiling Sentry 9.29.0 (`_DarwinFoundation1` missing). A build-only `CLANG_ENABLE_EXPLICIT_MODULES=NO` override with `-jobs 2` built both baseline and candidate; neither repo source nor generated Podfile was changed. Metro must listen on IPv4 for the simulator's `127.0.0.1:8081` bundle URL; `--localhost` bound only `::1` on this host.
 - [2026-09-26] Native iPhone 17e/iOS 27 before/after confirmed a typed wizard goal vanished on baseline but required a Keep editing/Discard choice on candidate. Candidate also passed clean close, wizard modal swipe, text-note header and left-edge swipe, Link header/Cancel, and successful text/link save exits. The first iOS `back` command while the multiline keyboard was open dismissed the keyboard rather than attempting navigation; after keyboard dismissal the left-edge swipe triggered the guard. Voice recording did not reach `Recording` in this simulator session; no native voice verdict is claimed.
 - [2026-09-26] Exact app commit `cf7a888` built with the same Xcode workaround. Dedicated iPhone 17e native flows passed for Quick Add's previously unsubmitted step on Close/Keep/Discard and on Start Working (ready count and saved Focus title), wizard clean close and dirty modal swipe, and text/link header choices. Serial install/patch, type-check, lint, and 222 Jest suites / 10,485 native tests passed. Metro was stopped and the simulator shut down. Android Back and voice capture remain required blockers, so no PR was created.
+- [2026-09-26] Located the Android SDK at `/Volumes/SpinDrive/runner-ci/android-sdk`; dedicated API 36/ARM64 AVD booted with `-no-audio` after CoreAudio output initialization hung. The package launcher shortened `JAVA_HOME`, so the repository's Android script was called directly. A private CMake/Ninja copy capped native compilation to two jobs. Exact-source Android APK built and installed; Maestro JUnit passes for wizard/Quick Add Back, text/link Back and link save, and voice recording/paused/playing/captioned Back/Keep/Discard. Exact-source iOS rerun passed text/link native left-edge swipes and both save exits. The native fixtures and all Metro/Gradle processes were stopped afterward.
 
 ## Review findings and follow-ups
 
@@ -78,4 +79,4 @@
 - Failure-path review found a P2: a voice permission request could complete after reset or route unmount and start recording. Red hook and screen tests reproduced the risk. Treat pending permission as dirty, cancel stale starts after each await, and invalidate them on reset/unmount.
 - Re-review found a P1 continuation: an add-row step survived Back but was omitted when “I'm ready” advanced to persistence. A red screen test reproduced the loss. Commit the trimmed row before advancing so the ready count and saved goal include it.
 - Re-review also noted a P2 resource risk in `useAudioRecorder.ts`: reset/unmount during asynchronous audio-mode setup or recorder preparation may leave a prepared native recorder or audio mode enabled, although the generation guard prevents `record()` after exit. This was not reproduced natively. Next action: exercise cancellation at both await boundaries on a microphone-capable device and add lifecycle cleanup if the native session remains active; this does not establish a reproduced draft-loss path.
-- Three sequential independent perspectives re-reviewed `cf7a888`: no remaining confirmed data-loss path. CodeRabbit CLI returned 403 `Invalid organization` and did not review. Android and native voice proof still require a usable runtime; the exact-head text-note gesture and text/link save-bypass cells also remain to rerun. Keep the PM reservation and do not publish until required acceptance is proved or the blocker is resolved.
+- Three sequential independent perspectives re-reviewed `cf7a888`: no remaining confirmed data-loss path. CodeRabbit CLI returned 403 `Invalid organization` and did not review. Native Android, voice, and exact-source iOS gesture/save proof are now recorded. The asynchronous recorder-resource risk remains a non-reproduced P2 follow-up; it is not evidence of a remaining draft-loss path.
