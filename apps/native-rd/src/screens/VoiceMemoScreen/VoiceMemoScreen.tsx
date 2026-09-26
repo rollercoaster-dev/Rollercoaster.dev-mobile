@@ -55,16 +55,20 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
     stopPlayback,
     reset,
   } = useAudioRecorder();
+  const hasRecording =
+    status === "recording" ||
+    status === "paused" ||
+    status === "recorded" ||
+    status === "playing";
   const { requestExit, exitAfterSave } = useUnsavedExitGuard({
-    isDirty:
-      status === "recording" ||
-      status === "paused" ||
-      status === "recorded" ||
-      status === "playing" ||
-      caption.length > 0,
+    isDirty: hasRecording || caption.length > 0,
     copy: {
-      title: t("captureVoice:discardUnsaved.title"),
-      message: t("captureVoice:discardUnsaved.message"),
+      title: hasRecording
+        ? t("captureVoice:discardUnsaved.title")
+        : t("common:unsavedChanges.title"),
+      message: hasRecording
+        ? t("captureVoice:discardUnsaved.message")
+        : t("common:unsavedChanges.message"),
       keep: t("common:unsavedChanges.keep"),
       discard: t("common:unsavedChanges.discard"),
     },

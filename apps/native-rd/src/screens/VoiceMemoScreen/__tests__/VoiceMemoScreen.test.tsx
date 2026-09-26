@@ -162,6 +162,34 @@ describe("VoiceMemoScreen", () => {
     );
   });
 
+  it("describes caption-only work without claiming a recording exists", () => {
+    mockStatus = "recorded";
+    mockUri = "file:///recording.m4a";
+    const alert = jest
+      .spyOn(Alert, "alert")
+      .mockImplementation(() => undefined);
+    try {
+      const { rerender } = renderScreen();
+      fireEvent.changeText(
+        screen.getByLabelText(i18n.t("captureVoice:caption.a11yLabel")),
+        "Caption still in progress",
+      );
+      mockStatus = "idle";
+      mockUri = null;
+      rerender(
+        <VoiceMemoScreen route={mockRoute} navigation={undefined as never} />,
+      );
+      fireEvent.press(screen.getByLabelText("Go back"));
+      expect(alert).toHaveBeenCalledWith(
+        i18n.t("common:unsavedChanges.title"),
+        i18n.t("common:unsavedChanges.message"),
+        expect.any(Array),
+      );
+    } finally {
+      alert.mockRestore();
+    }
+  });
+
   it("leaves after Attach without a discard prompt", () => {
     mockStatus = "recorded";
     mockUri = "file:///recording.m4a";

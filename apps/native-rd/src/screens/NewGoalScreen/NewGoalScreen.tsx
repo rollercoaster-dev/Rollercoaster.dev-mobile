@@ -64,11 +64,13 @@ export function NewGoalScreen() {
   const [stack, setStack] = useState<NewGoalWizardStep[]>(["name"]);
   const currentStep = stack[stack.length - 1];
   const [goalTitle, setGoalTitle] = useState("");
+  const [addStepDraft, setAddStepDraft] = useState("");
   const [evidencePickerOpen, setEvidencePickerOpen] = useState(false);
   const { steps, stepProps } = useNewGoalSteps();
   const { requestExit, exitAfterSave } = useUnsavedExitGuard({
     isDirty:
       goalTitle.length > 0 ||
+      addStepDraft.length > 0 ||
       steps.length > 0 ||
       stepProps.plannedEvidenceType !== EvidenceType.text,
     copy: {
@@ -176,6 +178,8 @@ export function NewGoalScreen() {
         currentStep={currentStep}
         goalTitle={goalTitle}
         onGoalTitleChange={setGoalTitle}
+        addStepDraft={addStepDraft}
+        onAddStepDraftChange={setAddStepDraft}
         stepCount={steps.length}
         onBack={handleBack}
         onClose={requestExit}

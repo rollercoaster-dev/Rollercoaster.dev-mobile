@@ -8,12 +8,12 @@
 
 ## Intent Verification
 
-- [ ] Header close/back and Link Cancel ask Keep editing or Discard for dirty drafts; Keep editing preserves entered data, Discard leaves.
-- [ ] Android back and native-stack gestures cannot remove a dirty route without the same choice.
-- [ ] Clean drafts exit immediately; successful saves/replacement leave without a discard prompt.
-- [ ] Voice recording, playback, and caption drafts use the same navigation protection, and Discard resets an unsaved recording.
-- [ ] English, German, and pseudo-locale copy is complete; behavior remains usable in all seven themes.
-- [ ] Native verification records exact tested SHA, device, flow, state, and observed results, including any unavailable states.
+- [x] Header close/back and Link Cancel ask Keep editing or Discard for dirty drafts; Keep editing preserves entered data, Discard leaves on the named iOS simulator.
+- [ ] Android back and native-stack gestures cannot remove a dirty route without the same choice. iOS wizard/modal and text-note gestures passed; Android SDK/device is absent locally.
+- [x] Clean drafts exit immediately; successful saves/replacement leave without a discard prompt in tests and named iOS flows.
+- [ ] Voice recording, playback, and caption drafts use the same navigation protection, and Discard resets an unsaved recording. Jest covers these; native recording did not reach a usable state on the simulator.
+- [ ] English, German, and pseudo-locale copy is complete; behavior remains usable in all seven themes. Strings are present; native locale/theme matrix remains untested.
+- [ ] Native verification records exact tested SHA, device, flow, state, and observed results, including any unavailable states. Before/after report exists; review fixes require an exact-head rerun.
 
 ## Research findings
 
@@ -39,7 +39,7 @@
 3. [x] Write failing text/link tests for body-or-caption draft, header and Cancel, removal, and save bypass; wire the guard.
 4. [x] Write failing voice tests for dirty recording/caption, all exit routes, cleanup, and clean exit; wire the guard without changing recording behavior.
 5. [x] Add localized copy; focused Jest (112/112), root type-check, root lint, and root tests (10,476 native tests) pass with one local task at a time. Package build and native acceptance remain.
-6. [ ] Run `verify-native` against the committed HEAD on a disposable simulator, compare before/after where possible, and record each exit-path state honestly. Coordinate with #705 scene-lifecycle fix before claiming iOS proof.
+6. [ ] Run `verify-native` against the committed HEAD on a disposable simulator, compare before/after where possible, and record each exit-path state honestly. Baseline `a7628dd` loss reproduced; candidate `6829141` passed wizard/header/gesture, link, text-note, and save-bypass flows on iPhone 17e/iOS 27. Review fixes need an exact-head rerun; Android and voice native states remain unverified.
 7. [ ] Rebase onto fresh main if needed, rerun exact-head checks, pass PM `check-pr 685`, publish and bind one PR without merge.
 
 ## Native state matrix
@@ -65,7 +65,11 @@
 - [2026-09-24] Started at fresh `origin/main` in an isolated worktree. The existing main checkout has unrelated dirty documentation and is untouched.
 - [2026-09-24] Review of the voice capture path found that its in-screen Discard reset the recording but retained a hidden caption. Clear the caption with that explicit discard so a fresh idle recorder is clean.
 - [2026-09-26] Resumed oldest PM reservation after #684 reached review. Current main differs from the branch base only by PM serial-execution documentation (#707). Focused and root checks pass on the current worktree; native verification and independent review remain.
+- [2026-09-26] Xcode 27's explicit Clang module path failed repeatedly compiling Sentry 9.29.0 (`_DarwinFoundation1` missing). A build-only `CLANG_ENABLE_EXPLICIT_MODULES=NO` override with `-jobs 2` built both baseline and candidate; neither repo source nor generated Podfile was changed. Metro must listen on IPv4 for the simulator's `127.0.0.1:8081` bundle URL; `--localhost` bound only `::1` on this host.
+- [2026-09-26] Native iPhone 17e/iOS 27 before/after confirmed a typed wizard goal vanished on baseline but required a Keep editing/Discard choice on candidate. Candidate also passed clean close, wizard modal swipe, text-note header and left-edge swipe, Link header/Cancel, and successful text/link save exits. The first iOS `back` command while the multiline keyboard was open dismissed the keyboard rather than attempting navigation; after keyboard dismissal the left-edge swipe triggered the guard. Voice recording did not reach `Recording` in this simulator session; no native voice verdict is claimed.
 
 ## Review findings and follow-ups
 
-Pending review.
+- Code-quality review found a P1: Quick Add's new-step input lived only inside `EditGoalStepList`; with an otherwise blank wizard it could be lost on close without a prompt. A red regression test reproduced this. Hoist that draft through an optional controlled prop so it counts as dirty and survives wizard back; rerun native proof on the new HEAD.
+- Code-quality review found a P2: a caption-only voice draft after Re-record received recording-specific warning text. A red test reproduced it. Use generic unsaved-work copy when no recording exists.
+- Remaining independent test-coverage and failure-path reviews are pending, as are Android and native voice verification. Keep the PM reservation and do not publish until required acceptance is proved or the blocker is resolved.

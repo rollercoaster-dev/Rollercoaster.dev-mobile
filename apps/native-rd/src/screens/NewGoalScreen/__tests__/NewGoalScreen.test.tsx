@@ -576,6 +576,33 @@ describe("NewGoalScreen", () => {
     expect(mockCreateSubStep).not.toHaveBeenCalled();
   });
 
+  it("protects an unfinished Quick Add step and retains it across wizard back", () => {
+    renderWithProviders(<NewGoalScreen />);
+    fireEvent.press(screen.getByTestId("new-goal-quick-add"));
+    fireEvent.changeText(
+      screen.getByTestId("edit-goal-add-step-input"),
+      "An unfinished step",
+    );
+
+    fireEvent.press(screen.getByTestId("new-goal-close-button"));
+    expect(mockGoBack).not.toHaveBeenCalled();
+    expect(alertSpy).toHaveBeenCalledWith(
+      t("common:unsavedChanges.title"),
+      t("common:unsavedChanges.message"),
+      expect.any(Array),
+    );
+    const buttons = alertSpy.mock.calls.at(-1)?.[2] ?? [];
+    act(() => buttons[0]?.onPress?.());
+    fireEvent.press(
+      screen.getByLabelText(t("common:screenHeader.a11y.goBack")),
+    );
+    fireEvent.press(screen.getByTestId("new-goal-quick-add"));
+    expect(screen.getByTestId("edit-goal-add-step-input")).toHaveProp(
+      "value",
+      "An unfinished step",
+    );
+  });
+
   it("closes an untouched wizard without prompting", () => {
     renderWithProviders(<NewGoalScreen />);
     fireEvent.press(screen.getByTestId("new-goal-close-button"));
