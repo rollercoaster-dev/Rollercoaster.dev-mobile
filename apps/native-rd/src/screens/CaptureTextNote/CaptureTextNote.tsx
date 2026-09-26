@@ -82,7 +82,7 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
 
     setSaving(true);
     try {
-      createEvidence({
+      const result = createEvidence({
         ...(stepId
           ? { stepId: stepId as StepId }
           : { goalId: goalId as GoalId }),
@@ -90,6 +90,7 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
         uri: `${TEXT_EVIDENCE_PREFIX}${trimmedContent}`,
         description: caption.trim() || undefined,
       });
+      if (!result.ok) throw result.error;
 
       AccessibilityInfo.announceForAccessibility(
         t("captureText:a11y.noteSaved"),

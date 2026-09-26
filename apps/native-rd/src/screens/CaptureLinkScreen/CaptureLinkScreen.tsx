@@ -68,7 +68,7 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
 
     setSaving(true);
     try {
-      createEvidence({
+      const result = createEvidence({
         ...(stepId
           ? { stepId: stepId as StepId }
           : { goalId: goalId as GoalId }),
@@ -76,6 +76,7 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
         uri: trimmedUrl,
         description: caption.trim() || undefined,
       });
+      if (!result.ok) throw result.error;
       exitAfterSave(() => navigation.goBack());
     } catch (error) {
       console.error("[CaptureLinkScreen] Failed to save link evidence", {

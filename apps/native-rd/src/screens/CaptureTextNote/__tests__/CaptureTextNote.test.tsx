@@ -55,6 +55,7 @@ const routeWithStep = {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  createEvidence.mockReturnValue({ ok: true, value: { id: "evidence_test" } });
 });
 
 describe("CaptureTextNote", () => {
@@ -211,6 +212,37 @@ describe("CaptureTextNote", () => {
       description: undefined,
     });
     expect(mockGoBack).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps a note when the database rejects its save", () => {
+    const alert = jest
+      .spyOn(Alert, "alert")
+      .mockImplementation(() => undefined);
+    createEvidence.mockReturnValueOnce({
+      ok: false,
+      error: new Error("write failed"),
+    });
+    try {
+      renderWithProviders(
+        <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
+      );
+      fireEvent.changeText(
+        screen.getByTestId("capture-text-body"),
+        "Unsaved note",
+      );
+      fireEvent.press(screen.getByTestId("capture-text-save"));
+
+      expect(mockGoBack).not.toHaveBeenCalled();
+      expect(screen.getByTestId("capture-text-body").props.value).toBe(
+        "Unsaved note",
+      );
+      expect(alert).toHaveBeenCalledWith(
+        i18n.t("captureText:errors.couldNotSaveTitle"),
+        i18n.t("captureText:errors.couldNotSaveMessage"),
+      );
+    } finally {
+      alert.mockRestore();
+    }
   });
 
   it("saves evidence with step attachment when stepId is provided", () => {

@@ -61,7 +61,8 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
     status === "recorded" ||
     status === "playing";
   const { requestExit, exitAfterSave } = useUnsavedExitGuard({
-    isDirty: hasRecording || caption.length > 0,
+    isDirty:
+      hasRecording || status === "requesting-permission" || caption.length > 0,
     copy: {
       title: hasRecording
         ? t("captureVoice:discardUnsaved.title")
@@ -84,7 +85,7 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
         format: "m4a",
       });
 
-      createEvidence({
+      const result = createEvidence({
         ...(stepId
           ? { stepId: stepId as StepId }
           : { goalId: goalId as GoalId }),
@@ -93,6 +94,7 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
         description: caption.trim() || undefined,
         metadata,
       });
+      if (!result.ok) throw result.error;
 
       exitAfterSave(() => navigation.goBack());
     } catch (err) {

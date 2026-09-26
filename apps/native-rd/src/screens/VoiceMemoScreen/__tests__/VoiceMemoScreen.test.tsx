@@ -87,6 +87,10 @@ function renderScreen(route = mockRoute) {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  (createEvidence as jest.Mock).mockReturnValue({
+    ok: true,
+    value: { id: "evidence_test" },
+  });
   mockReset.mockResolvedValue(undefined);
   mockStatus = "idle";
   mockDurationMs = 0;
@@ -113,6 +117,15 @@ describe("VoiceMemoScreen", () => {
       );
     },
   );
+
+  it("guards exit while microphone permission is pending", () => {
+    mockStatus = "requesting-permission";
+    renderScreen();
+    expect(usePreventRemove).toHaveBeenLastCalledWith(
+      true,
+      expect.any(Function),
+    );
+  });
 
   it("keeps or discards a recorded memo after a clear choice", async () => {
     mockStatus = "recorded";
@@ -205,6 +218,35 @@ describe("VoiceMemoScreen", () => {
       expect(createEvidence).toHaveBeenCalledTimes(1);
       expect(mockGoBack).toHaveBeenCalledTimes(1);
       expect(alert).not.toHaveBeenCalled();
+    } finally {
+      alert.mockRestore();
+    }
+  });
+
+  it("retains a recording when the database rejects Attach", () => {
+    mockStatus = "recorded";
+    mockUri = "file:///recording.m4a";
+    const alert = jest
+      .spyOn(Alert, "alert")
+      .mockImplementation(() => undefined);
+    (createEvidence as jest.Mock).mockReturnValueOnce({
+      ok: false,
+      error: new Error("write failed"),
+    });
+    try {
+      renderScreen();
+      fireEvent.press(screen.getByText(i18n.t("captureVoice:actions.attach")));
+
+      expect(mockGoBack).not.toHaveBeenCalled();
+      expect(mockReset).not.toHaveBeenCalled();
+      expect(usePreventRemove).toHaveBeenLastCalledWith(
+        true,
+        expect.any(Function),
+      );
+      expect(alert).toHaveBeenCalledWith(
+        i18n.t("captureVoice:errors.saveFailedTitle"),
+        i18n.t("captureVoice:errors.saveFailedMessage"),
+      );
     } finally {
       alert.mockRestore();
     }

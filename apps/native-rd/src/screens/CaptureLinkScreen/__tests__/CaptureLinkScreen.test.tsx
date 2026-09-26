@@ -66,6 +66,10 @@ function renderScreen(params?: { goalId: string; stepId?: string }) {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockCreateEvidence.mockReturnValue({
+    ok: true,
+    value: { id: "evidence_test" },
+  } as ReturnType<typeof createEvidence>);
 });
 
 describe("CaptureLinkScreen", () => {
@@ -179,6 +183,35 @@ describe("CaptureLinkScreen", () => {
       description: undefined,
     });
     expect(mockGoBack).toHaveBeenCalled();
+  });
+
+  it("keeps a link when the database rejects its save", () => {
+    const alert = jest
+      .spyOn(Alert, "alert")
+      .mockImplementation(() => undefined);
+    mockCreateEvidence.mockReturnValueOnce({
+      ok: false,
+      error: new Error("write failed"),
+    } as unknown as ReturnType<typeof createEvidence>);
+    try {
+      renderScreen();
+      fireEvent.changeText(
+        screen.getByTestId("capture-link-url"),
+        "https://example.com",
+      );
+      fireEvent.press(screen.getByTestId("capture-link-save"));
+
+      expect(mockGoBack).not.toHaveBeenCalled();
+      expect(screen.getByTestId("capture-link-url").props.value).toBe(
+        "https://example.com",
+      );
+      expect(alert).toHaveBeenCalledWith(
+        i18n.t("captureLink:errors.couldNotSaveTitle"),
+        i18n.t("captureLink:errors.couldNotSaveMessage"),
+      );
+    } finally {
+      alert.mockRestore();
+    }
   });
 
   it("saves link evidence with caption when provided", () => {

@@ -38,7 +38,7 @@
 2. [x] Write failing wizard tests for dirty title/steps, clean close, navigation removal, retained draft, and successful replacement; wire the guard.
 3. [x] Write failing text/link tests for body-or-caption draft, header and Cancel, removal, and save bypass; wire the guard.
 4. [x] Write failing voice tests for dirty recording/caption, all exit routes, cleanup, and clean exit; wire the guard without changing recording behavior.
-5. [x] Add localized copy; focused Jest (112/112), root type-check, root lint, and root tests (10,476 native tests) pass with one local task at a time. Package build and native acceptance remain.
+5. [x] Add localized copy and run focused Jest (128/128), root type-check, lint, and tests (10,484 native tests) with one local task at a time. Exact committed HEAD and native checks remain.
 6. [ ] Run `verify-native` against the committed HEAD on a disposable simulator, compare before/after where possible, and record each exit-path state honestly. Baseline `a7628dd` loss reproduced; candidate `6829141` passed wizard/header/gesture, link, text-note, and save-bypass flows on iPhone 17e/iOS 27. Review fixes need an exact-head rerun; Android and voice native states remain unverified.
 7. [ ] Rebase onto fresh main if needed, rerun exact-head checks, pass PM `check-pr 685`, publish and bind one PR without merge.
 
@@ -72,4 +72,7 @@
 
 - Code-quality review found a P1: Quick Add's new-step input lived only inside `EditGoalStepList`; with an otherwise blank wizard it could be lost on close without a prompt. A red regression test reproduced this. Hoist that draft through an optional controlled prop so it counts as dirty and survives wizard back; rerun native proof on the new HEAD.
 - Code-quality review found a P2: a caption-only voice draft after Re-record received recording-specific warning text. A red test reproduced it. Use generic unsaved-work copy when no recording exists.
-- Remaining independent test-coverage and failure-path reviews are pending, as are Android and native voice verification. Keep the PM reservation and do not publish until required acceptance is proved or the blocker is resolved.
+- Test-coverage review found that four tests invoked Keep editing and then Discard from the same mock alert. Each now reopens the prompt; focused tests passed. It also flagged required Android and native voice proof.
+- Failure-path review found a P1: text, link, and voice capture treated an Evolu `{ ok: false }` insert as a successful save and left, losing the draft. Red tests reproduced all three. Check the mutation Result before exiting, report the failure, and retain the form.
+- Failure-path review found a P2: a voice permission request could complete after reset or route unmount and start recording. Red hook and screen tests reproduced the risk. Treat pending permission as dirty, cancel stale starts after each await, and invalidate them on reset/unmount.
+- Independent re-review and exact-head verification are pending. Android and native voice proof still require a usable runtime. Keep the PM reservation and do not publish until required acceptance is proved or the blocker is resolved.
