@@ -334,6 +334,7 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
                               style: "destructive",
                               onPress: () => {
                                 reset();
+                                setCaption("");
                               },
                             },
                           ],

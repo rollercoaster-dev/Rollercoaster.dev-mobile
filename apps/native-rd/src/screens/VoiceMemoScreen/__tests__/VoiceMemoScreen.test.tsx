@@ -179,6 +179,36 @@ describe("VoiceMemoScreen", () => {
     }
   });
 
+  it("clears a caption when the in-screen Discard resets a recording", () => {
+    mockStatus = "recorded";
+    mockUri = "file:///recording.m4a";
+    const alert = jest
+      .spyOn(Alert, "alert")
+      .mockImplementation(() => undefined);
+    try {
+      const { rerender } = renderScreen();
+      fireEvent.changeText(
+        screen.getByLabelText(i18n.t("captureVoice:caption.a11yLabel")),
+        "Unsaved caption",
+      );
+      fireEvent.press(screen.getByText(i18n.t("captureVoice:actions.discard")));
+      const buttons = alert.mock.calls.at(-1)?.[2] ?? [];
+      act(() => buttons[1]?.onPress?.());
+      expect(mockReset).toHaveBeenCalledTimes(1);
+      mockStatus = "idle";
+      mockUri = null;
+      rerender(
+        <VoiceMemoScreen route={mockRoute} navigation={undefined as never} />,
+      );
+      expect(usePreventRemove).toHaveBeenLastCalledWith(
+        false,
+        expect.any(Function),
+      );
+    } finally {
+      alert.mockRestore();
+    }
+  });
+
   describe("idle state", () => {
     it("renders the screen title", () => {
       renderScreen();

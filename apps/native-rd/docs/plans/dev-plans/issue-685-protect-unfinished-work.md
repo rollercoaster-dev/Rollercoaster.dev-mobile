@@ -3,7 +3,7 @@
 ## Workspace and scope
 
 - Issue: https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/685
-- Branch: `codex/issue-685`; base `b70382290001bf31f14690ccfe48be2b352be3aa` (`origin/main`, 2026-09-24)
+- Branch: `codex/issue-685`; base includes iOS scene-lifecycle fix `a7628ddff68851863355133d726e51bba3031d8a`; current `origin/main` is `64d09ab4d18593d56e712bf698a77166989ad513` (2026-09-26, PM documentation only since the branch base).
 - Scope: new-goal wizard, text-note and link capture, and existing voice-memo exit paths. Keep data in memory; no draft persistence.
 
 ## Intent Verification
@@ -38,7 +38,7 @@
 2. [x] Write failing wizard tests for dirty title/steps, clean close, navigation removal, retained draft, and successful replacement; wire the guard.
 3. [x] Write failing text/link tests for body-or-caption draft, header and Cancel, removal, and save bypass; wire the guard.
 4. [x] Write failing voice tests for dirty recording/caption, all exit routes, cleanup, and clean exit; wire the guard without changing recording behavior.
-5. [ ] Add localized copy, run focused tests, type-check, lint, full tests, and build script; review against acceptance and scope.
+5. [x] Add localized copy; focused Jest (112/112), root type-check, root lint, and root tests (10,476 native tests) pass with one local task at a time. Package build and native acceptance remain.
 6. [ ] Run `verify-native` against the committed HEAD on a disposable simulator, compare before/after where possible, and record each exit-path state honestly. Coordinate with #705 scene-lifecycle fix before claiming iOS proof.
 7. [ ] Rebase onto fresh main if needed, rerun exact-head checks, pass PM `check-pr 685`, publish and bind one PR without merge.
 
@@ -63,6 +63,8 @@
 ## Discovery Log
 
 - [2026-09-24] Started at fresh `origin/main` in an isolated worktree. The existing main checkout has unrelated dirty documentation and is untouched.
+- [2026-09-24] Review of the voice capture path found that its in-screen Discard reset the recording but retained a hidden caption. Clear the caption with that explicit discard so a fresh idle recorder is clean.
+- [2026-09-26] Resumed oldest PM reservation after #684 reached review. Current main differs from the branch base only by PM serial-execution documentation (#707). Focused and root checks pass on the current worktree; native verification and independent review remain.
 
 ## Review findings and follow-ups
 
