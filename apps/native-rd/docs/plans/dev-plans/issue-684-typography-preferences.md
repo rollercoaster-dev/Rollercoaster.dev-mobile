@@ -44,7 +44,7 @@
 3. [x] Add failing component/style assertions for essential Focus, cockpit, badge, and viewer text; update their styles and wrapping/layout. Keep translations and seven-theme behavior intact.
 4. [x] Run focused tests, type-check, lint, full Jest suite, and applicable package build. Inspect complete diff and perform review. Record noncritical findings in this plan.
 5. [x] Run `verify-native` in bug mode using a disposable iOS simulator: baseline and fix on the same long-text fixture, default/Warm Studio/Loud & Clear, increased OS text, Goals/Focus/Badges/evidence strip where reachable. Capture literal observations and screenshots in `tmp/native-verify/issue-684/`; rerun targeted states after the final rebase to attribute the verdict to the published HEAD.
-6. [ ] Rebase onto fresh main if #705 lands, rerun exact-head checks/native proof, then pass PM `check-pr 684` and publish/bind one PR without merge.
+6. [x] Rebase onto fresh main, rerun exact-app-source checks/native proof, and update the existing reserved draft PR with current screenshots. The PM `check-pr 684` creation guard reports “PR already exists; maintain it instead,” as expected for this existing PR. Do not merge.
 
 ## Native state matrix
 
