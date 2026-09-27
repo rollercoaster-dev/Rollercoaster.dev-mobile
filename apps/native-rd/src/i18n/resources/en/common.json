@@ -11,6 +11,12 @@
     "retry": "Retry",
     "undo": "Undo"
   },
+  "unsavedChanges": {
+    "title": "Discard unsaved changes?",
+    "message": "Your unfinished work will be lost if you leave.",
+    "keep": "Keep editing",
+    "discard": "Discard"
+  },
   "navigation": {
     "tabs": {
       "goals": "Goals",

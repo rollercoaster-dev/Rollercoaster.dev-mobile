@@ -1,8 +1,11 @@
 import React from "react";
+import { Alert } from "react-native";
+import { usePreventRemove } from "@react-navigation/native";
 import {
   renderWithProviders,
   screen,
   fireEvent,
+  act,
 } from "../../../__tests__/test-utils";
 import { i18n } from "../../../i18n";
 import { CaptureTextNote } from "../CaptureTextNote";
@@ -52,6 +55,7 @@ const routeWithStep = {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  createEvidence.mockReturnValue({ ok: true, value: { id: "evidence_test" } });
 });
 
 describe("CaptureTextNote", () => {
@@ -100,6 +104,59 @@ describe("CaptureTextNote", () => {
     );
     fireEvent.press(screen.getByLabelText("Go back"));
     expect(mockGoBack).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps an unfinished note intact until Discard", () => {
+    const alert = jest
+      .spyOn(Alert, "alert")
+      .mockImplementation(() => undefined);
+    try {
+      renderWithProviders(
+        <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
+      );
+      fireEvent.changeText(
+        screen.getByTestId("capture-text-body"),
+        "Draft note",
+      );
+      fireEvent.press(screen.getByLabelText("Go back"));
+
+      expect(mockGoBack).not.toHaveBeenCalled();
+      expect(usePreventRemove).toHaveBeenLastCalledWith(
+        true,
+        expect.any(Function),
+      );
+      const buttons = alert.mock.calls.at(-1)?.[2] ?? [];
+      expect(buttons.map((button) => button.text)).toEqual([
+        i18n.t("common:unsavedChanges.keep"),
+        i18n.t("common:unsavedChanges.discard"),
+      ]);
+      act(() => buttons[0]?.onPress?.());
+      expect(screen.getByTestId("capture-text-body").props.value).toBe(
+        "Draft note",
+      );
+      expect(mockGoBack).not.toHaveBeenCalled();
+      fireEvent.press(screen.getByLabelText("Go back"));
+      const secondButtons = alert.mock.calls.at(-1)?.[2] ?? [];
+      expect(alert).toHaveBeenCalledTimes(2);
+      act(() => secondButtons[1]?.onPress?.());
+      expect(mockGoBack).toHaveBeenCalledTimes(1);
+    } finally {
+      alert.mockRestore();
+    }
+  });
+
+  it("protects a caption-only draft", () => {
+    renderWithProviders(
+      <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
+    );
+    fireEvent.changeText(
+      screen.getByLabelText(i18n.t("captureText:caption.label")),
+      "Useful context",
+    );
+    expect(usePreventRemove).toHaveBeenLastCalledWith(
+      true,
+      expect.any(Function),
+    );
   });
 
   it("disables Save button when content is empty", () => {
@@ -155,6 +212,37 @@ describe("CaptureTextNote", () => {
       description: undefined,
     });
     expect(mockGoBack).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps a note when the database rejects its save", () => {
+    const alert = jest
+      .spyOn(Alert, "alert")
+      .mockImplementation(() => undefined);
+    createEvidence.mockReturnValueOnce({
+      ok: false,
+      error: new Error("write failed"),
+    });
+    try {
+      renderWithProviders(
+        <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
+      );
+      fireEvent.changeText(
+        screen.getByTestId("capture-text-body"),
+        "Unsaved note",
+      );
+      fireEvent.press(screen.getByTestId("capture-text-save"));
+
+      expect(mockGoBack).not.toHaveBeenCalled();
+      expect(screen.getByTestId("capture-text-body").props.value).toBe(
+        "Unsaved note",
+      );
+      expect(alert).toHaveBeenCalledWith(
+        i18n.t("captureText:errors.couldNotSaveTitle"),
+        i18n.t("captureText:errors.couldNotSaveMessage"),
+      );
+    } finally {
+      alert.mockRestore();
+    }
   });
 
   it("saves evidence with step attachment when stepId is provided", () => {
