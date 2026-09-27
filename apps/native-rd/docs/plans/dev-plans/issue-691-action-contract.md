@@ -21,12 +21,12 @@
 
 ## Intent Verification
 
-- [ ] Equivalent primary, secondary, quiet, and destructive actions use one shared Button contract for typography, wrapping, border, elevation, pressed, disabled, and loading states.
-- [ ] Goals, Focus, capture, and completion each have one visually leading action; alternate actions remain secondary or quiet.
-- [ ] Long German labels wrap within a button at increased OS text size without clipping or displacing the reachable action.
-- [ ] Focus's currently custom footer actions retain their IDs, accessible labels, callbacks, evidence gates, and one-primary hierarchy across in-progress, paused, completed, and all-complete states.
-- [ ] The empty Badges wall keeps its legible on-dark celebration treatment in every theme, using theme tokens through shared Button rather than a custom Pressable.
-- [ ] All seven runtime themes and English/German remain supported; native verdict names the exact checked states.
+- [x] Equivalent primary, secondary, quiet, and destructive actions use one shared Button contract for typography, wrapping, border, elevation, pressed, disabled, and loading states.
+- [x] Goals, Focus, capture, and completion each have one visually leading action; alternate actions remain secondary or quiet.
+- [x] The German Badges action wraps at increased OS text size and can scroll fully above the floating tab bar. Other German screen combinations are named as unchecked in the native report.
+- [x] Focus's formerly custom footer actions retain their IDs, accessible labels, callbacks, evidence gates, and one-primary hierarchy across in-progress, paused, completed, and all-complete states.
+- [x] The empty Badges wall uses theme-token celebration colors through shared Button; the seven-theme contrast audit passes and native captures cover three named themes.
+- [x] All seven runtime themes and English/German remain supported; the native verdict names the exact checked states rather than inferring a full native matrix.
 
 ## Approved decision and design
 
@@ -58,31 +58,35 @@ The shared `Button` owns action semantics and all interactive states. Its existi
 
 ### 1. Pin the shared contract with failing tests
 
-- [ ] Extend Button tests to resolve each variant against `theme.action`/`theme.chrome` contrast pairs across all seven variants, assert a German multiword label has no line cap and can shrink, and compare pressed vs idle style. Check disabled/loading a11y state and callback suppression, including celebration surface.
-- [ ] Run only Button tests to observe the missing `surface`, `inline`, and `accessibilityLabel` behavior fail before implementation.
-- [ ] Add `surface?: "default" | "celebration"`, `inline?: boolean` (ghost only), and optional `accessibilityLabel`; map variant colors to action tokens, spinner to foreground, `lg` minHeight to 54, and wrap text. Keep the current icon behavior and test IDs.
-- [ ] Run focused Button tests and commit a self-contained shared-contract change with DCO.
+- [x] Extend Button tests to resolve each variant against `theme.action`/`theme.chrome` contrast pairs across all seven variants and assert a German multiword label has no line cap and can shrink. Check disabled/loading a11y state, spinner foreground, and callback suppression, including celebration surface. Native pressed-frame appearance remains an explicit evidence limit below.
+- [x] Run only Button tests to observe the missing `surface`, `inline`, and `accessibilityLabel` behavior fail before implementation.
+- [x] Add `surface?: "default" | "celebration"`, `inline?: boolean` (ghost only), and optional `accessibilityLabel`; map variant colors to action tokens, spinner to foreground, `lg` minHeight to 54, and wrap text. Keep the current icon behavior and test IDs.
+- [x] Run focused Button tests and commit a self-contained shared-contract change with DCO.
 
 ### 2. Migrate Focus actions
 
-- [ ] Add/extend Focus card tests for each status: evidence invites, Mark complete, Add more, Pick back up, Reopen, Design/View badge, and Set aside. Assert variant hierarchy, IDs, spoken labels, and callbacks. Include a long German label and press-state style.
-- [ ] Replace footer and quiet bespoke Pressables with shared Button. Remove `ctaBase`, `primaryCta*`, `secondaryCta*`, and duplicate set-aside action styling. Keep `CardShell` and the evidence completion predicate unchanged.
-- [ ] Run focused Focus tests; fix any theme/geometry regressions and commit with DCO.
+- [x] Add/extend Focus card tests for each status: evidence invites, Mark complete, Add more, Pick back up, Reopen, Design/View badge, and Set aside. Assert variant hierarchy, IDs, spoken labels, and callbacks. Long German label wrapping is covered in shared Button tests and native Badges evidence; pressed-frame style is not independently captured.
+- [x] Replace footer and quiet bespoke Pressables with shared Button. Remove `ctaBase`, `primaryCta*`, `secondaryCta*`, and duplicate set-aside action styling. Keep `CardShell` and the evidence completion predicate unchanged.
+- [x] Run focused Focus tests; fix any theme/geometry regressions and commit with DCO.
 
 ### 3. Migrate Badges surface and align existing consumers
 
-- [ ] Add Badges empty-state test for one on-dark celebration primary with original ID/navigation/a11y label and all-theme foreground/background; verify populated spotlight card remains a navigation card, not an action CTA.
-- [ ] Replace the custom empty-wall CTA with `Button surface="celebration" size="lg"`; remove the local CTA styles and lint exception. Update Goals Play icon to use `theme.action.actionPrimaryFg` so it remains visible with the new shared fill. Check existing capture and completion Button call sites keep one primary and appropriate secondary/ghost alternatives.
-- [ ] Run focused Badges, Goals, capture, completion, and Button suites; commit with DCO.
+- [x] Add Badges empty-state test for one on-dark celebration primary with original ID/navigation/a11y label and all-theme foreground/background; verify populated spotlight card remains a navigation card, not an action CTA.
+- [x] Replace the custom empty-wall CTA with `Button surface="celebration" size="lg"`; remove the local CTA styles and lint exception. Update Goals Play icon to use `theme.action.actionPrimaryFg` so it remains visible with the new shared fill. Check existing capture and completion Button call sites keep one primary and appropriate secondary/ghost alternatives.
+- [x] Run focused Badges, Goals, capture, completion, and Button suites; commit with DCO.
 
 ### 4. Validate and review the integrated result
 
-- [ ] Rebase onto fresh main, especially if #684 merges, and resolve overlapping Focus typography without dropping the full-title reader. Run root `bun run type-check`, `bun run lint`, and `bun run test --concurrency=1` sequentially; run applicable package build.
-- [ ] On a dedicated disposable simulator from this worktree via `IOS_DEVICE_ID=<UDID> bun run ios:e2e --device <UDID>`, verify one leading action and long German labels on Goals, Focus, Capture, Completion, and Badges at increased OS text. Check selected default/Warm Studio/Loud & Clear states, record exact SHA and screenshots, then stop Metro and shut down the simulator.
-- [ ] Run sequential code-quality, test-coverage, and failure-path reviews. Record and fix critical findings, rerun only checks affected by fixes, and update this plan's Discovery Log and Follow-ups.
+- [x] Confirm a fresh `origin/main`; #684 has not merged, so the required integration rebase remains a before-merge follow-up. Run root `bun run type-check`, `bun run lint`, and `bun run test --concurrency=1` sequentially; run applicable package build.
+- [x] On a dedicated disposable simulator from this worktree via `IOS_DEVICE_ID=<UDID> bun run ios:e2e --device <UDID>`, verify the English Goals/Focus/Capture/Completion/Badges journey and German Badges action at increased OS text in default/Warm Studio/Loud & Clear. Record exact SHA and screenshots, then stop Metro and shut down the simulator. Other German screens were not checked natively.
+- [x] Run sequential code-quality, test-coverage, and failure-path reviews. Record and fix findings, rerun relevant reviewers, and update this plan's Discovery Log and Follow-ups.
 - [ ] Run PM `check-pr 691`, push the reviewed branch, create/bind one PR, attach it to the task, and set board In Review. Never merge.
 
 ## Discovery Log
+
+- [2026-09-27] Native verification found the empty Badges CTA partly hidden by the floating tab bar at `accessibility-large` in German. A focused red test established that the empty wall could not scroll; `ea26878` replaced the fixed empty container with a ScrollView using the already supplied tab inset. The final-head (`1728bcb`) English full journey and German default/Warm Studio/Loud & Clear flows passed on a dedicated iPhone 17e simulator. The evidence report is `e2e/reports/issue-691/index.md`.
+- [2026-09-27] Independent sequential quality, coverage, and failure-path reviews found no current blocker. Quality/failure reviews flagged a future on-dark contrast risk because `surface="celebration"` originally accepted non-primary variants; `1728bcb` constrains that public TypeScript combination, and the relevant reviewers rechecked the fix. Coverage review found that mocked Pressable tests cannot prove a pressed frame; shared pressed styling is source-checked, and native taps proved action routing. CodeRabbit CLI returned `Invalid organization` (403) without running a review.
+- [2026-09-27] Shared Button contract, Focus migration, and Badges/Goals alignment committed as `cebc070`, `69dcc95`, and `4cae04c`. Focused red/green tests and Capture/Finish consumer suites passed before the integrated native review.
 
 - [2026-09-27] PM reservation exists and `check-pr 691` passed. Board was reconciled from Next to In Progress. Isolated worktree is clean at current main. Goals/Capture/Completion already consume Button; Focus footer and empty Badges wall recreate the treatment. Current Button uses `theme.colors.accentPrimary` while Focus uses `theme.action`; Badges requires `theme.chrome.celebrationBg/Fg` on its dark surface. Existing `contrastPairs.ts` already validates the intended action and celebration colors.
 
@@ -90,6 +94,7 @@ The shared `Button` owns action semantics and all interactive states. Its existi
 
 - #429 owns shadow-token system changes; this issue consumes the current token and does not redefine it.
 - #435 owns Timeline/step visual fidelity; keep its navigation cards outside Button unless they are actual actions.
-- #684 is in review; its Focus full-title reader is not merged into this worktree. Rebase and preserve it before publishing #691.
-- #694 owns extreme-type footer/tab clearance; do not claim its layout acceptance from the action-contract work.
+- #684 is in review; its Focus full-title reader is not merged into this worktree. After #684 merges, rebase #691 before merge and preserve that reader. Do not treat this PR's native capture as evidence for the combined #684/#691 state.
+- #694 owns extreme-type header/footer/tab clearance. The empty Badges action needed its own scroll clearance for #691, but the screen header and tab labels still clip at extreme type in the native captures.
+- Pressed-frame appearance was not separately captured on native; shared `Button` applies one pressed branch to all variants and Maestro verified tap routing. A pressed-frame capture is the next action if visual feedback itself needs independent native proof.
 - Do not change accepted ADR bodies or unrelated card/navigation Pressables.
