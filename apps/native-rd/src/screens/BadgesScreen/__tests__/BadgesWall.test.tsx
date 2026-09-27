@@ -278,6 +278,21 @@ describe("BadgesWall", () => {
       fireEvent.press(screen.getByTestId("badges-wall-see-goals"));
       expect(onSeeGoals).toHaveBeenCalledTimes(1);
     });
+
+    it("exposes the shared action state on the on-dark primary", () => {
+      renderWithProviders(
+        <BadgesWall
+          count={0}
+          spotlight={null}
+          gallery={[]}
+          onOpenBadge={noop}
+          onSeeGoals={noop}
+        />,
+      );
+      expect(
+        screen.getByTestId("badges-wall-see-goals").props.accessibilityState,
+      ).toEqual({ disabled: false, busy: false });
+    });
   });
 
   describe("animation gating", () => {
