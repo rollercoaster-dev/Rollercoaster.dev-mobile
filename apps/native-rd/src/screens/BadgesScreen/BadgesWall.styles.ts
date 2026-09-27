@@ -186,6 +186,7 @@ export const styles = StyleSheet.create((theme) => ({
 
   // --- Empty state: ghost badge + copy + CTA -----------------------------
   empty: {
+    flexGrow: 1,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: theme.space[6],

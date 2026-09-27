@@ -4,6 +4,7 @@ import {
   Text,
   Pressable,
   FlatList,
+  ScrollView,
   useWindowDimensions,
 } from "react-native";
 import Animated, {
@@ -165,7 +166,11 @@ export function BadgesWall({
 
   if (count === 0) {
     return (
-      <View style={[styles.surface, styles.empty]}>
+      <ScrollView
+        style={styles.surface}
+        contentContainerStyle={[styles.empty, contentInset]}
+        testID="badges-wall-empty-scroll"
+      >
         <GhostBadge glowStyle={glowStyle} />
         <Text style={styles.emptyTitle} accessibilityRole="header">
           {t("badges:wall.empty.title")}
@@ -180,7 +185,7 @@ export function BadgesWall({
             testID="badges-wall-see-goals"
           />
         </View>
-      </View>
+      </ScrollView>
     );
   }
 
