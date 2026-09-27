@@ -4,6 +4,7 @@ import {
   Text,
   Pressable,
   FlatList,
+  ScrollView,
   useWindowDimensions,
 } from "react-native";
 import Animated, {
@@ -17,6 +18,7 @@ import { useTranslation } from "react-i18next";
 import { BadgeRenderer } from "../../badges/BadgeRenderer";
 import type { BadgeDesign } from "../../badges/types";
 import { BadgeWallCell } from "../../components/BadgeWallCell/BadgeWallCell";
+import { Button } from "../../components/Button";
 import { CELL_SIZE } from "../../components/BadgeWallCell/BadgeWallCell.styles";
 import { useAnimationPref } from "../../hooks/useAnimationPref";
 import { formatDate } from "../../utils/format";
@@ -164,25 +166,26 @@ export function BadgesWall({
 
   if (count === 0) {
     return (
-      <View style={[styles.surface, styles.empty]}>
+      <ScrollView
+        style={styles.surface}
+        contentContainerStyle={[styles.empty, contentInset]}
+        testID="badges-wall-empty-scroll"
+      >
         <GhostBadge glowStyle={glowStyle} />
         <Text style={styles.emptyTitle} accessibilityRole="header">
           {t("badges:wall.empty.title")}
         </Text>
         <Text style={styles.emptyBody}>{t("badges:wall.empty.body")}</Text>
-        {/* eslint-disable-next-line local/no-shared-component-reimplementation -- intentional on-surface accent CTA (D13): the shared <Button>'s accentPrimary fill is #000000 in highContrast, invisible on #161616. */}
-        <Pressable
-          onPress={onSeeGoals}
-          accessible
-          accessibilityRole="button"
-          accessibilityLabel={t("badges:wall.empty.action")}
-          testID="badges-wall-see-goals"
-          style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]}
-        >
-          {/* Trailing arrow lives in the copy (Button's icon slot is leading-only, D9). */}
-          <Text style={styles.ctaLabel}>{t("badges:wall.empty.action")}</Text>
-        </Pressable>
-      </View>
+        <View style={styles.emptyAction}>
+          <Button
+            label={t("badges:wall.empty.action")}
+            onPress={onSeeGoals}
+            surface="celebration"
+            size="lg"
+            testID="badges-wall-see-goals"
+          />
+        </View>
+      </ScrollView>
     );
   }
 

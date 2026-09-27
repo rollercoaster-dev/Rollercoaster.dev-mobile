@@ -213,15 +213,13 @@ export function GoalsCockpit({
         <View style={styles.heroAction}>
           <Button
             label={resumeLabel}
-            // `fill` reads as a solid play mark at the hero's scale. Sized to
-            // the lg label and colored `background` to match `labelPrimary` on
-            // the primary variant's dark fill — the `▶` this replaces could do
-            // neither, being an emoji-presentation codepoint (Rule 8).
+            // Match the shared primary action foreground in every theme.
+            // `background` diverges from it in dark and several ND variants.
             icon={
               <Play
                 size={theme.size.lg}
                 weight="fill"
-                color={theme.colors.background}
+                color={theme.action.actionPrimaryFg}
               />
             }
             size="lg"

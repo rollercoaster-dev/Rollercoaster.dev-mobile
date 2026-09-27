@@ -1,6 +1,5 @@
 import { StyleSheet } from "react-native-unistyles";
 import { palette } from "../../themes/palette";
-import { shadowStyle } from "../../styles/shadows";
 import { CELL_SIZE } from "../../components/BadgeWallCell/BadgeWallCell.styles";
 
 /**
@@ -39,7 +38,6 @@ const WALL_INK = palette.white;
 const WALL_INK_MUTED = palette.gray400;
 const WALL_PANEL = palette.gray800;
 const WALL_GHOST_BORDER = palette.gray600;
-const WALL_CTA_BORDER = palette.black;
 /* eslint-enable local/no-raw-colors */
 
 export const styles = StyleSheet.create((theme) => ({
@@ -188,6 +186,7 @@ export const styles = StyleSheet.create((theme) => ({
 
   // --- Empty state: ghost badge + copy + CTA -----------------------------
   empty: {
+    flexGrow: 1,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: theme.space[6],
@@ -247,31 +246,8 @@ export const styles = StyleSheet.create((theme) => ({
     maxWidth: 260,
     marginTop: theme.space[2],
   },
-  // Bespoke celebrationBg CTA (matches the prototype's yellow button and stays
-  // legible on #161616 in every theme — see resolved Open Question / D13). The
-  // shared <Button> would fill with accentPrimary (#000000 in highContrast →
-  // invisible here), so this is styled directly on-surface.
-  cta: {
-    minHeight: 50,
+  // Keep the on-dark shared Button at the same rhythm as the original CTA.
+  emptyAction: {
     marginTop: theme.space[6],
-    paddingHorizontal: theme.space[5],
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: theme.radius.sm,
-    borderWidth: theme.borderWidth.thick,
-    borderColor: WALL_CTA_BORDER,
-    backgroundColor: theme.chrome.celebrationBg,
-    ...shadowStyle(theme, "hardMd"),
-  },
-  ctaPressed: {
-    transform: [{ translateX: 2 }, { translateY: 2 }],
-    shadowOffset: { width: 1, height: 1 },
-  },
-  ctaLabel: {
-    fontFamily: theme.fontFamily.body,
-    fontWeight: theme.fontWeight.bold,
-    fontSize: 15,
-    color: theme.chrome.celebrationFg,
   },
 }));

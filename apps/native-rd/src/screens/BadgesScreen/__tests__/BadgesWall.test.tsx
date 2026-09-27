@@ -229,6 +229,25 @@ describe("BadgesWall", () => {
   });
 
   describe("empty state", () => {
+    it("lets a tall translated action scroll above the floating tab bar", () => {
+      renderWithProviders(
+        <BadgesWall
+          count={0}
+          spotlight={null}
+          gallery={[]}
+          onOpenBadge={noop}
+          onSeeGoals={noop}
+          contentInset={{ paddingBottom: 136 }}
+        />,
+      );
+      const scroll = screen.getByTestId("badges-wall-empty-scroll");
+      expect(scroll.props.contentContainerStyle).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ paddingBottom: 136 }),
+        ]),
+      );
+    });
+
     it("renders the redesigned copy when count is 0", () => {
       renderWithProviders(
         <BadgesWall
@@ -277,6 +296,21 @@ describe("BadgesWall", () => {
       );
       fireEvent.press(screen.getByTestId("badges-wall-see-goals"));
       expect(onSeeGoals).toHaveBeenCalledTimes(1);
+    });
+
+    it("exposes the shared action state on the on-dark primary", () => {
+      renderWithProviders(
+        <BadgesWall
+          count={0}
+          spotlight={null}
+          gallery={[]}
+          onOpenBadge={noop}
+          onSeeGoals={noop}
+        />,
+      );
+      expect(
+        screen.getByTestId("badges-wall-see-goals").props.accessibilityState,
+      ).toEqual({ disabled: false, busy: false });
     });
   });
 
