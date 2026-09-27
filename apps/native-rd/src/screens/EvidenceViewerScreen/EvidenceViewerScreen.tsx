@@ -12,6 +12,7 @@ import { useAllEvidenceForGoal } from "../../hooks/useAllEvidenceForGoal";
 import type { GoalId } from "../../db";
 import type { EvidenceViewerScreenProps } from "../../navigation/types";
 import { styles } from "./EvidenceViewerScreen.styles";
+import { FullTitleButton } from "../../components/FullTitleButton";
 
 // Hardcoded; useBottomTabBarHeight requires extra Jest ESM transform config.
 const TAB_BAR_HEIGHT = 12;
@@ -69,13 +70,27 @@ function ViewerContent({
 
   return (
     <View style={styles.container}>
-      {evidence.length > 1 ? (
-        <View style={styles.counterBar}>
+      <View style={styles.counterBar}>
+        <Text
+          variant="title"
+          style={styles.activeTitle}
+          numberOfLines={2}
+          testID="evidence-viewer-active-title"
+          accessibilityLiveRegion="polite"
+        >
+          {active.title}
+        </Text>
+        <FullTitleButton
+          title={active.title}
+          kind="evidence"
+          testID="evidence-viewer-read-full-title"
+        />
+        {evidence.length > 1 ? (
           <Text style={styles.counter} accessibilityLiveRegion="polite">
             {activeIndex + 1} / {evidence.length}
           </Text>
-        </View>
-      ) : null}
+        ) : null}
+      </View>
       <View style={styles.body}>
         <EvidenceContent evidence={active} />
       </View>

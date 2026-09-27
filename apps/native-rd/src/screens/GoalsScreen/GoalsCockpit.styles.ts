@@ -28,10 +28,8 @@ export const styles = StyleSheet.create((theme) => ({
     zIndex: 1,
   },
   overline: {
+    ...theme.textStyles.metadata,
     color: theme.colors.textMuted,
-    fontSize: 10,
-    textTransform: "uppercase",
-    letterSpacing: 1,
     textAlign: "center",
   },
   nextStep: {
@@ -47,13 +45,12 @@ export const styles = StyleSheet.create((theme) => ({
     gap: theme.space[3],
   },
   sectionLabel: {
+    ...theme.textStyles.label,
     color: theme.colors.textMuted,
-    fontSize: 10,
     textTransform: "uppercase",
-    letterSpacing: 1,
   },
-  // Fixed two-column grid (prototype layout): every card is a uniform half-width
-  // tile that wraps to the next row after two.
+  // Two-column grid by default; low-vision and increased OS type use one column
+  // so long goal titles have room to wrap.
   keepWarmGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -65,7 +62,7 @@ export const styles = StyleSheet.create((theme) => ({
   // collapses its whole subtree into one screen-reader node — a pin nested
   // inside it would be unreachable, so it has to be a sibling.
   keepWarmCell: {
-    width: "48%",
+    width: theme.variant === "lowVision" ? "100%" : "48%",
     position: "relative",
   },
   keepWarmCard: {
@@ -127,7 +124,9 @@ export const styles = StyleSheet.create((theme) => ({
   // Bespoke empty state — reticle in a dashed frame + warm "prove something"
   // copy + a single blue CTA (prototype's Goals · Empty).
   empty: {
-    flex: 1,
+    // Keep the empty state centered when it fits, but let it grow beyond the
+    // ScrollView viewport when the OS text size makes the CTA taller.
+    flexGrow: 1,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: theme.space[6],

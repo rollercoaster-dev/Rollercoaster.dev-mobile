@@ -78,6 +78,23 @@ function renderCard(overrides: TestOverrides = {}) {
 }
 
 describe("FocusCurrentTaskCard", () => {
+  it.each(["in-progress", "paused", "completed"] as FocusCardStatus[])(
+    "%s bounds a long step title and reveals its full text",
+    (status) => {
+      const title =
+        "A detailed step title that would fill the card at large text";
+      renderCard({ status, title, capturedEvidence: captured });
+      expect(
+        screen.getByTestId("focus-current-task-title").props.numberOfLines,
+      ).toBe(2);
+      fireEvent.press(screen.getByTestId("focus-current-task-read-full-title"));
+      expect(
+        screen.getByTestId("focus-current-task-read-full-title-full-title")
+          .props.children,
+      ).toBe(title);
+    },
+  );
+
   it.each(ALL_STATES)("renders %s without crashing", (status) => {
     renderCard({ status, capturedEvidence: captured });
     if (status === "all-complete") {

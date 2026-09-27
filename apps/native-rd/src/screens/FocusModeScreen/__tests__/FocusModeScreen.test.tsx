@@ -367,6 +367,20 @@ beforeEach(() => {
 // --- Tests ---
 
 describe("FocusModeScreen", () => {
+  it("keeps the goal header compact and lets the full title be read", () => {
+    const title = "A long goal title with details that should remain readable";
+    setupQueries({ goal: { ...GOAL, title } });
+    renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+    expect(
+      screen.getByRole("header", { name: title }).props.numberOfLines,
+    ).toBe(2);
+    fireEvent.press(screen.getByTestId("focus-read-full-title"));
+    expect(
+      screen.getByTestId("focus-read-full-title-full-title").props.children,
+    ).toBe(title);
+  });
+
   describe("single-card body (#466)", () => {
     it("renders exactly one current-task card for the resolved step", () => {
       setupQueries({

@@ -1,4 +1,5 @@
 import React from "react";
+import * as ReactNative from "react-native";
 import {
   renderWithProviders,
   screen,
@@ -78,6 +79,14 @@ describe("GoalsCockpit", () => {
         i18n.t("goals:cockpit.doThisNext", { title: hero.title }),
       ),
     ).toBeOnTheScreen();
+    expect(
+      screen.getByTestId("goals-cockpit-next-step").props.numberOfLines,
+    ).toBe(2);
+    fireEvent.press(screen.getByTestId("goals-hero-read-full-step-title"));
+    expect(
+      screen.getByTestId("goals-hero-read-full-step-title-full-title").props
+        .children,
+    ).toBe(hero.nextStepTitle);
   });
 
   it("renders every keep-warm goal it is given", () => {
@@ -86,6 +95,58 @@ describe("GoalsCockpit", () => {
     );
     expect(screen.getByText("Build a component library")).toBeOnTheScreen();
     expect(screen.getByText("Understand local-first sync")).toBeOnTheScreen();
+  });
+
+  it("reads complete hero and keep-warm titles from compact cards", () => {
+    const hero = makeHero();
+    renderWithProviders(
+      <GoalsCockpit hero={hero} keepWarm={keepWarm} {...handlers()} />,
+    );
+
+    fireEvent.press(screen.getByTestId("goals-hero-read-full-title"));
+    expect(
+      screen.getByTestId("goals-hero-read-full-title-full-title").props
+        .children,
+    ).toBe(hero.title);
+    fireEvent.press(screen.getByTestId("goals-hero-read-full-title-close"));
+
+    fireEvent.press(screen.getByTestId("keep-warm-read-full-title-kw-1"));
+    expect(
+      screen.getByTestId("keep-warm-read-full-title-kw-1-full-title").props
+        .children,
+    ).toBe(keepWarm[0].title);
+    fireEvent.press(screen.getByTestId("keep-warm-read-full-title-kw-1-close"));
+
+    fireEvent.press(screen.getByTestId("keep-warm-read-full-step-title-kw-1"));
+    expect(
+      screen.getByTestId("keep-warm-read-full-step-title-kw-1-full-title").props
+        .children,
+    ).toBe(keepWarm[0].nextStepTitle);
+  });
+
+  it("uses a full-width keep-warm card when OS text is enlarged", () => {
+    const dimensions = jest
+      .spyOn(ReactNative, "useWindowDimensions")
+      .mockReturnValue({
+        width: 320,
+        height: 640,
+        scale: 2,
+        fontScale: 1.5,
+      });
+    try {
+      renderWithProviders(
+        <GoalsCockpit hero={makeHero()} keepWarm={keepWarm} {...handlers()} />,
+      );
+      const cell = screen.getByTestId("keep-warm-cell-kw-1");
+      expect(ReactNative.StyleSheet.flatten(cell.props.style).width).toBe(
+        "100%",
+      );
+      expect(
+        screen.getByText("Build a component library").props.numberOfLines,
+      ).toBe(2);
+    } finally {
+      dimensions.mockRestore();
+    }
   });
 
   it("fires onStartResume with the hero id", () => {
