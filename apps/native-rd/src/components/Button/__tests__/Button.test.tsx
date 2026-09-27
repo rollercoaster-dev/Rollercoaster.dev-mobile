@@ -94,14 +94,43 @@ describe("Button", () => {
     },
   );
 
-  it("uses the action foreground for a loading indicator and blocks presses", () => {
-    const onPress = jest.fn();
-    renderWithProviders(<Button label="Save" onPress={onPress} loading />);
-    expect(screen.UNSAFE_getByType(ActivityIndicator).props.color).toBe(
-      mockTheme.action.actionPrimaryFg,
+  it.each([
+    ["primary", mockTheme.action.actionPrimaryFg],
+    ["secondary", mockTheme.action.actionSecondaryFg],
+    ["ghost", mockTheme.colors.text],
+    ["destructive", mockTheme.action.actionDestructiveFg],
+  ] as const)(
+    "%s loading keeps its foreground and blocks presses",
+    (variant, color) => {
+      const onPress = jest.fn();
+      renderWithProviders(
+        <Button label="Save" onPress={onPress} variant={variant} loading />,
+      );
+      expect(screen.UNSAFE_getByType(ActivityIndicator).props.color).toBe(
+        color,
+      );
+      const button = screen.getByRole("button", { name: "Save" });
+      expect(button.props.accessibilityState).toEqual({
+        disabled: true,
+        busy: true,
+      });
+      fireEvent.press(button);
+      expect(onPress).not.toHaveBeenCalled();
+    },
+  );
+
+  it("uses the celebration foreground while loading", () => {
+    renderWithProviders(
+      <Button
+        label="See goals"
+        onPress={jest.fn()}
+        surface="celebration"
+        loading
+      />,
     );
-    fireEvent.press(screen.getByRole("button", { name: "Save" }));
-    expect(onPress).not.toHaveBeenCalled();
+    expect(screen.UNSAFE_getByType(ActivityIndicator).props.color).toBe(
+      mockTheme.chrome.celebrationFg,
+    );
   });
 
   it("calls onPress when pressed", () => {

@@ -11,13 +11,13 @@ import {
 
 export type { ButtonVariant, ButtonSize, ButtonSurface };
 
-export interface ButtonProps {
+interface ButtonBaseProps {
   label: string;
   /**
    * Optional leading icon. Prefer a Phosphor element — `<Play size={20}
    * weight="fill" color={...} />` — for anything conveying an action or state
    * (design system Rule 8); the caller owns its size and color because only the
-   * caller knows the variant's foreground.
+   * caller chooses its color to match the variant's foreground.
    *
    * A `string` is still accepted for text-presentation marks (`"+"`, `"✓"`) and
    * gets wrapped in its own <Text> run, separate from the label. Keeping a glyph
@@ -30,9 +30,7 @@ export interface ButtonProps {
    */
   icon?: React.ReactNode;
   onPress: () => void;
-  variant?: ButtonVariant;
   size?: ButtonSize;
-  surface?: ButtonSurface;
   /** Quiet text-level action with a 44pt touch target; use with ghost. */
   inline?: boolean;
   disabled?: boolean;
@@ -41,6 +39,13 @@ export interface ButtonProps {
   accessibilityLabel?: string;
   accessibilityHint?: string;
 }
+
+/** The fixed dark celebration wall only has an audited primary color pair. */
+export type ButtonProps = ButtonBaseProps &
+  (
+    | { surface?: "default"; variant?: ButtonVariant }
+    | { surface: "celebration"; variant?: "primary" }
+  );
 
 export function Button({
   label,

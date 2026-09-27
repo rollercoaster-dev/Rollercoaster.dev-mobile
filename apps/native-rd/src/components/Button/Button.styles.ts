@@ -47,7 +47,7 @@ const sizeMap = {
 
 export const styles = StyleSheet.create((theme) => ({
   pressable: (size: ButtonSize = "md") => ({
-    // WCAG AA requires 44x44 minimum touch target; we use 48px minimum for better UX
+    // Filled actions use at least 48pt; inline ghost keeps a 44pt touch target.
     minHeight: Math.max(sizeMap[size].minHeight, 48),
     borderRadius: theme.radius.md,
     flexDirection: "row" as const,
