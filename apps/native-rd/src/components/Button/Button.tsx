@@ -1,8 +1,15 @@
 import React from "react";
 import { Pressable, Text, ActivityIndicator } from "react-native";
-import { styles, type ButtonVariant, type ButtonSize } from "./Button.styles";
+import { useUnistyles } from "react-native-unistyles";
+import {
+  styles,
+  resolveButtonColors,
+  type ButtonVariant,
+  type ButtonSize,
+  type ButtonSurface,
+} from "./Button.styles";
 
-export type { ButtonVariant, ButtonSize };
+export type { ButtonVariant, ButtonSize, ButtonSurface };
 
 export interface ButtonProps {
   label: string;
@@ -25,9 +32,13 @@ export interface ButtonProps {
   onPress: () => void;
   variant?: ButtonVariant;
   size?: ButtonSize;
+  surface?: ButtonSurface;
+  /** Quiet text-level action with a 44pt touch target; use with ghost. */
+  inline?: boolean;
   disabled?: boolean;
   loading?: boolean;
   testID?: string;
+  accessibilityLabel?: string;
   accessibilityHint?: string;
 }
 
@@ -37,12 +48,17 @@ export function Button({
   onPress,
   variant = "primary",
   size = "md",
+  surface = "default",
+  inline = false,
   disabled = false,
   loading = false,
   testID,
+  accessibilityLabel,
   accessibilityHint,
 }: ButtonProps) {
+  const { theme } = useUnistyles();
   const isDisabled = disabled || loading;
+  const colors = resolveButtonColors(theme, variant, surface);
 
   // Look up variant styles at render time. Module-level capture of
   // `styles.variantX` / `styles.labelX` breaks react-native-unistyles
@@ -50,13 +66,13 @@ export function Button({
   // captured at module load keeps pointing at the previous theme's
   // colors — visible as wrong-colored text after toggling themes.
   const variantStyle = {
-    primary: styles.variantPrimary,
+    primary: styles.variantPrimary(surface),
     secondary: styles.variantSecondary,
     ghost: styles.variantGhost,
     destructive: styles.variantDestructive,
   }[variant];
   const labelStyle = {
-    primary: styles.labelPrimary,
+    primary: styles.labelPrimary(surface),
     secondary: styles.labelSecondary,
     ghost: styles.labelGhost,
     destructive: styles.labelDestructive,
@@ -93,24 +109,20 @@ export function Button({
       disabled={isDisabled}
       accessible
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityLabel={accessibilityLabel ?? label}
       accessibilityHint={accessibilityHint}
       accessibilityState={{ disabled: isDisabled, busy: loading }}
       testID={testID}
       style={({ pressed }) => [
         styles.pressable(size),
         variantStyle,
+        inline && variant === "ghost" && styles.inlineGhost,
         pressed && styles.pressed,
         isDisabled && styles.disabled,
       ]}
     >
       {loading ? (
-        <ActivityIndicator
-          size="small"
-          color={
-            variant === "secondary" || variant === "ghost" ? undefined : "white"
-          }
-        />
+        <ActivityIndicator size="small" color={colors.foreground} />
       ) : (
         <>
           {iconRun}

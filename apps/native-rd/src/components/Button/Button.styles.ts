@@ -1,13 +1,48 @@
 import { StyleSheet } from "react-native-unistyles";
 import { shadowStyle } from "../../styles/shadows";
+import type { ComposedTheme } from "../../themes/compose";
 
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "destructive";
 export type ButtonSize = "sm" | "md" | "lg";
+export type ButtonSurface = "default" | "celebration";
+
+/** The same semantic foreground/background pairs used by the contrast audit. */
+export function resolveButtonColors(
+  theme: ComposedTheme,
+  variant: ButtonVariant,
+  surface: ButtonSurface = "default",
+) {
+  if (surface === "celebration" && variant === "primary") {
+    return {
+      background: theme.chrome.celebrationBg,
+      foreground: theme.chrome.celebrationFg,
+    };
+  }
+  switch (variant) {
+    case "primary":
+      return {
+        background: theme.action.actionPrimaryBg,
+        foreground: theme.action.actionPrimaryFg,
+      };
+    case "secondary":
+      return {
+        background: theme.action.actionSecondaryBg,
+        foreground: theme.action.actionSecondaryFg,
+      };
+    case "destructive":
+      return {
+        background: theme.action.actionDestructiveBg,
+        foreground: theme.action.actionDestructiveFg,
+      };
+    case "ghost":
+      return { background: "transparent", foreground: theme.colors.text };
+  }
+}
 
 const sizeMap = {
   sm: { paddingH: "3", paddingV: "1", fontSize: "sm", minHeight: 36 },
   md: { paddingH: "4", paddingV: "2", fontSize: "md", minHeight: 44 },
-  lg: { paddingH: "5", paddingV: "3", fontSize: "lg", minHeight: 52 },
+  lg: { paddingH: "5", paddingV: "3", fontSize: "lg", minHeight: 54 },
 } as const;
 
 export const styles = StyleSheet.create((theme) => ({
@@ -22,14 +57,14 @@ export const styles = StyleSheet.create((theme) => ({
     paddingVertical: theme.space[sizeMap[size].paddingV],
     gap: theme.space[2],
   }),
-  variantPrimary: {
-    backgroundColor: theme.colors.accentPrimary,
+  variantPrimary: (surface: ButtonSurface = "default") => ({
+    backgroundColor: resolveButtonColors(theme, "primary", surface).background,
     borderWidth: theme.borderWidth.thick,
-    borderColor: theme.colors.accentPrimary,
+    borderColor: theme.colors.border,
     ...shadowStyle(theme, "cardElevation"),
-  },
+  }),
   variantSecondary: {
-    backgroundColor: theme.colors.backgroundSecondary,
+    backgroundColor: theme.action.actionSecondaryBg,
     borderWidth: theme.borderWidth.thick,
     borderColor: theme.colors.border,
     ...shadowStyle(theme, "cardElevation"),
@@ -40,7 +75,7 @@ export const styles = StyleSheet.create((theme) => ({
     borderColor: "transparent",
   },
   variantDestructive: {
-    backgroundColor: theme.colors.warning,
+    backgroundColor: theme.action.actionDestructiveBg,
     borderWidth: theme.borderWidth.thick,
     borderColor: theme.colors.text,
     ...shadowStyle(theme, "cardElevation"),
@@ -52,6 +87,14 @@ export const styles = StyleSheet.create((theme) => ({
   disabled: {
     opacity: 0.4,
   },
+  inlineGhost: {
+    alignSelf: "flex-start",
+    justifyContent: "flex-start",
+    minHeight: 44,
+    paddingHorizontal: 0,
+    borderWidth: 0,
+    shadowOpacity: 0,
+  },
   // Leading emoji icon. Deliberately omits fontFamily so the glyph renders in
   // the system emoji font on its own, rather than being pulled into the body
   // font's run — the mixed-run case that drops trailing label glyphs on Android.
@@ -62,21 +105,20 @@ export const styles = StyleSheet.create((theme) => ({
     fontSize: theme.size[sizeMap[size].fontSize],
     fontWeight: theme.fontWeight.bold,
     fontFamily: theme.fontFamily.body,
+    lineHeight: theme.size[sizeMap[size].fontSize] * 1.3,
+    flexShrink: 1,
+    textAlign: "center" as const,
   }),
-  labelPrimary: {
-    color: theme.colors.background,
-  },
+  labelPrimary: (surface: ButtonSurface = "default") => ({
+    color: resolveButtonColors(theme, "primary", surface).foreground,
+  }),
   labelSecondary: {
-    color: theme.colors.text,
+    color: theme.action.actionSecondaryFg,
   },
   labelGhost: {
     color: theme.colors.text,
   },
   labelDestructive: {
-    // Use dark text on warning background for better contrast
-    // Light mode: #262626 on #d97706 = 4.75:1 ✓
-    // Dark mode: #262626 on #d97706 = 4.75:1 ✓ (better than #fafafa = 3.05:1 ✗)
-    // eslint-disable-next-line local/no-raw-colors -- contrast-verified exception, see ratios above
-    color: "#262626",
+    color: theme.action.actionDestructiveFg,
   },
 }));
