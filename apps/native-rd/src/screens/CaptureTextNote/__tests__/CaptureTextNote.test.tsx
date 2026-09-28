@@ -1,10 +1,12 @@
 import React from "react";
+import { AccessibilityInfo, Platform, StyleSheet } from "react-native";
 import {
   renderWithProviders,
   screen,
   fireEvent,
 } from "../../../__tests__/test-utils";
 import { i18n } from "../../../i18n";
+import { mockTheme } from "../../../__tests__/mocks/unistyles";
 import { CaptureTextNote } from "../CaptureTextNote";
 
 const mockGoBack = jest.fn();
@@ -36,7 +38,8 @@ jest.mock("../../../db", () => ({
   TEXT_EVIDENCE_PREFIX: "content:text;",
 }));
 
-const { createEvidence } = require("../../../db");
+const { createEvidence, TEXT_EVIDENCE_PREFIX } = require("../../../db");
+const MAX_NOTE_LENGTH = 1000 - TEXT_EVIDENCE_PREFIX.length;
 
 const defaultRoute = {
   key: "CaptureTextNote-test",
@@ -84,7 +87,7 @@ describe("CaptureTextNote", () => {
     renderWithProviders(
       <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
     );
-    expect(screen.getByText("0/1000")).toBeOnTheScreen();
+    expect(screen.getByText(`0/${MAX_NOTE_LENGTH}`)).toBeOnTheScreen();
   });
 
   it("has go back button with accessibility label", () => {
@@ -110,6 +113,94 @@ describe("CaptureTextNote", () => {
       i18n.t("captureText:actions.save"),
     );
     expect(saveButton.props.accessibilityState?.disabled).toBe(true);
+    expect(
+      screen.getByText(i18n.t("captureText:validation.noteRequired")),
+    ).toBeOnTheScreen();
+    expect(saveButton.props.accessibilityHint).toBe(
+      i18n.t("captureText:validation.noteRequired"),
+    );
+  });
+
+  it("explains an overlong note and clears the error when corrected", () => {
+    renderWithProviders(
+      <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
+    );
+    const body = screen.getByTestId("capture-text-body");
+    fireEvent.changeText(body, "a".repeat(MAX_NOTE_LENGTH + 1));
+
+    const message = i18n.t("captureText:validation.tooLong", {
+      max: MAX_NOTE_LENGTH,
+    });
+    expect(screen.getByTestId("capture-text-error")).toHaveTextContent(message);
+    expect(body.props.accessibilityHint).toBe(message);
+    expect(StyleSheet.flatten(body.props.style).borderColor).toBe(
+      mockTheme.colors.error,
+    );
+    expect(
+      screen.getByTestId("capture-text-save").props.accessibilityState
+        ?.disabled,
+    ).toBe(true);
+    expect(
+      screen.getByTestId("capture-text-save").props.accessibilityHint,
+    ).toBe(message);
+    expect(createEvidence).not.toHaveBeenCalled();
+
+    fireEvent.changeText(body, "a".repeat(MAX_NOTE_LENGTH));
+    expect(screen.queryByTestId("capture-text-error")).toBeNull();
+    expect(StyleSheet.flatten(body.props.style).borderColor).toBe(
+      mockTheme.colors.border,
+    );
+    expect(
+      screen.getByTestId("capture-text-save").props.accessibilityState
+        ?.disabled,
+    ).not.toBe(true);
+  });
+
+  it("announces only when the note crosses the storage limit on iOS", () => {
+    const platformStub = jest.replaceProperty(Platform, "OS", "ios");
+    const announce = jest
+      .spyOn(AccessibilityInfo, "announceForAccessibility")
+      .mockImplementation(() => {});
+    renderWithProviders(
+      <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
+    );
+    const body = screen.getByTestId("capture-text-body");
+    const message = i18n.t("captureText:validation.tooLong", {
+      max: MAX_NOTE_LENGTH,
+    });
+
+    fireEvent.changeText(body, "a".repeat(MAX_NOTE_LENGTH));
+    expect(announce).not.toHaveBeenCalledWith(message);
+    fireEvent.changeText(body, "a".repeat(MAX_NOTE_LENGTH + 1));
+    expect(announce).toHaveBeenCalledTimes(1);
+    expect(announce).toHaveBeenLastCalledWith(message);
+    fireEvent.changeText(body, "a".repeat(MAX_NOTE_LENGTH + 2));
+    expect(announce).toHaveBeenCalledTimes(1);
+    fireEvent.changeText(body, "a".repeat(MAX_NOTE_LENGTH));
+    fireEvent.changeText(body, "a".repeat(MAX_NOTE_LENGTH + 1));
+    expect(announce).toHaveBeenCalledTimes(2);
+
+    announce.mockRestore();
+    platformStub.restore();
+  });
+
+  it("accepts the largest note whose prefixed URI fits storage", () => {
+    renderWithProviders(
+      <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
+    );
+    fireEvent.changeText(
+      screen.getByTestId("capture-text-body"),
+      "a".repeat(MAX_NOTE_LENGTH),
+    );
+    fireEvent.press(screen.getByTestId("capture-text-save"));
+    expect(createEvidence).toHaveBeenCalledWith(
+      expect.objectContaining({
+        uri: `${TEXT_EVIDENCE_PREFIX}${"a".repeat(MAX_NOTE_LENGTH)}`,
+      }),
+    );
+    expect(
+      `${TEXT_EVIDENCE_PREFIX}${"a".repeat(MAX_NOTE_LENGTH)}`,
+    ).toHaveLength(1000);
   });
 
   it("enables Save button when content is entered", () => {
@@ -134,7 +225,7 @@ describe("CaptureTextNote", () => {
       screen.getByLabelText(i18n.t("captureText:input.label")),
       "Hello",
     );
-    expect(screen.getByText("5/1000")).toBeOnTheScreen();
+    expect(screen.getByText(`5/${MAX_NOTE_LENGTH}`)).toBeOnTheScreen();
   });
 
   it("saves evidence with goal attachment when no stepId", () => {
@@ -223,7 +314,7 @@ describe("CaptureTextNote", () => {
       "   ",
     );
     // Character counter should show 0 (trimmed)
-    expect(screen.getByText("0/1000")).toBeOnTheScreen();
+    expect(screen.getByText(`0/${MAX_NOTE_LENGTH}`)).toBeOnTheScreen();
     expect(createEvidence).not.toHaveBeenCalled();
   });
 
@@ -237,7 +328,10 @@ describe("CaptureTextNote", () => {
     );
     expect(
       screen.getByLabelText(
-        i18n.t("captureText:charCount.a11y", { count: 5, max: 1000 }),
+        i18n.t("captureText:charCount.a11y", {
+          count: 5,
+          max: MAX_NOTE_LENGTH,
+        }),
       ),
     ).toBeOnTheScreen();
   });
@@ -279,10 +373,28 @@ describe("CaptureTextNote", () => {
       );
       const pseudo = i18n.t("captureText:charCount.a11y", {
         count: 5,
-        max: 1000,
+        max: MAX_NOTE_LENGTH,
       });
       expect(pseudo.startsWith("[")).toBe(true);
       expect(screen.getByLabelText(pseudo)).toBeOnTheScreen();
+    });
+
+    it("renders the over-limit explanation under pseudo locale", async () => {
+      await i18n.changeLanguage("pseudo");
+      renderWithProviders(
+        <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
+      );
+      fireEvent.changeText(
+        screen.getByTestId("capture-text-body"),
+        "a".repeat(MAX_NOTE_LENGTH + 1),
+      );
+      const pseudo = i18n.t("captureText:validation.tooLong", {
+        max: MAX_NOTE_LENGTH,
+      });
+      expect(pseudo.startsWith("[")).toBe(true);
+      expect(screen.getByTestId("capture-text-error")).toHaveTextContent(
+        pseudo,
+      );
     });
   });
 });

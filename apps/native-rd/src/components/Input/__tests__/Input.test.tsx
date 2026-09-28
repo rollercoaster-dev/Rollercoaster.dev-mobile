@@ -1,10 +1,12 @@
 import React from "react";
+import { StyleSheet } from "react-native";
 import {
   renderWithProviders,
   screen,
   fireEvent,
 } from "../../../__tests__/test-utils";
 import { Input } from "../Input";
+import { mockTheme } from "../../../__tests__/mocks/unistyles";
 
 describe("Input", () => {
   it("renders label when provided", () => {
@@ -34,6 +36,39 @@ describe("Input", () => {
   it("renders error message when error prop is set", () => {
     renderWithProviders(<Input placeholder="Field" error="Required field" />);
     expect(screen.getByText("Required field")).toBeOnTheScreen();
+    expect(screen.getByPlaceholderText("Field")).toHaveProp(
+      "accessibilityHint",
+      "Required field",
+    );
+  });
+
+  it("restores the normal accessibility hint when the error clears", () => {
+    const { rerender } = renderWithProviders(
+      <Input label="Field" error="Required field" accessibilityHint="Help" />,
+    );
+    expect(screen.getByLabelText("Field")).toHaveProp(
+      "accessibilityHint",
+      "Required field",
+    );
+    rerender(<Input label="Field" accessibilityHint="Help" />);
+    expect(screen.getByLabelText("Field")).toHaveProp(
+      "accessibilityHint",
+      "Help",
+    );
+  });
+
+  it("uses the semantic error border until the field is corrected", () => {
+    const { rerender } = renderWithProviders(
+      <Input label="Field" error="Required field" />,
+    );
+    const field = screen.getByLabelText("Field");
+    expect(StyleSheet.flatten(field.props.style).borderColor).toBe(
+      mockTheme.colors.error,
+    );
+    rerender(<Input label="Field" />);
+    expect(StyleSheet.flatten(field.props.style).borderColor).toBe(
+      mockTheme.colors.border,
+    );
   });
 
   it("does not render error element when no error", () => {

@@ -128,6 +128,23 @@ describe("Theme contrast audit (all themes × canonical pairs)", () => {
   });
 });
 
+describe("Inline validation contrast (#693)", () => {
+  test.each(themeNames)(
+    "%s keeps error indication and text readable",
+    (name) => {
+      const { background, backgroundSecondary, error, text } =
+        themes[name].colors;
+      // FieldError has a semantic error rail and normal text; the explanation is
+      // still readable if the rail is not perceived by color alone.
+      expect(getContrastRatio(error, background)).toBeGreaterThanOrEqual(3);
+      expect(
+        getContrastRatio(error, backgroundSecondary),
+      ).toBeGreaterThanOrEqual(3);
+      expect(getContrastRatio(text, background)).toBeGreaterThanOrEqual(4.5);
+    },
+  );
+});
+
 /**
  * Sub-step indentation rail — the only net-new colour relationship introduced
  * by the substructure grammar (#291 `StepList.styles.ts` `leftRail`): a vertical

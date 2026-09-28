@@ -26,11 +26,6 @@ export const styles = StyleSheet.create((theme) => ({
     borderColor: theme.colors.focusRing,
   },
   inputError: {
-    borderColor: theme.colors.accentPrimary,
-  },
-  error: {
-    fontSize: theme.size.xs,
-    fontFamily: theme.fontFamily.body,
-    color: theme.colors.accentPrimary,
+    borderColor: theme.colors.error,
   },
 }));

@@ -12,6 +12,10 @@
   "charCount": {
     "a11y": "{{count}} of {{max}} characters used"
   },
+  "validation": {
+    "noteRequired": "Write a note to enable Save.",
+    "tooLong": "This note is too long. Keep it within {{max}} characters to save."
+  },
   "actions": {
     "save": "Save Note"
   },
