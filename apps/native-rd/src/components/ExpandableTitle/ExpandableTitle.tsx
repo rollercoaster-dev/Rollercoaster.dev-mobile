@@ -1,7 +1,9 @@
 import { useState } from "react";
 import {
   Pressable,
+  ScrollView,
   View,
+  useWindowDimensions,
   type StyleProp,
   type TextLayoutEvent,
   type TextStyle,
@@ -10,6 +12,9 @@ import {
 import { useTranslation } from "react-i18next";
 import { Text, type TextVariant } from "../Text";
 import { styles } from "./ExpandableTitle.styles";
+
+/** Expanded text may take this share of the window before it scrolls. */
+const EXPANDED_WINDOW_SHARE = 0.4;
 
 export interface ExpandableTitleProps {
   title: string;
@@ -33,6 +38,10 @@ export interface ExpandableTitleProps {
  * either the title or the control expands it in place. Nothing leaves the
  * screen, nothing animates, and short titles pay no cost.
  *
+ * Expanded text is capped at a share of the window height and scrolls inside
+ * that cap, so a 180-character title at accessibility text sizes cannot push
+ * the work below it (and the "Show less" control) off the screen.
+ *
  * Screen readers already receive the whole text regardless of clamping, so the
  * toggle is purely a visual affordance. It is still a real button for anyone
  * who reaches it.
@@ -48,6 +57,7 @@ export function ExpandableTitle({
   accessibilityRole = "header",
 }: ExpandableTitleProps) {
   const { t } = useTranslation(["common"]);
+  const { height: windowHeight } = useWindowDimensions();
   const [expanded, setExpanded] = useState(false);
   const [fullLineCount, setFullLineCount] = useState(0);
   const overflows = fullLineCount > numberOfLines;
@@ -57,24 +67,40 @@ export function ExpandableTitle({
     setFullLineCount(event.nativeEvent.lines.length);
   };
 
+  const fullText = (
+    <Text
+      variant={variant}
+      style={style}
+      numberOfLines={expanded ? undefined : numberOfLines}
+      accessible
+      accessibilityRole={accessibilityRole}
+      testID={testID}
+    >
+      {title}
+    </Text>
+  );
+
   return (
     <View style={[styles.container, containerStyle]}>
-      <Pressable
-        accessible={false}
-        disabled={!showToggle}
-        onPress={() => setExpanded((v) => !v)}
-      >
-        <Text
-          variant={variant}
-          style={style}
-          numberOfLines={expanded ? undefined : numberOfLines}
-          accessible
-          accessibilityRole={accessibilityRole}
-          testID={testID}
+      {expanded ? (
+        <ScrollView
+          style={{
+            maxHeight: Math.round(windowHeight * EXPANDED_WINDOW_SHARE),
+          }}
+          nestedScrollEnabled
+          testID={`${testID}-expanded-scroll`}
         >
-          {title}
-        </Text>
-      </Pressable>
+          {fullText}
+        </ScrollView>
+      ) : (
+        <Pressable
+          accessible={false}
+          disabled={!showToggle}
+          onPress={() => setExpanded(true)}
+        >
+          {fullText}
+        </Pressable>
+      )}
       <Text
         variant={variant}
         style={[style, styles.measure]}

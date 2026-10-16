@@ -44,6 +44,11 @@ describe("ExpandableTitle", () => {
 
     fireEvent.press(toggle);
     expect(screen.getByTestId("title").props.numberOfLines).toBeUndefined();
+    // Expanded text scrolls inside a height cap so it cannot push the rest of
+    // the screen (and this toggle) out of reach at accessibility text sizes.
+    expect(
+      screen.getByTestId("title-expanded-scroll").props.style.maxHeight,
+    ).toBeGreaterThan(0);
     expect(screen.getByTestId("title-toggle").props.accessibilityLabel).toBe(
       i18n.t("common:expandableTitle.showLess"),
     );
