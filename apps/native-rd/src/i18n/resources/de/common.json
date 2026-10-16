@@ -11,6 +11,12 @@
     "retry": "Erneut versuchen",
     "undo": "Rückgängig"
   },
+  "unsavedChanges": {
+    "title": "Ungespeicherte Änderungen verwerfen?",
+    "message": "Deine unfertige Arbeit geht verloren, wenn du diese Ansicht verlässt.",
+    "keep": "Weiter bearbeiten",
+    "discard": "Verwerfen"
+  },
   "navigation": {
     "tabs": {
       "goals": "Ziele",
