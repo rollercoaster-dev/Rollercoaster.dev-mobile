@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { View, TextInput, Text, type TextInputProps } from "react-native";
+import { View, TextInput, type TextInputProps } from "react-native";
 import { useUnistyles } from "react-native-unistyles";
 import { FieldError } from "../FieldError";
+import { Text } from "../Text";
 import { styles } from "./Input.styles";
 
 export interface InputProps extends Omit<TextInputProps, "style"> {
@@ -16,11 +17,15 @@ export const Input = React.forwardRef<TextInput, InputProps>(function Input(
 ) {
   const { theme } = useUnistyles();
   const [focused, setFocused] = useState(false);
-  const accessibilityHint = error ?? rest.accessibilityHint;
+  const accessibilityHint = error || rest.accessibilityHint;
 
   return (
     <View style={styles.container}>
-      {label && <Text style={styles.label}>{label}</Text>}
+      {label && (
+        <Text variant="label" style={styles.label}>
+          {label}
+        </Text>
+      )}
       <TextInput
         ref={ref}
         style={[

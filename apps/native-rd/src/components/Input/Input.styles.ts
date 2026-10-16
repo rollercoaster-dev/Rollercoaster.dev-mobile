@@ -5,9 +5,6 @@ export const styles = StyleSheet.create((theme) => ({
     gap: theme.space[1],
   },
   label: {
-    fontSize: theme.size.sm,
-    fontWeight: theme.fontWeight.medium,
-    fontFamily: theme.fontFamily.body,
     color: theme.colors.textSecondary,
   },
   input: {

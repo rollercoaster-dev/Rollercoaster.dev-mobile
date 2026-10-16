@@ -4,6 +4,10 @@ import { renderWithProviders, screen } from "../../../__tests__/test-utils";
 import { FieldError } from "../FieldError";
 
 describe("FieldError", () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   it("renders readable text in an Android live region", () => {
     renderWithProviders(<FieldError message="Check this field" />);
     expect(screen.getByText("Check this field")).toHaveProp(

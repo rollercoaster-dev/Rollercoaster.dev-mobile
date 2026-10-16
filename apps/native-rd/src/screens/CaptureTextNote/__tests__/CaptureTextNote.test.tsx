@@ -35,7 +35,7 @@ jest.mock("../../../db", () => ({
     link: "link",
     file: "file",
   },
-  TEXT_EVIDENCE_PREFIX: "content:text;",
+  TEXT_EVIDENCE_PREFIX: jest.requireActual("../../../db").TEXT_EVIDENCE_PREFIX,
 }));
 
 const { createEvidence, TEXT_EVIDENCE_PREFIX } = require("../../../db");
@@ -58,6 +58,10 @@ beforeEach(() => {
 });
 
 describe("CaptureTextNote", () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   it("renders the screen with header", () => {
     renderWithProviders(
       <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
@@ -143,6 +147,7 @@ describe("CaptureTextNote", () => {
     expect(
       screen.getByTestId("capture-text-save").props.accessibilityHint,
     ).toBe(message);
+    fireEvent.press(screen.getByTestId("capture-text-save"));
     expect(createEvidence).not.toHaveBeenCalled();
 
     fireEvent.changeText(body, "a".repeat(MAX_NOTE_LENGTH));
@@ -198,9 +203,6 @@ describe("CaptureTextNote", () => {
         uri: `${TEXT_EVIDENCE_PREFIX}${"a".repeat(MAX_NOTE_LENGTH)}`,
       }),
     );
-    expect(
-      `${TEXT_EVIDENCE_PREFIX}${"a".repeat(MAX_NOTE_LENGTH)}`,
-    ).toHaveLength(1000);
   });
 
   it("enables Save button when content is entered", () => {

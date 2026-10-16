@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
-import { AccessibilityInfo, Platform, Text } from "react-native";
+import { AccessibilityInfo, Platform } from "react-native";
+import { Text } from "../Text";
 import { styles } from "./FieldError.styles";
 
 interface FieldErrorProps {
@@ -17,6 +18,7 @@ export function FieldError({ message, testID }: FieldErrorProps) {
 
   return (
     <Text
+      variant="caption"
       style={styles.message}
       accessibilityLiveRegion="polite"
       testID={testID}

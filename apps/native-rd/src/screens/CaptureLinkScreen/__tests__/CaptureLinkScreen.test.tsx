@@ -71,6 +71,10 @@ beforeEach(() => {
 });
 
 describe("CaptureLinkScreen", () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   it("renders URL and caption input fields", () => {
     renderScreen();
 
@@ -132,7 +136,6 @@ describe("CaptureLinkScreen", () => {
       "accessibilityHint",
       i18n.t("captureLink:validation.urlRequired"),
     );
-    expect(focus).toHaveBeenCalled();
     expect(
       (focus.mock.contexts.at(-1) as TextInput | undefined)?.props.testID,
     ).toBe("capture-link-url");
