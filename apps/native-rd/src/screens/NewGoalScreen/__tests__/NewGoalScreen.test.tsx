@@ -631,6 +631,32 @@ describe("NewGoalScreen", () => {
     );
   });
 
+  it("treats a changed evidence choice as unfinished work on its own", () => {
+    renderWithProviders(<NewGoalScreen />);
+    typeTitleAndAdvance();
+    fireEvent.press(screen.getByTestId("new-goal-evidence-chip"));
+    fireEvent.press(
+      screen.getByRole("radio", {
+        name: t("common:evidenceTypes.photo.label"),
+      }),
+    );
+    // Back to the name step and blank the title: the picked chip is now the
+    // only thing the user has changed.
+    fireEvent.press(
+      screen.getByLabelText(t("common:screenHeader.a11y.goBack")),
+    );
+    fireEvent.changeText(screen.getByTestId("new-goal-title-input"), "");
+
+    fireEvent.press(screen.getByTestId("new-goal-close-button"));
+
+    expect(mockGoBack).not.toHaveBeenCalled();
+    expect(alertSpy).toHaveBeenCalledWith(
+      t("common:unsavedChanges.title"),
+      t("common:unsavedChanges.message"),
+      expect.any(Array),
+    );
+  });
+
   it("closes an untouched wizard without prompting", () => {
     renderWithProviders(<NewGoalScreen />);
     fireEvent.press(screen.getByTestId("new-goal-close-button"));

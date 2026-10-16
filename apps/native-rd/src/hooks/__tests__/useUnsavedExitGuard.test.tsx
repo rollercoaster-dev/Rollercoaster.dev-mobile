@@ -1,5 +1,5 @@
 import { Alert } from "react-native";
-import { act, renderHook } from "../../__tests__/test-utils";
+import { act, renderHook, waitFor } from "../../__tests__/test-utils";
 import { useUnsavedExitGuard } from "../useUnsavedExitGuard";
 
 const mockGoBack = jest.fn();
@@ -35,6 +35,17 @@ function pressAlertButton(label: string) {
   act(() => button?.onPress?.());
 }
 
+/** The guard must be released (usePreventRemove(false)) before the leave runs. */
+function expectReleasedBefore(leave: jest.Mock) {
+  const released = mockUsePreventRemove.mock.invocationCallOrder.at(-1) ?? 0;
+  const left = leave.mock.invocationCallOrder[0] ?? 0;
+  expect(mockUsePreventRemove).toHaveBeenLastCalledWith(
+    false,
+    expect.any(Function),
+  );
+  expect(released).toBeLessThan(left);
+}
+
 describe("useUnsavedExitGuard", () => {
   it("exits clean forms immediately", () => {
     const { result } = renderHook(() =>
@@ -67,11 +78,26 @@ describe("useUnsavedExitGuard", () => {
 
     act(() => onPreventedRemove({ data: { action: nativeAction } }));
     pressAlertButton(copy.discard);
-    expect(mockUsePreventRemove).toHaveBeenLastCalledWith(
-      false,
-      expect.any(Function),
-    );
     expect(mockDispatch).toHaveBeenCalledWith(nativeAction);
+    expectReleasedBefore(mockDispatch);
+  });
+
+  it.each([
+    ["resolves", () => Promise.resolve()],
+    ["rejects", () => Promise.reject(new Error("cleanup failed"))],
+  ])("leaves after Discard even when onDiscard %s", async (_label, outcome) => {
+    const onDiscard = jest.fn(outcome);
+    const { result } = renderHook(() =>
+      useUnsavedExitGuard({ isDirty: true, copy, onDiscard }),
+    );
+
+    act(() => result.current.requestExit());
+    expect(onDiscard).not.toHaveBeenCalled();
+    pressAlertButton(copy.discard);
+
+    await waitFor(() => expect(mockGoBack).toHaveBeenCalledTimes(1));
+    expect(onDiscard).toHaveBeenCalledTimes(1);
+    expectReleasedBefore(mockGoBack);
   });
 
   it("confirms a visible back and leaves only after Discard", () => {
@@ -83,6 +109,7 @@ describe("useUnsavedExitGuard", () => {
     expect(mockGoBack).not.toHaveBeenCalled();
     pressAlertButton(copy.discard);
     expect(mockGoBack).toHaveBeenCalledTimes(1);
+    expectReleasedBefore(mockGoBack);
   });
 
   it("lets a successful save leave without a discard prompt", () => {
@@ -92,11 +119,8 @@ describe("useUnsavedExitGuard", () => {
 
     act(() => result.current.exitAfterSave(() => mockGoBack()));
 
-    expect(mockUsePreventRemove).toHaveBeenLastCalledWith(
-      false,
-      expect.any(Function),
-    );
     expect(mockGoBack).toHaveBeenCalledTimes(1);
+    expectReleasedBefore(mockGoBack);
     expect(alert).not.toHaveBeenCalled();
   });
 });

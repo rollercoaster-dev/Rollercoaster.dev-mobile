@@ -40,6 +40,7 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
   const { t } = useTranslation(["captureVoice", "common", "permissions"]);
   const { goalId, stepId } = route.params;
   const [caption, setCaption] = useState("");
+  const [saving, setSaving] = useState(false);
 
   const {
     status,
@@ -61,8 +62,9 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
     status === "recorded" ||
     status === "playing";
   const { requestExit, exitAfterSave } = useUnsavedExitGuard({
-    isDirty:
-      hasRecording || status === "requesting-permission" || caption.length > 0,
+    // A pending permission request is not dirty: useAudioRecorder cancels a
+    // stale start on unmount, so leaving mid-request loses nothing.
+    isDirty: hasRecording || caption.length > 0,
     copy: {
       title: hasRecording
         ? t("captureVoice:discardUnsaved.title")
@@ -77,8 +79,9 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
   });
 
   async function handleSave() {
-    if (!uri) return;
+    if (!uri || saving) return;
 
+    setSaving(true);
     try {
       const metadata = JSON.stringify({
         durationMs,
@@ -104,6 +107,8 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
         t("captureVoice:errors.saveFailedTitle"),
         t("captureVoice:errors.saveFailedMessage"),
       );
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -320,6 +325,7 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
                       label={t("captureVoice:actions.attach")}
                       variant="primary"
                       onPress={handleSave}
+                      loading={saving}
                     />
                   </View>
                   <View style={styles.buttonFlex}>

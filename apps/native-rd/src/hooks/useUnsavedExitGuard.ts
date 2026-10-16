@@ -22,8 +22,11 @@ export function useUnsavedExitGuard({
   const navigation = useNavigation();
   const [pendingLeave, setPendingLeave] = useState<(() => void) | null>(null);
 
-  // Release the native-stack guard before replaying a gesture/back action. A
-  // dispatch while usePreventRemove is still active would show the alert again.
+  // Release the native-stack guard before leaving. A replayed `data.action`
+  // is already marked visited by react-navigation, but requestExit's fresh
+  // goBack() and a post-save replace() are not: dispatched while
+  // usePreventRemove is still active they would show the alert again.
+  // Invariant: every `leave` must remove this route; the latch never resets.
   useEffect(() => {
     pendingLeave?.();
   }, [pendingLeave]);

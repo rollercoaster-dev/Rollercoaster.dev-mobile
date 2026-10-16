@@ -118,13 +118,15 @@ describe("VoiceMemoScreen", () => {
     },
   );
 
-  it("guards exit while microphone permission is pending", () => {
+  it("leaves immediately while microphone permission is pending", () => {
     mockStatus = "requesting-permission";
     renderScreen();
     expect(usePreventRemove).toHaveBeenLastCalledWith(
-      true,
+      false,
       expect.any(Function),
     );
+    fireEvent.press(screen.getByLabelText("Go back"));
+    expect(mockGoBack).toHaveBeenCalledTimes(1);
   });
 
   it("keeps or discards a recorded memo after a clear choice", async () => {
