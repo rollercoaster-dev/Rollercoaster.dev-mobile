@@ -68,12 +68,15 @@ export interface TextStyle {
 
 /** All typography presets */
 export interface TextStyles {
+  screenTitle: TextStyle;
+  taskTitle: TextStyle;
   display: TextStyle;
   headline: TextStyle;
   title: TextStyle;
   body: TextStyle;
   caption: TextStyle;
   label: TextStyle;
+  metadata: TextStyle;
   mono: TextStyle;
 }
 
@@ -203,53 +206,82 @@ export function composeTheme(
 
   // Build typography presets using resolved scales
   const s = sizeScale as Record<string, number>;
+  // `lineHeightL` is computed from `sizeL` in the adapter, even for the
+  // dyslexia theme (which keeps the normal font-size scale). Convert it back
+  // to a multiplier before applying it to the resolved size of each role.
+  const lineHeightBoost = variantDef.lineHeight
+    ? lineHeightScale.md / sizeL.md - lineHeight.md / size.md
+    : 0;
+  const textLineHeight = (fontSize: number, multiplier: number) =>
+    Math.round(fontSize * (multiplier + lineHeightBoost));
   const textStyles: TextStyles = {
+    screenTitle: {
+      fontSize: s["4xl"] ?? 40,
+      fontWeight: fontWeight.black,
+      lineHeight: textLineHeight(s["4xl"] ?? 40, 1.3),
+      letterSpacing: letterSpacing.tight,
+      fontFamily: resolvedFontFamily.headline,
+    },
+    taskTitle: {
+      fontSize: s["3xl"] ?? 32,
+      fontWeight: fontWeight.black,
+      lineHeight: textLineHeight(s["3xl"] ?? 32, 1.3),
+      letterSpacing: letterSpacing.normal,
+      fontFamily: resolvedFontFamily.headline,
+    },
     display: {
       fontSize: s["4xl"] ?? 40,
       fontWeight: fontWeight.black,
-      lineHeight: Math.round((s["4xl"] ?? 40) * 1.05),
+      lineHeight: textLineHeight(s["4xl"] ?? 40, 1.05),
       letterSpacing: letterSpacing.tight,
       fontFamily: resolvedFontFamily.headline,
     },
     headline: {
       fontSize: s["2xl"] ?? 24,
       fontWeight: fontWeight.bold,
-      lineHeight: Math.round((s["2xl"] ?? 24) * 1.3),
+      lineHeight: textLineHeight(s["2xl"] ?? 24, 1.3),
       letterSpacing: letterSpacing.tight,
       fontFamily: resolvedFontFamily.headline,
     },
     title: {
       fontSize: s.lg ?? 18,
       fontWeight: fontWeight.semibold,
-      lineHeight: Math.round((s.lg ?? 18) * 1.3),
+      lineHeight: textLineHeight(s.lg ?? 18, 1.3),
       letterSpacing: letterSpacing.normal,
       fontFamily: resolvedFontFamily.body,
     },
     body: {
       fontSize: s.md ?? 16,
       fontWeight: fontWeight.normal,
-      lineHeight: Math.round((s.md ?? 16) * 1.6),
+      lineHeight: textLineHeight(s.md ?? 16, 1.6),
       letterSpacing: letterSpacing.normal,
       fontFamily: resolvedFontFamily.body,
     },
     caption: {
       fontSize: s.xs ?? 12,
       fontWeight: fontWeight.normal,
-      lineHeight: Math.round((s.xs ?? 12) * 1.6),
+      lineHeight: textLineHeight(s.xs ?? 12, 1.6),
       letterSpacing: letterSpacing.label,
       fontFamily: resolvedFontFamily.body,
     },
     label: {
       fontSize: s.sm ?? 14,
       fontWeight: fontWeight.medium,
-      lineHeight: Math.round((s.sm ?? 14) * 1.3),
+      lineHeight: textLineHeight(s.sm ?? 14, 1.3),
       letterSpacing: letterSpacing.wide,
+      fontFamily: resolvedFontFamily.body,
+    },
+    metadata: {
+      fontSize: s.sm ?? 14,
+      fontWeight: fontWeight.normal,
+      lineHeight: textLineHeight(s.sm ?? 14, 1.3),
+      letterSpacing: letterSpacing.normal,
       fontFamily: resolvedFontFamily.body,
     },
     mono: {
       fontSize: s.sm ?? 14,
       fontWeight: fontWeight.normal,
-      lineHeight: Math.round((s.sm ?? 14) * 1.6),
+      lineHeight: textLineHeight(s.sm ?? 14, 1.6),
       letterSpacing: letterSpacing.normal,
       fontFamily: resolvedFontFamily.mono,
     },

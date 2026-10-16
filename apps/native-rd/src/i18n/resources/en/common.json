@@ -11,6 +11,10 @@
     "retry": "Retry",
     "undo": "Undo"
   },
+  "expandableTitle": {
+    "showMore": "Show full title",
+    "showLess": "Show less"
+  },
   "navigation": {
     "tabs": {
       "goals": "Goals",

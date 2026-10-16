@@ -208,11 +208,8 @@ describe("GoalsScreen", () => {
       ]);
 
       renderWithProviders(<GoalsScreen />);
-      // Hero title surfaces inside the "Do this next · <title>" overline.
       expect(
-        screen.getByText(
-          i18n.t("goals:cockpit.doThisNext", { title: "Learn TypeScript" }),
-        ),
+        screen.getByRole("header", { name: "Learn TypeScript" }),
       ).toBeOnTheScreen();
       // The runner-up renders as a keep-warm card.
       expect(screen.getByText("Learn Rust")).toBeOnTheScreen();
@@ -295,9 +292,7 @@ describe("GoalsScreen", () => {
 
       renderWithProviders(<GoalsScreen />);
       expect(
-        screen.getByText(
-          i18n.t("goals:cockpit.doThisNext", { title: "Learn Rust" }),
-        ),
+        screen.getByRole("header", { name: "Learn Rust" }),
       ).toBeOnTheScreen();
       // The demoted default is a keep-warm card; the pinned goal is not.
       expect(screen.getByTestId("keep-warm-goal-1")).toBeOnTheScreen();
@@ -315,9 +310,7 @@ describe("GoalsScreen", () => {
 
       renderWithProviders(<GoalsScreen />);
       expect(
-        screen.getByText(
-          i18n.t("goals:cockpit.doThisNext", { title: "Learn TypeScript" }),
-        ),
+        screen.getByRole("header", { name: "Learn TypeScript" }),
       ).toBeOnTheScreen();
       expect(screen.getByTestId("keep-warm-goal-2")).toBeOnTheScreen();
     });

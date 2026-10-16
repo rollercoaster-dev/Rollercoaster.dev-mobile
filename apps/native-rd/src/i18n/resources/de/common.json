@@ -11,6 +11,10 @@
     "retry": "Erneut versuchen",
     "undo": "Rückgängig"
   },
+  "expandableTitle": {
+    "showMore": "Ganzen Titel anzeigen",
+    "showLess": "Weniger anzeigen"
+  },
   "navigation": {
     "tabs": {
       "goals": "Ziele",

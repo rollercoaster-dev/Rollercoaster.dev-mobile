@@ -11,6 +11,10 @@
     "retry": "[Ŕêţŕý··]",
     "undo": "[Üñđø··]"
   },
+  "expandableTitle": {
+    "showMore": "[Šĥøŵ ƒüĺĺ ţïţĺê······]",
+    "showLess": "[Šĥøŵ ĺêšš····]"
+  },
   "navigation": {
     "tabs": {
       "goals": "[Ğøàĺš··]",
