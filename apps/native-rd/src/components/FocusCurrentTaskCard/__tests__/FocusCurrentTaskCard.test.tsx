@@ -79,7 +79,7 @@ function renderCard(overrides: TestOverrides = {}) {
 
 describe("FocusCurrentTaskCard", () => {
   it.each(["in-progress", "paused", "completed"] as FocusCardStatus[])(
-    "%s bounds a long step title and reveals its full text",
+    "%s bounds a long step title and expands it in place",
     (status) => {
       const title =
         "A detailed step title that would fill the card at large text";
@@ -87,11 +87,19 @@ describe("FocusCurrentTaskCard", () => {
       expect(
         screen.getByTestId("focus-current-task-title").props.numberOfLines,
       ).toBe(2);
-      fireEvent.press(screen.getByTestId("focus-current-task-read-full-title"));
+      fireEvent(
+        screen.getByTestId("focus-current-task-title-measure", {
+          includeHiddenElements: true,
+        }),
+        "textLayout",
+        {
+          nativeEvent: { lines: [{ text: "a" }, { text: "b" }, { text: "c" }] },
+        },
+      );
+      fireEvent.press(screen.getByTestId("focus-current-task-title-toggle"));
       expect(
-        screen.getByTestId("focus-current-task-read-full-title-full-title")
-          .props.children,
-      ).toBe(title);
+        screen.getByTestId("focus-current-task-title").props.numberOfLines,
+      ).toBeUndefined();
     },
   );
 

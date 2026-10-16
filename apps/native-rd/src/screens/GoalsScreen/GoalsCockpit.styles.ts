@@ -32,6 +32,10 @@ export const styles = StyleSheet.create((theme) => ({
     color: theme.colors.textMuted,
     textAlign: "center",
   },
+  heroTitle: {
+    color: theme.surfaceBorder.surfaceCardFg,
+    textAlign: "center",
+  },
   nextStep: {
     color: theme.surfaceBorder.surfaceCardFg,
     textAlign: "center",
@@ -62,8 +66,11 @@ export const styles = StyleSheet.create((theme) => ({
   // collapses its whole subtree into one screen-reader node — a pin nested
   // inside it would be unreachable, so it has to be a sibling.
   keepWarmCell: {
-    width: theme.variant === "lowVision" ? "100%" : "48%",
+    width: "48%",
     position: "relative",
+  },
+  keepWarmCellWide: {
+    width: "100%",
   },
   keepWarmCard: {
     // Full width of the cell above, which is the half-row that makes two fit per

@@ -29,13 +29,13 @@
 
 ## Decisions
 
-| ID  | Decision                                                                                                                                                 | Rationale                                                                                                     |
-| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| D1  | Make the shared typography presets use the resolved line-height preference, while retaining each role's relative hierarchy.                              | All seven themes then receive one consistent behavior without per-screen dyslexia branches.                   |
-| D2  | Apply theme semantic presets (with local color/weight only where needed) to the cited UI text, and eliminate literal sizes below 14pt for required copy. | Native `Text` does not inherit a sibling font; semantic presets carry family, size, and line height together. |
-| D3  | Let the cockpit goal context wrap as readable text and enlarge evidence strip tiles with its exported width kept in sync.                                | Essential identities cannot fit in one tiny/truncated line under OS scaling.                                  |
-| D4  | Keep badges' fixed dark-surface color treatment.                                                                                                         | This issue concerns typography; theme colors/contrast are handled elsewhere.                                  |
-| D5  | Keep long goal, step, badge, and evidence titles as compact ellipsized previews with a visible full-title reader.                                        | Large text cannot let titles consume the screen; the reader preserves access to every word.                   |
+| ID  | Decision                                                                                                                                                 | Rationale                                                                                                                         |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| D1  | Make the shared typography presets use the resolved line-height preference, while retaining each role's relative hierarchy.                              | All seven themes then receive one consistent behavior without per-screen dyslexia branches.                                       |
+| D2  | Apply theme semantic presets (with local color/weight only where needed) to the cited UI text, and eliminate literal sizes below 14pt for required copy. | Native `Text` does not inherit a sibling font; semantic presets carry family, size, and line height together.                     |
+| D3  | Let the cockpit goal context wrap as readable text and enlarge evidence strip tiles with its exported width kept in sync.                                | Essential identities cannot fit in one tiny/truncated line under OS scaling.                                                      |
+| D4  | Keep badges' fixed dark-surface color treatment.                                                                                                         | This issue concerns typography; theme colors/contrast are handled elsewhere.                                                      |
+| D5  | Keep long goal, step, and evidence titles as two-line previews that expand in place only when the text overflows (`ExpandableTitle`).                    | Large text cannot let titles consume the screen; short titles show no extra control, long ones expand without leaving the screen. |
 
 ## Implementation Plan
 

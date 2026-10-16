@@ -111,7 +111,7 @@ describe("EvidenceViewerScreen", () => {
     expect(screen.getByText("1 / 2")).toBeOnTheScreen();
   });
 
-  it("keeps a compact evidence title with a full-title reader", () => {
+  it("keeps a compact evidence title that expands in place", () => {
     const title =
       "A detailed photo of the community archive after several careful revisions";
     mockUseAllEvidenceForGoal.mockReturnValue([
@@ -122,11 +122,17 @@ describe("EvidenceViewerScreen", () => {
     const heading = screen.getByTestId("evidence-viewer-active-title");
     expect(heading.props.children).toBe(title);
     expect(heading.props.numberOfLines).toBe(2);
-    fireEvent.press(screen.getByTestId("evidence-viewer-read-full-title"));
+    fireEvent(
+      screen.getByTestId("evidence-viewer-active-title-measure", {
+        includeHiddenElements: true,
+      }),
+      "textLayout",
+      { nativeEvent: { lines: [{ text: "a" }, { text: "b" }, { text: "c" }] } },
+    );
+    fireEvent.press(screen.getByTestId("evidence-viewer-active-title-toggle"));
     expect(
-      screen.getByTestId("evidence-viewer-read-full-title-full-title").props
-        .children,
-    ).toBe(title);
+      screen.getByTestId("evidence-viewer-active-title").props.numberOfLines,
+    ).toBeUndefined();
   });
 
   it("hides counter and strip when only one item exists", () => {

@@ -11,14 +11,9 @@
     "retry": "Erneut versuchen",
     "undo": "Rückgängig"
   },
-  "fullTitle": {
-    "heading": "Vollständiger Titel",
-    "read": {
-      "title": "Vollständigen Titel lesen",
-      "goal": "Vollständigen Zieltitel lesen",
-      "step": "Vollständigen Schritttitel lesen",
-      "evidence": "Vollständigen Nachweistitel lesen"
-    }
+  "expandableTitle": {
+    "showMore": "Ganzen Titel anzeigen",
+    "showLess": "Weniger anzeigen"
   },
   "navigation": {
     "tabs": {

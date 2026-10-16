@@ -9,7 +9,7 @@ import { ProgressBar } from "../../components/ProgressBar";
 import { Button } from "../../components/Button";
 import { IconButton, type IconButtonTone } from "../../components/IconButton";
 import { Text } from "../../components/Text";
-import { FullTitleButton } from "../../components/FullTitleButton";
+import { ExpandableTitle } from "../../components/ExpandableTitle";
 import { styles } from "./GoalsCockpit.styles";
 
 export interface CockpitHeroGoal {
@@ -123,6 +123,9 @@ export function GoalsCockpit({
   const { t } = useTranslation(["goals", "common"]);
   const { theme } = useUnistyles();
   const { fontScale } = useWindowDimensions();
+  // One column for keep-warm tiles whenever type is large, whether that comes
+  // from the Low Vision theme or from the OS text-size setting.
+  const isLargeType = theme.variant === "lowVision" || fontScale >= 1.3;
 
   if (!hero) {
     return (
@@ -198,29 +201,26 @@ export function GoalsCockpit({
           centerSublabel={ringSublabel}
         />
         <Text variant="metadata" style={styles.overline} numberOfLines={1}>
-          {t("goals:cockpit.doThisNext", { title: hero.title })}
+          {t("goals:cockpit.doThisNext")}
         </Text>
-        <FullTitleButton
+        {/* The goal's identity gets its own readable line (#684) rather than
+            riding inside the metadata overline. */}
+        <ExpandableTitle
           title={hero.title}
-          kind="goal"
-          testID="goals-hero-read-full-title"
+          variant="title"
+          style={styles.heroTitle}
+          align="center"
+          testID="goals-cockpit-hero-title"
         />
         {hero.nextStepTitle ? (
-          <>
-            <Text
-              variant="headline"
-              style={styles.nextStep}
-              numberOfLines={2}
-              testID="goals-cockpit-next-step"
-            >
-              {hero.nextStepTitle}
-            </Text>
-            <FullTitleButton
-              title={hero.nextStepTitle}
-              kind="step"
-              testID="goals-hero-read-full-step-title"
-            />
-          </>
+          <ExpandableTitle
+            title={hero.nextStepTitle}
+            variant="headline"
+            style={styles.nextStep}
+            align="center"
+            accessibilityRole="text"
+            testID="goals-cockpit-next-step"
+          />
         ) : null}
         {/* S3 coherence: single resume affordance — see #381. No FAB or header
             button duplicates this control anywhere on the Goals screen. */}
@@ -260,7 +260,7 @@ export function GoalsCockpit({
                 testID={`keep-warm-cell-${goal.id}`}
                 style={[
                   styles.keepWarmCell,
-                  fontScale >= 1.3 && { width: "100%" },
+                  isLargeType && styles.keepWarmCellWide,
                 ]}
               >
                 <Pressable
@@ -299,18 +299,6 @@ export function GoalsCockpit({
                   ) : null}
                   <ProgressBar progress={goal.progress} />
                 </Pressable>
-                <FullTitleButton
-                  title={goal.title}
-                  kind="goal"
-                  testID={`keep-warm-read-full-title-${goal.id}`}
-                />
-                {goal.nextStepTitle ? (
-                  <FullTitleButton
-                    title={goal.nextStepTitle}
-                    kind="step"
-                    testID={`keep-warm-read-full-step-title-${goal.id}`}
-                  />
-                ) : null}
                 {/* Outside the Pressable above, which is `accessible` and so
                     collapses its subtree into a single screen-reader node — a
                     nested pin would be announced-and-activated as part of the

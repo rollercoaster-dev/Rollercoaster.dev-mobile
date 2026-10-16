@@ -109,10 +109,11 @@ describe("essential text follows typography preferences", () => {
         onUnpinGoal={jest.fn()}
       />,
     );
-    const context = screen.getByText(/Learn accessible interface design/);
-    expect(context.props.numberOfLines).toBe(1);
+    // The goal identity is its own two-line header, not an overline suffix.
+    const heroTitle = screen.getByRole("header", { name: title });
+    expect(heroTitle.props.numberOfLines).toBe(2);
     expect(
-      StyleSheet.flatten(context.props.style).fontSize,
+      StyleSheet.flatten(cockpitStyles.overline).fontSize,
     ).toBeGreaterThanOrEqual(mockTheme.size.sm);
     expect(
       StyleSheet.flatten(cockpitStyles.sectionLabel).fontSize,

@@ -67,7 +67,7 @@ import { Logger } from "../../shims/rd-logger";
 import { reportError, breadcrumb } from "../../services/sentry-report";
 import { runEvoluMutation } from "../../utils/evoluMutation";
 import { styles } from "./FocusModeScreen.styles";
-import { FullTitleButton } from "../../components/FullTitleButton";
+import { ExpandableTitle } from "../../components/ExpandableTitle";
 
 const logger = new Logger("FocusModeScreen");
 
@@ -572,15 +572,12 @@ function FocusContent({
   return (
     <View style={styles.content}>
       <View style={styles.headerRow}>
-        <Text
+        <ExpandableTitle
+          title={goal.title ?? ""}
           variant="title"
-          style={styles.title}
-          numberOfLines={2}
-          accessible
-          accessibilityRole="header"
-        >
-          {goal.title}
-        </Text>
+          containerStyle={styles.title}
+          testID="focus-goal-title"
+        />
         <IconButton
           icon={<Pencil size={20} weight="bold" />}
           onPress={handleEditPress}
@@ -589,11 +586,6 @@ function FocusContent({
           size="sm"
         />
       </View>
-      <FullTitleButton
-        title={goal.title ?? ""}
-        kind="goal"
-        testID="focus-read-full-title"
-      />
 
       {/* The one way to see everything: progress + "See all steps ›" in a
           single tap target, replacing the old MiniTimeline/ProgressDots pair. */}

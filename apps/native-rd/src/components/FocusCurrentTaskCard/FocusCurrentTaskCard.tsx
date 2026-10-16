@@ -7,7 +7,7 @@ import {
   validateEvidenceType,
 } from "../../types/evidence";
 import { getMissingQuickEvidenceOptions } from "../StepCard/StepCardEvidenceCapture";
-import { FullTitleButton } from "../FullTitleButton";
+import { ExpandableTitle } from "../ExpandableTitle";
 import { styles } from "./FocusCurrentTaskCard.styles";
 import {
   StateWordPill,
@@ -37,22 +37,12 @@ export type {
 
 function StepTitlePreview({ title }: { title: string }) {
   return (
-    <>
-      <Text
-        style={styles.title}
-        numberOfLines={2}
-        accessible
-        accessibilityRole="header"
-        testID="focus-current-task-title"
-      >
-        {title}
-      </Text>
-      <FullTitleButton
-        title={title}
-        kind="step"
-        testID="focus-current-task-read-full-title"
-      />
-    </>
+    <ExpandableTitle
+      title={title}
+      variant="taskTitle"
+      style={styles.title}
+      testID="focus-current-task-title"
+    />
   );
 }
 

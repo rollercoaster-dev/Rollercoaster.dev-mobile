@@ -17,7 +17,6 @@ import { useTranslation } from "react-i18next";
 import { BadgeRenderer } from "../../badges/BadgeRenderer";
 import type { BadgeDesign } from "../../badges/types";
 import { BadgeWallCell } from "../../components/BadgeWallCell/BadgeWallCell";
-import { FullTitleButton } from "../../components/FullTitleButton";
 import { CELL_SIZE } from "../../components/BadgeWallCell/BadgeWallCell.styles";
 import { useAnimationPref } from "../../hooks/useAnimationPref";
 import { formatDate } from "../../utils/format";
@@ -220,59 +219,51 @@ export function BadgesWall({
         </Text>
       </View>
       {spotlight ? (
-        <>
-          {/* eslint-disable-next-line local/no-shared-component-reimplementation -- tappable content card (the spotlight), not a Button lookalike */}
-          <Pressable
-            onPress={() => onOpenBadge(spotlight.id)}
-            accessible
-            accessibilityRole="button"
-            accessibilityLabel={spotlight.goalTitle}
-            testID="badges-wall-spotlight"
+        // eslint-disable-next-line local/no-shared-component-reimplementation -- tappable content card (the spotlight), not a Button lookalike
+        <Pressable
+          onPress={() => onOpenBadge(spotlight.id)}
+          accessible
+          accessibilityRole="button"
+          accessibilityLabel={spotlight.goalTitle}
+          testID="badges-wall-spotlight"
+          style={[
+            styles.spotlightPressable,
+            isNarrow && styles.spotlightPressableCompact,
+          ]}
+        >
+          <Animated.View
+            style={[styles.glowOverlay, glowStyle]}
+            pointerEvents="none"
+          />
+          <View
             style={[
-              styles.spotlightPressable,
-              isNarrow && styles.spotlightPressableCompact,
+              styles.spotlightCard,
+              isNarrow && styles.spotlightCardCompact,
             ]}
           >
-            <Animated.View
-              style={[styles.glowOverlay, glowStyle]}
-              pointerEvents="none"
+            <SpotlightArt
+              design={spotlight.design}
+              title={spotlight.goalTitle}
+              size={spotlightArtSize}
             />
-            <View
-              style={[
-                styles.spotlightCard,
-                isNarrow && styles.spotlightCardCompact,
-              ]}
-            >
-              <SpotlightArt
-                design={spotlight.design}
-                title={spotlight.goalTitle}
-                size={spotlightArtSize}
-              />
-              <View style={styles.spotlightBody}>
-                <Text style={styles.spotlightOverline}>
-                  {t("badges:wall.justEarned")}
+            <View style={styles.spotlightBody}>
+              <Text style={styles.spotlightOverline}>
+                {t("badges:wall.justEarned")}
+              </Text>
+              <Text style={styles.spotlightTitle} numberOfLines={2}>
+                {spotlight.goalTitle}
+              </Text>
+              {spotlight.earnedAt ? (
+                <Text style={styles.spotlightDate}>
+                  {formatDate(spotlight.earnedAt, i18n.language)}
                 </Text>
-                <Text style={styles.spotlightTitle} numberOfLines={2}>
-                  {spotlight.goalTitle}
-                </Text>
-                {spotlight.earnedAt ? (
-                  <Text style={styles.spotlightDate}>
-                    {formatDate(spotlight.earnedAt, i18n.language)}
-                  </Text>
-                ) : null}
-              </View>
-              {/* Decorative "open" arrow — the whole card is already a button, so
-                it's dropped on narrow surfaces to give the title its width. */}
-              {isNarrow ? null : <Text style={styles.spotlightArrow}>→</Text>}
+              ) : null}
             </View>
-          </Pressable>
-          <FullTitleButton
-            title={spotlight.goalTitle}
-            kind="goal"
-            onDark
-            testID="badges-spotlight-read-full-title"
-          />
-        </>
+            {/* Decorative "open" arrow — the whole card is already a button, so
+                it's dropped on narrow surfaces to give the title its width. */}
+            {isNarrow ? null : <Text style={styles.spotlightArrow}>→</Text>}
+          </View>
+        </Pressable>
       ) : null}
     </View>
   );

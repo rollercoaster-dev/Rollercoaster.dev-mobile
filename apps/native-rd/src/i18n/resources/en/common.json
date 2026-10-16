@@ -11,14 +11,9 @@
     "retry": "Retry",
     "undo": "Undo"
   },
-  "fullTitle": {
-    "heading": "Full title",
-    "read": {
-      "title": "Read full title",
-      "goal": "Read full goal title",
-      "step": "Read full step title",
-      "evidence": "Read full evidence title"
-    }
+  "expandableTitle": {
+    "showMore": "Show full title",
+    "showLess": "Show less"
   },
   "navigation": {
     "tabs": {
