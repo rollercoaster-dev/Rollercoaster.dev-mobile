@@ -6,6 +6,7 @@ import React from "react";
 const useNavigation = jest.fn(() => ({
   navigate: jest.fn(),
   goBack: jest.fn(),
+  dispatch: jest.fn(),
   setOptions: jest.fn(),
   addListener: jest.fn(() => jest.fn()),
   canGoBack: jest.fn(() => true),
@@ -23,6 +24,7 @@ const useFocusEffect = jest.fn((callback: () => void | (() => void)) => {
 });
 
 const useIsFocused = jest.fn(() => true);
+const usePreventRemove = jest.fn();
 
 const NavigationContainer = ({ children }: { children: React.ReactNode }) =>
   children;
@@ -51,6 +53,7 @@ module.exports = {
   useRoute,
   useFocusEffect,
   useIsFocused,
+  usePreventRemove,
   NavigationContainer,
   DefaultTheme,
   CommonActions,

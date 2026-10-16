@@ -35,7 +35,7 @@
   },
   "discardConfirm": {
     "title": "Discard recording?",
-    "message": "This recording will be lost.",
+    "message": "This recording and its note will be lost.",
     "keep": "Keep",
     "discard": "Discard"
   },

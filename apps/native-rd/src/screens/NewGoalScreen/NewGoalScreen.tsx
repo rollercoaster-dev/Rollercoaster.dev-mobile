@@ -9,8 +9,8 @@
  * The whole flow — goal title, first step, and the full build list — is **local
  * React state**. Nothing is written to Evolu until "Start Working" on the ready
  * step, which persists the goal, its steps and their sub-steps in one batch
- * (D2). Closing with × writes nothing, so an abandoned wizard can never leave an
- * orphan goal behind.
+ * (D2). Leaving an unfinished wizard requires an explicit discard decision;
+ * the confirmation does not persist an orphan goal.
  */
 import React, { useState } from "react";
 import { Alert, View } from "react-native";
@@ -25,10 +25,12 @@ import {
   createGoal,
   createStep,
   createSubStep,
+  EvidenceType,
   type GoalId,
   type StepId,
 } from "../../db";
 import { reportError } from "../../services/sentry-report";
+import { useUnsavedExitGuard } from "../../hooks/useUnsavedExitGuard";
 import type { GoalsStackParamList } from "../../navigation/types";
 import { newGoalWizardCopy } from "./newGoalWizardCopy";
 import { useNewGoalSteps } from "./useNewGoalSteps";
@@ -62,10 +64,30 @@ export function NewGoalScreen() {
   const [stack, setStack] = useState<NewGoalWizardStep[]>(["name"]);
   const currentStep = stack[stack.length - 1];
   const [goalTitle, setGoalTitle] = useState("");
+  const [addStepDraft, setAddStepDraft] = useState("");
   const [evidencePickerOpen, setEvidencePickerOpen] = useState(false);
   const { steps, stepProps } = useNewGoalSteps();
+  const { requestExit, exitAfterSave } = useUnsavedExitGuard({
+    isDirty:
+      goalTitle.length > 0 ||
+      addStepDraft.length > 0 ||
+      steps.length > 0 ||
+      stepProps.plannedEvidenceType !== EvidenceType.text,
+    copy: {
+      title: t("common:unsavedChanges.title"),
+      message: t("common:unsavedChanges.message"),
+      keep: t("common:unsavedChanges.keep"),
+      discard: t("common:unsavedChanges.discard"),
+    },
+  });
 
   function handleNext() {
+    // "I'm ready" commits any step still in the add row. Otherwise the ready
+    // summary and Start Working would silently omit text the user just typed.
+    if (currentStep === "build" && addStepDraft.trim()) {
+      stepProps.onAddStep?.(addStepDraft.trim());
+      setAddStepDraft("");
+    }
     setStack((prev) => {
       const next = NEXT_STEP[prev[prev.length - 1]];
       return next ? [...prev, next] : prev;
@@ -79,11 +101,6 @@ export function NewGoalScreen() {
 
   function handleBack() {
     setStack((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev));
-  }
-
-  /** × close — nothing persisted, so nothing to confirm or roll back (D2). */
-  function handleClose() {
-    navigation.goBack();
   }
 
   function reportCreateFailure(error: unknown) {
@@ -155,7 +172,7 @@ export function NewGoalScreen() {
 
       // replace, not navigate: back from Focus Mode returns to the Goals list,
       // never into a stale wizard whose goal already exists (D7).
-      navigation.replace("FocusMode", { goalId });
+      exitAfterSave(() => navigation.replace("FocusMode", { goalId }));
     } catch (error) {
       reportCreateFailure(error);
     }
@@ -167,9 +184,11 @@ export function NewGoalScreen() {
         currentStep={currentStep}
         goalTitle={goalTitle}
         onGoalTitleChange={setGoalTitle}
+        addStepDraft={addStepDraft}
+        onAddStepDraftChange={setAddStepDraft}
         stepCount={steps.length}
         onBack={handleBack}
-        onClose={handleClose}
+        onClose={requestExit}
         onNext={handleNext}
         onQuickAdd={handleQuickAdd}
         onStartWorking={handleStartWorking}
