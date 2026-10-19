@@ -107,3 +107,6 @@ apps/native-rd/e2e/.android/
 # Python automation bytecode
 __pycache__/
 *.pyc
+
+# Claude Code agent worktrees (Agent tool isolation: "worktree")
+.claude/worktrees/
