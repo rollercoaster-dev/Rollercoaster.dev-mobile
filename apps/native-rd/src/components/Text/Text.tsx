@@ -1,6 +1,8 @@
 import React from "react";
 import { Text as RNText, type TextProps as RNTextProps } from "react-native";
 import { textStylesheet } from "./Text.styles";
+import { useTypeScale } from "../../hooks/useTypeScale";
+import { capFor } from "../../utils/typeScale";
 
 export type TextVariant =
   | "display"
@@ -13,19 +15,30 @@ export type TextVariant =
 
 export interface TextProps extends RNTextProps {
   variant?: TextVariant;
+  /** Chrome text (tab labels, pills, counters, overlines) stops growing at 1.3x. */
+  chrome?: boolean;
   children: React.ReactNode;
 }
 
 export function Text({
   variant = "body",
+  chrome = false,
   style,
   children,
+  maxFontSizeMultiplier,
   ...rest
 }: TextProps) {
   textStylesheet.useVariants({ variant });
+  const { themeScale } = useTypeScale();
 
   return (
-    <RNText style={[textStylesheet.text, style]} {...rest}>
+    <RNText
+      style={[textStylesheet.text, style]}
+      maxFontSizeMultiplier={
+        maxFontSizeMultiplier ?? capFor(variant, chrome, themeScale)
+      }
+      {...rest}
+    >
       {children}
     </RNText>
   );

@@ -70,4 +70,26 @@ describe("Input", () => {
       },
     );
   });
+
+  describe("maxFontSizeMultiplier", () => {
+    it("caps the field at body, the label at label and the error at caption", () => {
+      renderWithProviders(
+        <Input label="Name" placeholder="Your name" error="Required" />,
+      );
+      expect(
+        screen.getByPlaceholderText("Your name").props.maxFontSizeMultiplier,
+      ).toBe(2);
+      expect(screen.getByText("Name").props.maxFontSizeMultiplier).toBe(2);
+      expect(screen.getByText("Required").props.maxFontSizeMultiplier).toBe(2);
+    });
+
+    it("lets an explicit caller value win on the field", () => {
+      renderWithProviders(
+        <Input placeholder="Code" maxFontSizeMultiplier={1.2} />,
+      );
+      expect(
+        screen.getByPlaceholderText("Code").props.maxFontSizeMultiplier,
+      ).toBe(1.2);
+    });
+  });
 });
