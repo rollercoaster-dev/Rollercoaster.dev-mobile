@@ -40,6 +40,13 @@ updates:
       # Revisit when prettier 3.10 (or a fixed 3.9.x) lands.
       - dependency-name: "prettier"
         versions: ["3.9.x"]
+      # react-native-unistyles is vendored-patched (patches/react-native-unistyles@3.3.0.patch,
+      # the shadow-tree double-free fix from #588). Bun keys patches by exact
+      # name@version, so any bump silently drops the patch and `check:patches`
+      # fails (#732: "Patched dependency check failed."). Lift this once the patch
+      # is re-applied against the new version (#738).
+      - dependency-name: "react-native-unistyles"
+        versions: ["> 3.3.0"]
       # React Native ecosystem: must be bumped in coordination with the Expo SDK,
       # not piecemeal by Dependabot. Expo's jest preset asserts exact-match peers
       # (react / react-test-renderer) and the RN install layout changes between
