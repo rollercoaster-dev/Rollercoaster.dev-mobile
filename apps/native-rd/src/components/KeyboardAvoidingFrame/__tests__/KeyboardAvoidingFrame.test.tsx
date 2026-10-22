@@ -1,5 +1,6 @@
 import React from "react";
-import { View } from "react-native";
+import * as ReactNative from "react-native";
+import { Platform, View } from "react-native";
 import { act, render, screen } from "@testing-library/react-native";
 import { KeyboardControllerNative } from "react-native-keyboard-controller";
 import { KeyboardAvoidingFrame } from "../KeyboardAvoidingFrame";
@@ -52,5 +53,35 @@ describe("KeyboardAvoidingFrame", () => {
     });
     expect(measureInWindow).toHaveBeenCalledTimes(1);
     expect(screen.getByTestId("frame").props.keyboardVerticalOffset).toBe(40);
+  });
+
+  describe("on web (Storybook reference previews)", () => {
+    const nativeOS = Platform.OS;
+    beforeEach(() => {
+      viewPositionInWindow.mockClear();
+      Platform.OS = "web";
+    });
+    afterEach(() => {
+      Platform.OS = nativeOS;
+    });
+
+    it("lays out without findNodeHandle, which react-native-web throws from", () => {
+      const findNodeHandle = jest
+        .spyOn(ReactNative, "findNodeHandle")
+        .mockImplementation(() => {
+          throw new Error("findNodeHandle is not supported on web.");
+        });
+      const onLayout = jest.fn();
+      render(<KeyboardAvoidingFrame testID="frame" onLayout={onLayout} />);
+      expect(() =>
+        screen.getByTestId("frame").props.onLayout({
+          nativeEvent: { layout: { x: 0, y: 78, width: 402, height: 668 } },
+        }),
+      ).not.toThrow();
+      expect(onLayout).toHaveBeenCalledTimes(1);
+      expect(viewPositionInWindow).not.toHaveBeenCalled();
+      expect(screen.getByTestId("frame").props.keyboardVerticalOffset).toBe(0);
+      findNodeHandle.mockRestore();
+    });
   });
 });
