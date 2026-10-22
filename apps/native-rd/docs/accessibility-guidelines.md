@@ -78,7 +78,7 @@ const styles = {
 
 All changes to design tokens (in `@rollercoaster-dev/design-tokens`) must be verified for WCAG compliance:
 
-1. Test the color change across all 12 theme variants
+1. Test the color change across all seven product themes ([ND Themes](./design/nd-themes.md#testing-matrix))
 2. Verify contrast ratios for all affected UI elements
 3. Document the contrast ratios in the PR description
 4. Update automated tests if needed
@@ -93,8 +93,8 @@ All interactive elements must meet minimum touch target sizes:
 // Button already enforces 48px minimum
 <Button size="sm" /> {/* Minimum 48px height */}
 
-// IconButton already enforces 48x48
-<IconButton size="sm" /> {/* Minimum 48x48 */}
+// IconButton: 36 / 44 / 52pt; sm adds hitSlop so the target reaches 44pt
+<IconButton size="sm" /> {/* 36pt visual, 44pt touch target */}
 
 // Custom pressables
 <Pressable
@@ -342,34 +342,36 @@ Future work: Integrate `@testing-library/react-native` with `jest-native` for au
 
 ## Theme Considerations
 
-The app supports 14 theme variants (2 color modes × 7 accessibility variants):
+The app ships seven product themes. [ND Themes](./design/nd-themes.md) is the inventory (ids, names, fonts, scales, elevation); [Design Language](./design/design-language.md) is the component contract.
 
 ### Theme Variants
 
-1. **Default** - Standard light/dark modes
-2. **High Contrast** - WCAG AAA compliance (7:1 for normal text, 4.5:1 for large text)
-3. **Large Text** - Increased font sizes for better readability
-4. **Dyslexia Friendly** - Optimized font and spacing
-5. **Low Vision** - Maximum contrast and clarity
-6. **Autism Friendly** - Muted/desaturated colors, no shadows, calming palette
-7. **Low Info** - Stripped-back UI, minimal decorative elements, text-first
+1. **The Full Ride** (`light-default`) - Standard theme
+2. **Night Ride** (`dark-default`) - Dark mode; a peer theme, not a mode applied to the others
+3. **Bold Ink** (`light-highContrast`) - WCAG AAA compliance (7:1 for normal text, 4.5:1 for large text), no shadows
+4. **Warm Studio** (`light-dyslexia`) - Lexend font, cream background, relaxed line height
+5. **Still Water** (`light-autismFriendly`) - Muted/desaturated colors, no shadows, calming palette
+6. **Loud & Clear** (`light-lowVision`) - Maximum contrast, Atkinson Hyperlegible, 1.25× text, no shadows
+7. **Clean Signal** (`light-lowInfo`) - Stripped-back UI, minimal decorative elements, text-first
+
+Three themes render no shadows, so borders — never shadows alone — must define every edge.
 
 ### Testing Across Themes
 
-When making UI changes, verify across all variants:
+When making UI changes, verify across all seven themes. In Storybook web, pick each from the toolbar. In the app, switch in Settings, or in code:
 
 ```typescript
-// Switch theme in app
-import { useTheme } from "../hooks/useTheme";
+import { useThemeContext } from "../hooks/useTheme";
 
-const { setTheme } = useTheme();
+const { setTheme } = useThemeContext();
 
-// Test each variant
-setTheme("default-light");
-setTheme("default-dark");
-setTheme("highContrast-light");
-setTheme("highContrast-dark");
-// ... test remaining variants
+setTheme("light-default");
+setTheme("dark-default");
+setTheme("light-highContrast");
+setTheme("light-dyslexia");
+setTheme("light-autismFriendly");
+setTheme("light-lowVision");
+setTheme("light-lowInfo");
 ```
 
 ### Color Token Changes
@@ -377,8 +379,8 @@ setTheme("highContrast-dark");
 When modifying design tokens:
 
 1. Update `@rollercoaster-dev/design-tokens` package
-2. Rebuild tokens: `cd monorepo/packages/design-tokens && bun run build`
-3. Test all 12 theme variants
+2. Rebuild tokens: `bun run build` in `packages/design-tokens/`
+3. Test all seven product themes
 4. Verify contrast ratios using the accessibility utility
 5. Document changes in CHANGELOG and PR description
 

@@ -82,7 +82,7 @@
 │       │                                                             │
 │       └──► compose.ts       `ComposedTheme` interface +             │
 │                             `composeTheme(mode, variant)`           │
-│                             Cartesian product → 14 themes           │
+│                             7 product themes (productThemeEntries)  │
 │                             Inline TextStyles preset construction   │
 │                                                                     │
 │  index.ts                   barrel                                  │

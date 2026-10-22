@@ -23,7 +23,7 @@ What's here:
 - Attach evidence — photo, video, voice memo, note, link, or file.
 - Design your own badge when a goal is done.
 - Task view: one next step per goal, always one screen away.
-- 7 themes in light or dark — high-contrast, dyslexia, large text, low-vision, autism-friendly, low-info, standard.
+- 7 themes — standard, dark, high-contrast, dyslexia-friendly, autism-friendly, low-vision, low-info.
 - Works offline. Nothing leaves your phone.
 
 Tell me what crashes, what feels wrong, and what's missing.
@@ -122,7 +122,7 @@ WHAT WORKS TODAY
 - Six ways to attach evidence — photo, video, voice memo, note, link, file.
 - Task view — one next step per goal.
 - Designed for non-linear paths. Pause for weeks if you need to. Your work is still there.
-- 7 themes in light or dark: standard, high-contrast, dyslexia-friendly, large text, low-vision, autism-friendly, low-info.
+- 7 themes: standard, dark, high-contrast, dyslexia-friendly, autism-friendly, low-vision, low-info.
 - Badge designer with shape, colour, icon, frame generators, and curved text.
 - Earned-badge view with all your evidence in order.
 - Works fully offline.

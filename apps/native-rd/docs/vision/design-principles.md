@@ -10,7 +10,7 @@
 
 The native app inherits from three sources:
 
-- **The monorepo's design language** — typography (Anybody, system-ui, DM Mono, OpenDyslexic), color system (landing page accents as highlights, not backgrounds), the "character without chaos" philosophy
+- **The monorepo's design language** — typography (originally Anybody, system-ui, DM Mono, OpenDyslexic; the app now ships Anybody headlines and Instrument Sans body, with Lexend and Atkinson Hyperlegible for the dyslexia and low-vision themes — see [Design Language](../design/design-language.md#fonts)), color system (landing page accents as highlights, not backgrounds), the "character without chaos" philosophy
 - **The monorepo's accessibility system** — 7 ND themes, content density, reduced motion, focus management, WCAG AA minimum
 - **New constraints from mobile** — touch targets, one-handed use, interruption-friendly (you'll use this app in 30-second bursts on a bus, not hour-long sessions at a desk)
 
@@ -52,7 +52,7 @@ These aren't guidelines — they're rules. Breaking them requires explicit justi
 
 ### For Dyslexia
 
-- OpenDyslexic font available as a prominent toggle, not buried in settings
+- Warm Studio (Lexend, cream background, relaxed line height) is offered in onboarding and Settings, not buried
 - Minimum 16px body text, 14px only for non-essential metadata
 - Spacing is adjustable (letter-spacing, line-height, word-spacing)
 - Voice memo is a first-class evidence type — communicate however works best for you
@@ -82,10 +82,10 @@ The monorepo's [design language](https://github.com/rollercoaster-dev/monorepo/b
 | Use                   | Font                  | Why                                                         |
 | --------------------- | --------------------- | ----------------------------------------------------------- |
 | **Headlines**         | Anybody               | Character, from landing page DNA. Bundled with the app.     |
-| **Body**              | System font stack     | Familiar, fast, respects OS accessibility settings          |
+| **Body**              | Instrument Sans       | Calm, readable, bundled with the app                        |
 | **Mono**              | DM Mono               | Personality in technical contexts (badge metadata, details) |
-| **Dyslexia option**   | OpenDyslexic          | User-selectable accessibility                               |
-| **Low vision option** | Atkinson Hyperlegible | Designed for legibility at any size                         |
+| **Dyslexia option**   | Lexend                | Warm Studio theme; body and headlines                       |
+| **Low vision option** | Atkinson Hyperlegible | Loud & Clear theme; designed for legibility at any size     |
 
 ### Color
 
@@ -119,15 +119,17 @@ Borrowed from the landing page's voice:
 
 Every theme ships from day one. These aren't progressive enhancements — they're core.
 
-| Theme                 | Who it serves                             | Key characteristics                                                      |
-| --------------------- | ----------------------------------------- | ------------------------------------------------------------------------ |
-| **Light** (default)   | General use                               | Clean, calm, landing page accents as highlights                          |
-| **Dark**              | Low light, preference, reduced eye strain | Dark backgrounds, maintained contrast ratios                             |
-| **High Contrast**     | Low vision                                | WCAG AAA contrast, 2px borders, strong focus indicators                  |
-| **Large Text**        | Reading difficulty, low vision            | Larger base font, relaxed line heights, increased spacing                |
-| **Dyslexia-Friendly** | Dyslexia                                  | OpenDyslexic font, cream background (#f8f5e4), extra letter/word spacing |
-| **Low Vision**        | Severe visual impairment                  | Atkinson Hyperlegible font, high contrast, large touch targets           |
-| **Autism-Friendly**   | Sensory sensitivities                     | Muted colors, no shadows, no animations, predictable borders             |
+| Theme                         | Who it serves                             | Key characteristics                                 |
+| ----------------------------- | ----------------------------------------- | --------------------------------------------------- |
+| **The Full Ride** (default)   | General use                               | Clean, calm, landing page accents as highlights     |
+| **Night Ride** (dark)         | Low light, preference, reduced eye strain | Dark backgrounds, maintained contrast ratios        |
+| **Bold Ink** (high contrast)  | Low vision                                | WCAG AAA contrast, strong borders, no shadows       |
+| **Warm Studio** (dyslexia)    | Dyslexia                                  | Lexend font, cream background, relaxed line height  |
+| **Loud & Clear** (low vision) | Severe visual impairment                  | Atkinson Hyperlegible, maximum contrast, 1.25× text |
+| **Still Water** (autism)      | Sensory sensitivities                     | Muted colors, no shadows, predictable borders       |
+| **Clean Signal** (low info)   | Cognitive load, focus                     | Reduced visual noise, minimal color variation       |
+
+The current inventory — ids, fonts, scales, elevation — is [ND Themes](../design/nd-themes.md).
 
 ### Rules for Themes
 

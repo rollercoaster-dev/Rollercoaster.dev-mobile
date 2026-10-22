@@ -19,7 +19,7 @@ The 14-theme × 6-a11y-variant matrix and everything that serves it.
 - `src/screens/SettingsScreen/**` — the user-facing control surface for theme variant, density, animation preference, language, and Sentry debug tools
 - `src/__tests__/accessibility.test.tsx`, `src/themes/__tests__/contrast.test.ts`
 - Font stack: Anybody, Instrument Sans, DM Mono, Lexend, Atkinson Hyperlegible
-- ND variants: highContrast, largeText, dyslexia, lowVision, autismFriendly, lowInfo
+- Product themes (7): default, dark-default, highContrast, dyslexia, autismFriendly, lowVision, lowInfo — `largeText` composes for tests only (see `docs/design/nd-themes.md`)
 
 **Lens emphasis:** a11y/ND-a11y is the load-bearing lens here — expect this chapter to be heavier on that section.
 

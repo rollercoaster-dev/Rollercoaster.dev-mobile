@@ -1,29 +1,14 @@
-# Design Language: React Native Reference
+# Design Language: the Component Contract
 
-**Status:** Current
-**Source of Truth:** `@rollercoaster-dev/design-tokens` v0.1.1 → `src/themes/adapter.ts`
-
----
-
-## Purpose
-
-Documents how the shared rollercoaster.dev design language maps to React Native via the Unistyles theme system. All values are from generated code — if a value here doesn't match `build/unistyles/`, update this doc.
+**Status:** Current — the one component contract. Values below are what the app composes at runtime; when code and this doc disagree, fix whichever is wrong in the same PR.
+**Source of truth:** `@rollercoaster-dev/design-tokens` → `src/themes/adapter.ts` (single import boundary) → `src/themes/compose.ts` (`ComposedTheme`), plus the shared components named below.
+**Theme inventory:** [ND Themes](./nd-themes.md) — the seven product themes, their fonts, scales and elevation.
 
 ---
 
-## Platform Differences
+## Visual language in one paragraph
 
-| Web (monorepo)           | React Native (native-rd)                      | Adaptation                                   |
-| ------------------------ | --------------------------------------------- | -------------------------------------------- |
-| CSS custom properties    | Unistyles theme objects                       | `@rollercoaster-dev/design-tokens/unistyles` |
-| `rem` units              | Density-independent pixels (dp)               | `build-unistyles.js` converts                |
-| `@media` queries         | Unistyles breakpoints                         | `StyleSheet.configure`                       |
-| `prefers-reduced-motion` | `AccessibilityInfo`                           | Accessibility hook                           |
-| `:focus-visible`         | `onFocus`/`onBlur` + state                    | Manual focus ring                            |
-| `@font-face`             | `expo-font` + `useFonts`                      | Loaded at app start                          |
-| `box-shadow`             | `shadow*` props (iOS) / `elevation` (Android) | Per-theme opacity                            |
-| `prefers-color-scheme`   | `useColorScheme()`                            | System theme detection                       |
-| Theme CSS classes        | `useStyles()` from Unistyles                  | `StyleSheet.configure({ themes })`           |
+Neo-brutalist, calm by default: flat surfaces, a bold 3pt outline, small 2pt corners, and hard offset shadows that themes may turn off. Accessibility themes change _how_ the contract renders (fonts, scale, shadows, color roles), never _which_ components exist. Styles come from `StyleSheet.create((theme) => …)` (react-native-unistyles v3, ADR-0002) and read theme roles, never hex values.
 
 ---
 
@@ -31,357 +16,208 @@ Documents how the shared rollercoaster.dev design language maps to React Native 
 
 ### Fonts
 
-| Role               | Font                     | Use                           |
-| ------------------ | ------------------------ | ----------------------------- |
-| Headlines          | Anybody                  | Display/headline text         |
-| Body               | Instrument Sans / system | Primary body text             |
-| Code               | DM Mono                  | Code blocks, monospace        |
-| Dyslexia variant   | Lexend                   | Body text in dyslexia theme   |
-| Low vision variant | Atkinson Hyperlegible    | Body text in low vision theme |
+| Role     | Default theme   | Warm Studio (`light-dyslexia`) | Loud & Clear (`light-lowVision`) | Token                       |
+| -------- | --------------- | ------------------------------ | -------------------------------- | --------------------------- |
+| Headline | Anybody         | Lexend                         | Atkinson Hyperlegible            | `theme.fontFamily.headline` |
+| Body     | Instrument Sans | Lexend                         | Atkinson Hyperlegible            | `theme.fontFamily.body`     |
+| Mono     | DM Mono         | DM Mono                        | DM Mono                          | `theme.fontFamily.mono`     |
 
-### Size Scale
+Fonts are bundled as native resources by the `expo-font` config plugin (`app.json` → `fonts`); `useFonts()` only reports ready. Storybook web loads the same families with `@font-face` from `public/fonts/` (`.storybook-web/preview.tsx`). OpenDyslexic is bundled but no product theme selects it.
 
-From `build/unistyles/tokens.ts` — values in dp:
+**Rule:** every text style sets `fontFamily` from the theme. React Native does not inherit a font through a `View`, so a label without `fontFamily` renders in the system font even when its heading uses Lexend. Prefer `<Text variant="…">` (`src/components/Text`), which applies a full preset.
 
-| Token     | dp  | Use                                           |
-| --------- | --- | --------------------------------------------- |
-| `2xs`     | 10  | Decorative metadata only (below 12dp minimum) |
-| `xs`      | 12  | Captions, timestamps                          |
-| `sm`      | 14  | Secondary text, hints                         |
-| `md`      | 16  | Body text (default)                           |
-| `lg`      | 18  | Emphasized body                               |
-| `xl`      | 20  | Card titles                                   |
-| `2xl`     | 24  | Section headers                               |
-| `3xl`     | 32  | Page titles                                   |
-| `4xl`     | 40  | Display                                       |
-| `5xl`     | 48  | Display                                       |
-| `6xl`     | 60  | Display                                       |
-| `7xl`     | 72  | Display                                       |
-| `display` | 96  | Hero sections                                 |
+### Presets (`theme.textStyles`, used by `<Text variant>`)
 
-### Large Text Scale (`sizeL`)
+| Variant    | Size token | Default size | Weight   | Line height | Letter spacing | Family   |
+| ---------- | ---------- | ------------ | -------- | ----------- | -------------- | -------- |
+| `display`  | `4xl`      | 40           | black    | × 1.05      | `tight`        | headline |
+| `headline` | `2xl`      | 24           | bold     | × 1.3       | `tight`        | headline |
+| `title`    | `lg`       | 18           | semibold | × 1.3       | `normal`       | body     |
+| `body`     | `md`       | 16           | normal   | × 1.6       | `normal`       | body     |
+| `caption`  | `xs`       | 12           | normal   | × 1.6       | `label`        | body     |
+| `label`    | `sm`       | 14           | medium   | × 1.3       | `wide`         | body     |
+| `mono`     | `sm`       | 14           | normal   | × 1.6       | `normal`       | mono     |
 
-1.25x multiplied scale for `largeText` and `lowVision` variants:
+Sizes follow the theme's size scale, so Loud & Clear's `body` is 20. Line heights are the multipliers above applied to that size. The presets do **not** yet pick up Warm Studio's relaxed line heights — see [Known gaps](#known-gaps).
 
-| Token     | dp   |
-| --------- | ---- |
-| `xs`      | 15   |
-| `sm`      | 17.5 |
-| `md`      | 20   |
-| `lg`      | 22.5 |
-| `xl`      | 25   |
-| `2xl`     | 30   |
-| `3xl`     | 40   |
-| `4xl`     | 50   |
-| `5xl`     | 60   |
-| `6xl`     | 75   |
-| `7xl`     | 90   |
-| `display` | 120  |
+Body copy is 16 (`md`); metadata is 14 (`sm`); 12 (`xs`) is the floor for anything a person needs to read. `2xs` (10) is decorative only.
 
-### Line Height Multipliers
+### Size scale (`theme.size`)
 
-From `build/unistyles/tokens.ts`:
+| Token     | `size` | `sizeL` (Loud & Clear) |
+| --------- | ------ | ---------------------- |
+| `2xs`     | 10     | —                      |
+| `xs`      | 12     | 15                     |
+| `sm`      | 14     | 17.5                   |
+| `md`      | 16     | 20                     |
+| `lg`      | 18     | 22.5                   |
+| `xl`      | 20     | 25                     |
+| `2xl`     | 24     | 30                     |
+| `3xl`     | 32     | 40                     |
+| `4xl`     | 40     | 50                     |
+| `5xl`     | 48     | 60                     |
+| `6xl`     | 60     | 75                     |
+| `7xl`     | 72     | 90                     |
+| `display` | 96     | 120                    |
 
-| Token     | Multiplier | Use                                |
-| --------- | ---------- | ---------------------------------- |
-| `tight`   | 1.05       | Single-line display headlines only |
-| `compact` | 1.3        | Compact metadata                   |
-| `normal`  | 1.6        | Body text                          |
-| `relaxed` | 1.8        | Comfortable reading                |
+### Line heights (`theme.lineHeight`)
 
-### Large Line Height Multipliers (`lineHeightL`)
+Absolute values keyed by size token (`xs`–`3xl`), because React Native needs points, not multipliers:
 
-Used by `dyslexia` and `lowVision` variants:
+- `lineHeight` (default): `size[key] × 1.6` — `md` → 26.
+- `lineHeightL` (Warm Studio): `sizeL[key] × 1.9` — `md` → 38.
 
-| Token     | Multiplier |
-| --------- | ---------- |
-| `tight`   | 1.2        |
-| `normal`  | 1.7        |
-| `relaxed` | 1.9        |
+### Weights and letter spacing
 
-The adapter computes absolute px line heights for React Native by multiplying size × multiplier.
+`theme.fontWeight`: `normal` 400 · `medium` 500 · `semibold` 600 · `bold` 700 · `black` 900.
 
-### Font Weights
-
-| Token      | Value   |
-| ---------- | ------- |
-| `normal`   | `'400'` |
-| `medium`   | `'500'` |
-| `semibold` | `'600'` |
-| `bold`     | `'700'` |
-| `black`    | `'900'` |
-
-### Letter Spacing
-
-From `src/tokens/typography.json`:
-
-| Token    | Value   | Use                           |
-| -------- | ------- | ----------------------------- |
-| `tight`  | -0.03em | Headlines, display text       |
-| `normal` | 0       | Body text                     |
-| `label`  | 0.05em  | Uppercase label tracking      |
-| `wide`   | 0.1em   | Spaced text                   |
-| `caps`   | 0.15em  | Uppercase labels and captions |
+`theme.letterSpacing` (points): `tight` −0.48 · `normal` 0 · `label` 0.8 · `wide` 1.6 · `caps` 2.4.
 
 ---
 
-## Color System
+## Color roles
 
-### `Colors` Interface
+Hex values live in the token sources and the _Design System / Colors_ story, not here (see [ND Themes → Colors](./nd-themes.md#colors)). Components read roles:
 
-13 semantic color properties per theme (from `build/unistyles/colorModes.ts`):
+| Group                 | What it colors                                                                                                                                                                                                  |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `theme.colors`        | Base surfaces, text, borders, accents, focus ring, feedback (success/warning…)                                                                                                                                  |
+| `theme.chrome`        | Screen header band, brand mark, navigation chrome                                                                                                                                                               |
+| `theme.action`        | Action fills and foregrounds: primary, secondary, destructive, disabled, selection — read by e.g. `IconButton`, `ProgressRing` and Focus actions; `Button` still reads `colors` (see [Known gaps](#known-gaps)) |
+| `theme.surfaceBorder` | Card, sheet and input border hierarchy                                                                                                                                                                          |
+| `theme.journey`       | Timeline nodes, step states, progress, goal completion                                                                                                                                                          |
+| `theme.evidence`      | Per-evidence-type proof-card tints                                                                                                                                                                              |
+| `theme.narrative`     | Climb / drop / stories / relief section colors for celebratory surfaces                                                                                                                                         |
+
+---
+
+## Elevation
+
+Use the semantic roles through `shadowStyle(theme, role)` (`src/styles/shadows.ts`); never write `shadow*` props by hand.
+
+| Role                 | Use                        | Built from |
+| -------------------- | -------------------------- | ---------- |
+| `cardElevation`      | Cards, buttons             | `hardMd`   |
+| `cardElevationSmall` | Chips, small controls      | `hardSm`   |
+| `modalElevation`     | Sheets, modals, focus card | `hardLg`   |
+
+How a role renders depends on the theme:
+
+| Themes                              | Rendering                                                  |
+| ----------------------------------- | ---------------------------------------------------------- |
+| The Full Ride, Clean Signal         | Hard offset, no blur — 2 / 3 / 4pt down-right, 0.8 opacity |
+| Night Ride                          | 6pt straight-down cutout, no blur                          |
+| Warm Studio                         | Soft, low shadow (1–3pt, small blur, 0.1 opacity)          |
+| Bold Ink, Still Water, Loud & Clear | None — the 3pt border alone defines the edge               |
+
+Because three themes drop shadows entirely, an element must never rely on its shadow to be distinguishable. The border carries the edge.
+
+---
+
+## Shape
+
+**Borders** (`theme.borderWidth`): `thin`/`default` 1 · `medium` 2 · `thick` 3. The shared `Card` and `Button` surfaces use `thick`; inputs, chips, pills, rows, checkboxes, dividers and bordered icon buttons use `medium`; `thin` is for internal dividers and the side edges of `AnimatedSheet` (whose top edge is `medium`).
+
+**Radius** (`theme.radius`): `sm` 2 · `md` 4 · `lg` 8 · `xl` 12 · `pill` 9999 (`full` aliases `pill`). Cards and icon buttons use `sm`; buttons and inputs use `md`.
+
+**Spacing** (`theme.space`): `1` 4 · `2` 8 · `3` 12 · `4` 16 · `5` 20 · `6` 24 · `8` 32 · `10` 40 · `12` 48 · `16` 64.
+
+**Z-index** (`theme.zIndex`): `dropdown` 1000 · `sticky` 1100 · `modal` 1300 · `tooltip` 1400.
+
+---
+
+## Components
+
+### Surface — `Card`
 
 ```typescript
-interface Colors {
-  background: string;
-  backgroundSecondary: string;
-  backgroundTertiary: string;
-  text: string;
-  textSecondary: string;
-  textMuted: string;
-  accentPrimary: string;
-  accentPurple: string;
-  accentMint: string;
-  accentYellow: string;
-  border: string;
-  shadow: string;
-  focusRing: string;
-}
+container: {
+  backgroundColor: theme.colors.backgroundSecondary,
+  borderWidth: theme.borderWidth.thick,
+  borderColor: theme.colors.border,
+  borderRadius: theme.radius.sm,
+  padding: theme.space[6], // compact 3 · normal 6 · spacious 8
+  ...shadowStyle(theme, "cardElevation"),
+},
 ```
 
-### Light Mode Colors
+A pressable card has a 48pt minimum height and the shared pressed state below.
 
-| Property              | Value     | Use                     |
-| --------------------- | --------- | ----------------------- |
-| `background`          | `#fafafa` | Main content background |
-| `backgroundSecondary` | `#fafafa` | Cards, secondary areas  |
-| `backgroundTertiary`  | `#e5e5e5` | Dividers, subtle bg     |
-| `text`                | `#262626` | Headings, primary text  |
-| `textSecondary`       | `#737373` | Body, descriptions      |
-| `textMuted`           | `#737373` | Hints, timestamps       |
-| `accentPrimary`       | `#0a0a0a` | Buttons, focus          |
-| `accentPurple`        | `#a78bfa` | Highlights, badges      |
-| `accentMint`          | `#d4f4e7` | Success backgrounds     |
-| `accentYellow`        | `#ffe50c` | Attention (sparingly)   |
-| `border`              | `#e5e5e5` | Default borders         |
-| `shadow`              | `#0a0a0a` | Shadow color            |
-| `focusRing`           | `#0a0a0a` | Focus ring color        |
+### Actions — `Button`
 
-### Dark Mode Colors
+Every new action uses the shared `Button` (`src/components/Button`).
 
-| Property              | Value     | Notes                       |
-| --------------------- | --------- | --------------------------- |
-| `background`          | `#1a1033` | Deep indigo                 |
-| `backgroundSecondary` | `#2d1f52` | Elevated purple             |
-| `backgroundTertiary`  | `#3a2d5c` | Tertiary purple             |
-| `text`                | `#fafafa` | Off-white                   |
-| `textSecondary`       | `#e5e5e5` | Light gray                  |
-| `textMuted`           | `#e5e5e5` | Light gray                  |
-| `accentPrimary`       | `#fafafa` | Inverted                    |
-| `accentPurple`        | `#c4b5fd` | Lighter purple for contrast |
-| `accentMint`          | `#1a3a2a` | Dark mint                   |
-| `accentYellow`        | `#ffe50c` | Unchanged                   |
-| `border`              | `#3a2d5c` | Purple-tinted               |
-| `shadow`              | `#fafafa` | Light shadow on dark bg     |
-| `focusRing`           | `#fafafa` | Light focus ring            |
+| Variant       | Fill                         | Border                     | Label                         | Shadow          |
+| ------------- | ---------------------------- | -------------------------- | ----------------------------- | --------------- |
+| `primary`     | `colors.accentPrimary`       | 3pt `colors.accentPrimary` | `colors.background`           | `cardElevation` |
+| `secondary`   | `colors.backgroundSecondary` | 3pt `colors.border`        | `colors.text`                 | `cardElevation` |
+| `ghost`       | transparent                  | 3pt transparent            | `colors.text`                 | none            |
+| `destructive` | `colors.warning`             | 3pt `colors.text`          | `#262626` (contrast-verified) | `cardElevation` |
 
-### Palette Primitives
+| Size | Padding (h / v) | Label size | Minimum height |
+| ---- | --------------- | ---------- | -------------- |
+| `sm` | 12 / 4          | `sm`       | 48             |
+| `md` | 16 / 8          | `md`       | 48             |
+| `lg` | 20 / 12         | `lg`       | 52             |
 
-From `build/unistyles/palette.ts` — 30+ raw color constants used by tokens and themes:
+| State    | Treatment                                                                                |
+| -------- | ---------------------------------------------------------------------------------------- |
+| Pressed  | Moves 2pt right and down; shadow collapses to 1pt — the button "presses into" its shadow |
+| Disabled | 0.4 opacity, not pressable, `accessibilityState.disabled`                                |
+| Loading  | Spinner replaces the label; disabled and `accessibilityState.busy`                       |
 
-| Key                | Value         | Key                 | Value     |
-| ------------------ | ------------- | ------------------- | --------- |
-| `primary`          | `#0a0a0a`     | `accentPurple`      | `#a78bfa` |
-| `primaryDark`      | `#000000`     | `accentMint`        | `#d4f4e7` |
-| `primaryLight`     | `#333333`     | `accentYellow`      | `#ffe50c` |
-| `secondary`        | `#a78bfa`     | `accentEmerald`     | `#059669` |
-| `secondaryDark`    | `#7c5cbf`     | `accentTeal`        | `#00d4aa` |
-| `secondaryLight`   | `#c4b5fd`     | `accentOrange`      | `#ff6b35` |
-| `success`          | `#059669`     | `accentSky`         | `#38bdf8` |
-| `error`            | `#dc2626`     | `accentPurpleVivid` | `#a855f7` |
-| `warning`          | `#d97706`     | `deepIndigo`        | `#1a1033` |
-| `info`             | `#2563eb`     | `white`             | `#fafafa` |
-| `gray50`–`gray900` | neutral scale | `black`             | `#0a0a0a` |
+Labels are bold, body family. A leading icon is a Phosphor element (or a text mark in its own run) and is excluded from the accessible label.
 
----
+### Icon actions — `IconButton`
 
-## Narrative Arc
+Square, `radius.sm`. `surface`, `primary` and `destructive` tones add a 2pt border and `cardElevationSmall`; `chrome`, `celebration` and `ghost` are transparent. Filled tones read `theme.action` (`actionSecondaryBg`, `actionPrimaryBg`, `actionDestructiveBg`). Pressed is 0.7 opacity rather than the `Button` press-in; disabled is 0.4 opacity. Sizes 36 / 44 / 52; `sm` adds `hitSlop` so every target reaches 44pt. Tones: `chrome`, `celebration`, `ghost`, `surface`, `primary`, `destructive`. An icon-only action always has an `accessibilityLabel`.
 
-The `Narrative` interface defines colors for the four-section landing page narrative (from `build/unistyles/narrative.ts`):
+### Text input — `Input`
 
 ```typescript
-interface Narrative {
-  climb: { bg: string; text: string };
-  drop: { bg: string; bgEnd: string; text: string; accent: string };
-  stories: {
-    bg: string;
-    text: string;
-    accent1: string;
-    accent2: string;
-    accent3: string;
-    accent4: string;
-    accentForeground: string;
-  };
-  relief: { bg: string; text: string; accent: string };
-}
+input: {
+  borderWidth: theme.borderWidth.medium,
+  borderColor: theme.colors.border,       // focus → colors.focusRing
+  borderRadius: theme.radius.md,
+  paddingHorizontal: theme.space[3],
+  paddingVertical: theme.space[3],
+  fontSize: theme.size.md,                // 16 — prevents iOS zoom
+  fontFamily: theme.fontFamily.body,
+  color: theme.colors.text,
+  backgroundColor: theme.colors.backgroundSecondary,
+  minHeight: 48,
+},
 ```
 
-Light narrative values:
+Label above the field: `sm`, medium, `colors.textSecondary`. Error: border and `xs` message in `colors.accentPrimary`.
 
-| Section     | Property           | Value     | Description              |
-| ----------- | ------------------ | --------- | ------------------------ |
-| **Climb**   | `bg`               | `#ffe50c` | Bold yellow energy       |
-|             | `text`             | `#0a0a0a` | Dark on yellow           |
-| **Drop**    | `bg`               | `#0a0a0a` | Near-black               |
-|             | `bgEnd`            | `#1a1033` | Deep indigo gradient end |
-|             | `text`             | `#fafafa` | Light on dark            |
-|             | `accent`           | `#a78bfa` | Soft purple              |
-| **Stories** | `bg`               | `#2b1f4b` | Elevated purple          |
-|             | `text`             | `#fafafa` | Light on indigo          |
-|             | `accent1`          | `#00d4aa` | Teal                     |
-|             | `accent2`          | `#ff6b35` | Orange                   |
-|             | `accent3`          | `#a855f7` | Vivid purple             |
-|             | `accent4`          | `#38bdf8` | Sky blue                 |
-|             | `accentForeground` | `#0a0a0a` | Text on accent bg        |
-| **Relief**  | `bg`               | `#d4f4e7` | Soft mint                |
-|             | `text`             | `#0a0a0a` | Dark on mint             |
-|             | `accent`           | `#059669` | Emerald                  |
+### Keyboard and pinned footers — `KeyboardAvoidingFrame`
 
-Each variant can override any narrative value — see [ND Themes](./nd-themes.md) for per-theme narrative overrides.
+Screens with a text input above a pinned footer CTA wrap the `[body][footer]` pair in `KeyboardAvoidingFrame` (`src/components/KeyboardAvoidingFrame`); the header stays a sibling above it. Footers that reserve space for the floating tab bar or home indicator use `useKeyboardFooterPadding` so the CTA tracks the keyboard.
 
 ---
 
-## Spacing
+## Known gaps
 
-From `build/unistyles/tokens.ts`:
+Runtime places that do not yet meet this contract. Each is tracked; fix them there, not by rewriting the contract to match.
 
-| Token | dp  | Use                        |
-| ----- | --- | -------------------------- |
-| `0`   | 0   | None                       |
-| `1`   | 4   | Tight gaps                 |
-| `2`   | 8   | Icon gaps, compact padding |
-| `3`   | 12  | Button padding             |
-| `4`   | 16  | Card padding, section gaps |
-| `5`   | 20  | Comfortable card padding   |
-| `6`   | 24  | Card margins               |
-| `8`   | 32  | Section padding            |
-| `10`  | 40  | Large section gaps         |
-| `12`  | 48  | Page margins               |
-| `16`  | 64  | Maximum spacing            |
+| Gap                                                                                                                                                                                                                                                          | Tracking                                                                                 |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| Some text styles omit `fontFamily`; `textStyles` use fixed multipliers so Warm Studio line heights miss them; 9–10pt essential labels                                                                                                                        | [#684](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/684) (UI-01) |
+| Focus actions use their own button treatment (`theme.action`, modal elevation, no pressed state); the badge-wall CTA uses celebration chrome with its own press-in; `Button` itself reads `colors.accentPrimary`/`colors.warning` rather than `theme.action` | [#691](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/691) (UI-08) |
+| Pinned action groups and the badge-detail hero are unbounded on small screens                                                                                                                                                                                | [#694](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/694) (UI-11) |
 
 ---
 
-## Border Radius
+## Reviewing against the contract
 
-From `build/unistyles/tokens.ts`:
-
-| Token  | dp   | Use             |
-| ------ | ---- | --------------- |
-| `sm`   | 2    | Small elements  |
-| `md`   | 4    | Buttons, inputs |
-| `lg`   | 8    | Cards           |
-| `xl`   | 12   | Large cards     |
-| `pill` | 9999 | Circles, pills  |
-
-The adapter adds a `full` alias pointing to `pill` for backward compatibility.
-
----
-
-## Shadows
-
-Shadows use per-theme opacity from `ColorModeConfig`:
-
-| Color mode | Shadow opacity |
-| ---------- | -------------- |
-| Light      | 0.04           |
-| Dark       | 0.2            |
-
-Variants override shadow opacity:
-
-- `highContrast`: 0 (borders define edges)
-- `autismFriendly`: 0 (reduce sensory input)
-- `lowVision`: 0 (borders define edges)
-
----
-
-## Z-Index
-
-From `build/unistyles/tokens.ts`:
-
-| Token      | Value |
-| ---------- | ----- |
-| `dropdown` | 1000  |
-| `sticky`   | 1100  |
-| `modal`    | 1300  |
-| `tooltip`  | 1400  |
-
-The adapter adds numeric aliases `0`–`5` (0, 100, 200, 300, 400, 500) for backward compatibility.
-
----
-
-## Component Patterns
-
-### Card
-
-```typescript
-const stylesheet = StyleSheet.create((theme) => ({
-  card: {
-    backgroundColor: theme.colors.background,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.radius.lg,
-    padding: theme.space[4],
-    shadowColor: theme.colors.shadow,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: theme.shadows.opacity,
-    shadowRadius: 2,
-  },
-}));
-```
-
-### Button (Primary)
-
-```typescript
-const stylesheet = StyleSheet.create((theme) => ({
-  button: {
-    backgroundColor: theme.colors.accentPrimary,
-    paddingVertical: theme.space[3],
-    paddingHorizontal: theme.space[6],
-    borderRadius: theme.radius.md,
-    minHeight: 48,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  buttonText: {
-    color: theme.colors.background,
-    fontSize: theme.size.md,
-    fontWeight: theme.fontWeight.semibold,
-  },
-}));
-```
-
-### Text Input
-
-```typescript
-const stylesheet = StyleSheet.create((theme) => ({
-  input: {
-    paddingVertical: theme.space[3],
-    paddingHorizontal: theme.space[4],
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.radius.md,
-    fontSize: theme.size.md, // 16dp — prevents iOS auto-zoom
-    color: theme.colors.text,
-    backgroundColor: theme.colors.background,
-    minHeight: 48,
-  },
-}));
-```
+Storybook web (`bun run storybook:web`) is the reference preview. The toolbar lists the seven product themes. _Design System_ stories show tokens; _Composed Screens_ stories mirror each screen's composition with fixture data inside the real app shell (navigator, floating tab bar, safe-area insets, keyboard frame) at compact and standard phone sizes, so layout is checked in context rather than only as individually framed parts. Storybook is a review aid: confirm layout and keyboard behavior on a native build before calling it verified.
 
 ---
 
 ## Related Documents
 
+- [ND Themes](./nd-themes.md) — the seven product themes
 - [Design Token System](../architecture/design-token-system.md) — package architecture and build pipeline
-- [ND Themes](./nd-themes.md) — all 14 composed theme definitions
 - [Design Principles](../vision/design-principles.md) — philosophy and rules
+- [Accessibility Guidelines](../accessibility-guidelines.md) — WCAG targets, touch targets, testing

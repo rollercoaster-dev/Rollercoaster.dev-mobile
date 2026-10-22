@@ -15,21 +15,21 @@ See `docs/vision/product-vision.md` for full context.
 | User stories?           | `docs/vision/user-stories.md`                                          |
 | Architecture decisions? | `docs/decisions/ADR-*.md`                                              |
 | Data model?             | `docs/architecture/data-model.md`                                      |
-| Design language?        | `docs/design/design-language.md`                                       |
+| Component contract?     | `docs/design/design-language.md`                                       |
 | Theme system?           | `docs/design/nd-themes.md`, `docs/architecture/design-token-system.md` |
 | Accessibility?          | `docs/accessibility-guidelines.md`                                     |
 | Internationalization?   | `docs/i18n.md`                                                         |
 
 ## Tech Stack
 
-| Layer         | Choice                                             | Docs                                                        |
-| ------------- | -------------------------------------------------- | ----------------------------------------------------------- |
-| Runtime       | Expo / React Native                                | `app.json`, `metro.config.js`                               |
-| UI styling    | react-native-unistyles v3                          | `docs/decisions/ADR-0002-ui-styling-library.md`             |
-| Local storage | Evolu (SQLite + CRDT)                              | `docs/decisions/ADR-0003-sync-layer-decision.md`, `src/db/` |
-| Navigation    | React Navigation                                   | `src/navigation/`                                           |
-| Testing       | Jest 30 + @testing-library/react-native v13        | `jest.config.js`, `src/__tests__/`                          |
-| Design tokens | Unistyles themes (14 = 2 color modes x 7 variants) | `src/themes/`                                               |
+| Layer         | Choice                                      | Docs                                                        |
+| ------------- | ------------------------------------------- | ----------------------------------------------------------- |
+| Runtime       | Expo / React Native                         | `app.json`, `metro.config.js`                               |
+| UI styling    | react-native-unistyles v3                   | `docs/decisions/ADR-0002-ui-styling-library.md`             |
+| Local storage | Evolu (SQLite + CRDT)                       | `docs/decisions/ADR-0003-sync-layer-decision.md`, `src/db/` |
+| Navigation    | React Navigation                            | `src/navigation/`                                           |
+| Testing       | Jest 30 + @testing-library/react-native v13 | `jest.config.js`, `src/__tests__/`                          |
+| Design tokens | Unistyles themes (7 product themes)         | `src/themes/`, `docs/design/nd-themes.md`                   |
 
 ## Project Structure
 

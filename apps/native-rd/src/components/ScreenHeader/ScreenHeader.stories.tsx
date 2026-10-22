@@ -57,7 +57,7 @@ function Body() {
       <Text variant="body">
         Page content renders below the band. Switch the global theme in the
         Storybook toolbar to verify the band stays solid (no two-tone split)
-        across all 14 themes.
+        across all seven themes.
       </Text>
     </View>
   );
