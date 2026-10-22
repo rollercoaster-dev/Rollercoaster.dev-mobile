@@ -18,9 +18,9 @@ surrounding code of each hunk you comment on. The diff alone is never enough
 evidence — open the file. For a deleted file, read it from the patch and
 `grep` for what still references it.
 
-The app lives in `apps/native-rd/`; its rules are `apps/native-rd/CLAUDE.md`
-and `apps/native-rd/AGENTS.md`. Workspace rules are the root `CLAUDE.md`,
-`AGENTS.md` and `.claude/rules/*.md`.
+The app lives in `apps/native-rd/`; its rules are `apps/native-rd/AGENTS.md`.
+Workspace rules are the root `AGENTS.md` and `.claude/rules/*.md`.
+(`CLAUDE.md` files only import their sibling `AGENTS.md`.)
 
 ## What you return
 

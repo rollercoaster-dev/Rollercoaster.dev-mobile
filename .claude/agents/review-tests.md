@@ -17,7 +17,7 @@ read-only commands only; never run the test suite and never modify files.
 
 - `.claude/rules/no-unfalsifiable-assertions.md` — the shapes of assertions
   that cannot fail, and the legitimate negatives
-- `apps/native-rd/CLAUDE.md` → "Tests"
+- `apps/native-rd/AGENTS.md` → "Tests"
 - `apps/native-rd/docs/i18n.md` → "Testing components that use `t()`" and
   "Pseudo-render smoke tests" (when the code under test renders copy)
 - `apps/native-rd/docs/accessibility-guidelines.md` → "Automated Testing"

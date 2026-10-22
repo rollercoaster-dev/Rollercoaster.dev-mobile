@@ -15,7 +15,7 @@ Read first: `.agents/skills/expert-review/references/finding-contract.md`
 
 ## Sources
 
-- `packages/openbadges-core/CLAUDE.md` — module structure, platform
+- `packages/openbadges-core/AGENTS.md` — module structure, platform
   detection, logging, conventions
 - `apps/native-rd/docs/architecture/openbadges-core.md`
 - `apps/native-rd/docs/architecture/ob3-compliance-status.md` — the closed

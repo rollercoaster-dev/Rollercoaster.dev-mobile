@@ -12,14 +12,14 @@ Read first: `.agents/skills/expert-review/references/finding-contract.md`
 
 ## Sources
 
-- Root `CLAUDE.md` → "Hard rules at the root level" (registry vs workspace
+- Root `AGENTS.md` → "Hard rules" (registry vs workspace
   deps, removed monorepo apps, DCO, commit identity)
 - Root `AGENTS.md` → "Root-level conventions"
 - `docs/architecture/ci-contract.md` — workflows, validation steps, "Honesty
   rule for CI steps", coverage and a11y-audit contracts, branch protection
 - `apps/native-rd/docs/release.md` — pipeline, profiles, required secrets,
   failure modes, "Tag rewriting is blocked"
-- `apps/native-rd/CLAUDE.md` → "Hard Rules", "Commands", "Tests" (Jest via
+- `apps/native-rd/AGENTS.md` → "Hard Rules", "Commands", "Tests" (Jest via
   `scripts/jest-node.sh`, never `bun test`)
 
 ## Focus

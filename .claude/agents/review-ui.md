@@ -12,7 +12,7 @@ Read first: `.agents/skills/expert-review/references/finding-contract.md`
 
 ## Sources — read the ones your files need
 
-- `apps/native-rd/CLAUDE.md` → "Design System", "Styling"
+- `apps/native-rd/AGENTS.md` → "Design System", "Styling"
 - `apps/native-rd/AGENTS.md` → "Architectural Rules"
 - `apps/native-rd/docs/decisions/ADR-0002-ui-styling-library.md`
 - `apps/native-rd/.claude/skills/neo-brutalist-design/SKILL.md` → "The 8
@@ -25,7 +25,7 @@ Read first: `.agents/skills/expert-review/references/finding-contract.md`
 - `apps/native-rd/docs/vision/design-principles.md` → "Visual Identity on
   Mobile", "The Seven Themes"
 - `apps/native-rd/docs/architecture/design-token-system.md` and
-  `packages/design-tokens/CLAUDE.md` (token changes)
+  `packages/design-tokens/AGENTS.md` (token changes)
 - `apps/native-rd/src/themes/adapter.ts`, `src/styles/shadows.ts`,
   `src/components/` — to name the token, helper or existing component to use
 

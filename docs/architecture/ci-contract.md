@@ -110,7 +110,7 @@ this — see commit `cedbc3c` for the removal rationale.
 
 What this means in practice:
 
-- A PR that touches only `apps/native-rd/CLAUDE.md` (or any top-level
+- A PR that touches only `apps/native-rd/AGENTS.md` (or any top-level
   markdown under `apps/native-rd/`) WILL still trigger `ci-native-rd`.
   The cost is a few minutes of CI per pure-docs PR.
 - The only excluded native-rd subdirs are `docs/`, `research/`,

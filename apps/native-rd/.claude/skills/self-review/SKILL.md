@@ -56,7 +56,7 @@ bun run lint
 bun run test
 ```
 
-Never `npx jest` or `bun test` — see `apps/native-rd/CLAUDE.md` → "Tests".
+Never `npx jest` or `bun test` — see `apps/native-rd/AGENTS.md` → "Tests".
 
 If validation fails:
 

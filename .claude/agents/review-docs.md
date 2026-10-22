@@ -1,6 +1,6 @@
 ---
 name: review-docs
-description: Expert-review panel member. Reviews docs, ADRs, plans, CLAUDE.md/AGENTS.md, rules and agent skills for the binding ADR rules, accurate commands and paths, and doc-index upkeep. Dispatched by the expert-review skill; read-only.
+description: Expert-review panel member. Reviews docs, ADRs, plans, AGENTS.md (and CLAUDE.md, which must only import AGENTS.md), rules and agent skills for the binding ADR rules, accurate commands and paths, and doc-index upkeep. Dispatched by the expert-review skill; read-only.
 tools: Read, Grep, Glob, Bash
 model: sonnet
 ---
@@ -19,7 +19,7 @@ Read first: `.agents/skills/expert-review/references/finding-contract.md`
   "Documentation", "Handling Review-Skipped Findings"
 - `apps/native-rd/docs/decisions/index.md` — Current positions and Ledger
 - Root `AGENTS.md` → "Where to go", "Root-level conventions", "Git provenance"
-- `apps/native-rd/CLAUDE.md` → "Hard Rules", "Commands", "Tests"
+- `apps/native-rd/AGENTS.md` → "Hard Rules", "Commands", "Tests"
 - `.agents/skills/*/SKILL.md` and their `.claude/skills/*/SKILL.md`
   compatibility entrypoints (agent tooling changes)
 
@@ -40,7 +40,10 @@ Read first: `.agents/skills/expert-review/references/finding-contract.md`
   subdirectory's `index.md`; plans in the wrong place (`apps/native-rd/docs/plans/`
   for app work, `docs/plans/` for cross-cutting infra).
 - **Contradictions** — a doc that now disagrees with a current ADR position,
-  `CLAUDE.md`, or another doc the diff didn't touch.
+  `AGENTS.md`, or another doc the diff didn't touch.
+- **CLAUDE.md** — any `CLAUDE.md` with content other than `@AGENTS.md`;
+  instructions belong in the sibling `AGENTS.md` (root `AGENTS.md` →
+  "Root-level conventions").
 - **Agent tooling** — a `.claude/skills/` entrypoint that re-implements its
   canonical `.agents/skills/` skill instead of pointing to it; skill
   descriptions that don't say when to use them; agent

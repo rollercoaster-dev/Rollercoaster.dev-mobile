@@ -15,7 +15,7 @@ Read first: `.agents/skills/expert-review/references/finding-contract.md`
 - `apps/native-rd/docs/accessibility-guidelines.md` — contrast, touch targets,
   labels, hints, roles, focus management (modals, `AnimatedSheet`, focus
   traps), live regions, component checklist, theme considerations
-- `apps/native-rd/CLAUDE.md` → "ND Accessibility"
+- `apps/native-rd/AGENTS.md` → "ND Accessibility"
 - `apps/native-rd/docs/vision/design-principles.md` → "For Sensory
   Sensitivities", "For Dyslexia"
 - `apps/native-rd/docs/design/nd-themes.md` → "Testing Matrix"
