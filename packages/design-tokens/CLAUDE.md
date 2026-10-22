@@ -61,6 +61,8 @@ bun run clean           # rm -rf build/*
 | Low Info          | `lowInfo`             | Clean Signal           |
 | Autism-Friendly   | `autismFriendly`      | Still Water            |
 
+native-rd ships seven of these as product themes; Large Text is authored here but not exposed in the app (it composes for tests only). The app's inventory is `apps/native-rd/docs/design/nd-themes.md`.
+
 Theme class names (`.ob-*-theme`) and `--ob-*` CSS variables no longer exist; the package emits TypeScript only. The contrast validation gate lives in `apps/native-rd/src/themes/` (`contrastPairs.ts` + `__tests__/contrast.test.ts`), surfaced visually by the Storybook `Design System/Contrast Audit` story.
 
 ## Conventions

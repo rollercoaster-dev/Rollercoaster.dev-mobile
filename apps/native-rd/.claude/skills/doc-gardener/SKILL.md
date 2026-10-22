@@ -132,7 +132,7 @@ Claims verified: 47
 Divergences found: 3
 
 [HIGH]   CLAUDE.md:45 — path `src/old/removed.ts` does not exist
-[MEDIUM] docs/architecture/overview.md:12 — claims "12 themes" but actual count is 14
+[MEDIUM] docs/architecture/overview.md:12 — claims "14 themes" but runtime registers 7
 [LOW]    AGENTS.md:30 — references "Tamagui" but no imports found (may be historical)
 
 Issues created: 2
