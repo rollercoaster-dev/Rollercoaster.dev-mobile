@@ -32,6 +32,9 @@ One module owns the numbers, one hook owns the OS reading, and the shared text p
 - **D5 — `scaleFor(role) = min(fontScale, capFor(role))`:** the multiplier RN actually applies to that role's theme size. Layout math multiplies theme line heights by it.
 - **D6 — BadgeCard / GoalEvidenceCard text-column nodes move to shared `Text`** (headline/body/caption variants, existing style kept). Their badge size is computed from those nodes' line heights; if the text stayed on raw RN `Text` it would scale uncapped while the badge used capped math. Other raw-`Text` nodes in those files stay for the #741 lint migration.
 - **D7 — Jest font scale pinned to 1** in a setup file via `Dimensions.set`; `mockFontScale(n)` in `src/__tests__/fontScale.ts` changes it inside `act` for a test and the setup restores 1 after each test.
+- **D8 — Shared `Text`/`Input` use `useThemeScale()`, not `useTypeScale()`.** They only need the theme scale; RN applies the OS scale natively, so subscribing every text node to window dimensions is wasted re-renders.
+- **D9 — "Only reader" is enforced by lint** (`no-restricted-syntax` in `eslint.config.js`): `PixelRatio.getFontScale`, `fontScale` from `useWindowDimensions` or `Dimensions.get` are errors outside `useTypeScale.ts`.
+- **D10 — Audit renders at 3.571**, RN's AX5 font scale (`RCTAccessibilityManager.mm`), not the issue's 3.1 (Apple's body-text ratio). Caps are all below AX1 (1.786), so results are unchanged.
 
 ## Affected Areas
 
@@ -46,23 +49,23 @@ One module owns the numbers, one hook owns the OS reading, and the shared text p
 
 ### Step 1: Policy module and hook
 
-- [ ] `typeScale.ts`: `CAPS`, `CHROME_CAP`, `LARGE_TYPE_AT`, `ACCESSIBILITY_SIZE_AT`, `themeScaleOf(sizeScale)`, `capFor(variant, chrome, themeScale)`.
-- [ ] `useTypeScale.ts`: `{ fontScale, isLargeType, isAccessibilitySize, themeScale, scaleFor(role) }` from `useWindowDimensions().fontScale`.
-- [ ] Jest pin + `mockFontScale` helper. Unit tests for both.
+- [x] `typeScale.ts`: `CAPS`, `CHROME_CAP`, `LARGE_TYPE_AT`, `ACCESSIBILITY_SIZE_AT`, `themeScaleOf(sizeScale)`, `capFor(variant, chrome, themeScale)`.
+- [x] `useTypeScale.ts`: `{ fontScale, isLargeType, isAccessibilitySize, themeScale, scaleFor(role) }` from `useWindowDimensions().fontScale`.
+- [x] Jest pin + `mockFontScale` helper. Unit tests for both.
 
 ### Step 2: Shared Text and Input apply the cap
 
-- [ ] `Text` defaults `maxFontSizeMultiplier` to `capFor(variant, chrome, themeScale)`; new `chrome` prop; caller prop wins.
-- [ ] `Input`: TextInput → body cap, label → label cap, error → caption cap; caller prop wins on the TextInput.
+- [x] `Text` defaults `maxFontSizeMultiplier` to `capFor(variant, chrome, themeScale)`; new `chrome` prop; caller prop wins.
+- [x] `Input`: TextInput → body cap, label → label cap, error → caption cap; caller prop wins on the TextInput.
 
 ### Step 3: Cards read the hook
 
-- [ ] BadgeCard and GoalEvidenceCard drop `PixelRatio.getFontScale()`; per-role `scaleFor` on line heights; text-column nodes on shared `Text`.
+- [x] BadgeCard and GoalEvidenceCard drop `PixelRatio.getFontScale()`; per-role `scaleFor` on line heights; text-column nodes on shared `Text`.
 
 ### Step 4: Scale-audit test and docs
 
-- [ ] Audit: every variant × {default, lowVision} at fontScale 3.1 → effective size ≤ cap × default base; body at 2.0 → exactly 2.0×.
-- [ ] "Text scaling" section in accessibility guidelines; `nd-themes.md` checklist link; ProgressRing `adjustsFontSizeToFit` documented as the exception.
+- [x] Audit: every variant × {default, lowVision} at fontScale 3.1 → effective size ≤ cap × default base; body at 2.0 → exactly 2.0×.
+- [x] "Text scaling" section in accessibility guidelines; `nd-themes.md` checklist link; ProgressRing `adjustsFontSizeToFit` documented as the exception.
 
 ## Testing Strategy
 
@@ -78,7 +81,35 @@ Unit tests on the pure module, hook tests with `mockFontScale`, render tests tha
 
 - RN jest preset mocks `DeviceInfo` window/screen `fontScale: 2`; every test so far rendered at 2×.
 - `sizeL` is exactly 1.25 × `size` on every key, so `md` ratio is a faithful theme scale.
+- The #741 plan file the issue cites does not exist anywhere; the issue body was the spec.
+- RN ignores `maxFontSizeMultiplier` in (0, 1) and scales `lineHeight` by the same capped multiplier (iOS `RCTAttributedTextUtils.mm`, Android `getEffectiveLineHeight`), so `lineHeight * scaleFor(role)` matches what iOS draws.
+- Android 14+ scales large sp sizes non-linearly (`PixelUtil.kt`), so `scaleFor` is an upper bound there; documented on the hook.
+- react-native-web reports `fontScale: 1` and drops `maxFontSizeMultiplier`, so caps are a silent no-op in Storybook web.
+- BadgeCard's initials glyph was scaled twice (size from the scaled column, then the OS scale again) and overflowed its tile at AX sizes; now `allowFontScaling={false}`.
+
+## Review (round 1, HEAD 8cffcec0)
+
+Reviewers: code quality, test coverage, error handling (independent subagents). CodeRabbit CLI unavailable: `Connection failed: Invalid organization` (CLI 0.7.6); the GitHub CodeRabbit review runs on the PR.
+
+| Finding                                                    | Severity | Disposition                                                                                                                        |
+| ---------------------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Text/Input subscribe to window dimensions via useTypeScale | medium   | Fixed: `useThemeScale` (a85f2a0e)                                                                                                  |
+| BadgeCard initials glyph double-scaled, overflows tile     | medium   | Fixed (5d4c3ec0)                                                                                                                   |
+| "Only reader" not enforced                                 | medium   | Fixed: lint rule (5d4c3ec0)                                                                                                        |
+| Card badge math not tied to rendered variants              | medium   | Fixed: tests pin title/description caps (5d4c3ec0)                                                                                 |
+| Input tests can't tell roles apart, no Low Vision          | medium   | Fixed: Low Vision case, honest test name; roles indistinguishable while caps are equal (5d4c3ec0, a85f2a0e)                        |
+| `scaleFor` exact only on iOS                               | medium   | Documented on the hook; onLayout measurement deferred (no Android acceptance here)                                                 |
+| Audit ignored RN's ">= 1" rule                             | low      | Fixed (5d4c3ec0)                                                                                                                   |
+| Audit/docs used 3.1 not RN's 3.571                         | low      | Fixed (a85f2a0e)                                                                                                                   |
+| capForRole loop could not fail                             | low      | Replaced with literal values (5d4c3ec0)                                                                                            |
+| Mock reset dropped `rt`                                    | low      | Fixed (5d4c3ec0)                                                                                                                   |
+| mockFontScale in beforeAll silently reset                  | low      | Documented (5d4c3ec0)                                                                                                              |
+| `fontScale` NaN guard                                      | low      | Fixed in hook (5d4c3ec0)                                                                                                           |
+| Nested shared Text overrides outer cap                     | low      | Follow-up #747                                                                                                                     |
+| Audit reads theme fontSize, not host style                 | low      | Skipped: StyleSheet mock always renders the default theme, so host style can't show Low Vision; multiplier is the thing under test |
+| Caller `null` replaced by cap; (0,1) passes through        | low      | Kept: `??` preserves explicit 0 ("no limit"); null → policy default is the intended behaviour                                      |
 
 ## Follow-ups
 
-(none yet)
+- #747 — nested shared `Text` should inherit the outer role cap (from review; land with/before #745).
+- Android: if card badges look oversized on Android 14+ at large font sizes, measure the text column with `onLayout` instead of predicting it (`src/hooks/useTypeScale.ts` `scaleFor`). No issue filed; no Android acceptance in #744.
