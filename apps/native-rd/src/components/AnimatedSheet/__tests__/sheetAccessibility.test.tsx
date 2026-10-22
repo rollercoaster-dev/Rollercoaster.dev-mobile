@@ -17,6 +17,17 @@ jest.mock("@react-navigation/native", () => ({
   NavigationContext: jest.requireActual("react").createContext(undefined),
 }));
 
+// The production trigger is a host instance, which focusAccessibilityRef
+// resolves through findNodeHandle; resolve test instances to the tag they carry.
+jest.mock("react-native", () => {
+  const RN = jest.requireActual("react-native");
+  Object.defineProperty(RN, "findNodeHandle", {
+    configurable: true,
+    value: jest.fn((instance: { tag?: number } | null) => instance?.tag ?? 111),
+  });
+  return RN;
+});
+
 jest.mock("../../../hooks/useAnimationPref", () => ({
   useAnimationPref: () => ({
     animationPref: "none",
@@ -153,7 +164,7 @@ describe("useSheetTrigger (#686)", () => {
   it.each([
     {
       source: "the pressed control",
-      event: { currentTarget: 888, nativeEvent: { target: 777 } },
+      event: { currentTarget: { tag: 888 }, nativeEvent: { target: 777 } },
       expected: 888,
     },
     {

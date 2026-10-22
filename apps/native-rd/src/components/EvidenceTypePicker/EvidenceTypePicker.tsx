@@ -188,6 +188,7 @@ function CaptureSheet({
       title={title}
       subLine={subLine}
       closeLabel={t("common:actions.close")}
+      closeTestID="capture-sheet-close"
       restoreFocusRef={restoreFocusRef}
     >
       <CaptureGrid selectedType={selectedType} onSelectType={onSelectType} />

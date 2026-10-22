@@ -73,6 +73,11 @@ function useIsHostScreenFocused() {
  * behind a tab switch must not keep hiding the tab bar and headers of the tab
  * the user moved to. Called by `AnimatedSheet` itself, so consumers never
  * register by hand.
+ *
+ * The count drops in the re-render the `blur` event triggers. If screens are
+ * ever frozen on blur (react-native-screens `freezeOnBlur` / `enableFreeze`,
+ * both off today), that render never commits and the count would stick — move
+ * the decrement into the blur listener before turning freezing on.
  */
 export function useOpenSheetRegistration(visible: boolean) {
   const focused = useIsHostScreenFocused();
