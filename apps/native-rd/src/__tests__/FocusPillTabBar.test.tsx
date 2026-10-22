@@ -12,6 +12,7 @@ import { renderWithProviders, screen, fireEvent } from "./test-utils";
 import { i18n } from "../i18n";
 import { composeTheme } from "../themes/compose";
 import { FocusPillTabBar } from "../navigation/FocusPillTabBar";
+import { AnimatedSheet } from "../components/AnimatedSheet";
 import {
   expectAccessibleRole,
   expectAccessibleLabel,
@@ -196,6 +197,33 @@ describe("FocusPillTabBar", () => {
         expect(knobBg()).toBe(theme.chrome.brandAccentBg);
       },
     );
+  });
+
+  // The bar renders outside every screen, so a screen's sheet can't isolate it
+  // on its own (#686).
+  it("leaves the assistive-tech tree while any sheet is open", () => {
+    const { props } = buildProps();
+    const withSheet = (visible: boolean) => (
+      <>
+        <FocusPillTabBar {...props} />
+        <AnimatedSheet
+          visible={visible}
+          onClose={jest.fn()}
+          title="Sheet"
+          closeLabel="Close"
+        >
+          {null}
+        </AnimatedSheet>
+      </>
+    );
+    const { rerender } = renderWithProviders(withSheet(false));
+    expect(screen.getAllByRole("tab")).toHaveLength(3);
+
+    rerender(withSheet(true));
+    expect(screen.queryAllByRole("tab")).toHaveLength(0);
+
+    rerender(withSheet(false));
+    expect(screen.getAllByRole("tab")).toHaveLength(3);
   });
 
   describe("pseudo locale", () => {
