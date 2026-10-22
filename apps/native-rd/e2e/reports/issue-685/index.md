@@ -9,17 +9,17 @@ App source: `cf7a8882c25d0049080d63cae301c527f7a7bbbc`. Baseline: `a7628ddff6885
 
 The iOS baseline closed a dirty wizard without a choice:
 
-![Baseline typed goal before Close](baseline-dirty-wizard.png)
+_Baseline typed goal before Close: screenshot in the [PR #709 description](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/pull/709)._
 
-![Baseline returned to Goals and lost the typed goal](baseline-lost-wizard.png)
+_Baseline returned to Goals and lost the typed goal: screenshot in the [PR #709 description](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/pull/709)._
 
 On the candidate, even a typed but unsubmitted Quick Add step triggered a clear choice:
 
-![Candidate Quick Add draft with Keep editing and Discard choices](candidate-quick-add-choice.png)
+_Candidate Quick Add draft with Keep editing and Discard choices: screenshot in the [PR #709 description](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/pull/709)._
 
 After choosing to continue through Start Working, that pending step appeared in Focus:
 
-![Candidate saved Quick Add step in Focus](candidate-quick-add-saved.png)
+_Candidate saved Quick Add step in Focus: screenshot in the [PR #709 description](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/pull/709)._
 
 The Android SDK was located at `/Volumes/SpinDrive/runner-ci/android-sdk`. The app built successfully with a private two-job CMake/Ninja wrapper and the repository's `scripts/run-android.sh --no-bundler`; the Android package script shortened `JAVA_HOME` on this host. The emulator needed `-no-audio` to avoid a CoreAudio startup hang, but its virtual microphone still supported the tested recording and playback states. Android and iOS simulators, Metro servers, and Gradle daemons were stopped after verification.
 
