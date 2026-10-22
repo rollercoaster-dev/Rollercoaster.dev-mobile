@@ -1,6 +1,6 @@
 ---
 name: review-accessibility
-description: Expert-review panel member. Reviews UI changes against the ND accessibility contract — screen-reader roles and labels, 44pt targets, focus in sheets and modals, live regions, reduce-motion, large-text and dyslexia variants, contrast across all 14 themes. Dispatched by the expert-review skill; read-only.
+description: Expert-review panel member. Reviews UI changes against the ND accessibility contract — screen-reader roles and labels, 44pt targets, focus in sheets and modals, live regions, reduce-motion, large-text and dyslexia themes, contrast across all seven product themes. Dispatched by the expert-review skill; read-only.
 tools: Read, Grep, Glob, Bash
 model: sonnet
 ---
@@ -23,7 +23,8 @@ Read first: `.agents/skills/expert-review/references/finding-contract.md`
   `src/utils/accessibilityFocus.ts`, `src/hooks/useAnimationPref.ts`,
   `src/utils/animation.ts` — the helpers a change should use
 
-Target is WCAG 2.1 AA (AAA 7:1 in `highContrast` and `lowVision`).
+Target is WCAG 2.1 AA (AAA 7:1 in Bold Ink `light-highContrast` and Loud &
+Clear `light-lowVision`).
 
 ## Focus
 
@@ -45,11 +46,11 @@ Target is WCAG 2.1 AA (AAA 7:1 in `highContrast` and `lowVision`).
   motion or the user's animation level (`useAnimationPref`: none / minimal /
   full) where siblings respect it; media that autoplays.
 - **Text scaling** — fixed heights, `numberOfLines` or
-  `allowFontScaling={false}` that clip text in `largeText` / `lowVision` or
-  the dyslexia line heights.
+  `allowFontScaling={false}` that clip text at Loud & Clear's 1.25× size, at
+  OS font scale, or with Warm Studio's relaxed line height.
 - **Contrast** — a new foreground/background pairing that fails in any of the
-  14 themes; information carried by color alone; shadows relied on for
-  separation where `highContrast` / `autismFriendly` remove them.
+  seven product themes; information carried by color alone; shadows relied
+  on for separation where Bold Ink, Still Water and Loud & Clear render none.
 - **Grouping** — related text split into many focus stops; nested
   touchables that trap the reader.
 

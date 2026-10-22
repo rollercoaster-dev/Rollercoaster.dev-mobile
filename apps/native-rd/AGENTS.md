@@ -22,21 +22,21 @@ See `docs/vision/product-vision.md` for full context.
 | User stories?           | `docs/vision/user-stories.md`                                          |
 | Architecture decisions? | `docs/decisions/ADR-*.md`                                              |
 | Data model?             | `docs/architecture/data-model.md`                                      |
-| Design language?        | `docs/design/design-language.md`                                       |
+| Component contract?     | `docs/design/design-language.md`                                       |
 | Theme system?           | `docs/design/nd-themes.md`, `docs/architecture/design-token-system.md` |
 | Accessibility?          | `docs/accessibility-guidelines.md`                                     |
 | Internationalization?   | `docs/i18n.md`                                                         |
 
 ## Tech Stack
 
-| Layer         | Choice                                             | Docs                                                        |
-| ------------- | -------------------------------------------------- | ----------------------------------------------------------- |
-| Runtime       | Expo / React Native                                | `app.json`, `metro.config.js`                               |
-| UI styling    | react-native-unistyles v3                          | `docs/decisions/ADR-0002-ui-styling-library.md`             |
-| Local storage | Evolu (SQLite + CRDT)                              | `docs/decisions/ADR-0003-sync-layer-decision.md`, `src/db/` |
-| Navigation    | React Navigation                                   | `src/navigation/`                                           |
-| Testing       | Jest 30 + @testing-library/react-native v13        | `jest.config.js`, `src/__tests__/`                          |
-| Design tokens | Unistyles themes (14 = 2 color modes x 7 variants) | `src/themes/`                                               |
+| Layer         | Choice                                      | Docs                                                        |
+| ------------- | ------------------------------------------- | ----------------------------------------------------------- |
+| Runtime       | Expo / React Native                         | `app.json`, `metro.config.js`                               |
+| UI styling    | react-native-unistyles v3                   | `docs/decisions/ADR-0002-ui-styling-library.md`             |
+| Local storage | Evolu (SQLite + CRDT)                       | `docs/decisions/ADR-0003-sync-layer-decision.md`, `src/db/` |
+| Navigation    | React Navigation                            | `src/navigation/`                                           |
+| Testing       | Jest 30 + @testing-library/react-native v13 | `jest.config.js`, `src/__tests__/`                          |
+| Design tokens | Unistyles themes (7 product themes)         | `src/themes/`, `docs/design/nd-themes.md`                   |
 
 ## Project Structure
 
@@ -101,16 +101,16 @@ src/
 
 ## Design System
 
-Neo-brutalist visual language with hard shadows, bold borders, and confident typography.
+Neo-brutalist visual language with hard shadows, bold borders, and confident typography. **Theme inventory:** `docs/design/nd-themes.md`. **Component contract** (typography, elevation, action states, inputs): `docs/design/design-language.md`.
 
 - **Tokens from:** `@rollercoaster-dev/design-tokens` (workspace package at `packages/design-tokens/`)
 - **Adapter layer:** `src/themes/adapter.ts` — the single import boundary from the package
-- **Theme composition:** `src/themes/compose.ts` — 2 color modes x 7 variants = 14 themes
-- **Shadows:** `src/styles/shadows.ts` — `shadowStyle(theme, key)` helper; hard shadows (`hardSm`/`hardMd`/`hardLg`) have radius: 0
-- **Fonts:** Anybody (headlines), Instrument Sans (body), DM Mono (code), Lexend (dyslexia), Atkinson Hyperlegible (low vision)
-- **Storybook:** `src/stories/design-system/` — Colors, Typography, Spacing reference stories
+- **Theme composition:** `src/themes/compose.ts` — 7 product themes (`productThemeEntries`); dark (`dark-default`, Night Ride) is one of the seven, not an axis
+- **Shadows:** `src/styles/shadows.ts` — `shadowStyle(theme, role)` with semantic roles `cardElevation` / `cardElevationSmall` / `modalElevation`; Bold Ink, Still Water and Loud & Clear render none
+- **Fonts:** Anybody (headlines), Instrument Sans (body), DM Mono (code); Warm Studio uses Lexend and Loud & Clear uses Atkinson Hyperlegible for body and headlines
+- **Storybook:** `bun run storybook:web` — `src/stories/design-system/` token stories, `src/stories/composed/` screens in the app shell
 
-Theme names follow `{colorMode}-{variant}` pattern (e.g., `light-default`, `dark-highContrast`).
+Theme ids follow `{colorMode}-{variant}` (e.g. `light-default`, `light-dyslexia`). Other pairs (`largeText`, `dark-<variant>`) compose for tests only and are not product themes.
 
 ### Styling
 
@@ -120,14 +120,13 @@ Theme names follow `{colorMode}-{variant}` pattern (e.g., `light-default`, `dark
 
 ## ND Accessibility
 
-Targets WCAG 2.1 AA. Six accessibility variants built as day-one requirements, not afterthoughts:
+Targets WCAG 2.1 AA. Five accessibility themes ship beside The Full Ride and Night Ride as day-one requirements, not afterthoughts:
 
-- **highContrast** — WCAG AAA (7:1), no shadows, strong borders
-- **largeText** — 1.25x font scale
-- **dyslexia** — Lexend font, cream bg, relaxed line height (1.7-1.9x)
-- **lowVision** — max contrast + large text combined
-- **autismFriendly** — muted/desaturated colors, no shadows, reduced visual noise
-- **lowInfo** — reduced visual complexity
+- **Bold Ink** (`light-highContrast`) — WCAG AAA (7:1), no shadows, strong borders
+- **Warm Studio** (`light-dyslexia`) — Lexend font, cream bg, relaxed line height
+- **Still Water** (`light-autismFriendly`) — muted/desaturated colors, no shadows
+- **Loud & Clear** (`light-lowVision`) — max contrast, Atkinson Hyperlegible, 1.25× text, no shadows
+- **Clean Signal** (`light-lowInfo`) — reduced visual complexity
 
 Key files: `src/utils/accessibility.ts` (contrast checker), `docs/accessibility-guidelines.md`, `src/__tests__/accessibility.test.tsx` (a11y contract tests), `src/themes/__tests__/contrast.test.ts`.
 

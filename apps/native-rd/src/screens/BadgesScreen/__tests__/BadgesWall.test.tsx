@@ -79,19 +79,23 @@ beforeEach(() => {
 
 describe("BadgesWall", () => {
   describe("count header", () => {
-    it("renders the count tally", () => {
+    it.each([
+      [1, "1 badge"],
+      [2, "2 badges"],
+      [24, "24 badges"],
+    ])("renders the count tally for %i as %s", (count, expected) => {
       renderWithProviders(
         <BadgesWall
-          count={24}
+          count={count}
           spotlight={SPOTLIGHT}
           gallery={makeGallery(3)}
           onOpenBadge={noop}
           onSeeGoals={noop}
         />,
       );
-      expect(
-        screen.getByText(i18n.t("badges:wall.count", { count: 24 })),
-      ).toBeOnTheScreen();
+      expect(screen.getByTestId("badges-wall-count")).toHaveTextContent(
+        expected,
+      );
       expect(
         screen.getByText(i18n.t("badges:wall.allVerifiable")),
       ).toBeOnTheScreen();

@@ -25,7 +25,7 @@ describe("TimelineNode", () => {
   // `paused` is the one state whose marker is a Phosphor icon rather than a
   // text glyph, so it is asserted by testID. It used to render `\u23f8`, an
   // emoji-presentation codepoint that ignored the node's foreground color in
-  // all 14 themes (design system Rule 8) \u2014 hence the second assertion.
+  // all seven themes (design system Rule 8) \u2014 hence the second assertion.
   it("renders a Pause icon, not an emoji, for paused status", () => {
     renderWithProviders(<TimelineNode {...baseProps} status="paused" />);
     expect(

@@ -17,12 +17,15 @@ Input: issue, exact plan path, review report, isolated worktree, tested/reviewed
 
    Require success. Workers must not claim a slot themselves, relabel automated work manual, override priority approval, or bypass a denied audit/slot/pause gate. Direct manual issue work does not require a manager reservation.
 
-4. Write a real temporary Markdown file for the PR body. Lead with the problem and resulting behavior; include acceptance/Intent Verification with truthful checkboxes, relevant Decisions and Discovery Log, actual validation commands and HEAD, and tracked follow-up links. Use `Closes #ISSUE` only when the PR satisfies the complete issue acceptance criteria, so Joe’s merge closes the implemented issue. Partial work uses `Refs #ISSUE`. This does not authorize closing stale or superseded issues. Derive the conventional title from the actual change, not the `codex/` branch prefix.
+4. Write a real temporary Markdown file for the PR body. Lead with the problem and resulting behavior; include acceptance/Intent Verification with truthful checkboxes, relevant Decisions and Discovery Log, actual validation commands and HEAD, and tracked follow-up links. Use `Closes #ISSUE` only when the PR satisfies the complete issue acceptance criteria, so Joe’s merge closes the implemented issue. Partial work uses `Refs #ISSUE`. This does not authorize closing stale or superseded issues. Derive the conventional title from the actual change, not the `codex/` branch prefix. Write the body file inside `tmp/native-verify/<issue>/` and embed each verify-native capture as `![alt](./capture.png)`. Captures never enter git or a PR comment (`.claude/rules/no-committed-review-screenshots.md`); confirm `git diff --name-only origin/main...HEAD` lists no image or video file.
 5. Push the issue branch with `git push -u origin HEAD`. Check for an existing PR on that exact branch with explicit `--repo` before creating another; update/reuse it on resume. Create a new PR using the body file:
 
    ```bash
-   gh pr create --repo rollercoaster-dev/Rollercoaster.dev-mobile --base main --head codex/issue-ISSUE --title 'TYPE(SCOPE): DESCRIPTION' --body-file /absolute/path/pr-body.md
+   gh pr create --repo rollercoaster-dev/Rollercoaster.dev-mobile --base main --head codex/issue-ISSUE --title 'TYPE(SCOPE): DESCRIPTION' --body-file /absolute/path/pr-body.md \
+     --attach /absolute/path/capture-1.png --attach /absolute/path/capture-2.png
    ```
+
+   `--attach` needs gh ≥ 2.99 (`gh --version`; upgrade rather than commit images). gh uploads each file and rewrites its `./` reference in the body to a `user-attachments` URL; confirm with `gh pr view <number> --repo ... --json body` that no local path remains. On resume or new captures, use `gh pr edit <number> --repo ... --body-file ... --attach ...`.
 
    Substitute the actual verified branch/title/path. Never interpolate the body into shell code. Capture the URL and number. In Codex call the available `mcp__codex_app__attach_artifact` tool with artifact type `pull_request` and the URL. For automated work, return the PR identity to the manager for immediate `bind` and reconciliation; retain the reservation if binding fails, notify, and never create a duplicate PR.
 

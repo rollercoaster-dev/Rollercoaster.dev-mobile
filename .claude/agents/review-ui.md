@@ -1,6 +1,6 @@
 ---
 name: review-ui
-description: Expert-review panel member. Reviews React Native components, screens and themes against the neo-brutalist design system, unistyles v3, the 14-theme matrix and the component structure rules. Dispatched by the expert-review skill; read-only.
+description: Expert-review panel member. Reviews React Native components, screens and themes against the neo-brutalist design system, unistyles v3, the seven product themes and the component structure rules. Dispatched by the expert-review skill; read-only.
 tools: Read, Grep, Glob, Bash
 model: sonnet
 ---
@@ -20,8 +20,8 @@ Read first: `.agents/skills/expert-review/references/finding-contract.md`
   Phosphor never emoji), "Component Recipes", "Audit Checklist"
 - `apps/native-rd/docs/design/design-language.md` — typography, color,
   spacing, radius, shadows, component patterns
-- `apps/native-rd/docs/design/nd-themes.md` — the 14 composed themes and what
-  each variant changes
+- `apps/native-rd/docs/design/nd-themes.md` — the seven product themes (the
+  app's theme inventory) and what each changes
 - `apps/native-rd/docs/vision/design-principles.md` → "Visual Identity on
   Mobile", "The Seven Themes"
 - `apps/native-rd/docs/architecture/design-token-system.md` and
@@ -38,16 +38,19 @@ Read first: `.agents/skills/expert-review/references/finding-contract.md`
   instead of through `src/themes/adapter.ts`.
 - **Theme reactivity** — styles captured outside the unistyles stylesheet
   (module-level constants, `useMemo` without the theme) that won't update on
-  `setTheme()`; one variant forgotten (e.g. shadows drawn where
-  `highContrast` / `autismFriendly` specify none — use `shadowStyle`).
+  `setTheme()`; one theme forgotten (e.g. shadows drawn where
+  Bold Ink, Still Water or Loud & Clear render none — use `shadowStyle(theme, role)`
+  with a semantic role: `cardElevation`, `cardElevationSmall`, `modalElevation`).
 - **Component structure** — a new shared component missing `*.styles.ts`, its
   test or its barrel; a primitive defined inside a screen; a hand-built
   button, card, sheet or modal where `src/components/` already has one.
 - **Neo-brutalist rules** — borders, zero-blur shadows, radius and accent
   use per the 8 Rules; an emoji or text glyph used as an action or state
   indicator where Rule 8 requires a Phosphor icon.
-- **Typography** — font families from the theme so the dyslexia and
-  low-vision fonts apply; no fixed line heights that break `lineHeightL`.
+- **Typography** — font families from the theme so Warm Studio's
+  Lexend and Loud & Clear's Atkinson Hyperlegible apply; no fixed line
+  heights that break Warm Studio's relaxed line height or Loud & Clear's
+  1.25× text.
 - **Layout** — one clear primary action per screen; safe-area insets
   (`useTabScreenContentInset`); keyboard avoidance via `KeyboardAvoidingFrame`.
 - **Platform** — `Platform.OS` / `.ios.tsx` splits that leave one platform

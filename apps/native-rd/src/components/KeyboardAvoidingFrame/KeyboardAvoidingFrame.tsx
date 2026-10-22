@@ -61,6 +61,9 @@ export function KeyboardAvoidingFrame({
   const handleLayout = useCallback(
     (event: LayoutChangeEvent) => {
       onLayout?.(event);
+      // react-native-web throws from findNodeHandle and has no native window
+      // offset to correct, so the web reference preview keeps offset 0.
+      if (Platform.OS === "web") return;
       const layoutY = event.nativeEvent.layout.y;
       // Both measurements are async; the KAV re-derives its overlap when the
       // offset prop changes, so a late-arriving value still lands.

@@ -1,7 +1,8 @@
 {
   "header": "Badges",
   "wall": {
-    "count": "{{count}} Badges",
+    "count_one": "{{count}} Badge",
+    "count_other": "{{count}} Badges",
     "allVerifiable": "EINE WAND AUS NACHWEISEN · ALLE VERIFIZIERBAR",
     "justEarned": "GERADE VERDIENT",
     "empty": {
