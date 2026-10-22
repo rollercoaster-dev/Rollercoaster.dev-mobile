@@ -29,4 +29,4 @@ Design reference images that are part of the docs themselves (`apps/native-rd/do
 
 ## Origin
 
-#708–#711 and #740 (Oct 2026) committed verification captures into `apps/native-rd/e2e/reports/issue-*/` and hotlinked them from PR bodies by SHA; #685/#687 shipped eight to main. #708 additionally posted six captures as a PR comment. The cleanup moved those captures into PR bodies with `gh pr edit --attach` and deleted them from the tree.
+#708–#711 and #740 (Oct 2026) committed verification captures into `apps/native-rd/e2e/reports/issue-*/` and hotlinked them from PR bodies by SHA; #685/#687/#699 shipped twelve to main. #708 additionally posted six captures as a PR comment. The cleanup moved those captures into PR bodies with `gh pr edit --attach` and deleted them from the tree.
