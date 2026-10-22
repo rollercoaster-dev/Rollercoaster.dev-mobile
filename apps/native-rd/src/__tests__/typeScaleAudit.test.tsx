@@ -1,6 +1,6 @@
 /**
  * Scale audit (#741): renders every shared Text variant at the largest iOS
- * accessibility size and checks the size RN would draw against its cap.
+ * accessibility size (AX5) and checks the size RN would draw against its cap.
  *
  * RN draws `fontSize × min(fontScale, maxFontSizeMultiplier)` and ignores a
  * multiplier below 1 (0 means "no limit"). The audit applies that rule to
@@ -17,7 +17,8 @@ import { CAPS, CHROME_CAP } from "../utils/typeScale";
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const unistylesMock = require("react-native-unistyles");
 
-const LARGEST_AX_SIZE = 3.1;
+// RN's fontScale for iOS's largest size (AX5); see RCTAccessibilityManager.mm.
+const LARGEST_AX_SIZE = 3.571;
 const defaultTheme = composeTheme("light", "default");
 const themes: [string, ComposedTheme][] = [
   ["default", defaultTheme],
@@ -54,7 +55,7 @@ describe("type-scale audit", () => {
     });
   });
 
-  describe.each(themes)("%s theme at fontScale 3.1", (_name, theme) => {
+  describe.each(themes)("%s theme at the largest AX size", (_name, theme) => {
     test.each(variants)("%s stays within its cap", (variant) => {
       const base = defaultTheme.textStyles[variant].fontSize;
       expect(renderedSize(theme, variant, LARGEST_AX_SIZE)).toBeLessThanOrEqual(

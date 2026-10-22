@@ -10,6 +10,16 @@ import {
 } from "../utils/typeScale";
 
 /**
+ * The active theme's type scale (1.25 for Low Vision) without subscribing to
+ * window dimensions. Shared `Text` and `Input` only need this to set their
+ * cap; RN applies the OS scale natively, so they need not re-render on it.
+ */
+export function useThemeScale(): number {
+  const { theme } = useUnistyles();
+  return themeScaleOf(theme.size);
+}
+
+/**
  * The app's only reader of the OS font scale. `useWindowDimensions` re-renders
  * when the user changes Dynamic Type; `PixelRatio.getFontScale()` does not.
  *
@@ -22,8 +32,7 @@ export function useTypeScale() {
   const { fontScale: rawFontScale } = useWindowDimensions();
   const fontScale =
     Number.isFinite(rawFontScale) && rawFontScale > 0 ? rawFontScale : 1;
-  const { theme } = useUnistyles();
-  const themeScale = themeScaleOf(theme.size);
+  const themeScale = useThemeScale();
 
   const scaleFor = useCallback(
     (role: TypeRole) => Math.min(fontScale, capForRole(role, themeScale)),

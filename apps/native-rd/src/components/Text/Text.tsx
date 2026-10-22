@@ -1,7 +1,7 @@
 import React from "react";
 import { Text as RNText, type TextProps as RNTextProps } from "react-native";
 import { textStylesheet } from "./Text.styles";
-import { useTypeScale } from "../../hooks/useTypeScale";
+import { useThemeScale } from "../../hooks/useTypeScale";
 import { capFor } from "../../utils/typeScale";
 
 export type TextVariant =
@@ -29,7 +29,7 @@ export function Text({
   ...rest
 }: TextProps) {
   textStylesheet.useVariants({ variant });
-  const { themeScale } = useTypeScale();
+  const themeScale = useThemeScale();
 
   return (
     <RNText

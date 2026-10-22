@@ -85,7 +85,7 @@ describe("Input", () => {
 
     // Body, label and caption share the 2.0 cap today, so these pin "capped
     // and composed with the theme scale" rather than which role each part uses.
-    it("caps the field at body, the label at label and the error at caption", () => {
+    it("caps the field, label and error at 2.0", () => {
       renderWithProviders(
         <Input label="Name" placeholder="Your name" error="Required" />,
       );

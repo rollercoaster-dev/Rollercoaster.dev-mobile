@@ -127,7 +127,7 @@ Ensure adequate spacing between touch targets to prevent accidental taps:
 
 ## Text Scaling
 
-React Native multiplies every `<Text>` by the OS font scale (iOS Dynamic Type, Android font size). iOS accessibility sizes run from about 1.6x to 3.1x, and Loud & Clear's 1.25x token scale stacks on top. The policy bounds the combined growth per text role. It lives in `src/utils/typeScale.ts`; do not restate the numbers elsewhere.
+React Native multiplies every `<Text>` by the OS font scale (iOS Dynamic Type, Android font size). iOS accessibility sizes report a font scale of about 1.8x (AX1) to 3.6x (AX5), and Loud & Clear's 1.25x token scale stacks on top. The policy bounds the combined growth per text role. It lives in `src/utils/typeScale.ts`; do not restate the numbers elsewhere.
 
 ### Caps
 
@@ -162,7 +162,7 @@ Never use `adjustsFontSizeToFit` on content text; it undoes the user's size choi
 
 ### Tests
 
-Jest pins the font scale to 1 (`src/__tests__/setup-font-scale.ts`). Call `mockFontScale(n)` from `src/__tests__/fontScale.ts` to render at another size. `src/__tests__/typeScaleAudit.test.tsx` renders every variant at 3.1x on the default and Loud & Clear themes and fails when one outgrows its cap.
+Jest pins the font scale to 1 (`src/__tests__/setup-font-scale.ts`). Call `mockFontScale(n)` from `src/__tests__/fontScale.ts` to render at another size. `src/__tests__/typeScaleAudit.test.tsx` renders every variant at AX5 (3.571x) on the default and Loud & Clear themes and fails when one outgrows its cap.
 
 ## Screen Reader Support
 

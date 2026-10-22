@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View, TextInput, Text, type TextInputProps } from "react-native";
 import { useUnistyles } from "react-native-unistyles";
 import { styles } from "./Input.styles";
-import { useTypeScale } from "../../hooks/useTypeScale";
+import { useThemeScale } from "../../hooks/useTypeScale";
 import { capFor } from "../../utils/typeScale";
 
 export interface InputProps extends Omit<TextInputProps, "style"> {
@@ -22,7 +22,7 @@ export function Input({
   ...rest
 }: InputProps) {
   const { theme } = useUnistyles();
-  const { themeScale } = useTypeScale();
+  const themeScale = useThemeScale();
   const [focused, setFocused] = useState(false);
 
   return (
