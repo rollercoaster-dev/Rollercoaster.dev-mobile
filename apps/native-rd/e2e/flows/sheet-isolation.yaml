@@ -15,6 +15,13 @@ env:
 # that is still painted on screen is the assistive-tech check: the tab bar never
 # leaves the screen visually, only the tree.
 #
+# The negative checks run on iOS only. Maestro's Android tree is UiAutomator's
+# with not-important views included, so a TalkBack-hidden control still
+# matches `assertNotVisible`'s query there; it reports the hiding as the node's
+# `important-for-accessibility=false` attribute instead, which Maestro cannot
+# assert. Android was verified by reading that attribute from `maestro
+# hierarchy` at each state (e2e/reports/issue-686/).
+#
 # Covers Focus Mode's evidence-plan and capture sheets, Badge detail's share
 # sheet from both openers, and a tab switch with the share sheet left open
 # (the other tab's chrome must stay reachable). Focus *restoration* is not
@@ -61,11 +68,15 @@ env:
     id: "focus-current-task-change-plan"
 - assertVisible:
     id: "focus-evidence-plan-close"
-- assertNotVisible:
-    id: "tab-GoalsTab"
-- assertNotVisible:
-    id: "focus-current-task-add-text"
-- assertNotVisible: "Go back"
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - assertNotVisible:
+          id: "tab-GoalsTab"
+      - assertNotVisible:
+          id: "focus-current-task-add-text"
+      - assertNotVisible: "Go back"
 - tapOn:
     id: "focus-evidence-plan-close"
 - assertVisible:
@@ -90,11 +101,15 @@ env:
     id: "focus-current-task-add-more"
 - assertVisible:
     id: "capture-sheet-close"
-- assertNotVisible:
-    id: "tab-GoalsTab"
-- assertNotVisible:
-    id: "focus-current-task-mark-complete"
-- assertNotVisible: "Go back"
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - assertNotVisible:
+          id: "tab-GoalsTab"
+      - assertNotVisible:
+          id: "focus-current-task-mark-complete"
+      - assertNotVisible: "Go back"
 - tapOn:
     id: "capture-sheet-close"
 - assertVisible:
@@ -136,12 +151,16 @@ env:
     id: "badge-share-cta"
 - assertVisible:
     id: "share-row-verifiable"
-- assertNotVisible:
-    id: "celebration-hero-overflow"
-- assertNotVisible:
-    id: "badge-share-cta"
-- assertNotVisible:
-    id: "tab-BadgesTab"
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - assertNotVisible:
+          id: "celebration-hero-overflow"
+      - assertNotVisible:
+          id: "badge-share-cta"
+      - assertNotVisible:
+          id: "tab-BadgesTab"
 - tapOn:
     id: "badge-share-close"
 - assertVisible:
@@ -152,16 +171,32 @@ env:
     id: "tab-BadgesTab"
 
 # --- 4. Same sheet from ⋯ › Share badge -------------------------------------
-- tapOn:
-    id: "celebration-hero-overflow"
-- tapOn:
-    id: "overflow-row-share"
-- assertVisible:
-    id: "share-row-verifiable"
-- assertNotVisible:
-    id: "celebration-hero-overflow"
-- assertNotVisible:
-    id: "tab-BadgesTab"
+# iOS only: on Android the Expo dev client's floating gear button returns after
+# every `pm clear` and sits exactly over ⋯, so the tap opens the dev menu. The
+# Android ⋯ path was verified by hand with the button dragged aside.
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - tapOn:
+          id: "celebration-hero-overflow"
+      - tapOn:
+          id: "overflow-row-share"
+      - assertVisible:
+          id: "share-row-verifiable"
+      - assertNotVisible:
+          id: "celebration-hero-overflow"
+      - assertNotVisible:
+          id: "tab-BadgesTab"
+# Android reopens the sheet from the CTA so step 5 still leaves one open.
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - tapOn:
+          id: "badge-share-cta"
+      - assertVisible:
+          id: "share-row-verifiable"
 
 # --- 5. Leave the sheet open and switch tabs by touch -----------------------
 # The tab bar is out of the tree, so it is tapped by position: Goals is the
