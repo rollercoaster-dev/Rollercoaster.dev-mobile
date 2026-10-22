@@ -66,8 +66,9 @@ If validation fails:
 
 ### Step 2: Expert Review
 
-Run the `expert-review` skill (`.agents/skills/expert-review/SKILL.md`) on the
-current branch, with the issue number as intent. It routes the diff to the
+Run the `expert-review` skill (`.agents/skills/expert-review/SKILL.md`) with
+the argument `issue <issue_number>` — not the bare number, which it would
+read as a PR number. It routes the diff to the
 `review-*` panel, verifies every finding against the code and drops
 hypotheticals, and writes `tmp/expert-review/<run>/findings.json` and
 `report.md`.

@@ -19,6 +19,7 @@ GitHub from this skill. All subagents are read-only.
 | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
 | none                     | current branch vs. its merge base with `origin/main`, including uncommitted and untracked changes                            |
 | PR number (`733`) or URL | the same diff, with the PR's title, body and linked issue as intent — only when that PR's branch is the one checked out here |
+| `issue <n>`              | the same diff, with issue `<n>`'s body as intent — for branches with no PR yet (`/self-review` uses this)                    |
 
 **The current worktree is the only source the skill reads.** Its
 `node_modules` (Evolu, Expo, unistyles types) is what the code compiles
@@ -55,6 +56,7 @@ Never check another revision out for the review.
    Untracked files are reviewed. Never `git add` on the user's behalf.
 5. Intent → `$RUN/intent.md`: the commit messages
    (`git log --format='%s%n%b' "$BASE"..HEAD`) plus, first match wins: the
+   issue body (`issue <n>` argument); the
    PR's title, body and linked issue bodies; a plan under
    `apps/native-rd/docs/plans/` or `docs/plans/` the diff adds or changes; the
    issue the branch name references (`gh issue view <n>` for `issue-686`,
@@ -70,8 +72,10 @@ Apply `references/routing.md` to `files.txt` and `added.txt`:
 1. Drop generated and skipped files (with the bot-synced `de/` rule).
 2. Gate: nothing left or only lockfiles → stop and say so. Docs and agent
    tooling only → `review-docs` alone (+ `review-nd-guardrails` for ADRs).
-3. Match path globs, then content triggers. `review-correctness` and
-   `review-tests` always run, except on the gates above.
+3. Match path globs, then content triggers — content triggers only on added
+   lines of non-doc files, so prose in `*.md` or agent tooling never pulls in
+   an expert. `review-correctness` and `review-tests` always run, except on
+   the gates above or when routing hands them no files.
 4. Build each expert's file list; suffix deleted files with ` (deleted)`.
 
 Tell the user in one line which experts run and which are skipped, then dispatch.
@@ -102,7 +106,8 @@ session started, or a host without Claude subagents), dispatch
 
 1. Parse the JSON block from each expert; save it as `$RUN/<expert>.json`.
    An expert that returned no valid JSON goes under "Experts with errors",
-   never silently dropped.
+   never silently dropped. Files routed to an expert but missing from its
+   `reviewed_files` go under "Coverage gaps" in the report.
 2. Give every finding an id (`F1`, `F2`, …).
 3. **Dedupe:** same file within ±3 lines describing the same problem → one
    finding with the clearest text, the highest severity, and every expert
@@ -163,6 +168,7 @@ for the file, not the chat.
 - Experts run: … · skipped: … (no matching files)
 - Findings: <raw> raised → <after dedupe> → <confirmed> confirmed, <rejected> rejected by the verifier
 - Experts with errors: …
+- Coverage gaps: <expert: files routed but not in reviewed_files>
 - Files: `<RUN>/findings.json`, `<RUN>/report.md`
 </details>
 ```

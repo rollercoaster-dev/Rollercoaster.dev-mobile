@@ -5,4 +5,4 @@ description: Reviews the current branch (or the checked-out PR) of Rollercoaster
 
 # Claude compatibility entrypoint
 
-Read and follow the canonical [expert-review skill](../../../.agents/skills/expert-review/SKILL.md), resolving the path relative to this file. Pass through the caller's arguments (none, or a PR number/URL). All workflow behavior lives there; do not maintain a second implementation here.
+Read and follow the canonical [expert-review skill](../../../.agents/skills/expert-review/SKILL.md), resolving the path relative to this file. Pass through the caller's arguments (none, a PR number/URL, or `issue <n>`). All workflow behavior lives there; do not maintain a second implementation here.

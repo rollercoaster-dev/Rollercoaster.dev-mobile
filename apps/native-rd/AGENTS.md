@@ -120,7 +120,7 @@ Each `docs/` subdirectory has an `index.md` with a summary and links:
 ```
 
 1. `/implement` — execute the dev plan with atomic commits
-2. `/self-review` — pre-PR gate: local validation and the `/expert-review` panel, auto-fixing confirmed blockers. Codex uses the portable `.agents/skills/review/` workflow. Blocks on unresolved critical findings.
+2. `/self-review` — pre-PR gate: local validation and the `/expert-review` panel, auto-fixing confirmed blockers. Codex uses the portable `.agents/skills/review/` workflow. Blocks on unresolved confirmed blockers.
 3. `/acceptance-validator` — validate diff against issue acceptance criteria. Flags gaps.
 4. `/finalize` — push branch, create PR, update board
 
