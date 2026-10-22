@@ -350,12 +350,14 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
 
   return (
     <>
-      {/* Pinned, not scrolled: the badge is the thing the screen is about, so
-          it holds its position while the detail below it moves. Its back and ⋯
-          controls double as the screen's chrome and must stay reachable. */}
       {/* Hero + body: hidden from VoiceOver and TalkBack while the share sheet
-          is open. The CTA hides itself; the sheet stays outside (#686). */}
+          is open — the one time the hero's back and ⋯ chrome is unreachable.
+          The CTA hides itself; the sheet stays outside (#686). */}
       <SheetBackground style={styles.sheetBackground}>
+        {/* Pinned, not scrolled: the badge is the thing the screen is about,
+            so it holds its position while the detail below it moves. Its back
+            and ⋯ controls double as the screen's chrome and must stay
+            reachable. */}
         <CelebrationHeroHeader
           badgeDesign={design}
           badgeTitle={goalTitle}
@@ -372,14 +374,14 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
         />
 
         {/* flex:1 so the Share CTA below stays a pinned footer rather than being
-          pushed off-screen by tall content. */}
+            pushed off-screen by tall content. */}
         <ScrollView
           style={styles.scroll}
           contentContainerStyle={styles.scrollContent}
         >
           <View style={styles.body}>
             {/* The hero's chip already carries the earned date for credentialed
-              badges, so this line only fills the gap when there is no chip. */}
+                badges, so this line only fills the gap when there is no chip. */}
             {!isVerified && earnedDate ? (
               <Text style={styles.description}>
                 {t("badgeDetail:earned", { date: earnedDate })}
@@ -387,8 +389,8 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
             ) : null}
 
             {/* The narrative is the badge's own "how it was earned" sentence and
-              stands apart from the gallery below it: ProofSpine owns the
-              evidence, this owns the story. Older badges carry only this. */}
+                stands apart from the gallery below it: ProofSpine owns the
+                evidence, this owns the story. Older badges carry only this. */}
             {criteriaNarrative ? (
               <View style={styles.infoBlock}>
                 <Text style={styles.sectionLabel}>
@@ -399,9 +401,9 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
             ) : null}
 
             {/* Fed from the baked credential, never live DB rows, so the spine
-              keeps rendering after the goal/step is edited or soft-deleted —
-              and matches what a third-party verifier would see. Mounted
-              unconditionally: ProofSpine owns its own honest empty state. */}
+                keeps rendering after the goal/step is edited or soft-deleted —
+                and matches what a third-party verifier would see. Mounted
+                unconditionally: ProofSpine owns its own honest empty state. */}
             <ProofSpine
               evidence={evidenceItems ?? []}
               onCardPress={handleEvidencePress}

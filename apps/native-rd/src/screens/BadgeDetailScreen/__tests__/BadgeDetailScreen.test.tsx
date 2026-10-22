@@ -649,9 +649,14 @@ describe("BadgeDetailScreen", () => {
       });
 
     it.each([
-      { entry: "the Share CTA", open: () => pressWithTag("badge-share-cta") },
+      {
+        entry: "the Share CTA",
+        dismiss: "badge-share-close",
+        open: () => pressWithTag("badge-share-cta"),
+      },
       {
         entry: "the ⋯ menu's Share row",
+        dismiss: "badge-share-backdrop",
         open: () => {
           pressWithTag("celebration-hero-overflow");
           fireEvent.press(screen.getByTestId("overflow-row-share"));
@@ -659,7 +664,7 @@ describe("BadgeDetailScreen", () => {
       },
     ])(
       "opened from $entry, hides the screen and returns focus to that control",
-      ({ open }) => {
+      ({ open, dismiss }) => {
         mockUseQuery.mockReturnValue([makeRow()]);
         renderWithProviders(
           <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
@@ -673,9 +678,15 @@ describe("BadgeDetailScreen", () => {
         act(() => {
           jest.runAllTimers();
         });
-        setFocus.mockClear();
+        // Focus must land on a control that is back in the a11y tree, not one
+        // still hidden behind the closing sheet.
+        let ctaReachableAtRestore: boolean | undefined;
+        setFocus.mockClear().mockImplementation(() => {
+          ctaReachableAtRestore =
+            screen.queryByTestId("badge-share-cta") !== null;
+        });
 
-        fireEvent.press(screen.getByTestId("badge-share-close"));
+        fireEvent.press(screen.getByTestId(dismiss));
         act(() => {
           jest.runAllTimers();
         });
@@ -684,6 +695,7 @@ describe("BadgeDetailScreen", () => {
         ).toBeOnTheScreen();
         expect(screen.getByTestId("badge-share-cta")).toBeOnTheScreen();
         expect(setFocus).toHaveBeenCalledWith(TRIGGER_TAG);
+        expect(ctaReachableAtRestore).toBe(true);
       },
     );
   });

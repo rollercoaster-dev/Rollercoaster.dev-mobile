@@ -6,8 +6,16 @@ import {
   fireEvent,
   act,
 } from "../../../__tests__/test-utils";
+import { NavigationContext } from "@react-navigation/native";
 import { AnimatedSheet } from "../AnimatedSheet";
 import { SheetBackground, useSheetTrigger } from "../sheetAccessibility";
+
+// The shared navigation mock has no NavigationContext; give this suite a real
+// one so a test can play the hosting screen losing focus.
+jest.mock("@react-navigation/native", () => ({
+  ...jest.requireActual("../../../__tests__/mocks/navigation"),
+  NavigationContext: jest.requireActual("react").createContext(undefined),
+}));
 
 jest.mock("../../../hooks/useAnimationPref", () => ({
   useAnimationPref: () => ({
@@ -63,7 +71,10 @@ describe("SheetBackground (#686)", () => {
     });
 
     rerender(<Screen first={false} />);
-    expect(background().importantForAccessibility).toBe("auto");
+    expect(background()).toMatchObject({
+      accessibilityElementsHidden: false,
+      importantForAccessibility: "auto",
+    });
   });
 
   it("stays hidden until every open sheet has closed", () => {
@@ -79,6 +90,42 @@ describe("SheetBackground (#686)", () => {
     const { rerender } = renderWithProviders(<Screen first second />);
     rerender(<Screen first={false} />);
     expect(background().importantForAccessibility).toBe("auto");
+  });
+
+  // Bottom tabs keep an unfocused tab mounted: a sheet left open there must not
+  // keep hiding the tab bar and headers of the tab the user switched to.
+  it("releases the background while the sheet's screen is not focused", () => {
+    let focused = true;
+    const listeners = new Set<() => void>();
+    const navigation = {
+      isFocused: () => focused,
+      addListener: (_event: string, listener: () => void) => {
+        listeners.add(listener);
+        return () => listeners.delete(listener);
+      },
+    };
+    const setFocused = (next: boolean) =>
+      act(() => {
+        focused = next;
+        listeners.forEach((listener) => listener());
+      });
+    renderWithProviders(
+      <>
+        <SheetBackground testID="background">
+          <Text>Behind</Text>
+        </SheetBackground>
+        <NavigationContext.Provider value={navigation as never}>
+          <Sheet visible testID="first" />
+        </NavigationContext.Provider>
+      </>,
+    );
+    expect(background().importantForAccessibility).toBe("no-hide-descendants");
+
+    setFocused(false);
+    expect(background().importantForAccessibility).toBe("auto");
+
+    setFocused(true);
+    expect(background().importantForAccessibility).toBe("no-hide-descendants");
   });
 });
 
@@ -101,30 +148,46 @@ describe("useSheetTrigger (#686)", () => {
     );
   }
 
-  it("returns focus to the pressed trigger when the sheet closes", () => {
-    jest.useFakeTimers();
-    const setFocus = jest
-      .spyOn(AccessibilityInfo, "setAccessibilityFocus")
-      .mockImplementation(() => undefined);
-    try {
-      const { rerender } = renderWithProviders(<TriggeredSheet open={false} />);
-      fireEvent.press(screen.getByTestId("trigger"), {
-        nativeEvent: { target: 777 },
-      });
-      rerender(<TriggeredSheet open />);
-      act(() => {
-        jest.runAllTimers();
-      });
-      setFocus.mockClear();
+  // currentTarget (the Pressable itself) beats nativeEvent.target (the deepest
+  // view touched, e.g. its label), which is only a fallback.
+  it.each([
+    {
+      source: "the pressed control",
+      event: { currentTarget: 888, nativeEvent: { target: 777 } },
+      expected: 888,
+    },
+    {
+      source: "the touched view when no currentTarget is set",
+      event: { nativeEvent: { target: 777 } },
+      expected: 777,
+    },
+  ])(
+    "returns focus to $source when the sheet closes",
+    ({ event, expected }) => {
+      jest.useFakeTimers();
+      const setFocus = jest
+        .spyOn(AccessibilityInfo, "setAccessibilityFocus")
+        .mockImplementation(() => undefined);
+      try {
+        const { rerender } = renderWithProviders(
+          <TriggeredSheet open={false} />,
+        );
+        fireEvent.press(screen.getByTestId("trigger"), event);
+        rerender(<TriggeredSheet open />);
+        act(() => {
+          jest.runAllTimers();
+        });
+        setFocus.mockClear();
 
-      rerender(<TriggeredSheet open={false} />);
-      act(() => {
-        jest.runAllTimers();
-      });
-      expect(setFocus).toHaveBeenCalledWith(777);
-    } finally {
-      setFocus.mockRestore();
-      jest.useRealTimers();
-    }
-  });
+        rerender(<TriggeredSheet open={false} />);
+        act(() => {
+          jest.runAllTimers();
+        });
+        expect(setFocus).toHaveBeenCalledWith(expected);
+      } finally {
+        setFocus.mockRestore();
+        jest.useRealTimers();
+      }
+    },
+  );
 });

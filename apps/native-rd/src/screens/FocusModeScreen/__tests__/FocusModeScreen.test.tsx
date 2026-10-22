@@ -1287,6 +1287,9 @@ describe("FocusModeScreen", () => {
         goalId: "goal-1",
         stepId: "step-1",
       });
+      // The sheet really closed (its exit ran), so the negative below means
+      // the trigger was cleared rather than that no restore was attempted.
+      expect(screen.getByLabelText("Go back")).toBeOnTheScreen();
       expect(setFocus).not.toHaveBeenCalledWith(TRIGGER_TAG);
     });
   });

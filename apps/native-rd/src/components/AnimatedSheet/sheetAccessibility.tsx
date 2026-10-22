@@ -1,5 +1,14 @@
-import React, { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { View, type GestureResponderEvent, type ViewProps } from "react-native";
+import { NavigationContext } from "@react-navigation/native";
 
 /**
  * Screen-level sheet isolation contract (#686).
@@ -30,11 +39,44 @@ function isAnySheetOpen() {
   return openSheetCount > 0;
 }
 
+// Stand-in when NavigationContext is unavailable (a Jest mock of the package
+// that omits it); keeps the useContext call unconditional.
+const NoNavigationContext = createContext<undefined>(undefined);
+const noop = () => {};
+
 /**
- * Count this sheet as open while `open` is true. Called by `AnimatedSheet`
- * itself, so consumers never register by hand.
+ * Whether the screen hosting this component is the focused one. Outside a
+ * navigator (Storybook, component tests) there is no screen to lose focus, so
+ * it reads as focused.
  */
-export function useOpenSheetRegistration(open: boolean) {
+function useIsHostScreenFocused() {
+  const navigation = useContext(NavigationContext ?? NoNavigationContext);
+  const subscribeToFocus = useCallback(
+    (onChange: () => void) => {
+      if (!navigation) return noop;
+      const offFocus = navigation.addListener("focus", onChange);
+      const offBlur = navigation.addListener("blur", onChange);
+      return () => {
+        offFocus();
+        offBlur();
+      };
+    },
+    [navigation],
+  );
+  const isFocused = () => navigation?.isFocused() ?? true;
+  return useSyncExternalStore(subscribeToFocus, isFocused, isFocused);
+}
+
+/**
+ * Count this sheet as open while it is visible **and its screen is focused**.
+ * Bottom tabs keep an unfocused tab's stack mounted, so a sheet left open
+ * behind a tab switch must not keep hiding the tab bar and headers of the tab
+ * the user moved to. Called by `AnimatedSheet` itself, so consumers never
+ * register by hand.
+ */
+export function useOpenSheetRegistration(visible: boolean) {
+  const focused = useIsHostScreenFocused();
+  const open = visible && focused;
   useEffect(() => {
     if (!open) return;
     openSheetCount += 1;
@@ -83,24 +125,27 @@ export function SheetBackground(props: ViewProps) {
  * back to it on every dismissal path. Call `rememberTrigger` from the opening
  * press handler and pass `restoreFocusRef` to the sheet.
  *
- * Stores the press target's native tag rather than a component ref, so the
- * trigger can sit layers deep (a card footer, a list row) without threading a
- * ref through each one.
+ * Captures the pressed control from the event rather than a component ref, so
+ * the trigger can sit layers deep (a card footer, a list row) without
+ * threading a ref through each one.
  */
 export function useSheetTrigger() {
-  const restoreFocusRef = useRef<number | null>(null);
-  // Stable identity, so callers can list the trigger in hook dependencies.
-  return useMemo(
-    () => ({
-      restoreFocusRef,
-      /** Record the pressed control; call with no event to clear it. */
-      rememberTrigger: (event?: GestureResponderEvent) => {
-        // RN types nativeEvent.target as string, but it's the numeric react
-        // tag at runtime — the exact input setAccessibilityFocus expects.
-        restoreFocusRef.current =
-          (event?.nativeEvent?.target as unknown as number | undefined) ?? null;
-      },
-    }),
-    [],
-  );
+  const restoreFocusRef = useRef<View | number | null>(null);
+  // Lazy state, not useMemo: guaranteed stable identity, so callers can list
+  // the trigger in hook dependencies.
+  const [trigger] = useState(() => ({
+    restoreFocusRef,
+    /** Record the pressed control; call with no event to clear it. */
+    rememberTrigger: (event?: GestureResponderEvent) => {
+      // currentTarget is the Pressable's own host view while the press
+      // dispatches — the focusable element. nativeEvent.target is the deepest
+      // view under the touch (its label Text or icon), kept only as a fallback.
+      // RN types that as string, but it's the numeric react tag at runtime.
+      restoreFocusRef.current =
+        (event?.currentTarget as unknown as View | null | undefined) ??
+        (event?.nativeEvent?.target as unknown as number | undefined) ??
+        null;
+    },
+  }));
+  return trigger;
 }

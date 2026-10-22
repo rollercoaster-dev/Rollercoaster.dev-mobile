@@ -210,13 +210,17 @@ layer for focus behaviour. It implements the contract itself (#501):
   header title so assistive tech steps into the sheet instead of staying on the
   trigger behind it.
 - **Focus returns to the trigger on close.** Every dismissal path — the × close,
-  a backdrop tap, and Android hardware back — restores focus to the control
-  that opened the sheet, via `restoreFocusRef`. Use `useSheetTrigger()`: call
-  `rememberTrigger(event)` from the opening press handler and pass its
-  `restoreFocusRef` to the sheet. It stores the pressed element's native tag,
-  so the trigger can sit several layers down (a card footer, a list row). A
-  selection that moves on to another screen calls `rememberTrigger()` with no
-  event first, so focus isn't pulled back to the screen being left.
+  a backdrop tap, a row/selection that closes it, and Android hardware back —
+  restores focus to the control that opened the sheet, via `restoreFocusRef`.
+  When the trigger is a direct sibling of the sheet, pass its `View` ref (as
+  `BadgeShareSheet` does for its own CTA). When it sits several layers down (a
+  card footer, a list row) or the sheet has more than one opener, use
+  `useSheetTrigger()`: call `rememberTrigger(event)` from the opening press
+  handler and pass its `restoreFocusRef` to the sheet. It records the
+  Pressable's own host view (`event.currentTarget`), not the label or icon
+  under the finger. A selection that moves on to another screen calls
+  `rememberTrigger()` with no event first, so focus isn't pulled back to the
+  screen being left.
 - **Everything behind the sheet is hidden, on both platforms (#686).**
   `accessibilityViewIsModal` is iOS-only and hides only the overlay's own
   siblings, so it can't reach the screen's sub-header or the navigator's tab
@@ -224,7 +228,12 @@ layer for focus behaviour. It implements the contract itself (#501):
   itself as open, and background regions opt in to hiding while any sheet is
   open (`accessibilityElementsHidden` + `importantForAccessibility=
 "no-hide-descendants"`):
-  - `ScreenSubHeader` and `FocusPillTabBar` opt in centrally, for every screen.
+  - `ScreenSubHeader` (the stacked-screen header) and `FocusPillTabBar` opt in
+    centrally, so no screen has to hide them itself. The tab-root
+    `ScreenHeader` hosts no sheet today and is not opted in.
+  - A sheet only counts as open while its own screen is focused: bottom tabs
+    keep an unfocused tab mounted, and a sheet left open there must not hide
+    the tab bar and headers of the tab the user moved to.
   - A screen wraps its own body in `<SheetBackground>` and mounts the sheet as
     a sibling **outside** it. Never wrap a sheet in `SheetBackground` (or spread
     `useSheetBackgroundA11yProps()` onto its ancestor) — it would hide the

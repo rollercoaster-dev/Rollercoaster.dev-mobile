@@ -606,7 +606,7 @@ function FocusContent({
         </View>
 
         {/* The one way to see everything: progress + "See all steps ›" in a
-          single tap target, replacing the old MiniTimeline/ProgressDots pair. */}
+            single tap target, replacing the old MiniTimeline/ProgressDots pair. */}
         <FocusProgressStrip
           doneCount={doneCount}
           totalCount={stepRows.length}
