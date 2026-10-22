@@ -79,15 +79,15 @@ Absolute values keyed by size token (`xs`–`3xl`), because React Native needs p
 
 Hex values live in the token sources and the _Design System / Colors_ story, not here (see [ND Themes → Colors](./nd-themes.md#colors)). Components read roles:
 
-| Group                 | What it colors                                                                                                                                                                             |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `theme.colors`        | Base surfaces, text, borders, accents, focus ring, feedback (success/warning…)                                                                                                             |
-| `theme.chrome`        | Screen header band, brand mark, navigation chrome                                                                                                                                          |
-| `theme.action`        | Action fills and foregrounds: primary, secondary, destructive, disabled, selection — read by `IconButton` and Focus actions; `Button` still reads `colors` (see [Known gaps](#known-gaps)) |
-| `theme.surfaceBorder` | Card, sheet and input border hierarchy                                                                                                                                                     |
-| `theme.journey`       | Timeline nodes, step states, progress, goal completion                                                                                                                                     |
-| `theme.evidence`      | Per-evidence-type proof-card tints                                                                                                                                                         |
-| `theme.narrative`     | Climb / drop / stories / relief section colors for celebratory surfaces                                                                                                                    |
+| Group                 | What it colors                                                                                                                                                                                                  |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `theme.colors`        | Base surfaces, text, borders, accents, focus ring, feedback (success/warning…)                                                                                                                                  |
+| `theme.chrome`        | Screen header band, brand mark, navigation chrome                                                                                                                                                               |
+| `theme.action`        | Action fills and foregrounds: primary, secondary, destructive, disabled, selection — read by e.g. `IconButton`, `ProgressRing` and Focus actions; `Button` still reads `colors` (see [Known gaps](#known-gaps)) |
+| `theme.surfaceBorder` | Card, sheet and input border hierarchy                                                                                                                                                                          |
+| `theme.journey`       | Timeline nodes, step states, progress, goal completion                                                                                                                                                          |
+| `theme.evidence`      | Per-evidence-type proof-card tints                                                                                                                                                                              |
+| `theme.narrative`     | Climb / drop / stories / relief section colors for celebratory surfaces                                                                                                                                         |
 
 ---
 
@@ -201,11 +201,11 @@ Screens with a text input above a pinned footer CTA wrap the `[body][footer]` pa
 
 Runtime places that do not yet meet this contract. Each is tracked; fix them there, not by rewriting the contract to match.
 
-| Gap                                                                                                                                                                                                                                   | Tracking                                                                                 |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| Some text styles omit `fontFamily`; `textStyles` use fixed multipliers so Warm Studio line heights miss them; 9–10pt essential labels                                                                                                 | [#684](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/684) (UI-01) |
-| Focus actions and the badge-wall CTA use their own button treatment (`theme.action`, modal elevation, no pressed state) instead of `Button`; `Button` itself reads `colors.accentPrimary`/`colors.warning` rather than `theme.action` | [#691](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/691) (UI-08) |
-| Pinned action groups and the badge-detail hero are unbounded on small screens                                                                                                                                                         | [#694](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/694) (UI-11) |
+| Gap                                                                                                                                                                                                                                                          | Tracking                                                                                 |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| Some text styles omit `fontFamily`; `textStyles` use fixed multipliers so Warm Studio line heights miss them; 9–10pt essential labels                                                                                                                        | [#684](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/684) (UI-01) |
+| Focus actions use their own button treatment (`theme.action`, modal elevation, no pressed state); the badge-wall CTA uses celebration chrome with its own press-in; `Button` itself reads `colors.accentPrimary`/`colors.warning` rather than `theme.action` | [#691](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/691) (UI-08) |
+| Pinned action groups and the badge-detail hero are unbounded on small screens                                                                                                                                                                                | [#694](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/694) (UI-11) |
 
 ---
 

@@ -10,7 +10,7 @@
 
 The native app inherits from three sources:
 
-- **The monorepo's design language** — typography (originally Anybody, system-ui, DM Mono, OpenDyslexic; the app now ships Instrument Sans for body and Lexend for dyslexia — see [Design Language](../design/design-language.md#fonts)), color system (landing page accents as highlights, not backgrounds), the "character without chaos" philosophy
+- **The monorepo's design language** — typography (originally Anybody, system-ui, DM Mono, OpenDyslexic; the app now ships Anybody headlines and Instrument Sans body, with Lexend and Atkinson Hyperlegible for the dyslexia and low-vision themes — see [Design Language](../design/design-language.md#fonts)), color system (landing page accents as highlights, not backgrounds), the "character without chaos" philosophy
 - **The monorepo's accessibility system** — 7 ND themes, content density, reduced motion, focus management, WCAG AA minimum
 - **New constraints from mobile** — touch targets, one-handed use, interruption-friendly (you'll use this app in 30-second bursts on a bus, not hour-long sessions at a desk)
 

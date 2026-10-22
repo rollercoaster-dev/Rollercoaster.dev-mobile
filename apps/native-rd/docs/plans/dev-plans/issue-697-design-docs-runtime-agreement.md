@@ -83,6 +83,7 @@ Reviewed HEAD `463025d7`. Three independent reviewers (code quality, test covera
 | Quality                  | Medium   | Store listing copy said "7 themes in light or dark … large text"                                                                                | Fixed: lists the seven actual themes                                                                       |
 | Quality                  | Medium   | Composed stories copy screen JSX (already missed the header a11y props)                                                                         | Header props added; contract wording changed to "mirror"; extraction deferred (Follow-ups)                 |
 | Quality                  | Low      | Border rule wrong for AnimatedSheet side edges; theme registration file misnamed; `theme.action` vs `Button` mixed guidance; heritage font line | Fixed in contract, skill, nd-themes, design-principles                                                     |
+| Re-review (`ec17fbdc`)   | Low      | #691 gap row mis-described the badge-wall CTA; `theme.action` readers incomplete; heritage font line missed Atkinson                            | Fixed in contract and design-principles; all earlier findings verified fixed                               |
 
 ### Follow-ups
 
