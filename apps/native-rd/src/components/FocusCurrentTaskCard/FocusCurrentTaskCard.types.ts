@@ -1,3 +1,4 @@
+import type { GestureResponderEvent } from "react-native";
 import type { FocusCapturedEvidenceItem } from "./FocusCurrentTaskCard.parts";
 
 /**
@@ -44,14 +45,20 @@ export interface FocusInProgressCardProps extends FocusCardBase {
    * what is absent (#360).
    */
   capturedEvidence?: readonly FocusCapturedEvidenceItem[];
-  /** Open the evidence-plan chooser (#409) — the whole planned box is the target. */
-  onChangeEvidencePlan: () => void;
+  /**
+   * Open the evidence-plan chooser (#409) — the whole planned box is the target.
+   * Receives the press event so the screen can return focus here when the
+   * chooser closes (#686).
+   */
+  onChangeEvidencePlan: (event: GestureResponderEvent) => void;
   /**
    * Capture evidence. Pass a `type` to capture that specific planned type (the
    * per-type "Add {type}" invites); call with no argument to open the capture
    * chooser with no type pre-implied (the post-completion "Add more evidence").
+   * The chooser path also receives the press event so the screen can return
+   * focus to that button when the chooser closes (#686).
    */
-  onAddEvidence: (type?: string) => void;
+  onAddEvidence: (type?: string, event?: GestureResponderEvent) => void;
   /** Set this step aside (in-progress → paused). */
   onPause: () => void;
   /** Mark complete — revealed only once every planned type is captured. */

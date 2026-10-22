@@ -4,6 +4,7 @@ import {
   ActivityIndicator,
   AccessibilityInfo,
   ScrollView,
+  type GestureResponderEvent,
 } from "react-native";
 import { KeyboardAvoidingFrame } from "../../components/KeyboardAvoidingFrame";
 import { ScreenSubHeader } from "../../components/ScreenHeader";
@@ -27,7 +28,11 @@ import {
   type FocusParkedRow,
 } from "../../components/FocusParkedState";
 import { EvidenceTypePicker } from "../../components/EvidenceTypePicker";
-import { AnimatedSheet } from "../../components/AnimatedSheet";
+import {
+  AnimatedSheet,
+  SheetBackground,
+  useSheetTrigger,
+} from "../../components/AnimatedSheet";
 import { resolvePlannedEvidenceTypes } from "../../utils/parsePlannedEvidenceTypes";
 import {
   goalsQuery,
@@ -225,6 +230,10 @@ function FocusContent({
   const [isPlanSheetOpen, setIsPlanSheetOpen] = useState(false);
   // Capture sheet: pick a type to capture right now, with none pre-implied.
   const [isCaptureSheetOpen, setIsCaptureSheetOpen] = useState(false);
+  // The control that opened each sheet, so closing it returns screen-reader
+  // focus there rather than to the top of the screen (#686).
+  const captureTrigger = useSheetTrigger();
+  const planTrigger = useSheetTrigger();
 
   useEffect(() => {
     breadcrumb({ category: "focus", message: "enter" });
@@ -490,24 +499,28 @@ function FocusContent({
    * sheet so the user picks one first (FocusCurrentTaskCard.types.ts:49-54).
    */
   const handleAddEvidence = useCallback(
-    (type?: string) => {
+    (type?: string, event?: GestureResponderEvent) => {
       if (!currentStepId) return;
       if (type === undefined) {
+        captureTrigger.rememberTrigger(event);
         setIsCaptureSheetOpen(true);
         return;
       }
       navigateToCapture(validateEvidenceType(type), currentStepId);
     },
-    [currentStepId, navigateToCapture],
+    [currentStepId, navigateToCapture, captureTrigger],
   );
 
   const handleSelectCaptureType = useCallback(
     (type: EvidenceTypeValue) => {
+      // Picking a type moves on to the capture screen, which owns focus next;
+      // don't pull focus back to this screen's trigger as the sheet slides out.
+      captureTrigger.rememberTrigger();
       setIsCaptureSheetOpen(false);
       if (!currentStepId) return;
       navigateToCapture(type, currentStepId);
     },
-    [currentStepId, navigateToCapture],
+    [currentStepId, navigateToCapture, captureTrigger],
   );
 
   /**
@@ -570,75 +583,82 @@ function FocusContent({
 
   return (
     <View style={styles.content}>
-      <View style={styles.headerRow}>
-        <Text
-          variant="title"
-          style={styles.title}
-          numberOfLines={2}
-          accessible
-          accessibilityRole="header"
-        >
-          {goal.title}
-        </Text>
-        <IconButton
-          icon={<Pencil size={20} weight="bold" />}
-          onPress={handleEditPress}
-          tone="ghost"
-          accessibilityLabel={t("focusMode:header.editGoal")}
-          size="sm"
-        />
-      </View>
-
-      {/* The one way to see everything: progress + "See all steps ›" in a
-          single tap target, replacing the old MiniTimeline/ProgressDots pair. */}
-      <FocusProgressStrip
-        doneCount={doneCount}
-        totalCount={stepRows.length}
-        onPress={handleTimelineTap}
-      />
-
-      <View style={styles.cardSection}>
-        {currentStep ? (
-          currentStep.status === StepStatus.completed ? (
-            <FocusCurrentTaskCard
-              status="completed"
-              title={currentStepTitle}
-              capturedEvidence={capturedEvidence}
-              onReopen={handleReopen}
-            />
-          ) : currentStep.status === StepStatus.paused ? (
-            <FocusCurrentTaskCard
-              status="paused"
-              title={currentStepTitle}
-              onPickUp={handlePickUp}
-            />
-          ) : (
-            <FocusCurrentTaskCard
-              status="in-progress"
-              title={currentStepTitle}
-              plannedEvidenceTypes={plannedEvidenceTypes}
-              capturedEvidence={capturedEvidence}
-              onChangeEvidencePlan={() => setIsPlanSheetOpen(true)}
-              onAddEvidence={handleAddEvidence}
-              onPause={handlePause}
-              onMarkComplete={handleMarkComplete}
-              afterStep={band?.afterStep}
-              waitingOn={band?.waitingOn}
-              dueDate={band?.dueDate}
-            />
-          )
-        ) : (
-          <NoActionableBody
-            stepCount={stepRows.length}
-            allStepsComplete={areAllStepsComplete(stepRows)}
-            parkedRows={parkedRows}
-            goalTitle={goal.title ?? ""}
-            onAddFirstStep={handleEditPress}
-            onDesignBadge={handleDesignBadge}
-            sealed={sealed}
+      {/* Everything behind the two sheets. Hidden from VoiceOver and TalkBack
+          while either is open; the sheets stay siblings outside it (#686). */}
+      <SheetBackground style={styles.sheetBackground}>
+        <View style={styles.headerRow}>
+          <Text
+            variant="title"
+            style={styles.title}
+            numberOfLines={2}
+            accessible
+            accessibilityRole="header"
+          >
+            {goal.title}
+          </Text>
+          <IconButton
+            icon={<Pencil size={20} weight="bold" />}
+            onPress={handleEditPress}
+            tone="ghost"
+            accessibilityLabel={t("focusMode:header.editGoal")}
+            size="sm"
           />
-        )}
-      </View>
+        </View>
+
+        {/* The one way to see everything: progress + "See all steps ›" in a
+          single tap target, replacing the old MiniTimeline/ProgressDots pair. */}
+        <FocusProgressStrip
+          doneCount={doneCount}
+          totalCount={stepRows.length}
+          onPress={handleTimelineTap}
+        />
+
+        <View style={styles.cardSection}>
+          {currentStep ? (
+            currentStep.status === StepStatus.completed ? (
+              <FocusCurrentTaskCard
+                status="completed"
+                title={currentStepTitle}
+                capturedEvidence={capturedEvidence}
+                onReopen={handleReopen}
+              />
+            ) : currentStep.status === StepStatus.paused ? (
+              <FocusCurrentTaskCard
+                status="paused"
+                title={currentStepTitle}
+                onPickUp={handlePickUp}
+              />
+            ) : (
+              <FocusCurrentTaskCard
+                status="in-progress"
+                title={currentStepTitle}
+                plannedEvidenceTypes={plannedEvidenceTypes}
+                capturedEvidence={capturedEvidence}
+                onChangeEvidencePlan={(event) => {
+                  planTrigger.rememberTrigger(event);
+                  setIsPlanSheetOpen(true);
+                }}
+                onAddEvidence={handleAddEvidence}
+                onPause={handlePause}
+                onMarkComplete={handleMarkComplete}
+                afterStep={band?.afterStep}
+                waitingOn={band?.waitingOn}
+                dueDate={band?.dueDate}
+              />
+            )
+          ) : (
+            <NoActionableBody
+              stepCount={stepRows.length}
+              allStepsComplete={areAllStepsComplete(stepRows)}
+              parkedRows={parkedRows}
+              goalTitle={goal.title ?? ""}
+              onAddFirstStep={handleEditPress}
+              onDesignBadge={handleDesignBadge}
+              sealed={sealed}
+            />
+          )}
+        </View>
+      </SheetBackground>
 
       {/* Capture sheet — pick a type, then capture. Reuses #409's capture mode
           whole, as the New Goal wizard's step 2 does. Renders in-tree and gates
@@ -649,6 +669,7 @@ function FocusContent({
         activeStepTitle={currentStep?.title ?? undefined}
         onSelectType={handleSelectCaptureType}
         onClose={() => setIsCaptureSheetOpen(false)}
+        restoreFocusRef={captureTrigger.restoreFocusRef}
       />
 
       {/* Evidence-plan sheet — change *which* types this step plans. The
@@ -661,6 +682,7 @@ function FocusContent({
         closeLabel={t("common:actions.close")}
         closeTestID="focus-evidence-plan-close"
         backdropTestID="focus-evidence-plan-backdrop"
+        restoreFocusRef={planTrigger.restoreFocusRef}
       >
         <EvidenceTypePicker
           selectedTypes={plannedEvidenceTypes}

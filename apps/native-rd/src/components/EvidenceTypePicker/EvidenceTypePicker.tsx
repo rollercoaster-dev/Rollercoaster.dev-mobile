@@ -54,7 +54,7 @@ export interface CaptureEvidenceTypePickerProps {
    * that opened it. Forwarded to {@link AnimatedSheet}; omit and no focus is
    * restored (e.g. the theme-matrix story).
    */
-  restoreFocusRef?: React.RefObject<View | null>;
+  restoreFocusRef?: React.RefObject<View | number | null>;
 }
 
 /**
