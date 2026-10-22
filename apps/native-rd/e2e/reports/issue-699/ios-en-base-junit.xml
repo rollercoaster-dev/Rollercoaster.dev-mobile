@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<testsuites>
+  <testsuite name="Test Suite" device="rd-verify-699 - iOS 26.5 - 6766327D-0D6F-4FF7-BAAD-F72447E7F4F8" tests="1" failures="0" time="63.979" timestamp="2026-10-22T14:44:39">
+    <testcase id="base-badge-count" name="base-badge-count" classname="base-badge-count" file="maestro/flows/base-badge-count.yaml" time="63.96" timestamp="2026-10-22T14:44:39" status="SUCCESS"/>
+  </testsuite>
+</testsuites>

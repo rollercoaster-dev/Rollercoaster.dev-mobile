@@ -36,8 +36,9 @@ notes:
     forms follow English's _one/_other.
   - >-
     The `wall.*` keys are the chrome of the BadgesWall "wall of proof" view.
-    `wall.count` (`{{count}} badges`) is the header tally, matter-of-fact with
-    no exclamation. `wall.allVerifiable` and `wall.justEarned` are all-caps
+    `wall.count_one` / `wall.count_other` (`{{count}} badge` / `{{count}}
+    badges`) is the header tally, matter-of-fact with no exclamation. Plural
+    forms follow English's _one/_other. `wall.allVerifiable` and `wall.justEarned` are all-caps
     overlines; keep them terse and calm. "Verifiable" means the credential is
     real and checkable, not a boast. Preserve the middot separator "·" verbatim.
   - >-
