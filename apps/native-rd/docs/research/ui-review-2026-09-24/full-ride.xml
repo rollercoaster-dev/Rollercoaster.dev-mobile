@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<testsuites>
+  <testsuite name="Test Suite" device="ui-review-native-rd - iOS 26.5 - EF1ACDE1-7B8D-45AE-9380-D36F50C21D60" tests="1" failures="0" time="137.936" timestamp="2026-09-24T15:06:58">
+    <testcase id="full-ride" name="full-ride" classname="full-ride" file="/tmp/native-rd-ui-review/flows/full-ride.yaml" time="137.911" timestamp="2026-09-24T15:06:58" status="SUCCESS">
+      <properties>
+        <property name="tags" value="required"/>
+      </properties>
+    </testcase>
+  </testsuite>
+</testsuites>

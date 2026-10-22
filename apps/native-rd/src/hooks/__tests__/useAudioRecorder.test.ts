@@ -55,6 +55,56 @@ describe("useAudioRecorder", () => {
   });
 
   describe("startRecording", () => {
+    it("does not record if reset discards a pending permission request", async () => {
+      let grantPermission!: (value: { granted: boolean }) => void;
+      (requestRecordingPermissionsAsync as jest.Mock).mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            grantPermission = resolve;
+          }),
+      );
+      const { result } = renderHook(() => useAudioRecorder());
+
+      let start!: Promise<void>;
+      act(() => {
+        start = result.current.startRecording();
+      });
+      expect(result.current.status).toBe("requesting-permission");
+      await act(async () => {
+        await result.current.reset();
+      });
+      await act(async () => {
+        grantPermission({ granted: true });
+        await start;
+      });
+
+      expect(mockRecorder.record).not.toHaveBeenCalled();
+      expect(result.current.status).toBe("idle");
+    });
+
+    it("does not record if the screen unmounts during permission", async () => {
+      let grantPermission!: (value: { granted: boolean }) => void;
+      (requestRecordingPermissionsAsync as jest.Mock).mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            grantPermission = resolve;
+          }),
+      );
+      const { result, unmount } = renderHook(() => useAudioRecorder());
+
+      let start!: Promise<void>;
+      act(() => {
+        start = result.current.startRecording();
+      });
+      unmount();
+      await act(async () => {
+        grantPermission({ granted: true });
+        await start;
+      });
+
+      expect(mockRecorder.record).not.toHaveBeenCalled();
+    });
+
     it("requests permission and starts recording", async () => {
       const { result } = renderHook(() => useAudioRecorder());
 

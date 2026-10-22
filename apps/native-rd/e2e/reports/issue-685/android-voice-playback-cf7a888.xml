@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<testsuites>
+  <testsuite name="Test Suite" device="CodexIssue685" tests="1" failures="0" time="81.0">
+    <testcase id="android-voice-playback" name="android-voice-playback" classname="android-voice-playback" time="81.0" status="SUCCESS"/>
+  </testsuite>
+</testsuites>

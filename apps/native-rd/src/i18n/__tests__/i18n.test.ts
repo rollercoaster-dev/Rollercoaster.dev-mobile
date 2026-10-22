@@ -29,6 +29,13 @@ describe("i18n bootstrap", () => {
     await i18n.changeLanguage("en");
   });
 
+  test.each([
+    [1, "1 Badge"],
+    [2, "2 Badges"],
+  ])("resolves the de plural form for count %i as %s", (count, expected) => {
+    expect(i18n.t("badges:wall.count", { lng: "de", count })).toBe(expected);
+  });
+
   test("accepts regional tags via nonExplicitSupportedLngs", async () => {
     // With nonExplicitSupportedLngs: true, changeLanguage("en-GB") must not
     // reject as an unsupported language. We don't pin resolvedLanguage here —
