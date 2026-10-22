@@ -31,10 +31,10 @@ Checks whether the current branch diff satisfies the original issue's requiremen
 Call after `/self-review` and before `/finalize`:
 
 ```
-/implement  -->  /self-review  -->  /accept-check  -->  /finalize
+/implement  -->  /self-review  -->  /acceptance-validator  -->  /finalize
 ```
 
-Invoke as: `/accept-check` or `Run /accept-check for issue #<N>`
+Invoke as: `/acceptance-validator` or `Run /acceptance-validator for issue #<N>`
 
 ## Workflow
 

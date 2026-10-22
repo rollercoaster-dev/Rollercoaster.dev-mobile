@@ -108,25 +108,24 @@ Each `docs/` subdirectory has an `index.md` with a summary and links:
 
 - **Planning**: repository docs and issue acceptance criteria; graph-flow may be used when available. Automated prioritization uses `.agents/skills/project-manager/`.
 - **Issue tracking**: GitHub Issues + GitHub Project board
-- **Code review**: independent code, test, and failure-handling review through `.agents/skills/review/`; CodeRabbit locally when available and on GitHub where configured.
-- **Expert review**: `.agents/skills/expert-review/` — a report-only panel of `review-*` subagents (`.claude/agents/`) grounded in this repo's docs and ADRs, with every finding verified against the code. Run it on a branch before opening or readying a PR.
+- **Code review**: independent code, test, and failure-handling review through `.agents/skills/review/`.
+- **Expert review**: `.agents/skills/expert-review/` — a report-only panel of `review-*` subagents (`.claude/agents/`) grounded in this repo's docs and ADRs, with every finding verified against the code. `/self-review` runs it before a PR; run it alone for a report without fixes.
 - **Skills**: See `.claude/skills/` (project skills) and `.agents/skills/` (shared agent skills)
 - **Dev plans**: `.claude/dev-plans/` for issue-specific implementation plans
 
 ### Recommended Pre-PR Cycle
 
 ```
-/implement  -->  /self-review  -->  /expert-review  -->  /accept-check  -->  /finalize
+/implement  -->  /self-review  -->  /acceptance-validator  -->  /finalize
 ```
 
 1. `/implement` — execute the dev plan with atomic commits
-2. `/self-review` — pre-PR gate: local validation and independent reviewers. Codex uses the portable `.agents/skills/review/` workflow. Blocks on unresolved critical findings.
-3. `/expert-review` — report-only domain panel (ND guardrails, data model, badges, a11y, …); fix what it confirms.
-4. `/accept-check` — validate diff against issue acceptance criteria. Flags gaps.
-5. `/finalize` — push branch, create PR, update board
+2. `/self-review` — pre-PR gate: local validation and the `/expert-review` panel, auto-fixing confirmed blockers. Codex uses the portable `.agents/skills/review/` workflow. Blocks on unresolved critical findings.
+3. `/acceptance-validator` — validate diff against issue acceptance criteria. Flags gaps.
+4. `/finalize` — push branch, create PR, update board
 
 After merge: `/review-to-task <pr-number>` to convert unresolved review comments into tracked issues.
 
 ### Handling Review-Skipped Findings
 
-Every review finding (`/simplify`, `/review`, `/self-review`, `/expert-review`, CodeRabbit) you choose not to fix in scope must be tracked as a **GH issue** (preferred) and/or a **"Follow-ups" section in the active plan** under `apps/native-rd/docs/plans/`. Never chat-only.
+Every review finding (`/simplify`, `/review`, `/self-review`, `/expert-review`, GitHub PR reviews) you choose not to fix in scope must be tracked as a **GH issue** (preferred) and/or a **"Follow-ups" section in the active plan** under `apps/native-rd/docs/plans/`. Never chat-only.

@@ -83,28 +83,24 @@ Badge logic lives in `@rollercoaster-dev/openbadges-core` (workspace package at 
 
 ## Workflow
 
-- **Query graph-flow knowledge before acting** — run `k-query` for relevant area/topic at session start
-- **Planning stack**: use `p-stack`, `p-goal`, `p-plan` etc. for tracking work
-- **Issue workflow**: graph-flow skills (`setup`, `implement`, `finalize`)
-- **Code review**: CodeRabbit CLI at `~/.local/bin/coderabbit` — use `coderabbit review --plain`
+- **Issue workflow**: skills `start-issue` → `implement` → `self-review` → `acceptance-validator` → `finalize` (table below)
+- **Code review**: `self-review` runs the `expert-review` panel (`.agents/skills/expert-review/`); run `expert-review` on its own for a report without fixes
 - **Review-skipped findings**: track as GH issue or in plan "Follow-ups" — never chat-only. See `AGENTS.md` → Handling Review-Skipped Findings.
 
-## Graph Flow (Issue Workflow)
+## Issue Workflow
 
-| Command                | What it does                                                                                |
-| ---------------------- | ------------------------------------------------------------------------------------------- |
-| `/work-on-issue <#>`   | Creates branch, sets up board, fetches issue                                                |
-| `/implement`           | Implements code from a dev plan with atomic commits                                         |
-| `/review`              | Runs code-reviewer, test-analyzer, silent-failure-hunter in parallel                        |
-| `/self-review`         | Pre-PR gate: runs local validation + CodeRabbit + Claude agents, auto-fixes critical issues |
-| `/accept-check`        | Validates PR diff against issue acceptance criteria                                         |
-| `/quality-score`       | Grades codebase domains, updates docs/quality/grades.md                                     |
-| `/review-to-task <pr>` | Converts unresolved PR comments to tracked issues                                           |
-| `/finalize`            | Pushes branch, creates PR, updates board                                                    |
-| `/auto-issue`          | Creates a new GitHub issue                                                                  |
-| `/board-status`        | Shows project board state                                                                   |
-| `/issue-fetcher`       | Fetches and analyzes issue details                                                          |
-| `/milestone-status`    | Shows milestone progress and blockers                                                       |
+| Command                 | What it does                                                                      |
+| ----------------------- | --------------------------------------------------------------------------------- |
+| `/start-issue <#>`      | Fetches the issue, researches the codebase, writes the plan; stops for your input |
+| `/implement`            | Implements code from a dev plan with atomic commits                               |
+| `/self-review`          | Pre-PR gate: local validation + `expert-review`, auto-fixes confirmed blockers    |
+| `/expert-review`        | Report-only domain panel; every finding verified against the code                 |
+| `/review`               | Portable review-and-fix loop with acceptance checks (Codex and automation)        |
+| `/acceptance-validator` | Validates the branch diff against issue acceptance criteria                       |
+| `/finalize`             | Pushes branch, creates PR, updates board                                          |
+| `/review-to-task <pr>`  | Converts unresolved PR comments to tracked issues                                 |
+| `/quality-scorer`       | Grades codebase domains, updates docs/quality/grades.md                           |
+| `/auto-issue`           | Runs an issue end to end (automation)                                             |
 
 ## After Making Changes
 

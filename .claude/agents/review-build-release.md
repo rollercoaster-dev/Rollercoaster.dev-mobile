@@ -21,7 +21,6 @@ Read first: `.agents/skills/expert-review/references/finding-contract.md`
   failure modes, "Tag rewriting is blocked"
 - `apps/native-rd/CLAUDE.md` → "Hard Rules", "Commands", "Tests" (Jest via
   `scripts/jest-node.sh`, never `bun test`)
-- `.coderabbit.yaml` → the `.github/workflows/**` path instruction
 
 ## Focus
 
@@ -41,7 +40,8 @@ Read first: `.agents/skills/expert-review/references/finding-contract.md`
   assume a fixed Metro port in worktrees.
 - **CI** — `continue-on-error` or soft-fail without a contract row; jobs
   that stop running on the paths they guard (`paths:` filters too narrow);
-  missing concurrency cancel on PR refs; actions pinned to floating refs;
+  missing concurrency cancel-in-progress on PR refs; actions pinned to a
+  floating ref like `@main` instead of a major version;
   the contract doc not updated alongside a workflow change.
 - **Release** — release-please config or tag patterns that break the
   pipeline in `release.md`; secrets referenced that the runbook doesn't list;
