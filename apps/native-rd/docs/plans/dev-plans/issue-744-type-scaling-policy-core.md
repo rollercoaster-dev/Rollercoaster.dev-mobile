@@ -10,10 +10,10 @@ React Native multiplies every `<Text>` by the OS `fontScale` with no cap, and th
 
 ## Intent Verification
 
-- [ ] Each `Text` variant's host text gets its cap as `maxFontSizeMultiplier`; `chrome` gets 1.3; Low Vision's 1.25× is composed into the cap so the combined size stays bounded.
-- [ ] Body text still reaches 2.0× its default-theme base size at OS 200%.
-- [ ] `useTypeScale()` is the only OS font-scale reader in `src/`; thresholds live in `src/utils/typeScale.ts`.
-- [ ] The scale-audit test is in the suite; `docs/accessibility-guidelines.md` documents caps and hook, linked from the `nd-themes.md` checklist.
+- [x] Each `Text` variant's host text gets its cap as `maxFontSizeMultiplier`; `chrome` gets 1.3; Low Vision's 1.25× is composed into the cap so the combined size stays bounded.
+- [x] Body text still reaches 2.0× its default-theme base size at OS 200%.
+- [x] `useTypeScale()` is the only OS font-scale reader in `src/`; thresholds live in `src/utils/typeScale.ts`.
+- [x] The scale-audit test is in the suite; `docs/accessibility-guidelines.md` documents caps and hook, linked from the `nd-themes.md` checklist.
 
 ## Dependencies
 
@@ -108,6 +108,19 @@ Reviewers: code quality, test coverage, error handling (independent subagents). 
 | Nested shared Text overrides outer cap                     | low      | Follow-up #747                                                                                                                     |
 | Audit reads theme fontSize, not host style                 | low      | Skipped: StyleSheet mock always renders the default theme, so host style can't show Low Vision; multiplier is the thing under test |
 | Caller `null` replaced by cap; (0,1) passes through        | low      | Kept: `??` preserves explicit 0 ("no limit"); null → policy default is the intended behaviour                                      |
+
+## Review (round 2, HEAD a85f2a0e)
+
+Independent re-review of 8cffcec0..a85f2a0e verified every "Fixed" row above. New findings, all low, fixed in round 3:
+
+- `allowFontScaling={false}` on the BadgeCard initials was untested → asserted.
+- Lint missed `const { fontScale } = Dimensions.get(...)` → selector added. Indirect `const d = useWindowDimensions(); d.fontScale` and aliased `PixelRatio` imports remain undetected; accepted (AST selectors can't follow aliases).
+- Flat config replaces `no-restricted-syntax` options rather than merging → comment on the block.
+- Hook's non-finite/non-positive `fontScale` fallback untested → test added.
+
+## Native verification
+
+iPhone 17e sim, iOS 26.5, Welcome screen, default and Loud & Clear at Large and AX5: headline grows 1.5x and body 2.0x of the default base; Low Vision composes and stays bounded. Report and captures in `tmp/native-verify/744/` (gitignored; captures go to the PR body).
 
 ## Follow-ups
 

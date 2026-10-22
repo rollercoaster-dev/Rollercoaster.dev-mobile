@@ -66,7 +66,9 @@ module.exports = defineConfig([
   {
     // Type-scaling policy (#741): useTypeScale() is the only OS font-scale
     // reader, so caps and thresholds can't be bypassed. See
-    // docs/accessibility-guidelines.md#text-scaling.
+    // docs/accessibility-guidelines.md#text-scaling. Flat config replaces rule
+    // options instead of merging them: add any future no-restricted-syntax
+    // selectors for src/ to this block, or they will drop these.
     files: ["src/**/*.{ts,tsx}"],
     ignores: ["src/hooks/useTypeScale.ts"],
     rules: {
@@ -77,6 +79,7 @@ module.exports = defineConfig([
           "VariableDeclarator[init.callee.name='useWindowDimensions'] > ObjectPattern > Property[key.name='fontScale']",
           "MemberExpression[object.callee.name='useWindowDimensions'][property.name='fontScale']",
           "MemberExpression[object.callee.object.name='Dimensions'][property.name='fontScale']",
+          "VariableDeclarator[init.callee.object.name='Dimensions'] > ObjectPattern > Property[key.name='fontScale']",
         ].map((selector) => ({
           selector,
           message:

@@ -120,7 +120,9 @@ describe("BadgeCard", () => {
         expect(
           screen.getByText("Jan 1, 2025").props.maxFontSizeMultiplier,
         ).toBe(2);
-        // The initials tile is badgeSize square with its letter at 0.4x.
+        // The initials tile is badgeSize square with its letter at 0.4x; the
+        // letter opts out of OS scaling because badgeSize already includes it.
+        expect(screen.getByText("F").props.allowFontScaling).toBe(false);
         expect(screen.getByText("F")).toHaveStyle({
           fontSize: Math.round(expected * 0.4),
         });

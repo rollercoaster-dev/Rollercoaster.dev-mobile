@@ -49,6 +49,16 @@ describe("useTypeScale", () => {
     expect(result.current.isLargeType).toBe(true);
   });
 
+  it.each([0, -1, Number.NaN])(
+    "falls back to fontScale 1 when the platform reports %s",
+    (fontScale) => {
+      mockFontScale(fontScale);
+      const { result } = renderHook(() => useTypeScale());
+      expect(result.current.fontScale).toBe(1);
+      expect(result.current.scaleFor("body")).toBe(1);
+    },
+  );
+
   it("re-renders when the OS font scale changes", () => {
     const { result } = renderHook(() => useTypeScale());
     mockFontScale(2.35);
