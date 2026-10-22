@@ -52,6 +52,9 @@ if (
 
 const ThemeDecorator = (Story: React.ComponentType, context: any) => {
   const selectedTheme = context.globals?.theme as ThemeName | undefined;
+  // Composed-screen stories draw their own phone frames, so the story padding
+  // would only offset them from the canvas edge.
+  const fullscreen = context.parameters?.layout === "fullscreen";
 
   React.useEffect(() => {
     if (selectedTheme && themeNames.includes(selectedTheme)) {
@@ -67,7 +70,7 @@ const ThemeDecorator = (Story: React.ComponentType, context: any) => {
         <KeyboardProvider>
           <ScrollView
             style={styles.container}
-            contentContainerStyle={styles.content}
+            contentContainerStyle={fullscreen ? undefined : styles.content}
           >
             <Story />
           </ScrollView>
