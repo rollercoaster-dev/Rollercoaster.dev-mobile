@@ -40,6 +40,7 @@ describe("Text", () => {
     afterEach(() => {
       unistylesMock.useUnistyles.mockReturnValue({
         theme: unistylesMock.mockTheme,
+        rt: unistylesMock.UnistylesRuntime,
       });
     });
 

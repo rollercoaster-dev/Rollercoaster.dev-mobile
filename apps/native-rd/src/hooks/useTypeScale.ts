@@ -13,12 +13,15 @@ import {
  * The app's only reader of the OS font scale. `useWindowDimensions` re-renders
  * when the user changes Dynamic Type; `PixelRatio.getFontScale()` does not.
  *
- * `scaleFor(role)` is the multiplier RN actually applies to that role's
- * theme size once its cap kicks in — use it for layout math that has to
- * track rendered text (e.g. a badge sized to its text column).
+ * `scaleFor(role)` is the multiplier RN applies to that role's theme size
+ * once its cap kicks in — use it for layout math that has to track rendered
+ * text (e.g. a badge sized to its text column). Exact on iOS. Android 14+
+ * scales large sp sizes non-linearly, so there it is an upper bound.
  */
 export function useTypeScale() {
-  const { fontScale } = useWindowDimensions();
+  const { fontScale: rawFontScale } = useWindowDimensions();
+  const fontScale =
+    Number.isFinite(rawFontScale) && rawFontScale > 0 ? rawFontScale : 1;
   const { theme } = useUnistyles();
   const themeScale = themeScaleOf(theme.size);
 

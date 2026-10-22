@@ -2,9 +2,10 @@
  * Scale audit (#741): renders every shared Text variant at the largest iOS
  * accessibility size and checks the size RN would draw against its cap.
  *
- * RN draws `fontSize × min(fontScale, maxFontSizeMultiplier)`; the audit
- * applies that rule to the theme's own fontSize and the multiplier read off
- * the rendered host text, so a variant that loses its cap fails here.
+ * RN draws `fontSize × min(fontScale, maxFontSizeMultiplier)` and ignores a
+ * multiplier below 1 (0 means "no limit"). The audit applies that rule to
+ * the theme's fontSize and the multiplier read off the rendered host text,
+ * so a variant whose cap is missing or ineffective fails here.
  */
 import React from "react";
 import { renderWithProviders, screen } from "./test-utils";
@@ -38,16 +39,18 @@ function renderedSize(
     </Text>,
   );
   const { maxFontSizeMultiplier } = screen.getByText("Audit").props;
-  return (
-    theme.textStyles[variant].fontSize *
-    Math.min(fontScale, maxFontSizeMultiplier)
-  );
+  const applied =
+    maxFontSizeMultiplier >= 1
+      ? Math.min(fontScale, maxFontSizeMultiplier)
+      : fontScale;
+  return theme.textStyles[variant].fontSize * applied;
 }
 
 describe("type-scale audit", () => {
   afterEach(() => {
     unistylesMock.useUnistyles.mockReturnValue({
       theme: unistylesMock.mockTheme,
+      rt: unistylesMock.UnistylesRuntime,
     });
   });
 

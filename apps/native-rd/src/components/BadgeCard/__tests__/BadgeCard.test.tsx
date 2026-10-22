@@ -107,7 +107,19 @@ describe("BadgeCard", () => {
             caption.lineHeight * contentScale,
         );
         mockFontScale(fontScale);
-        renderWithProviders(<BadgeCard {...baseProps} />);
+        renderWithProviders(
+          <BadgeCard {...baseProps} description="Ran a mile" />,
+        );
+        // The math above assumes these caps; pin the rendered nodes to them.
+        expect(
+          screen.getByText("First Steps").props.maxFontSizeMultiplier,
+        ).toBe(1.5);
+        expect(screen.getByText("Ran a mile").props.maxFontSizeMultiplier).toBe(
+          2,
+        );
+        expect(
+          screen.getByText("Jan 1, 2025").props.maxFontSizeMultiplier,
+        ).toBe(2);
         // The initials tile is badgeSize square with its letter at 0.4x.
         expect(screen.getByText("F")).toHaveStyle({
           fontSize: Math.round(expected * 0.4),

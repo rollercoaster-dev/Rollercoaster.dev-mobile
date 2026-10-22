@@ -10,6 +10,7 @@ describe("useTypeScale", () => {
   afterEach(() => {
     unistylesMock.useUnistyles.mockReturnValue({
       theme: unistylesMock.mockTheme,
+      rt: unistylesMock.UnistylesRuntime,
     });
   });
 

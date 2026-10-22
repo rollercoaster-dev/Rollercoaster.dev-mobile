@@ -83,6 +83,12 @@ describe("GoalEvidenceCard", () => {
       const { headline, body } = mockTheme.textStyles;
       mockFontScale(fontScale);
       renderWithProviders(<GoalEvidenceCard {...defaultProps} />);
+      // The math below assumes these caps; pin the rendered nodes to them.
+      expect(screen.getByRole("header").props.maxFontSizeMultiplier).toBe(1.5);
+      expect(
+        screen.getByText(defaultProps.goalDescription).props
+          .maxFontSizeMultiplier,
+      ).toBe(2);
       const { size } = mockBadgeRenderer.mock.calls.at(-1)?.[0] as {
         size: number;
       };

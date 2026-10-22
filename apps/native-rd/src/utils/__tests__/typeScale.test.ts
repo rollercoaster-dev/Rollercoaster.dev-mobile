@@ -1,10 +1,4 @@
-import {
-  CAPS,
-  CHROME_CAP,
-  capFor,
-  capForRole,
-  themeScaleOf,
-} from "../typeScale";
+import { CHROME_CAP, capFor, capForRole, themeScaleOf } from "../typeScale";
 import { size, sizeL } from "../../themes/tokens";
 
 describe("themeScaleOf", () => {
@@ -60,10 +54,12 @@ describe("capFor", () => {
 });
 
 describe("capForRole", () => {
-  it("matches capFor for every variant and for chrome", () => {
-    for (const variant of Object.keys(CAPS) as (keyof typeof CAPS)[]) {
-      expect(capForRole(variant, 1.25)).toBe(capFor(variant, false, 1.25));
-    }
-    expect(capForRole("chrome", 1.25)).toBe(capFor("body", true, 1.25));
+  it.each([
+    ["chrome", 1, CHROME_CAP],
+    ["chrome", 1.25, 1.04],
+    ["headline", 1.25, 1.2],
+    ["body", 1.25, 1.6],
+  ] as const)("%s at theme scale %s → %s", (role, themeScale, expected) => {
+    expect(capForRole(role, themeScale)).toBeCloseTo(expected);
   });
 });

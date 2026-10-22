@@ -79,7 +79,11 @@ export function BadgeCard({
             />
           ) : (
             <View style={styles.initials(badgeSize)}>
-              <RNText style={styles.initialsText(badgeSize)}>
+              {/* Sized from badgeSize, which already tracks the scaled text column. */}
+              <RNText
+                style={styles.initialsText(badgeSize)}
+                allowFontScaling={false}
+              >
                 {(title.charAt(0) || "?").toUpperCase()}
               </RNText>
             </View>
