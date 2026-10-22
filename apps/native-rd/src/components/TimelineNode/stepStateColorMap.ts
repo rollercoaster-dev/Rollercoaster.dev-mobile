@@ -68,7 +68,7 @@ interface StepStateBase {
   /**
    * Phosphor icon for the node interior, overriding both `nodeGlyph` and the
    * step number. Rendered at the resolved `stepStateNodeFg` color so the state
-   * reads correctly in all 14 themes — which a `⏸` emoji could not do.
+   * reads correctly in all seven themes — which a `⏸` emoji could not do.
    */
   nodeIcon?: Icon;
 }

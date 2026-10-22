@@ -3,13 +3,13 @@ name: neo-brutalist-design
 description: Apply the rollercoaster.dev neo-brutalist design language to React Native components. Use when creating/reviewing components, fixing styles, choosing an icon, or auditing visual consistency. Also load before adding any glyph or emoji to the UI — action and state indicators must be Phosphor icons, never emoji (Rule 8). Invoke with "review my component", "check my styles", "apply design system", "audit design", or "which icon".
 metadata:
   author: rollercoaster.dev
-  version: "1.1.0"
+  version: "1.2.0"
   argument-hint: <file-or-pattern>
 ---
 
 # Neo-Brutalist Design Language — rollercoaster.dev
 
-This skill defines how to build and review React Native components using the rollercoaster.dev neo-brutalist design system. The `shadowStyle()` helper lives at `src/styles/shadows.ts`.
+This skill defines how to build and review React Native components using the rollercoaster.dev neo-brutalist design system. The `shadowStyle()` helper lives at `src/styles/shadows.ts`. The authoritative contract is `docs/design/design-language.md` (component contract) and `docs/design/nd-themes.md` (the seven themes); this skill applies them.
 
 ## Philosophy: "Character Without Chaos"
 
@@ -19,41 +19,29 @@ Bold, confident, accessible. Drama comes from **structure** (thick borders, hard
 
 ## The 8 Rules
 
-### 1. 2px Borders Everywhere
+### 1. Bold Borders Everywhere
 
 ```ts
-borderWidth: theme.borderWidth.medium; // 2px — the neo-brutalist standard
+borderWidth: theme.borderWidth.medium; // 2 — inputs, chips, pills, rows, icon buttons, checkboxes, dividers
+borderWidth: theme.borderWidth.thick; // 3 — the shared Card and Button surfaces
 ```
 
-Every card, input, button, badge chip, and container uses `medium` (2px). Use `thin` (1px) only for subtle internal dividers. Never use `default` (1px) for containers.
+Every bordered element uses `medium` (2) unless it is a `Card` or `Button` surface, which use `thick` (3). Use `thin` (1) only for subtle internal dividers and sheet side edges. Three themes (Bold Ink, Still Water, Loud & Clear) render no shadows, so the border alone must define the edge.
 
-### 2. Hard Offset Shadows (Zero Blur)
+### 2. Elevation Through Semantic Shadow Roles
 
 ```ts
-// Import from shared.tsx:
-import { shadowStyle } from '../stories/design-system/shared';
+import { shadowStyle } from "../../styles/shadows";
 
 // Usage in StyleSheet.create:
-...shadowStyle(theme, 'hardSm')  // 2px offset — chips, badges, small elements
-...shadowStyle(theme, 'hardMd')  // 3px offset — cards, buttons
-...shadowStyle(theme, 'hardLg')  // 4px offset — modals, hero blocks
-
-// What it expands to (for reference — always use the helper):
-{
-  shadowColor: '#000000',
-  shadowOffset: { width: 3, height: 3 },  // hardMd example
-  shadowOpacity: 0.15,
-  shadowRadius: 0,  // ZERO — this is the key
-}
+...shadowStyle(theme, "cardElevationSmall") // chips, pills, icon buttons
+...shadowStyle(theme, "cardElevation")      // cards, buttons
+...shadowStyle(theme, "modalElevation")     // sheets, modals, the focus card
 ```
 
-**NEVER use blurred shadows** (`shadowRadius > 0`). Hard offset = neo-brutalist. The offset creates a crisp printed-poster feel.
+Each role resolves per theme: a hard 2 / 3 / 4pt down-right offset with zero blur in The Full Ride and Clean Signal, a 6pt straight-down cutout in Night Ride, a soft low shadow in Warm Studio, and nothing in Bold Ink, Still Water and Loud & Clear. The table is in `docs/design/design-language.md` → Elevation.
 
-Shadow size guide:
-
-- `hardSm` (2px) — small interactive: badge chips, status pills, icon buttons
-- `hardMd` (3px) — standard interactive: cards, buttons, inputs
-- `hardLg` (4px) — large containers: modals, hero sections, narrative blocks
+**Never author a shadow by hand** — no raw `shadow*` props, no blur you chose yourself. The roles carry the per-theme behavior; a hand-written shadow ignores it. (`hardSm`/`hardMd`/`hardLg` are the raw tokens behind the roles; prefer the role names in new code.)
 
 ### 3. Sharp Corners (Small Radius)
 
@@ -117,23 +105,22 @@ The base is always `background` / `backgroundSecondary`. Accents appear as:
 ### 6. High Contrast Without Harshness
 
 ```ts
-// Near-black, not pure black
-theme.colors.text; // #262626 light / #fafafa dark
-theme.colors.accentPrimary; // #0a0a0a light / #fafafa dark
-
-// Off-white, not stark white
-theme.colors.background; // #fafafa light / #1a1033 dark
+theme.colors.text; // primary text
+theme.colors.textSecondary; // body, descriptions
+theme.colors.background; // page surface
+theme.colors.backgroundSecondary; // cards, inputs
+theme.action.actionPrimaryBg; // action fills (see the contract for the Button mapping)
 ```
 
-Dark mode uses deep indigo (`#1a1033`) not pure black. Light mode uses off-white (`#fafafa`) not pure white.
+Read roles, never hex — the values differ per theme and live in the token sources and the _Design System / Colors_ story. Night Ride is a deep indigo, not pure black; the light themes use near-black text, not pure black, except Bold Ink, which is AAA by design.
 
-### 7. 48dp Minimum Touch Targets
+### 7. Generous Touch Targets
 
 ```ts
-minHeight: 48; // Every pressable element
+minHeight: 48; // Buttons, rows, inputs, pressable cards
 ```
 
-No exceptions. Small visual elements (like icon buttons) can appear smaller visually but must have 48dp hit area.
+Every pressable reaches at least 44pt; buttons, rows, inputs and pressable cards use 48. Icon buttons may be smaller visually (`IconButton` `sm` is 36) but must reach 44 with `hitSlop`.
 
 ### 8. Icons Are Phosphor, Never Emoji
 
@@ -247,187 +234,38 @@ touching any glyph so you don't migrate a Tier C decoration by mistake.
 
 ## Component Recipes
 
-### Card (Standard Container)
+**Use the shared component first.** `Button`, `IconButton`, `Input`, `Card`, `Checkbox`, `Divider`, `ProgressBar` and `StatusBadge` already implement the contract, including pressed, disabled and loading states. `docs/design/design-language.md` documents their contract; read it rather than re-creating a button from a recipe — hand-rolled action treatments are exactly the drift tracked in #691.
+
+The recipes below are for bespoke containers that have no shared component.
+
+### Card-like container
 
 ```ts
 const styles = StyleSheet.create((theme) => ({
   card: {
     backgroundColor: theme.colors.backgroundSecondary,
-    borderWidth: theme.borderWidth.medium, // 2px
+    borderWidth: theme.borderWidth.thick, // 3 — matches the shared Card
     borderColor: theme.colors.border,
-    borderRadius: theme.radius.sm, // 2px
-    padding: theme.space[4], // 16px
-    ...shadowStyle(theme, "hardMd"), // 3px hard offset
+    borderRadius: theme.radius.sm, // 2
+    padding: theme.space[4],
+    ...shadowStyle(theme, "cardElevation"),
   },
 }));
 ```
 
-### Button (Primary)
+Pressable: add `minHeight: 48` and the shared pressed treatment — `transform: [{ translateX: 2 }, { translateY: 2 }]` with `shadowOffset: { width: 1, height: 1 }`.
+
+### Chip / status pill
 
 ```ts
-button: {
-  backgroundColor: theme.colors.accentPrimary,      // near-black
-  borderWidth: theme.borderWidth.medium,             // 2px
-  borderColor: theme.colors.accentPrimary,
-  borderRadius: theme.radius.md,                     // 4px
-  paddingHorizontal: theme.space[4],
-  paddingVertical: theme.space[3],
-  minHeight: 48,
-  ...shadowStyle(theme, 'hardMd'),
-},
-buttonLabel: {
-  color: theme.colors.background,                    // inverted text
-  fontWeight: theme.fontWeight.semibold,
-  fontSize: theme.size.md,
-  fontFamily: theme.fontFamily.body,
-},
-```
-
-### Button (Secondary / Outline)
-
-```ts
-buttonSecondary: {
-  backgroundColor: theme.colors.backgroundSecondary,
+chip: {
   borderWidth: theme.borderWidth.medium,
   borderColor: theme.colors.border,
-  borderRadius: theme.radius.md,
-  ...shadowStyle(theme, 'hardMd'),
-},
-```
-
-### Button (Ghost)
-
-```ts
-buttonGhost: {
-  backgroundColor: 'transparent',
-  borderWidth: theme.borderWidth.medium,
-  borderColor: 'transparent',                        // no visible border
-  borderRadius: theme.radius.md,
-  // NO shadow for ghost
-},
-```
-
-### Input
-
-```ts
-input: {
-  borderWidth: theme.borderWidth.medium,             // 2px
-  borderColor: theme.colors.border,
-  borderRadius: theme.radius.md,                     // 4px
-  paddingHorizontal: theme.space[3],
-  paddingVertical: theme.space[3],
-  fontSize: theme.size.md,                           // 16px (prevents iOS zoom)
-  fontFamily: theme.fontFamily.body,
-  color: theme.colors.text,
-  backgroundColor: theme.colors.backgroundSecondary,
-  minHeight: 48,
-},
-inputFocused: {
-  borderColor: theme.colors.focusRing,
-},
-```
-
-### Badge Chip / Status Pill
-
-```ts
-badgeChip: {
-  borderWidth: theme.borderWidth.medium,
-  borderColor: theme.colors.border,
-  borderRadius: theme.radius.sm,                     // 2px for chips
+  borderRadius: theme.radius.sm,                     // 2 for chips; radius.pill for status pills
   paddingVertical: theme.space[1],
   paddingHorizontal: theme.space[3],
-  ...shadowStyle(theme, 'hardSm'),                   // small hard offset
+  ...shadowStyle(theme, "cardElevationSmall"),
 },
-// Or pill shape for status:
-statusPill: {
-  borderRadius: theme.radius.pill,
-  paddingVertical: 2,
-  paddingHorizontal: theme.space[2],
-  // narrative colors for bg/text
-},
-```
-
-### Checkbox
-
-```ts
-box: {
-  width: 24,
-  height: 24,
-  borderRadius: theme.radius.sm,                     // 2px — sharp
-  borderWidth: theme.borderWidth.medium,             // 2px
-  borderColor: theme.colors.border,
-},
-boxChecked: {
-  backgroundColor: theme.colors.accentPrimary,
-  borderColor: theme.colors.accentPrimary,
-},
-```
-
-### IconButton
-
-```ts
-iconButton: {
-  width: 48,
-  height: 48,
-  borderRadius: theme.radius.pill,                   // circular
-  borderWidth: theme.borderWidth.medium,
-  borderColor: theme.colors.border,
-  backgroundColor: theme.colors.backgroundSecondary,
-  ...shadowStyle(theme, 'hardSm'),
-},
-```
-
-### Divider
-
-```ts
-divider: {
-  height: theme.borderWidth.medium,                  // 2px — not 1px
-  backgroundColor: theme.colors.border,
-},
-```
-
-### Progress Bar
-
-```ts
-track: {
-  height: 8,
-  borderRadius: theme.radius.pill,
-  backgroundColor: theme.colors.backgroundTertiary,
-  borderWidth: theme.borderWidth.medium,
-  borderColor: theme.colors.border,
-  overflow: 'hidden',
-},
-fill: {
-  height: '100%',
-  backgroundColor: theme.colors.accentPrimary,
-},
-```
-
----
-
-## Applying Shadows via the Helper
-
-Always use the `shadowStyle()` helper from `src/styles/shadows.ts`:
-
-```ts
-import { shadowStyle } from "../../styles/shadows";
-
-// In StyleSheet.create:
-const styles = StyleSheet.create((theme) => ({
-  card: {
-    ...shadowStyle(theme, "hardMd"),
-    // other styles...
-  },
-}));
-```
-
-If you need to expand manually (rare):
-
-```ts
-shadowColor: '#000000',
-shadowOffset: { width: theme.shadow.hardMd.offsetX, height: theme.shadow.hardMd.offsetY },
-shadowOpacity: theme.shadow.hardMd.opacity,
-shadowRadius: theme.shadow.hardMd.radius,  // Always 0 for hard shadows
 ```
 
 ---
@@ -436,10 +274,11 @@ shadowRadius: theme.shadow.hardMd.radius,  // Always 0 for hard shadows
 
 When reviewing a component for design compliance:
 
-- [ ] **Borders**: Uses `borderWidth.medium` (2px), not `default`/`thin` for containers
-- [ ] **Radius**: Cards use `radius.sm` (2px), buttons/inputs use `radius.md` (4px)
-- [ ] **Shadows**: Uses hard offset shadows (`hardSm`/`hardMd`/`hardLg`), never blurred
-- [ ] **Touch targets**: All pressables have `minHeight: 48`
+- [ ] **Borders**: `borderWidth.medium` (2) for bordered elements; `thick` (3) for Card/Button surfaces; never `thin`/`default` for containers
+- [ ] **Radius**: Cards, chips and icon buttons use `radius.sm` (2), buttons/inputs use `radius.md` (4)
+- [ ] **Shadows**: Uses `shadowStyle(theme, role)` with a semantic role; no hand-written `shadow*` props; edge still visible with shadows off
+- [ ] **Touch targets**: Pressables reach 44pt (48 for buttons, rows, inputs, pressable cards)
+- [ ] **Actions**: Uses the shared `Button`/`IconButton` rather than a bespoke Pressable treatment
 - [ ] **Typography**: Uses theme `textStyles` or `<Text variant>`, not manual assembly
 - [ ] **Colors**: Accents used as highlights, not large backgrounds
 - [ ] **Icons**: No emoji encoding an action or state — Phosphor icons with `theme` color (Rule 8). Decode `\u{...}` escapes when checking

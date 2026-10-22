@@ -11,11 +11,8 @@ import {
 } from "react-native-safe-area-context";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import {
-  NavigationContainer,
-  DefaultTheme,
-  type Theme,
-} from "@react-navigation/native";
+import { NavigationContainer } from "@react-navigation/native";
+import { navigationTheme } from "./src/navigation/navigationTheme";
 import { EvoluAppProvider } from "./src/db";
 import { TabNavigator } from "./src/navigation";
 import { ToastProvider } from "./src/components/Toast";
@@ -68,19 +65,7 @@ function ThemedApp() {
     [themeContext, persistingSetTheme],
   );
 
-  const navTheme: Theme = {
-    ...DefaultTheme,
-    dark: isDark,
-    colors: {
-      ...DefaultTheme.colors,
-      background: theme.colors.background,
-      card: theme.colors.backgroundSecondary,
-      text: theme.colors.text,
-      border: theme.colors.border,
-      primary: theme.colors.accentPrimary,
-      notification: theme.colors.accentPrimary,
-    },
-  };
+  const navTheme = navigationTheme(theme, isDark);
 
   let body: React.ReactNode;
   if (isFirstLaunch === null) {

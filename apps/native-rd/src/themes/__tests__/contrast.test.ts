@@ -1,6 +1,6 @@
 /**
  * Automated contrast ratio verification for all theme variants
- * Ensures WCAG AA compliance across all 12 themes
+ * Ensures WCAG AA compliance across the seven product themes
  */
 
 import { getContrastRatio, meetsWCAG } from "../../utils/accessibility";
