@@ -7,6 +7,8 @@ import {
 } from "../../../__tests__/test-utils";
 import { i18n } from "../../../i18n";
 import { GoalEvidenceCard } from "../GoalEvidenceCard";
+import { mockFontScale } from "../../../__tests__/fontScale";
+import { mockTheme } from "../../../__tests__/mocks/unistyles";
 
 jest.mock("expo-haptics", () => ({
   impactAsync: jest.fn().mockResolvedValue(undefined),
@@ -68,6 +70,31 @@ describe("GoalEvidenceCard", () => {
     expect(props.design.title).toBe("Run my first 5k");
     expect(props.size).toBeGreaterThan(0);
   });
+
+  // Title grows to the headline cap (1.5), description to body's (2.0), so
+  // the badge tracks the capped text column rather than the raw OS scale.
+  test.each([
+    [1, 1, 1],
+    [1.4, 1.4, 1.4],
+    [3.1, 1.5, 2],
+  ])(
+    "at fontScale %s sizes the badge to headline x%s, body x%s",
+    (fontScale, headlineScale, bodyScale) => {
+      const { headline, body } = mockTheme.textStyles;
+      mockFontScale(fontScale);
+      renderWithProviders(<GoalEvidenceCard {...defaultProps} />);
+      const { size } = mockBadgeRenderer.mock.calls.at(-1)?.[0] as {
+        size: number;
+      };
+      expect(size).toBe(
+        Math.round(
+          headline.lineHeight * headlineScale +
+            mockTheme.space[1] +
+            body.lineHeight * 2 * bodyScale,
+        ),
+      );
+    },
+  );
 
   it("exposes the badge as a labeled button", () => {
     renderWithProviders(<GoalEvidenceCard {...defaultProps} />);
