@@ -116,7 +116,7 @@ Because three themes drop shadows entirely, an element must never rely on its sh
 
 ## Shape
 
-**Borders** (`theme.borderWidth`): `thin`/`default` 1 · `medium` 2 · `thick` 3. Surfaces and buttons use `thick`; inputs use `medium`.
+**Borders** (`theme.borderWidth`): `thin`/`default` 1 · `medium` 2 · `thick` 3. The shared `Card` and `Button` surfaces use `thick`; inputs, chips, pills, rows, checkboxes, dividers and bordered icon buttons use `medium`; `thin` is for internal dividers only.
 
 **Radius** (`theme.radius`): `sm` 2 · `md` 4 · `lg` 8 · `xl` 12 · `pill` 9999 (`full` aliases `pill`). Cards and icon buttons use `sm`; buttons and inputs use `md`.
 
@@ -170,7 +170,7 @@ Labels are bold, body family. A leading icon is a Phosphor element (or a text ma
 
 ### Icon actions — `IconButton`
 
-Square, `radius.sm`. Sizes 36 / 44 / 52; `sm` adds `hitSlop` so every target reaches 44pt. Tones: `chrome`, `celebration`, `ghost`, `surface`, `primary`, `destructive`. An icon-only action always has an `accessibilityLabel`.
+Square, `radius.sm`. `surface`, `primary` and `destructive` tones add a 2pt border and `cardElevationSmall`; `chrome`, `celebration` and `ghost` are transparent. Filled tones read `theme.action` (`actionSecondaryBg`, `actionPrimaryBg`, `actionDestructiveBg`). Pressed is 0.7 opacity rather than the `Button` press-in; disabled is 0.4 opacity. Sizes 36 / 44 / 52; `sm` adds `hitSlop` so every target reaches 44pt. Tones: `chrome`, `celebration`, `ghost`, `surface`, `primary`, `destructive`. An icon-only action always has an `accessibilityLabel`.
 
 ### Text input — `Input`
 
