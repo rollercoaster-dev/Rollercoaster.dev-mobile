@@ -24,14 +24,14 @@ Both states run in one Maestro session (one top-level flow) because each top-lev
 
 ## Results
 
-| Criterion and state       | Expected               | Observed                                                       | Verdict                   | Evidence                                                |
-| ------------------------- | ---------------------- | -------------------------------------------------------------- | ------------------------- | ------------------------------------------------------- |
-| Bug repro, base, 1 badge  | "1 badges"             | literal assert "1 badges" passed; 1 spotlight, 0 gallery cells | Verified (bug reproduced) | base-1-badges.png                                       |
-| Base, 2 badges            | "2 badges"             | "2 badges"; spotlight + 1 gallery cell                         | Verified                  | base-2-badges.png                                       |
-| Fix, 1 badge              | "1 badge"              | literal assert "1 badge" passed; 1 spotlight, 0 gallery cells  | Verified                  | fix-1-badge.png                                         |
-| Fix, 2 badges             | "2 badges"             | literal assert "2 badges" passed; spotlight + 1 gallery cell   | Verified                  | fix-2-badges.png                                        |
-| Fix, German 1/2 badges    | "1 Badge" / "2 Badges" | not run natively (run-e2e pins English)                        | Not checked               | Jest only: src/i18n/**tests**/i18n.test.ts              |
-| Other themes / text sizes | no layout change       | only Still Water checked                                       | Not checked               | string is one letter shorter; no layout risk identified |
+| Criterion and state       | Expected               | Observed                                                       | Verdict                   | Evidence                                                                                    |
+| ------------------------- | ---------------------- | -------------------------------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------- |
+| Bug repro, base, 1 badge  | "1 badges"             | literal assert "1 badges" passed; 1 spotlight, 0 gallery cells | Verified (bug reproduced) | [base-1-badges.png](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/pull/740) |
+| Base, 2 badges            | "2 badges"             | "2 badges"; spotlight + 1 gallery cell                         | Verified                  | [base-2-badges.png](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/pull/740) |
+| Fix, 1 badge              | "1 badge"              | literal assert "1 badge" passed; 1 spotlight, 0 gallery cells  | Verified                  | [fix-1-badge.png](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/pull/740)   |
+| Fix, 2 badges             | "2 badges"             | literal assert "2 badges" passed; spotlight + 1 gallery cell   | Verified                  | [fix-2-badges.png](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/pull/740)  |
+| Fix, German 1/2 badges    | "1 Badge" / "2 Badges" | not run natively (run-e2e pins English)                        | Not checked               | Jest only: src/i18n/**tests**/i18n.test.ts                                                  |
+| Other themes / text sizes | no layout change       | only Still Water checked                                       | Not checked               | string is one letter shorter; no layout risk identified                                     |
 
 Overall: **verified on iPhone 17 sim, iOS 26.5, en, Still Water** for the required en criteria. German and the other themes were not checked natively.
 

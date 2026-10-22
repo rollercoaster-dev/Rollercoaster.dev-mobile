@@ -101,6 +101,15 @@ apps/native-rd/play-service-account.json
 # Maestro JUnit output. Only the machine-generated file is ignored — the
 # tracked run records under e2e/reports/ are the artifact #383 gates on.
 apps/native-rd/e2e/reports/junit.xml
+# Review screenshots and recordings go in the PR description via
+# `gh pr create/edit --attach`, never into git (.claude/rules/no-committed-review-screenshots.md).
+apps/native-rd/e2e/reports/**/*.png
+apps/native-rd/e2e/reports/**/*.jpg
+apps/native-rd/e2e/reports/**/*.jpeg
+apps/native-rd/e2e/reports/**/*.gif
+apps/native-rd/e2e/reports/**/*.webp
+apps/native-rd/e2e/reports/**/*.mp4
+apps/native-rd/e2e/reports/**/*.mov
 # appId-rewritten flow copy that scripts/run-e2e.sh --android materialises.
 apps/native-rd/e2e/.android/
 
