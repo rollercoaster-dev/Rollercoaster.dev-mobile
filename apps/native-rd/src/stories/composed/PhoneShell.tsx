@@ -8,6 +8,10 @@
  * Safe-area values are provided directly rather than through a nested
  * SafeAreaProvider: on web the provider re-measures with CSS env() and would
  * replace the device insets with zeros.
+ *
+ * `modal` only hides the tab bar. The iOS page sheet's few-point drop below
+ * the status bar and its rounded top corners are not modeled, so a modal
+ * preview is a few points taller than the device shows.
  */
 import React from "react";
 import { View } from "react-native";
@@ -22,7 +26,14 @@ import {
 } from "react-native-safe-area-context";
 import { StyleSheet } from "react-native-unistyles";
 import { Text } from "../../components/Text";
+import { ToastProvider } from "../../components/Toast";
+import { useTheme } from "../../hooks/useTheme";
 import { FocusPillTabBar } from "../../navigation/FocusPillTabBar";
+import { navigationTheme } from "../../navigation/navigationTheme";
+import {
+  TopInsetColorProvider,
+  useTopInsetColorState,
+} from "../../navigation/TopInsetColor";
 import type { RootTabParamList } from "../../navigation/types";
 
 export const DEVICES = {
@@ -50,6 +61,15 @@ function EmptyTab() {
   return null;
 }
 
+// The navigator needs a stable component per screen; a component closed over
+// `children` would be a new type each render and remount the screen, losing
+// its local state. The content travels through context instead.
+const ShellContent = React.createContext<React.ReactNode>(null);
+
+function ContentTab() {
+  return <>{React.useContext(ShellContent)}</>;
+}
+
 interface PhoneShellProps {
   device: Device;
   /** Tab the shell opens on; the content renders there. */
@@ -69,32 +89,46 @@ export function PhoneShell({
   children,
 }: PhoneShellProps) {
   const { width, height, insets } = DEVICES[device];
-  const Content = React.useCallback(() => <>{children}</>, [children]);
+  const { theme, isDark } = useTheme();
+  // Screens can repaint the status strip (useTopInsetColor), as in App.tsx.
+  const { topInsetColor, setTopInsetColor } = useTopInsetColorState();
 
   return (
     <SafeAreaFrameContext.Provider value={{ x: 0, y: 0, width, height }}>
       <SafeAreaInsetsContext.Provider value={insets}>
-        <View style={[styles.device, { width, height }]}>
+        <View
+          style={[
+            styles.device,
+            { width, height },
+            topInsetColor ? { backgroundColor: topInsetColor } : null,
+          ]}
+        >
           <View style={[styles.content, { marginTop: insets.top }]}>
             <NavigationIndependentTree>
-              <NavigationContainer>
-                <Tab.Navigator
-                  initialRouteName={tab}
-                  screenOptions={{ headerShown: false }}
-                  tabBar={(props) =>
-                    modal ? null : <FocusPillTabBar {...props} />
-                  }
-                >
-                  {(["GoalsTab", "BadgesTab", "SettingsTab"] as const).map(
-                    (name) => (
-                      <Tab.Screen
-                        key={name}
-                        name={name}
-                        component={name === tab ? Content : EmptyTab}
-                      />
-                    ),
-                  )}
-                </Tab.Navigator>
+              <NavigationContainer theme={navigationTheme(theme, isDark)}>
+                <TopInsetColorProvider onChange={setTopInsetColor}>
+                  <ToastProvider>
+                    <ShellContent.Provider value={children}>
+                      <Tab.Navigator
+                        initialRouteName={tab}
+                        screenOptions={{ headerShown: false }}
+                        tabBar={(props) =>
+                          modal ? null : <FocusPillTabBar {...props} />
+                        }
+                      >
+                        {(
+                          ["GoalsTab", "BadgesTab", "SettingsTab"] as const
+                        ).map((name) => (
+                          <Tab.Screen
+                            key={name}
+                            name={name}
+                            component={name === tab ? ContentTab : EmptyTab}
+                          />
+                        ))}
+                      </Tab.Navigator>
+                    </ShellContent.Provider>
+                  </ToastProvider>
+                </TopInsetColorProvider>
               </NavigationContainer>
             </NavigationIndependentTree>
           </View>

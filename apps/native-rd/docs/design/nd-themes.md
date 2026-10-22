@@ -64,7 +64,7 @@ const { setTheme } = useThemeContext();
 const saved = setTheme("light-dyslexia");
 ```
 
-`StyleSheet.configure({ themes })` registers the seven composed themes once at startup (`src/themes`), and `StyleSheet.create((theme) => …)` styles re-resolve on every switch.
+`StyleSheet.configure({ themes })` in `unistyles.ts` registers the seven composed themes once at startup, and `StyleSheet.create((theme) => …)` styles re-resolve on every switch.
 
 ---
 

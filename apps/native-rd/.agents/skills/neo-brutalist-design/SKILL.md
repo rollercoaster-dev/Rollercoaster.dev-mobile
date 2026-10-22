@@ -26,7 +26,7 @@ borderWidth: theme.borderWidth.medium; // 2 — inputs, chips, pills, rows, icon
 borderWidth: theme.borderWidth.thick; // 3 — the shared Card and Button surfaces
 ```
 
-Every bordered element uses `medium` (2) unless it is a `Card` or `Button` surface, which use `thick` (3). Use `thin` (1) only for subtle internal dividers. Three themes (Bold Ink, Still Water, Loud & Clear) render no shadows, so the border alone must define the edge.
+Every bordered element uses `medium` (2) unless it is a `Card` or `Button` surface, which use `thick` (3). Use `thin` (1) only for subtle internal dividers and sheet side edges. Three themes (Bold Ink, Still Water, Loud & Clear) render no shadows, so the border alone must define the edge.
 
 ### 2. Elevation Through Semantic Shadow Roles
 

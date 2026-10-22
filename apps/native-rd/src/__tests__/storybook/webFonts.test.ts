@@ -32,8 +32,11 @@ const FONT_SIGNATURES = ["774f4632", "774f4646", "00010000", "4f54544f"];
 describe("Storybook web font faces", () => {
   const faces = readFontFaces();
 
-  it("declares font faces", () => {
+  it("parses every declared font face", () => {
+    // A face written in another shape would otherwise skip the byte check.
+    const declared = readFileSync(PREVIEW_PATH, "utf8").match(/@font-face/g);
     expect(faces.length).toBeGreaterThan(0);
+    expect(faces).toHaveLength(declared?.length ?? 0);
   });
 
   it.each(faces.map((face) => [face.url, face]))(
@@ -53,6 +56,16 @@ describe("Storybook web font faces", () => {
       ]),
     ),
   ];
+
+  const headlineFamilies = [
+    ...new Set(Object.values(themes).map((theme) => theme.fontFamily.headline)),
+  ];
+
+  it.each(headlineFamilies)("declares a bold face for %s", (family) => {
+    expect(faces).toContainEqual(
+      expect.objectContaining({ family, weight: 700 }),
+    );
+  });
 
   it.each(themeFamilies)("declares a regular face for %s", (family) => {
     expect(faces).toContainEqual(

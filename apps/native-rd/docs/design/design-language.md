@@ -79,15 +79,15 @@ Absolute values keyed by size token (`xs`–`3xl`), because React Native needs p
 
 Hex values live in the token sources and the _Design System / Colors_ story, not here (see [ND Themes → Colors](./nd-themes.md#colors)). Components read roles:
 
-| Group                 | What it colors                                                                     |
-| --------------------- | ---------------------------------------------------------------------------------- |
-| `theme.colors`        | Base surfaces, text, borders, accents, focus ring, feedback (success/warning…)     |
-| `theme.chrome`        | Screen header band, brand mark, navigation chrome                                  |
-| `theme.action`        | Action fills and foregrounds: primary, secondary, destructive, disabled, selection |
-| `theme.surfaceBorder` | Card, sheet and input border hierarchy                                             |
-| `theme.journey`       | Timeline nodes, step states, progress, goal completion                             |
-| `theme.evidence`      | Per-evidence-type proof-card tints                                                 |
-| `theme.narrative`     | Climb / drop / stories / relief section colors for celebratory surfaces            |
+| Group                 | What it colors                                                                                                                                                                             |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `theme.colors`        | Base surfaces, text, borders, accents, focus ring, feedback (success/warning…)                                                                                                             |
+| `theme.chrome`        | Screen header band, brand mark, navigation chrome                                                                                                                                          |
+| `theme.action`        | Action fills and foregrounds: primary, secondary, destructive, disabled, selection — read by `IconButton` and Focus actions; `Button` still reads `colors` (see [Known gaps](#known-gaps)) |
+| `theme.surfaceBorder` | Card, sheet and input border hierarchy                                                                                                                                                     |
+| `theme.journey`       | Timeline nodes, step states, progress, goal completion                                                                                                                                     |
+| `theme.evidence`      | Per-evidence-type proof-card tints                                                                                                                                                         |
+| `theme.narrative`     | Climb / drop / stories / relief section colors for celebratory surfaces                                                                                                                    |
 
 ---
 
@@ -116,7 +116,7 @@ Because three themes drop shadows entirely, an element must never rely on its sh
 
 ## Shape
 
-**Borders** (`theme.borderWidth`): `thin`/`default` 1 · `medium` 2 · `thick` 3. The shared `Card` and `Button` surfaces use `thick`; inputs, chips, pills, rows, checkboxes, dividers and bordered icon buttons use `medium`; `thin` is for internal dividers only.
+**Borders** (`theme.borderWidth`): `thin`/`default` 1 · `medium` 2 · `thick` 3. The shared `Card` and `Button` surfaces use `thick`; inputs, chips, pills, rows, checkboxes, dividers and bordered icon buttons use `medium`; `thin` is for internal dividers and the side edges of `AnimatedSheet` (whose top edge is `medium`).
 
 **Radius** (`theme.radius`): `sm` 2 · `md` 4 · `lg` 8 · `xl` 12 · `pill` 9999 (`full` aliases `pill`). Cards and icon buttons use `sm`; buttons and inputs use `md`.
 
@@ -201,17 +201,17 @@ Screens with a text input above a pinned footer CTA wrap the `[body][footer]` pa
 
 Runtime places that do not yet meet this contract. Each is tracked; fix them there, not by rewriting the contract to match.
 
-| Gap                                                                                                                                         | Tracking                                                                                 |
-| ------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| Some text styles omit `fontFamily`; `textStyles` use fixed multipliers so Warm Studio line heights miss them; 9–10pt essential labels       | [#684](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/684) (UI-01) |
-| Focus actions and the badge-wall CTA use their own button treatment (`theme.action`, modal elevation, no pressed state) instead of `Button` | [#691](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/691) (UI-08) |
-| Pinned action groups and the badge-detail hero are unbounded on small screens                                                               | [#694](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/694) (UI-11) |
+| Gap                                                                                                                                                                                                                                   | Tracking                                                                                 |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Some text styles omit `fontFamily`; `textStyles` use fixed multipliers so Warm Studio line heights miss them; 9–10pt essential labels                                                                                                 | [#684](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/684) (UI-01) |
+| Focus actions and the badge-wall CTA use their own button treatment (`theme.action`, modal elevation, no pressed state) instead of `Button`; `Button` itself reads `colors.accentPrimary`/`colors.warning` rather than `theme.action` | [#691](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/691) (UI-08) |
+| Pinned action groups and the badge-detail hero are unbounded on small screens                                                                                                                                                         | [#694](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/694) (UI-11) |
 
 ---
 
 ## Reviewing against the contract
 
-Storybook web (`bun run storybook:web`) is the reference preview. The toolbar lists the seven product themes. _Design System_ stories show tokens; _Composed Screens_ stories render real screens inside the app shell (floating tab bar, safe area, keyboard frame) at phone size, so layout is checked in context rather than only as individually framed parts. Storybook is a review aid: confirm layout and keyboard behavior on a native build before calling it verified.
+Storybook web (`bun run storybook:web`) is the reference preview. The toolbar lists the seven product themes. _Design System_ stories show tokens; _Composed Screens_ stories mirror each screen's composition with fixture data inside the real app shell (navigator, floating tab bar, safe-area insets, keyboard frame) at compact and standard phone sizes, so layout is checked in context rather than only as individually framed parts. Storybook is a review aid: confirm layout and keyboard behavior on a native build before calling it verified.
 
 ---
 

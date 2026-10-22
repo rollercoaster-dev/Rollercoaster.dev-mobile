@@ -129,7 +129,13 @@ function FocusTab({
       <KeyboardAvoidingFrame style={focusStyles.keyboardAvoidingView}>
         <View style={focusStyles.content}>
           <View style={focusStyles.headerRow}>
-            <Text variant="title" style={focusStyles.title} numberOfLines={2}>
+            <Text
+              variant="title"
+              style={focusStyles.title}
+              numberOfLines={2}
+              accessible
+              accessibilityRole="header"
+            >
               Rewire the workshop
             </Text>
             <IconButton
