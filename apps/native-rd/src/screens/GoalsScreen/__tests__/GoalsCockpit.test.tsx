@@ -1,4 +1,5 @@
 import React from "react";
+import * as ReactNative from "react-native";
 import {
   renderWithProviders,
   screen,
@@ -10,6 +11,19 @@ import {
   type CockpitHeroGoal,
   type CockpitKeepWarmGoal,
 } from "../GoalsCockpit";
+
+/** Simulate the hidden measuring twin reporting how many lines the text needs. */
+function measureLines(testID: string, lineCount: number) {
+  fireEvent(
+    screen.getByTestId(`${testID}-measure`, { includeHiddenElements: true }),
+    "textLayout",
+    {
+      nativeEvent: {
+        lines: Array.from({ length: lineCount }, (_, i) => ({ text: `l${i}` })),
+      },
+    },
+  );
+}
 
 const makeHero = (overrides?: Partial<CockpitHeroGoal>): CockpitHeroGoal => ({
   id: "hero",
@@ -67,17 +81,20 @@ describe("GoalsCockpit", () => {
     },
   );
 
-  it("renders the hero next-step headline and overline", () => {
+  it("renders the hero title, next-step headline and overline", () => {
     const hero = makeHero();
     renderWithProviders(
       <GoalsCockpit hero={hero} keepWarm={[]} {...handlers()} />,
     );
-    expect(screen.getByText(hero.nextStepTitle!)).toBeOnTheScreen();
     expect(
-      screen.getByText(
-        i18n.t("goals:cockpit.doThisNext", { title: hero.title }),
-      ),
+      screen.getByText(i18n.t("goals:cockpit.doThisNext")),
     ).toBeOnTheScreen();
+    expect(
+      screen.getByRole("header", { name: hero.title }).props.numberOfLines,
+    ).toBe(2);
+    expect(
+      screen.getByTestId("goals-cockpit-next-step").props.numberOfLines,
+    ).toBe(2);
   });
 
   it("renders every keep-warm goal it is given", () => {
@@ -86,6 +103,51 @@ describe("GoalsCockpit", () => {
     );
     expect(screen.getByText("Build a component library")).toBeOnTheScreen();
     expect(screen.getByText("Understand local-first sync")).toBeOnTheScreen();
+  });
+
+  it("expands overflowing hero titles in place and leaves short ones alone", () => {
+    const hero = makeHero({
+      title: "Learn accessible interface design with long study notes",
+    });
+    renderWithProviders(
+      <GoalsCockpit hero={hero} keepWarm={keepWarm} {...handlers()} />,
+    );
+
+    // Short next step: measured to fit, so no toggle appears.
+    measureLines("goals-cockpit-next-step", 1);
+    expect(screen.queryByTestId("goals-cockpit-next-step-toggle")).toBeNull();
+
+    // Long goal title: measured to overflow, toggle expands it in place.
+    measureLines("goals-cockpit-hero-title", 3);
+    fireEvent.press(screen.getByTestId("goals-cockpit-hero-title-toggle"));
+    expect(
+      screen.getByTestId("goals-cockpit-hero-title").props.numberOfLines,
+    ).toBeUndefined();
+  });
+
+  it("uses a full-width keep-warm card when OS text is enlarged", () => {
+    const dimensions = jest
+      .spyOn(ReactNative, "useWindowDimensions")
+      .mockReturnValue({
+        width: 320,
+        height: 640,
+        scale: 2,
+        fontScale: 1.5,
+      });
+    try {
+      renderWithProviders(
+        <GoalsCockpit hero={makeHero()} keepWarm={keepWarm} {...handlers()} />,
+      );
+      const cell = screen.getByTestId("keep-warm-cell-kw-1");
+      expect(ReactNative.StyleSheet.flatten(cell.props.style).width).toBe(
+        "100%",
+      );
+      expect(
+        screen.getByText("Build a component library").props.numberOfLines,
+      ).toBe(2);
+    } finally {
+      dimensions.mockRestore();
+    }
   });
 
   it("fires onStartResume with the hero id", () => {

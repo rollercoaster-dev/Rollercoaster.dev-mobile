@@ -62,7 +62,7 @@ export function ViewerStripThumb({
         {icon}
       </Text>
       <View style={styles.labelWrap}>
-        <Text style={styles.label} numberOfLines={2}>
+        <Text style={styles.label} numberOfLines={3}>
           {evidence.title}
         </Text>
       </View>

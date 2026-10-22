@@ -367,6 +367,30 @@ beforeEach(() => {
 // --- Tests ---
 
 describe("FocusModeScreen", () => {
+  it("keeps the goal header compact and expands it in place when it overflows", () => {
+    const title = "A long goal title with details that should remain readable";
+    setupQueries({ goal: { ...GOAL, title } });
+    renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+    expect(
+      screen.getByRole("header", { name: title }).props.numberOfLines,
+    ).toBe(2);
+    expect(screen.queryByTestId("focus-goal-title-toggle")).toBeNull();
+    fireEvent(
+      screen.getByTestId("focus-goal-title-measure", {
+        includeHiddenElements: true,
+      }),
+      "textLayout",
+      {
+        nativeEvent: { lines: [{ text: "a" }, { text: "b" }, { text: "c" }] },
+      },
+    );
+    fireEvent.press(screen.getByTestId("focus-goal-title-toggle"));
+    expect(
+      screen.getByRole("header", { name: title }).props.numberOfLines,
+    ).toBeUndefined();
+  });
+
   describe("single-card body (#466)", () => {
     it("renders exactly one current-task card for the resolved step", () => {
       setupQueries({

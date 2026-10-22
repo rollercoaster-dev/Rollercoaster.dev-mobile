@@ -11,6 +11,10 @@
     "retry": "Erneut versuchen",
     "undo": "Rückgängig"
   },
+  "expandableTitle": {
+    "showMore": "Ganzen Titel anzeigen",
+    "showLess": "Weniger anzeigen"
+  },
   "unsavedChanges": {
     "title": "Ungespeicherte Änderungen verwerfen?",
     "message": "Deine unfertige Arbeit geht verloren, wenn du diese Ansicht verlässt.",

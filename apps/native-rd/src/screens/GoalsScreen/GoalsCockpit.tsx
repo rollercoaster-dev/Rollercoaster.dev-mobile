@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, View } from "react-native";
+import { Pressable, View, useWindowDimensions } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useUnistyles } from "react-native-unistyles";
 import Svg, { Circle } from "react-native-svg";
@@ -9,6 +9,7 @@ import { ProgressBar } from "../../components/ProgressBar";
 import { Button } from "../../components/Button";
 import { IconButton, type IconButtonTone } from "../../components/IconButton";
 import { Text } from "../../components/Text";
+import { ExpandableTitle } from "../../components/ExpandableTitle";
 import { styles } from "./GoalsCockpit.styles";
 
 export interface CockpitHeroGoal {
@@ -121,6 +122,10 @@ export function GoalsCockpit({
 }: GoalsCockpitProps) {
   const { t } = useTranslation(["goals", "common"]);
   const { theme } = useUnistyles();
+  const { fontScale } = useWindowDimensions();
+  // One column for keep-warm tiles whenever type is large, whether that comes
+  // from the Low Vision theme or from the OS text-size setting.
+  const isLargeType = theme.variant === "lowVision" || fontScale >= 1.3;
 
   if (!hero) {
     return (
@@ -129,7 +134,7 @@ export function GoalsCockpit({
           <TargetIcon color={theme.colors.text} />
         </View>
         <Text
-          variant="display"
+          variant="screenTitle"
           style={styles.emptyTitle}
           accessibilityRole="header"
         >
@@ -195,18 +200,27 @@ export function GoalsCockpit({
           centerLabel={`${percent}%`}
           centerSublabel={ringSublabel}
         />
-        <Text variant="mono" style={styles.overline} numberOfLines={1}>
-          {t("goals:cockpit.doThisNext", { title: hero.title })}
+        <Text variant="metadata" style={styles.overline} numberOfLines={1}>
+          {t("goals:cockpit.doThisNext")}
         </Text>
+        {/* The goal's identity gets its own readable line (#684) rather than
+            riding inside the metadata overline. */}
+        <ExpandableTitle
+          title={hero.title}
+          variant="title"
+          style={styles.heroTitle}
+          align="center"
+          testID="goals-cockpit-hero-title"
+        />
         {hero.nextStepTitle ? (
-          <Text
+          <ExpandableTitle
+            title={hero.nextStepTitle}
             variant="headline"
             style={styles.nextStep}
-            numberOfLines={2}
+            align="center"
+            accessibilityRole="text"
             testID="goals-cockpit-next-step"
-          >
-            {hero.nextStepTitle}
-          </Text>
+          />
         ) : null}
         {/* S3 coherence: single resume affordance — see #381. No FAB or header
             button duplicates this control anywhere on the Goals screen. */}
@@ -236,12 +250,19 @@ export function GoalsCockpit({
 
       {keepWarm.length > 0 ? (
         <View style={styles.keepWarmSection}>
-          <Text variant="mono" style={styles.sectionLabel}>
+          <Text variant="label" style={styles.sectionLabel}>
             {t("goals:cockpit.keepWarm")}
           </Text>
           <View style={styles.keepWarmGrid}>
             {keepWarm.map((goal) => (
-              <View key={goal.id} style={styles.keepWarmCell}>
+              <View
+                key={goal.id}
+                testID={`keep-warm-cell-${goal.id}`}
+                style={[
+                  styles.keepWarmCell,
+                  isLargeType && styles.keepWarmCellWide,
+                ]}
+              >
                 <Pressable
                   onPress={() => onOpenGoal(goal.id)}
                   onLongPress={() => onDeleteGoal(goal.id)}
@@ -263,13 +284,13 @@ export function GoalsCockpit({
                   <Text
                     variant="title"
                     style={styles.keepWarmTitle}
-                    numberOfLines={1}
+                    numberOfLines={2}
                   >
                     {goal.title}
                   </Text>
                   {goal.nextStepTitle ? (
                     <Text
-                      variant="caption"
+                      variant="body"
                       style={styles.keepWarmNextStep}
                       numberOfLines={1}
                     >
