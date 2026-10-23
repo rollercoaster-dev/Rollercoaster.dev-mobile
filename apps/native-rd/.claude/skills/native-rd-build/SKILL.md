@@ -3,7 +3,7 @@ name: native-rd-build
 description: Build native-rd for any target — local iOS simulator/device, local Release builds, EAS development/preview/production, Android (when generated). Use when the user hits a build failure, asks how to produce a build of any kind, needs to diagnose runtime errors that look build-related ("No script URL provided", missing assets, signing issues), or wants to understand what `eas.json` / `app.json` / `Podfile.properties.json` settings actually do. Also use as a pre-flight checklist before starting a fresh build.
 metadata:
   author: rollercoaster.dev
-  version: "2.10.0"
+  version: "2.10.1"
 ---
 
 # native-rd Build Playbook
@@ -1049,6 +1049,18 @@ rg 'class SceneDelegate|Window creation moved' ios/Rollercoasterdev/AppDelegate.
 ```
 
 The generated `ios/` directory is disposable; edit the plugin and app config, not its Info.plist or AppDelegate. The plugin is registered for local and EAS prebuilds; EAS was not run in this verification. See `prototypes/peer-evidence-spike/README.md` for the earlier physical-device reproduction.
+
+---
+
+## Gotcha 19 — Xcode 27: `Simulator.app` is gone, the GUI is `DeviceHub.app`
+
+`[VERIFIED 2026-09-24]` Xcode 27.0 (27A266a), iPhone 17 Pro / iOS 26.5 simulator.
+
+**Symptom:** scripts or docs that `open -a Simulator` or reference `/Applications/Xcode.app/Contents/Developer/Applications/Simulator.app` fail with "Unable to find application"; nothing else is wrong with the install.
+
+**What changed:** on this Xcode the simulator GUI is `/Applications/Xcode.app/Contents/Applications/DeviceHub.app` (bundle id `com.apple.dt.Devices`). `xcrun simctl` still creates, boots, installs and screenshots simulators exactly as before, so agent-driven flows (`bun run ios:e2e`, Maestro) are unaffected; only the human-facing window moved. Inspect the installed Xcode's `Contents/Applications` directory before assuming either path.
+
+**Related:** after a local `expo run:ios` against an already-prebuilt `ios/`, the generated native bundle metadata still read 0.1.17 while `package.json` was 0.1.19. A local compile alone does not resync generated version metadata; re-run prebuild (or rely on EAS) when the displayed version matters.
 
 ---
 
