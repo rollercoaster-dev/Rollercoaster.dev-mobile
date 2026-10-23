@@ -27,16 +27,23 @@ export const CAPS: Record<TextVariant, number> = {
 /** Max combined growth for chrome text: tab labels, pills, counters, overlines. */
 export const CHROME_CAP = 1.3;
 
+/** Button labels don't grow: a pinned button must not swallow the screen. */
+export const CONTROL_CAP = 1.0;
+
 /** OS font scale at which layouts should treat text as large. */
 export const LARGE_TYPE_AT = 1.3;
 
 /** OS font scale at which iOS enters its accessibility sizes (AX1 and up). */
 export const ACCESSIBILITY_SIZE_AT = 1.6;
 
-/** A text role: a `Text` variant, or chrome. */
-export type TypeRole = TextVariant | "chrome";
+/** A text role: a `Text` variant, chrome, or a control (button label). */
+export type TypeRole = TextVariant | "chrome" | "control";
 
-const ROLE_CAPS: Record<TypeRole, number> = { ...CAPS, chrome: CHROME_CAP };
+const ROLE_CAPS: Record<TypeRole, number> = {
+  ...CAPS,
+  chrome: CHROME_CAP,
+  control: CONTROL_CAP,
+};
 
 /** How much larger the active theme's type scale is than the default's (1.25 for Low Vision). */
 export function themeScaleOf(sizeScale: { md: number }): number {

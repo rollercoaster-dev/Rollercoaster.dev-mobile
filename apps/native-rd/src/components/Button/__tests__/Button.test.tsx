@@ -13,17 +13,15 @@ describe("Button", () => {
     expect(screen.getByText("Click me")).toBeOnTheScreen();
   });
 
-  it("caps the label and icon at the 1.3x chrome scale", () => {
+  it("keeps the label and icon at their size whatever the OS text size", () => {
     renderWithProviders(
       <Button label="Get Started" icon="→" onPress={jest.fn()} />,
     );
-    expect(screen.getByText("Get Started").props.maxFontSizeMultiplier).toBe(
-      1.3,
-    );
+    expect(screen.getByText("Get Started").props.maxFontSizeMultiplier).toBe(1);
     expect(
       screen.getByTestId("button-icon-run", { includeHiddenElements: true })
         .props.maxFontSizeMultiplier,
-    ).toBe(1.3);
+    ).toBe(1);
   });
 
   it("calls onPress when pressed", () => {

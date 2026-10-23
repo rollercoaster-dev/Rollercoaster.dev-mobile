@@ -45,9 +45,9 @@ export function Button({
   accessibilityHint,
 }: ButtonProps) {
   const isDisabled = disabled || loading;
-  // Button labels are chrome: they grow a little with the OS setting, then
-  // stop, so a pinned button can't swallow the screen at accessibility sizes.
-  const labelCap = capForRole("chrome", useThemeScale());
+  // Button labels don't grow with the OS setting, so a pinned button can't
+  // swallow the screen at accessibility sizes.
+  const labelCap = capForRole("control", useThemeScale());
 
   // Look up variant styles at render time. Module-level capture of
   // `styles.variantX` / `styles.labelX` breaks react-native-unistyles

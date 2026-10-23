@@ -25,7 +25,7 @@ One module owns the numbers, one hook owns the OS reading, and the shared text p
 
 ## Decisions
 
-- **D1 — Cap values:** display/headline 1.0 (Joe, after native review: headings are already large and growing them broke "Welcom/e"; the issue proposed 1.5); title/body/label/caption/mono 2.0; chrome 1.3, also applied to shared `Button` labels (the AX5 "Get Started" button swallowed the screen). `LARGE_TYPE_AT = 1.3`, `ACCESSIBILITY_SIZE_AT = 1.6`.
+- **D1 — Cap values:** display/headline 1.0 (Joe, after native review: headings are already large and growing them broke "Welcom/e"; the issue proposed 1.5); title/body/label/caption/mono 2.0; chrome 1.3; shared `Button` labels 1.0 (Joe: the AX5 "Get Started" button swallowed the screen). Body text keeps growing to 2.0. `LARGE_TYPE_AT = 1.3`, `ACCESSIBILITY_SIZE_AT = 1.6`.
 - **D2 — Caps are combined bounds against the default theme.** `themeScale = theme.size.md / size.md` (1.25 for Low Vision, 1 otherwise). The OS multiplier handed to RN is `cap / themeScale`, so Low Vision body reaches 2.0× combined (1.25 × 1.6), not 2.5×. Chrome composes the same way.
 - **D3 — Never pass an RN multiplier below 1.** RN ignores `maxFontSizeMultiplier` values in (0, 1). `capFor` clamps to ≥ 1; no current cap/theme pair hits it (1.3 / 1.25 = 1.04).
 - **D4 — Theme scale from `useUnistyles().theme`,** the same source `BadgeCard`/`Input` already read, so tests can swap the theme through the existing unistyles mock.

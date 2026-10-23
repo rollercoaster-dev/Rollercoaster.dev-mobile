@@ -135,7 +135,8 @@ React Native multiplies every `<Text>` by the OS font scale (iOS Dynamic Type, A
 | ------------------------------------------- | ----------------- | -------------------------------------------------------- |
 | `display`, `headline`                       | 1.0x (no growth)  | Already 24–40pt; growing them only breaks words mid-word |
 | `title`, `body`, `label`, `caption`, `mono` | 2.0x              | WCAG 1.4.4 asks for 200% on content text                 |
-| Chrome (`<Text chrome>`, `Button` labels)   | 1.3x              | Tab labels, pills, counters, overlines, button labels    |
+| Chrome (`<Text chrome>`)                    | 1.3x              | Tab labels, pills, counters, overlines                   |
+| `Button` labels                             | 1.0x (no growth)  | A pinned button must not swallow the screen              |
 
 Caps are measured against the default theme's base size. Loud & Clear composes with the OS scale but stays inside the same bound: its body text reaches 2.0x of the default base, not 2.5x. A theme's own scale is never undone, so Loud & Clear headings stay at their 1.25x.
 
