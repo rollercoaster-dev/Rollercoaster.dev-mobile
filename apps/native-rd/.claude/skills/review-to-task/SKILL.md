@@ -42,9 +42,7 @@ gh api repos/rollercoaster-dev/native-rd/pulls/<pr_number>/reviews
 
 Include a comment if it matches ANY of:
 
-- CodeRabbit comment containing "Potential issue" or "Bug" markers
-- CodeRabbit comment with an actionable suggestion that has no resolution
-- Claude review item marked "should fix" or "critical"
+- Bot review comment (Claude, Copilot, any reviewer bot) marked "should fix", "critical", "Potential issue" or "Bug", or carrying an actionable suggestion with no resolution
 - Human reviewer comment requesting a change with no follow-up commit
 
 Exclude a comment if it matches ANY of:
@@ -64,7 +62,7 @@ For each actionable item, extract:
 - **File**: Source file path
 - **Line**: Line number (if available)
 - **Body**: Original comment text
-- **Source**: Who left the comment (CodeRabbit, Claude, human reviewer name)
+- **Source**: Who left the comment (bot name or human reviewer name)
 
 ### Step 4: Create GitHub Issues
 
