@@ -1,6 +1,6 @@
 # Push review-fix commits
 
-When you commit a fix in response to PR review comments (CodeRabbit, Copilot, human reviewer, any source), `git push` is part of the same action. Do not stop after `git commit`.
+When you commit a fix in response to PR review comments (Claude, Copilot, human reviewer, expert-review, any source), `git push` is part of the same action. Do not stop after `git commit`.
 
 ## Rules
 

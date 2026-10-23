@@ -101,7 +101,7 @@ gh pr list --state merged --search "closes #<dep-number>" --json number,title,me
 ### Phase 2: Research Codebase
 
 0. **Project docs:**
-   - `apps/native-rd/CLAUDE.md` — hard rules, design system, ND accessibility
+   - `apps/native-rd/AGENTS.md` — hard rules, design system, ND accessibility
    - `apps/native-rd/AGENTS.md` — agent map
    - `docs/architecture/ci-contract.md` — CI contract (if touching CI)
    - Existing dev plans in `apps/native-rd/docs/plans/dev-plans/` for prior-art
@@ -247,7 +247,7 @@ User: "research issue #67"
 
 Agent:
 1. Fetches issue #67: "i18n: migrate Welcome, NewGoal, Settings screens"
-2. Reads apps/native-rd/CLAUDE.md, i18n patterns under src/i18n/
+2. Reads apps/native-rd/AGENTS.md, i18n patterns under src/i18n/
 3. Searches for existing translation keys, finds prior PRs (#127, #128)
 4. Maps: 3 screens, ~5 keys per screen, namespace decisions
 5. Estimates: ~250 lines (MEDIUM complexity)
