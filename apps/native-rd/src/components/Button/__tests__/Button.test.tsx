@@ -1,16 +1,136 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 import {
   renderWithProviders,
   screen,
   fireEvent,
 } from "../../../__tests__/test-utils";
 import { Button } from "../Button";
+import { resolveButtonColors } from "../Button.styles";
+import { mockTheme } from "../../../__tests__/mocks/unistyles";
+import { themeNames, themes } from "../../../themes/compose";
+
+function idleStyle(testID: string) {
+  const pressable = screen.getByTestId(testID);
+  return StyleSheet.flatten(pressable.props.style);
+}
 
 describe("Button", () => {
   it("renders with label", () => {
     renderWithProviders(<Button label="Click me" onPress={jest.fn()} />);
     expect(screen.getByText("Click me")).toBeOnTheScreen();
+  });
+
+  it("uses the contrast-validated action colors for the default primary", () => {
+    renderWithProviders(
+      <Button label="Save" onPress={jest.fn()} testID="save" />,
+    );
+    expect(idleStyle("save").backgroundColor).toBe(
+      mockTheme.action.actionPrimaryBg,
+    );
+    expect(StyleSheet.flatten(screen.getByText("Save").props.style).color).toBe(
+      mockTheme.action.actionPrimaryFg,
+    );
+  });
+
+  it("keeps the Badges primary legible on its celebration surface", () => {
+    renderWithProviders(
+      <Button
+        label="See your goals"
+        onPress={jest.fn()}
+        testID="celebration"
+        surface="celebration"
+      />,
+    );
+    expect(idleStyle("celebration").backgroundColor).toBe(
+      mockTheme.chrome.celebrationBg,
+    );
+    expect(
+      StyleSheet.flatten(screen.getByText("See your goals").props.style).color,
+    ).toBe(mockTheme.chrome.celebrationFg);
+  });
+
+  it("allows a long translated label to wrap beside an icon", () => {
+    const label = "Vollständigen Nachweistitel und weitere Details lesen";
+    renderWithProviders(<Button label={label} icon="+" onPress={jest.fn()} />);
+    const style = StyleSheet.flatten(screen.getByText(label).props.style);
+    expect(style.flexShrink).toBe(1);
+    expect(screen.getByText(label).props.numberOfLines).toBeUndefined();
+  });
+
+  it("supports richer spoken action copy than the visible label", () => {
+    renderWithProviders(
+      <Button
+        label="Set aside"
+        accessibilityLabel="Set this step aside"
+        onPress={jest.fn()}
+      />,
+    );
+    expect(
+      screen.getByRole("button", { name: "Set this step aside" }),
+    ).toBeOnTheScreen();
+  });
+
+  it.each(themeNames)(
+    "%s resolves every filled action from semantic contrast pairs",
+    (name) => {
+      const theme = themes[name];
+      expect(resolveButtonColors(theme, "primary")).toEqual({
+        background: theme.action.actionPrimaryBg,
+        foreground: theme.action.actionPrimaryFg,
+      });
+      expect(resolveButtonColors(theme, "secondary")).toEqual({
+        background: theme.action.actionSecondaryBg,
+        foreground: theme.action.actionSecondaryFg,
+      });
+      expect(resolveButtonColors(theme, "destructive")).toEqual({
+        background: theme.action.actionDestructiveBg,
+        foreground: theme.action.actionDestructiveFg,
+      });
+      expect(resolveButtonColors(theme, "primary", "celebration")).toEqual({
+        background: theme.chrome.celebrationBg,
+        foreground: theme.chrome.celebrationFg,
+      });
+    },
+  );
+
+  it.each([
+    ["primary", mockTheme.action.actionPrimaryFg],
+    ["secondary", mockTheme.action.actionSecondaryFg],
+    ["ghost", mockTheme.colors.text],
+    ["destructive", mockTheme.action.actionDestructiveFg],
+  ] as const)(
+    "%s loading keeps its foreground and blocks presses",
+    (variant, color) => {
+      const onPress = jest.fn();
+      renderWithProviders(
+        <Button label="Save" onPress={onPress} variant={variant} loading />,
+      );
+      expect(screen.UNSAFE_getByType(ActivityIndicator).props.color).toBe(
+        color,
+      );
+      const button = screen.getByRole("button", { name: "Save" });
+      expect(button.props.accessibilityState).toEqual({
+        disabled: true,
+        busy: true,
+      });
+      fireEvent.press(button);
+      expect(onPress).not.toHaveBeenCalled();
+    },
+  );
+
+  it("uses the celebration foreground while loading", () => {
+    renderWithProviders(
+      <Button
+        label="See goals"
+        onPress={jest.fn()}
+        surface="celebration"
+        loading
+      />,
+    );
+    expect(screen.UNSAFE_getByType(ActivityIndicator).props.color).toBe(
+      mockTheme.chrome.celebrationFg,
+    );
   });
 
   it("calls onPress when pressed", () => {
