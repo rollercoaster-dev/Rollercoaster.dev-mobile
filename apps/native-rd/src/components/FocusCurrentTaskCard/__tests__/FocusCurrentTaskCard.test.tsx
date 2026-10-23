@@ -217,9 +217,15 @@ describe("FocusCurrentTaskCard", () => {
         capturedEvidence: captured,
       });
       expect(screen.getByText("✓ Mark complete")).toBeTruthy();
-      fireEvent.press(screen.getByLabelText("Add more evidence to this step"));
+      const pressEvent = { nativeEvent: { target: 42 } };
+      fireEvent.press(
+        screen.getByLabelText("Add more evidence to this step"),
+        pressEvent,
+      );
       expect(props.onAddEvidence).toHaveBeenCalledTimes(1);
-      expect(props.onAddEvidence).toHaveBeenCalledWith();
+      // No type opens the chooser; the press event rides along so the screen
+      // can return focus to this button when the chooser closes (#686).
+      expect(props.onAddEvidence).toHaveBeenCalledWith(undefined, pressEvent);
     });
   });
 

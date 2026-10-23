@@ -54,7 +54,7 @@ export interface CaptureEvidenceTypePickerProps {
    * that opened it. Forwarded to {@link AnimatedSheet}; omit and no focus is
    * restored (e.g. the theme-matrix story).
    */
-  restoreFocusRef?: React.RefObject<View | null>;
+  restoreFocusRef?: React.RefObject<View | number | null>;
 }
 
 /**
@@ -188,6 +188,7 @@ function CaptureSheet({
       title={title}
       subLine={subLine}
       closeLabel={t("common:actions.close")}
+      closeTestID="capture-sheet-close"
       restoreFocusRef={restoreFocusRef}
     >
       <CaptureGrid selectedType={selectedType} onSelectType={onSelectType} />

@@ -20,6 +20,10 @@ import { Card } from "../../components/Card";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { IconButton } from "../../components/IconButton";
 import { HeaderBand } from "../../components/ScreenHeader";
+import {
+  SheetBackground,
+  useSheetTrigger,
+} from "../../components/AnimatedSheet";
 import { useTopInsetColor } from "../../navigation/TopInsetColor";
 import { ConfirmDeleteModal } from "../../components/ConfirmDeleteModal";
 import { badgeWithGoalQuery, deleteBadge } from "../../db";
@@ -197,6 +201,9 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showOverflowMenu, setShowOverflowMenu] = useState(false);
   const [isShareSheetOpen, setIsShareSheetOpen] = useState(false);
+  // The share sheet opens from the CTA or from ⋯ › Share badge; focus returns
+  // to whichever the user pressed (#686).
+  const shareTrigger = useSheetTrigger();
   const { shouldAnimate } = useAnimationPref();
   const insets = useSafeAreaInsets();
   const { theme } = useUnistyles();
@@ -343,94 +350,103 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
 
   return (
     <>
-      {/* Pinned, not scrolled: the badge is the thing the screen is about, so
-          it holds its position while the detail below it moves. Its back and ⋯
-          controls double as the screen's chrome and must stay reachable. */}
-      <CelebrationHeroHeader
-        badgeDesign={design}
-        badgeTitle={goalTitle}
-        credentialLabel={credentialLabel}
-        isVerified={isVerified}
-        showConfetti={shouldAnimate}
-        onBack={() => navigation.goBack()}
-        onOverflow={() => setShowOverflowMenu(true)}
-        backAccessibilityLabel={t("badgeDetail:fallback.goBack")}
-        overflowAccessibilityLabel={t("badgeDetail:hero.overflowLabel")}
-      />
+      {/* Hero + body: hidden from VoiceOver and TalkBack while the share sheet
+          is open — the one time the hero's back and ⋯ chrome is unreachable.
+          The CTA hides itself; the sheet stays outside (#686). */}
+      <SheetBackground style={styles.sheetBackground}>
+        {/* Pinned, not scrolled: the badge is the thing the screen is about,
+            so it holds its position while the detail below it moves. Its back
+            and ⋯ controls double as the screen's chrome and must stay
+            reachable. */}
+        <CelebrationHeroHeader
+          badgeDesign={design}
+          badgeTitle={goalTitle}
+          credentialLabel={credentialLabel}
+          isVerified={isVerified}
+          showConfetti={shouldAnimate}
+          onBack={() => navigation.goBack()}
+          onOverflow={(event) => {
+            shareTrigger.rememberTrigger(event);
+            setShowOverflowMenu(true);
+          }}
+          backAccessibilityLabel={t("badgeDetail:fallback.goBack")}
+          overflowAccessibilityLabel={t("badgeDetail:hero.overflowLabel")}
+        />
 
-      {/* flex:1 so the Share CTA below stays a pinned footer rather than being
-          pushed off-screen by tall content. */}
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-      >
-        <View style={styles.body}>
-          {/* The hero's chip already carries the earned date for credentialed
-              badges, so this line only fills the gap when there is no chip. */}
-          {!isVerified && earnedDate ? (
-            <Text style={styles.description}>
-              {t("badgeDetail:earned", { date: earnedDate })}
-            </Text>
-          ) : null}
-
-          {/* The narrative is the badge's own "how it was earned" sentence and
-              stands apart from the gallery below it: ProofSpine owns the
-              evidence, this owns the story. Older badges carry only this. */}
-          {criteriaNarrative ? (
-            <View style={styles.infoBlock}>
-              <Text style={styles.sectionLabel}>
-                {t("badgeDetail:sections.howEarned")}
+        {/* flex:1 so the Share CTA below stays a pinned footer rather than being
+            pushed off-screen by tall content. */}
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
+        >
+          <View style={styles.body}>
+            {/* The hero's chip already carries the earned date for credentialed
+                badges, so this line only fills the gap when there is no chip. */}
+            {!isVerified && earnedDate ? (
+              <Text style={styles.description}>
+                {t("badgeDetail:earned", { date: earnedDate })}
               </Text>
-              <Text style={styles.bodyText}>{criteriaNarrative}</Text>
-            </View>
-          ) : null}
+            ) : null}
 
-          {/* Fed from the baked credential, never live DB rows, so the spine
-              keeps rendering after the goal/step is edited or soft-deleted —
-              and matches what a third-party verifier would see. Mounted
-              unconditionally: ProofSpine owns its own honest empty state. */}
-          <ProofSpine
-            evidence={evidenceItems ?? []}
-            onCardPress={handleEvidencePress}
-          />
-
-          <Card>
-            <View style={styles.infoSection}>
-              {goalDescription ? (
-                <View style={styles.infoBlock}>
-                  <Text style={styles.sectionLabel}>
-                    {t("badgeDetail:sections.about")}
-                  </Text>
-                  <Text style={styles.bodyText}>{goalDescription}</Text>
-                </View>
-              ) : null}
-
+            {/* The narrative is the badge's own "how it was earned" sentence and
+                stands apart from the gallery below it: ProofSpine owns the
+                evidence, this owns the story. Older badges carry only this. */}
+            {criteriaNarrative ? (
               <View style={styles.infoBlock}>
                 <Text style={styles.sectionLabel}>
-                  {t("badgeDetail:sections.details")}
+                  {t("badgeDetail:sections.howEarned")}
                 </Text>
-                <Text style={styles.bodyText}>
-                  {t("badgeDetail:createdAt", {
-                    date: formatDate(
-                      badge.createdAt as string | null,
-                      i18n.language,
-                    ),
-                  })}
-                </Text>
+                <Text style={styles.bodyText}>{criteriaNarrative}</Text>
               </View>
-            </View>
-          </Card>
+            ) : null}
 
-          {goalId ? (
-            <Button
-              label={t("badgeDetail:actions.viewTimeline")}
-              variant="secondary"
-              onPress={() => handleViewTimeline(goalId)}
-              testID="badge-detail-view-timeline"
+            {/* Fed from the baked credential, never live DB rows, so the spine
+                keeps rendering after the goal/step is edited or soft-deleted —
+                and matches what a third-party verifier would see. Mounted
+                unconditionally: ProofSpine owns its own honest empty state. */}
+            <ProofSpine
+              evidence={evidenceItems ?? []}
+              onCardPress={handleEvidencePress}
             />
-          ) : null}
-        </View>
-      </ScrollView>
+
+            <Card>
+              <View style={styles.infoSection}>
+                {goalDescription ? (
+                  <View style={styles.infoBlock}>
+                    <Text style={styles.sectionLabel}>
+                      {t("badgeDetail:sections.about")}
+                    </Text>
+                    <Text style={styles.bodyText}>{goalDescription}</Text>
+                  </View>
+                ) : null}
+
+                <View style={styles.infoBlock}>
+                  <Text style={styles.sectionLabel}>
+                    {t("badgeDetail:sections.details")}
+                  </Text>
+                  <Text style={styles.bodyText}>
+                    {t("badgeDetail:createdAt", {
+                      date: formatDate(
+                        badge.createdAt as string | null,
+                        i18n.language,
+                      ),
+                    })}
+                  </Text>
+                </View>
+              </View>
+            </Card>
+
+            {goalId ? (
+              <Button
+                label={t("badgeDetail:actions.viewTimeline")}
+                variant="secondary"
+                onPress={() => handleViewTimeline(goalId)}
+                testID="badge-detail-view-timeline"
+              />
+            ) : null}
+          </View>
+        </ScrollView>
+      </SheetBackground>
 
       {/* Single Share CTA + its export sheet, replacing the old stacked
           3-button Export card. Mounted as a root-level sibling of the
@@ -441,7 +457,11 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
       <BadgeShareSheet
         goalTitle={goalTitle}
         isSheetOpen={isShareSheetOpen}
-        onOpenSheet={() => setIsShareSheetOpen(true)}
+        onOpenSheet={(event) => {
+          shareTrigger.rememberTrigger(event);
+          setIsShareSheetOpen(true);
+        }}
+        restoreFocusRef={shareTrigger.restoreFocusRef}
         onCloseSheet={() => setIsShareSheetOpen(false)}
         onShareVerifiable={() => exportVerifiableBadge(imageUri, goalTitle)}
         onSaveImage={() => exportImage(imageUri)}

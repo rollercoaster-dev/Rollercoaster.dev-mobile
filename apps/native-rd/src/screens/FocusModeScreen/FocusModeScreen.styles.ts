@@ -16,6 +16,11 @@ export const styles = StyleSheet.create((theme) => ({
   content: {
     flex: 1,
   },
+  // Wraps the screen body (not the sheets) so it hides from assistive tech
+  // while a sheet is open; flex:1 keeps the card section filling the screen.
+  sheetBackground: {
+    flex: 1,
+  },
   centered: {
     flex: 1,
     justifyContent: "center",
