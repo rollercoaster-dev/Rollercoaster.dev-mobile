@@ -109,6 +109,9 @@ module.exports = {
     "./src/i18n/index.ts",
   ],
 
+  // Runs after the test framework so it can register afterEach.
+  setupFilesAfterEnv: ["./src/__tests__/setup-font-scale.ts"],
+
   // Tests colocated under src/__tests__/ mirroring the src/ directory structure,
   // plus pure script tests under scripts/**/__tests__/ (no RN globals needed).
   testMatch: [

@@ -5,6 +5,10 @@ import {
   fireEvent,
 } from "../../../__tests__/test-utils";
 import { Input } from "../Input";
+import { composeTheme } from "../../../themes/compose";
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const unistylesMock = require("react-native-unistyles");
 
 describe("Input", () => {
   it("renders label when provided", () => {
@@ -69,5 +73,52 @@ describe("Input", () => {
         disabled: false,
       },
     );
+  });
+
+  describe("maxFontSizeMultiplier", () => {
+    afterEach(() => {
+      unistylesMock.useUnistyles.mockReturnValue({
+        theme: unistylesMock.mockTheme,
+        rt: unistylesMock.UnistylesRuntime,
+      });
+    });
+
+    // Body, label and caption share the 2.0 cap today, so these pin "capped
+    // and composed with the theme scale" rather than which role each part uses.
+    it("caps the field, label and error at 2.0", () => {
+      renderWithProviders(
+        <Input label="Name" placeholder="Your name" error="Required" />,
+      );
+      expect(
+        screen.getByPlaceholderText("Your name").props.maxFontSizeMultiplier,
+      ).toBe(2);
+      expect(screen.getByText("Name").props.maxFontSizeMultiplier).toBe(2);
+      expect(screen.getByText("Required").props.maxFontSizeMultiplier).toBe(2);
+    });
+
+    it("divides each cap by Low Vision's 1.25x theme scale", () => {
+      unistylesMock.useUnistyles.mockReturnValue({
+        theme: composeTheme("light", "lowVision"),
+      });
+      renderWithProviders(
+        <Input label="Name" placeholder="Your name" error="Required" />,
+      );
+      for (const node of [
+        screen.getByPlaceholderText("Your name"),
+        screen.getByText("Name"),
+        screen.getByText("Required"),
+      ]) {
+        expect(node.props.maxFontSizeMultiplier).toBeCloseTo(1.6);
+      }
+    });
+
+    it("lets an explicit caller value win on the field", () => {
+      renderWithProviders(
+        <Input placeholder="Code" maxFontSizeMultiplier={1.2} />,
+      );
+      expect(
+        screen.getByPlaceholderText("Code").props.maxFontSizeMultiplier,
+      ).toBe(1.2);
+    });
   });
 });
