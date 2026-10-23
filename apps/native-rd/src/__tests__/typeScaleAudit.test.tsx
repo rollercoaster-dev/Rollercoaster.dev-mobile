@@ -56,10 +56,14 @@ describe("type-scale audit", () => {
   });
 
   describe.each(themes)("%s theme at the largest AX size", (_name, theme) => {
+    // A theme's own scale is never undone, so Low Vision headings may sit at
+    // 1.25× even though headings don't grow with the OS.
+    const themeScale = theme.size.md / defaultTheme.size.md;
+
     test.each(variants)("%s stays within its cap", (variant) => {
       const base = defaultTheme.textStyles[variant].fontSize;
       expect(renderedSize(theme, variant, LARGEST_AX_SIZE)).toBeLessThanOrEqual(
-        base * CAPS[variant] + 1e-9,
+        base * Math.max(CAPS[variant], themeScale) + 1e-9,
       );
     });
 

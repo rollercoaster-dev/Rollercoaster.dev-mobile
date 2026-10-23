@@ -70,14 +70,14 @@ describe("useTypeScale", () => {
       mockFontScale(1.2);
       const { result } = renderHook(() => useTypeScale());
       expect(result.current.scaleFor("body")).toBe(1.2);
-      expect(result.current.scaleFor("headline")).toBe(1.2);
+      expect(result.current.scaleFor("chrome")).toBe(1.2);
     });
 
     it("stops at each role's cap", () => {
       mockFontScale(3.1);
       const { result } = renderHook(() => useTypeScale());
       expect(result.current.scaleFor("body")).toBe(2);
-      expect(result.current.scaleFor("headline")).toBe(1.5);
+      expect(result.current.scaleFor("headline")).toBe(1);
       expect(result.current.scaleFor("chrome")).toBe(1.3);
     });
 
@@ -88,7 +88,8 @@ describe("useTypeScale", () => {
       mockFontScale(3.1);
       const { result } = renderHook(() => useTypeScale());
       expect(result.current.scaleFor("body") * 1.25).toBeCloseTo(2);
-      expect(result.current.scaleFor("headline") * 1.25).toBeCloseTo(1.5);
+      // Headings don't grow with the OS, but keep Low Vision's own 1.25×.
+      expect(result.current.scaleFor("headline")).toBe(1);
     });
   });
 });

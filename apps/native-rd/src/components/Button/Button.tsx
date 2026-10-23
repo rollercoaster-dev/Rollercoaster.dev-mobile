@@ -1,6 +1,8 @@
 import React from "react";
 import { Pressable, Text, ActivityIndicator } from "react-native";
 import { styles, type ButtonVariant, type ButtonSize } from "./Button.styles";
+import { useThemeScale } from "../../hooks/useTypeScale";
+import { capForRole } from "../../utils/typeScale";
 
 export type { ButtonVariant, ButtonSize };
 
@@ -43,6 +45,9 @@ export function Button({
   accessibilityHint,
 }: ButtonProps) {
   const isDisabled = disabled || loading;
+  // Button labels are chrome: they grow a little with the OS setting, then
+  // stop, so a pinned button can't swallow the screen at accessibility sizes.
+  const labelCap = capForRole("chrome", useThemeScale());
 
   // Look up variant styles at render time. Module-level capture of
   // `styles.variantX` / `styles.labelX` breaks react-native-unistyles
@@ -79,6 +84,7 @@ export function Button({
       ? icon.length > 0 && (
           <Text
             style={[styles.icon(size), labelStyle]}
+            maxFontSizeMultiplier={labelCap}
             accessibilityElementsHidden
             testID="button-icon-run"
           >
@@ -114,7 +120,12 @@ export function Button({
       ) : (
         <>
           {iconRun}
-          <Text style={[styles.label(size), labelStyle]}>{label}</Text>
+          <Text
+            style={[styles.label(size), labelStyle]}
+            maxFontSizeMultiplier={labelCap}
+          >
+            {label}
+          </Text>
         </>
       )}
     </Pressable>

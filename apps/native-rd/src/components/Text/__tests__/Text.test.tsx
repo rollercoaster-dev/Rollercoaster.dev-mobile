@@ -45,8 +45,8 @@ describe("Text", () => {
     });
 
     test.each([
-      ["display", 1.5],
-      ["headline", 1.5],
+      ["display", 1],
+      ["headline", 1],
       ["title", 2],
       ["body", 2],
       ["caption", 2],

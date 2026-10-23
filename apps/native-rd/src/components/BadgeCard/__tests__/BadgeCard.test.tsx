@@ -89,12 +89,12 @@ describe("BadgeCard", () => {
   });
 
   describe("badge sizing", () => {
-    // Each text-column line grows by its role's capped scale (headline 1.5,
+    // Each text-column line grows by its role's capped scale (headline 1.0,
     // body and caption 2.0), so the badge tracks what the column really draws.
     test.each([
       [1, 1, 1],
-      [1.4, 1.4, 1.4],
-      [3.1, 1.5, 2],
+      [1.4, 1, 1.4],
+      [3.1, 1, 2],
     ])(
       "at fontScale %s sizes the badge to headline x%s, body/caption x%s",
       (fontScale, headlineScale, contentScale) => {
@@ -113,7 +113,7 @@ describe("BadgeCard", () => {
         // The math above assumes these caps; pin the rendered nodes to them.
         expect(
           screen.getByText("First Steps").props.maxFontSizeMultiplier,
-        ).toBe(1.5);
+        ).toBe(1);
         expect(screen.getByText("Ran a mile").props.maxFontSizeMultiplier).toBe(
           2,
         );

@@ -4,15 +4,19 @@
  *
  * Caps are combined bounds measured against the default theme's base size:
  * Low Vision's 1.25× token scale counts toward the cap, so its body text
- * reaches the same 2.0× as everyone else's instead of 2.5×.
+ * reaches the same 2.0× as everyone else's instead of 2.5×. A theme's own
+ * scale is never undone: Low Vision headings stay at 1.25×.
  */
 import type { TextVariant } from "../components/Text";
 import { size } from "../themes/tokens";
 
-/** Max combined growth per text variant. Headings stop early so they don't break mid-word. */
+/**
+ * Max combined growth per text variant. Headings are already large (24–40pt)
+ * and don't grow with the OS setting; growing them only breaks words.
+ */
 export const CAPS: Record<TextVariant, number> = {
-  display: 1.5,
-  headline: 1.5,
+  display: 1.0,
+  headline: 1.0,
   title: 2.0,
   body: 2.0,
   label: 2.0,

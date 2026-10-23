@@ -71,12 +71,12 @@ describe("GoalEvidenceCard", () => {
     expect(props.size).toBeGreaterThan(0);
   });
 
-  // Title grows to the headline cap (1.5), description to body's (2.0), so
+  // Title stays at the headline cap (1.0), description grows to body's (2.0), so
   // the badge tracks the capped text column rather than the raw OS scale.
   test.each([
     [1, 1, 1],
-    [1.4, 1.4, 1.4],
-    [3.1, 1.5, 2],
+    [1.4, 1, 1.4],
+    [3.1, 1, 2],
   ])(
     "at fontScale %s sizes the badge to headline x%s, body x%s",
     (fontScale, headlineScale, bodyScale) => {
@@ -84,7 +84,7 @@ describe("GoalEvidenceCard", () => {
       mockFontScale(fontScale);
       renderWithProviders(<GoalEvidenceCard {...defaultProps} />);
       // The math below assumes these caps; pin the rendered nodes to them.
-      expect(screen.getByRole("header").props.maxFontSizeMultiplier).toBe(1.5);
+      expect(screen.getByRole("header").props.maxFontSizeMultiplier).toBe(1);
       expect(
         screen.getByText(defaultProps.goalDescription).props
           .maxFontSizeMultiplier,
