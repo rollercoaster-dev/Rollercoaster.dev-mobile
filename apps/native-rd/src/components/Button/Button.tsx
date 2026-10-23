@@ -45,8 +45,8 @@ export function Button({
   accessibilityHint,
 }: ButtonProps) {
   const isDisabled = disabled || loading;
-  // Button labels don't grow with the OS setting, so a pinned button can't
-  // swallow the screen at accessibility sizes.
+  // Button labels grow a little with the OS setting (to Loud & Clear's 1.25x),
+  // then stop, so a pinned button can't swallow the screen at AX sizes.
   const labelCap = capForRole("control", useThemeScale());
 
   // Look up variant styles at render time. Module-level capture of

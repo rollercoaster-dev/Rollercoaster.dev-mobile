@@ -56,7 +56,7 @@ describe("capFor", () => {
 describe("capForRole", () => {
   it.each([
     ["chrome", 1, CHROME_CAP],
-    ["control", 1, 1],
+    ["control", 1, 1.25],
     ["control", 1.25, 1],
     ["chrome", 1.25, 1.04],
     ["headline", 1.25, 1],

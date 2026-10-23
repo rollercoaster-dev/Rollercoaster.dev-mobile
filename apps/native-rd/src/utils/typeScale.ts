@@ -27,8 +27,12 @@ export const CAPS: Record<TextVariant, number> = {
 /** Max combined growth for chrome text: tab labels, pills, counters, overlines. */
 export const CHROME_CAP = 1.3;
 
-/** Button labels don't grow: a pinned button must not swallow the screen. */
-export const CONTROL_CAP = 1.0;
+/**
+ * Max combined growth for button labels: enough to sit beside 2.0x body text,
+ * small enough that a pinned button can't swallow the screen. Matches Loud &
+ * Clear's 1.25x, so that theme's buttons keep their size.
+ */
+export const CONTROL_CAP = 1.25;
 
 /** OS font scale at which layouts should treat text as large. */
 export const LARGE_TYPE_AT = 1.3;
