@@ -64,6 +64,31 @@ module.exports = defineConfig([
   },
   localRules,
   {
+    // Type-scaling policy (#741): useTypeScale() is the only OS font-scale
+    // reader, so caps and thresholds can't be bypassed. See
+    // docs/accessibility-guidelines.md#text-scaling. Flat config replaces rule
+    // options instead of merging them: add any future no-restricted-syntax
+    // selectors for src/ to this block, or they will drop these.
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: ["src/hooks/useTypeScale.ts"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        ...[
+          "MemberExpression[object.name='PixelRatio'][property.name='getFontScale']",
+          "VariableDeclarator[init.callee.name='useWindowDimensions'] > ObjectPattern > Property[key.name='fontScale']",
+          "MemberExpression[object.callee.name='useWindowDimensions'][property.name='fontScale']",
+          "MemberExpression[object.callee.object.name='Dimensions'][property.name='fontScale']",
+          "VariableDeclarator[init.callee.object.name='Dimensions'] > ObjectPattern > Property[key.name='fontScale']",
+        ].map((selector) => ({
+          selector,
+          message:
+            "Read the OS font scale through useTypeScale() (src/hooks/useTypeScale.ts).",
+        })),
+      ],
+    },
+  },
+  {
     // SDK 56 bumped eslint-config-expo to v56, which enables eslint-plugin-react-hooks
     // v6 (the React Compiler ruleset) at "error". That surfaced 40 pre-existing findings
     // across ~15 files. To keep the SDK-56 bump focused, these are downgraded to "warn"
