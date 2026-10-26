@@ -8,6 +8,8 @@
 
 **Baseline:** `main` at `aad2e486`. **Trigger:** a YouTube transcript summarising the ECI report. Every transcript claim was checked against the report PDF itself. All web sources fetched 2026-10-26.
 
+**Glossary:** acronyms and evidence labels are defined in [glossary-community-credentialing.md](./glossary-community-credentialing.md).
+
 Labels used below: **[verified]** = read in the primary source. **[secondary]** = only in press or vendor coverage. **[unverified]** = not found or source unreachable. **[inference]** = my reasoning, not a source claim.
 
 ---
@@ -16,7 +18,7 @@ Labels used below: **[verified]** = read in the primary source. **[secondary]** 
 
 - **The report is real, and the transcript's figures are correct.** ECI's _NextGen Mechanics Report 2026_ (52 pp., published 30 Sep 2026) estimates 175,000 mechanics in Europe, a 45,000 shortfall today, 105,000 recruits needed by 2032 and a 2032 workforce of about 247,000. It draws on 600+ responses from 30 countries and makes 27 numbered recommendations in five sections. The transcript overstates one point. The report does not recommend _recognising_ informal routes. It recommends _researching how_ community-workshop training could feed the recognised pathway, and it calls volunteering-only entry a barrier.
 - **The report never mentions badges, digital credentials, ESCO, EQF or Europass.** It asks for a portable, modular entry qualification and says informally gained skills are "difficult for workshops or fleets to assess". That is the gap a portable, evidence-backed credential addresses. Nobody in the sector has claimed it yet: the only bike-trade "badge" found (Cytech, 2017) is a visual status in a directory.
-- **A pilot is technically feasible with what native-rd ships today plus one fix.** A self-issued OB3 badge proves integrity, not trust. Trust has to come from third parties, through OB3 `EndorsementCredential`s from a peer mechanic, a repair hub or VET provider, and eventually the ECI expert group, and through `alignment` to ESCO. Before any pilot, the shared catalog needs HTTPS achievement IDs (as [openbadges-sub-badges.md](./openbadges-sub-badges.md) already proposes). openbadges-core used to write `alignments`/`tags`/`resultDescriptions` where OB3 specifies `alignment`/`tag`/`resultDescription`, which would have silently dropped ESCO alignments; that was fixed in [#761](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/pull/761).
+- **A pilot is possible, but not with what ships today.** A self-issued OB3 badge proves integrity, not trust. Trust has to come from third parties, through OB3 `EndorsementCredential`s from a peer mechanic, a repair hub or VET provider, and eventually the ECI expert group, and through `alignment` to ESCO. Of the five engineering preconditions in §6, one is done ([#761](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/pull/761) fixed the serializer field names). Four remain: shared HTTPS achievement IDs, issuing and verifying endorsements, an organisational `did:web` signing path outside the app, and independent verification with the 1EdTech validator. No effort estimate exists yet.
 - **EDC (Europass) is not a near-term target for this app.** Issuing an EDC requires an eIDAS electronic seal held by an organisation. There is no official OB3↔ELM mapping, so an EDC bridge belongs to an institutional issuer, not a phone.
 
 ---

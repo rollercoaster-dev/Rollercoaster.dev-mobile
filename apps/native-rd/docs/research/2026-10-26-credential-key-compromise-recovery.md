@@ -8,6 +8,8 @@
 
 **Baseline:** `main` at `aad2e486`. **Question:** when a space admin's or a reviewer's phone is lost or stolen, how do legitimate past endorsements stay valid, the thief's stop counting, and no learner ever has to act? All web sources fetched 2026-10-26. The 1EdTech validator was read at commit `6bf38234` (2026-09-23).
 
+**Glossary:** acronyms and evidence labels are defined in [glossary-community-credentialing.md](./glossary-community-credentialing.md).
+
 Labels used below: **[verified]** = read in the primary source. **[verified in code]** = read in this repo or the validator source. **[secondary]** = only in vendor or community write-ups. **[unverified]** = not confirmed. **[inference]** = my reasoning, not a source claim.
 
 ---

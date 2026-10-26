@@ -8,6 +8,8 @@
 
 **Baseline:** `main` at `aad2e486`. **Framing:** the app stays generic. The bike repair hub is the first worked example of a credentialing pattern that any community space could use: a makerspace, a youth centre, a Berufsschule, a repair hub. Roles are named generically (space, drafting group, reviewer, endorser, learner, peer). All web sources were fetched 2026-10-26.
 
+**Glossary:** acronyms and evidence labels are defined in [glossary-community-credentialing.md](./glossary-community-credentialing.md).
+
 Labels: **[verified]** = read in the primary source. **[secondary]** = only in a search summary, press, or third-party copy. **[unverified]** = not found or unreachable. **[inference]** = my reasoning, not a source claim. Licence notes are a research reading, **not legal advice**.
 
 ---
