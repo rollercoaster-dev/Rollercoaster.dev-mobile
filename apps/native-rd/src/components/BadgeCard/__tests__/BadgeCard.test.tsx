@@ -7,6 +7,8 @@ import {
 import { BadgeCard } from "../BadgeCard";
 import type { BadgeDesign } from "../../../badges/types";
 import { getBadgeLayoutBoxes } from "../../../badges/layoutBoxes";
+import { mockFontScale } from "../../../__tests__/fontScale";
+import { mockTheme } from "../../../__tests__/mocks/unistyles";
 
 const mockBadgeRenderer = jest.fn();
 jest.mock("../../../badges/BadgeRenderer", () => ({
@@ -87,6 +89,46 @@ describe("BadgeCard", () => {
   });
 
   describe("badge sizing", () => {
+    // Each text-column line grows by its role's capped scale (headline 1.0,
+    // body and caption 2.0), so the badge tracks what the column really draws.
+    test.each([
+      [1, 1, 1],
+      [1.4, 1, 1.4],
+      [3.1, 1, 2],
+    ])(
+      "at fontScale %s sizes the badge to headline x%s, body/caption x%s",
+      (fontScale, headlineScale, contentScale) => {
+        const { headline, body, caption } = mockTheme.textStyles;
+        const expected = Math.round(
+          headline.lineHeight * headlineScale +
+            mockTheme.space[1] +
+            body.lineHeight * 2 * contentScale +
+            mockTheme.space[2] +
+            caption.lineHeight * contentScale,
+        );
+        mockFontScale(fontScale);
+        renderWithProviders(
+          <BadgeCard {...baseProps} description="Ran a mile" />,
+        );
+        // The math above assumes these caps; pin the rendered nodes to them.
+        expect(
+          screen.getByText("First Steps").props.maxFontSizeMultiplier,
+        ).toBe(1);
+        expect(screen.getByText("Ran a mile").props.maxFontSizeMultiplier).toBe(
+          2,
+        );
+        expect(
+          screen.getByText("Jan 1, 2025").props.maxFontSizeMultiplier,
+        ).toBe(2);
+        // The initials tile is badgeSize square with its letter at 0.4x; the
+        // letter opts out of OS scaling because badgeSize already includes it.
+        expect(screen.getByText("F").props.allowFontScaling).toBe(false);
+        expect(screen.getByText("F")).toHaveStyle({
+          fontSize: Math.round(expected * 0.4),
+        });
+      },
+    );
+
     it("passes a positive size derived from the theme to BadgeRenderer", () => {
       const design: BadgeDesign = {
         shape: "circle",
