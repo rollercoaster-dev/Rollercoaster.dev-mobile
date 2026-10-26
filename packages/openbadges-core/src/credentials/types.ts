@@ -107,11 +107,11 @@ export interface VerifiableCredentialData {
       image: Shared.IRI | string | Shared.OB3ImageObject;
       criteria: unknown;
       issuer: Shared.IRI;
-      alignments?: unknown[];
-      tags?: string[];
+      alignment?: unknown[];
+      tag?: string[];
       achievementType?: string;
       creator?: Shared.IRI | Record<string, unknown>;
-      resultDescriptions?: unknown[];
+      resultDescription?: unknown[];
     };
   };
   evidence?: unknown;
