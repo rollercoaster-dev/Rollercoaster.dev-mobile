@@ -46,6 +46,26 @@ const mockAssertion: AssertionData = {
   expires: "2025-01-15T10:00:00Z",
 };
 
+const mockBadgeClassWithExtras: BadgeClassData = {
+  ...mockBadgeClass,
+  alignment: [
+    {
+      type: ["Alignment"],
+      targetName: "Standard 1",
+      targetUrl: "https://example.edu/standards/1",
+    },
+  ],
+  tags: ["web", "html"],
+  resultDescriptions: [
+    {
+      id: "urn:uuid:4c3c6b8e-2f1a-4d7e-9b0a-1f2e3d4c5b6a",
+      type: ["ResultDescription"],
+      name: "Final grade",
+      resultType: "LetterGrade",
+    },
+  ],
+};
+
 describe("OpenBadges3Serializer", () => {
   const serializer = new OpenBadges3Serializer();
 
@@ -97,13 +117,16 @@ describe("OpenBadges3Serializer", () => {
       expect(result.type).toEqual(["Achievement"]);
     });
 
-    it("should map alignment to alignments", () => {
-      const badgeWithAlignment = {
-        ...mockBadgeClass,
-        alignment: [{ targetName: "Standard 1" }],
-      };
-      const result = serializer.serializeBadgeClass(badgeWithAlignment);
-      expect(result["alignments"]).toEqual([{ targetName: "Standard 1" }]);
+    // OB 3.0 §B.1.1 names these singular even though they hold arrays.
+    // Plural keys pass schema validation (extra properties are allowed) but
+    // consumers silently drop them.
+    it("emits alignment, tag and resultDescription under their OB3 names", () => {
+      const result = serializer.serializeBadgeClass(mockBadgeClassWithExtras);
+      expect(result["alignment"]).toEqual(mockBadgeClassWithExtras.alignment);
+      expect(result["tag"]).toEqual(["web", "html"]);
+      expect(result["resultDescription"]).toEqual(
+        mockBadgeClassWithExtras.resultDescriptions,
+      );
     });
   });
 
@@ -168,6 +191,21 @@ describe("OpenBadges3Serializer", () => {
       const subject = result["credentialSubject"] as Record<string, unknown>;
       const achievement = subject.achievement as Record<string, unknown>;
       expect(achievement.creator).toEqual(explicitCreator);
+    });
+
+    it("emits achievement alignment, tag and resultDescription under their OB3 names", () => {
+      const result = serializer.serializeAssertion(
+        mockAssertion,
+        mockBadgeClassWithExtras,
+        mockIssuer,
+      );
+      const subject = result["credentialSubject"] as Record<string, unknown>;
+      const achievement = subject.achievement as Record<string, unknown>;
+      expect(achievement.alignment).toEqual(mockBadgeClassWithExtras.alignment);
+      expect(achievement.tag).toEqual(["web", "html"]);
+      expect(achievement.resultDescription).toEqual(
+        mockBadgeClassWithExtras.resultDescriptions,
+      );
     });
 
     it("should include a top-level name mirroring the achievement title", () => {

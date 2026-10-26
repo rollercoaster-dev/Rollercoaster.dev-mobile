@@ -172,13 +172,13 @@ export class OpenBadges3Serializer implements BadgeSerializer {
       image: badgeClass.image,
       criteria: badgeClass.criteria,
     };
-    if (badgeClass.alignment) result.alignments = badgeClass.alignment;
-    if (badgeClass.tags) result.tags = badgeClass.tags;
+    if (badgeClass.alignment) result.alignment = badgeClass.alignment;
+    if (badgeClass.tags) result.tag = badgeClass.tags;
     if (badgeClass.achievementType)
       result.achievementType = badgeClass.achievementType;
     if (badgeClass.creator) result.creator = badgeClass.creator;
     if (badgeClass.resultDescriptions)
-      result.resultDescriptions = badgeClass.resultDescriptions;
+      result.resultDescription = badgeClass.resultDescriptions;
     if (badgeClass.version) result.version = badgeClass.version;
     if (badgeClass.related) result.related = badgeClass.related;
     if (badgeClass.endorsement) result.endorsement = badgeClass.endorsement;
@@ -239,13 +239,13 @@ export class OpenBadges3Serializer implements BadgeSerializer {
       // as `image` stay shared). `badgeClass.creator` below still overrides.
       creator: { ...issuerObj },
     };
-    if (badgeClass.alignment) achievement.alignments = badgeClass.alignment;
-    if (badgeClass.tags) achievement.tags = badgeClass.tags;
+    if (badgeClass.alignment) achievement.alignment = badgeClass.alignment;
+    if (badgeClass.tags) achievement.tag = badgeClass.tags;
     if (badgeClass.achievementType)
       achievement.achievementType = badgeClass.achievementType;
     if (badgeClass.creator) achievement.creator = badgeClass.creator;
     if (badgeClass.resultDescriptions)
-      achievement.resultDescriptions = badgeClass.resultDescriptions;
+      achievement.resultDescription = badgeClass.resultDescriptions;
 
     // BADGE_VERSION_CONTEXTS[V3] already has correct order: VC 2.0 first, OB3 second
     // Per VC Data Model 2.0 spec: https://www.w3.org/TR/vc-data-model-2.0/#contexts
