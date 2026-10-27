@@ -45,9 +45,9 @@
     "husky": "9.1.7",
     "lint-staged": "17.6.0",
     "prettier": "^3.8.5",
-    "turbo": "^2.11.8",
+    "turbo": "^2.11.10",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.71.2"
+    "typescript-eslint": "^8.72.0"
   },
   "lint-staged": {
     "apps/native-rd/**/*.{ts,tsx,js,jsx}": [
