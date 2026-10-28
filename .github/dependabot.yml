@@ -47,6 +47,14 @@ updates:
       # is re-applied against the new version (#738).
       - dependency-name: "react-native-unistyles"
         versions: ["> 3.3.0"]
+      # Evolu majors (common 8, react 11, react-native 16) are one coordinated
+      # migration, not three piecemeal bumps: createEvolu now returns a Result
+      # (#771: "Property 'createQuery' does not exist on type 'Ok<Evolu<...>>'"),
+      # @evolu/react dropped useQuery/EvoluProvider/createUseEvolu (#773), and
+      # @evolu/react-native/expo-sqlite dropped evoluReactNativeDeps (#770).
+      # Lift once #675 lands the migration.
+      - dependency-name: "@evolu/*"
+        update-types: ["version-update:semver-major"]
       # React Native ecosystem: must be bumped in coordination with the Expo SDK,
       # not piecemeal by Dependabot. Expo's jest preset asserts exact-match peers
       # (react / react-test-renderer) and the RN install layout changes between
