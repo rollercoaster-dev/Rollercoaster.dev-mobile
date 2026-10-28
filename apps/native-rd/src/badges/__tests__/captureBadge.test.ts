@@ -1,10 +1,13 @@
 import { Buffer } from "buffer";
 import { captureBadge, getCaptureDimensions } from "../captureBadge";
 import { createDefaultBadgeDesign, BannerPosition } from "../types";
-import { MOCK_PNG_BASE64 } from "../../__tests__/mocks/react-native-view-shot";
 import { isPNG, bakePNG } from "../png-baking";
 import { getBadgeLayoutBoxes } from "../layoutBoxes";
 import type { BadgeRendererHandle } from "../BadgeRenderer";
+
+// Minimal valid 1x1 RGBA PNG as base64 — what a native capture hands back.
+const MOCK_PNG_BASE64 =
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
 
 // Build a fresh mock ref with a jest.fn `captureAsPng` per test. captureBadge
 // calls `ref.current.captureAsPng({ width, height })`; the handle is what
