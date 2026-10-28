@@ -125,7 +125,7 @@
     "@types/jest": "^30.0.0",
     "@types/js-yaml": "4.0.9",
     "@types/react": "~19.2.10",
-    "ai": "^7.0.150",
+    "ai": "^7.0.152",
     "babel-jest": "^30.5.2",
     "babel-preset-expo": "~56.0.0",
     "eslint": "^9.39.5",
@@ -133,7 +133,7 @@
     "jest": "^30.5.2",
     "jest-expo": "~56.0.5",
     "js-yaml": "5.5.0",
-    "promptfoo": "^0.124.1",
+    "promptfoo": "^0.125.0",
     "react-test-renderer": "19.2.3",
     "storybook": "10.6.3",
     "typescript": "~6.0.3"
