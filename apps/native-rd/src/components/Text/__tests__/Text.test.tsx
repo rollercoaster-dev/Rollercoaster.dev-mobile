@@ -8,12 +8,15 @@ const unistylesMock = require("react-native-unistyles");
 
 describe("Text", () => {
   const variants: TextVariant[] = [
+    "screenTitle",
+    "taskTitle",
     "display",
     "headline",
     "title",
     "body",
     "caption",
     "label",
+    "metadata",
     "mono",
   ];
 

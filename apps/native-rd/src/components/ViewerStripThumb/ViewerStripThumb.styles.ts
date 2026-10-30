@@ -2,8 +2,8 @@ import { StyleSheet } from "react-native-unistyles";
 import { palette } from "../../themes/palette";
 import type { EvidenceSource } from "../../hooks/useAllEvidenceForGoal";
 
-const THUMB_WIDTH = 76;
-const THUMB_HEIGHT = 76;
+const THUMB_WIDTH = 104;
+const THUMB_MIN_HEIGHT = 104;
 
 // Step-source indicator color. No semantic "step blue" theme token exists, so
 // this stays a fixed palette value (the goal source uses the themed accentYellow
@@ -17,7 +17,7 @@ const STEP_SOURCE_COLOR = palette.blue600;
 export const styles = StyleSheet.create((theme) => ({
   container: (isActive: boolean) => ({
     width: THUMB_WIDTH,
-    height: THUMB_HEIGHT,
+    minHeight: THUMB_MIN_HEIGHT,
     flexDirection: "column" as const,
     alignItems: "center" as const,
     justifyContent: "center" as const,
@@ -53,12 +53,10 @@ export const styles = StyleSheet.create((theme) => ({
     alignItems: "center",
   },
   label: {
-    fontSize: 10,
+    ...theme.textStyles.metadata,
     fontWeight: theme.fontWeight.semibold,
     color: theme.colors.text,
-    fontFamily: theme.fontFamily.body,
     textAlign: "center" as const,
-    lineHeight: 12,
   },
 }));
 

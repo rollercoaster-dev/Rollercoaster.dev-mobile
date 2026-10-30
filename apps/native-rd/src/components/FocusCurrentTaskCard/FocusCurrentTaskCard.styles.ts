@@ -51,23 +51,17 @@ export const styles = StyleSheet.create((theme) => {
       gap: theme.space[4],
       paddingBottom: theme.space[2],
     },
-    // Prototype title is 29px Anybody-900; `3xl` (32) is the nearest token. (R2)
+    // Task titles can wrap, so use the semantic task role's reading font and
+    // relaxed line height instead of the prototype's single-line spacing.
     title: {
-      fontSize: theme.size["3xl"],
-      fontWeight: theme.fontWeight.black,
-      fontFamily: theme.fontFamily.headline,
+      ...theme.textStyles.taskTitle,
       color: theme.colors.text,
-      lineHeight: theme.size["3xl"] * 1.05,
     },
-    // Prototype all-complete heading is 34px; `3xl` (32) is the nearest token. (R3)
     heading: {
-      fontSize: theme.size["3xl"],
-      fontWeight: theme.fontWeight.black,
-      fontFamily: theme.fontFamily.headline,
+      ...theme.textStyles.taskTitle,
       color: theme.colors.text,
-      lineHeight: theme.size["3xl"] * 1.02,
     },
-    // E (state) pill — above the title, left-aligned, MONO + UPPERCASE. bg/ink
+    // E (state) pill — above the title, left-aligned, readable uppercase. bg/ink
     // resolve through the #406 stepStateColorMap (one color language); the border
     // stays neutral so the light paused / green completed fills read clearly,
     // matching the prototype's bordered pills.
@@ -81,10 +75,8 @@ export const styles = StyleSheet.create((theme) => {
       borderColor: theme.colors.border,
     }),
     stateWordText: (status: StepStateMapKey) => ({
-      fontSize: theme.size.xs,
-      fontFamily: theme.fontFamily.mono,
+      ...theme.textStyles.label,
       textTransform: "uppercase" as const,
-      letterSpacing: theme.letterSpacing.wide,
       color: stepStateNodeFg(theme, status),
     }),
     // C·B truth-lines: glyph + plain text + mono meta suffix (prototype F1–F3).
@@ -102,11 +94,11 @@ export const styles = StyleSheet.create((theme) => {
     // Glyph hues mirror the prototype: amber wait (`warning` == #d97706), green
     // dependency (`success`), neutral date (`textSecondary`).
     metadataText: {
-      fontSize: theme.size.sm,
+      ...theme.textStyles.metadata,
       color: theme.colors.text,
     },
     metadataMeta: {
-      fontSize: theme.size.xs,
+      ...theme.textStyles.metadata,
       color: theme.colors.textSecondary,
       fontFamily: theme.fontFamily.mono,
     },
@@ -115,14 +107,12 @@ export const styles = StyleSheet.create((theme) => {
     plannedGroup: {
       gap: theme.space[2],
     },
-    // Always-present "EVIDENCE · REQUIRED" attribute — mono, uppercase, muted
+    // Always-present "EVIDENCE · REQUIRED" attribute — uppercase, muted
     // (L5). Never frames evidence as missing/needed.
     evidenceRequired: {
-      fontSize: theme.size.xs,
+      ...theme.textStyles.label,
       color: theme.colors.textMuted,
-      fontFamily: theme.fontFamily.mono,
       textTransform: "uppercase",
-      letterSpacing: theme.letterSpacing.wide,
     },
     // Planned-evidence box — bordered, hard-shadowed; the whole box is the tap
     // target that opens the type picker (#409). icon + bold label + blue "change".
@@ -158,14 +148,14 @@ export const styles = StyleSheet.create((theme) => {
     plannedIcon: {
       fontSize: 18,
     },
-    // Prototype label is 14px (`sm`), "change" is 12px (`xs`). (R7)
+    // Planned type and change labels share the semantic label size.
     plannedLabel: {
-      fontSize: theme.size.sm,
+      ...theme.textStyles.label,
       fontWeight: theme.fontWeight.bold,
       color: theme.colors.text,
     },
     changeText: {
-      fontSize: theme.size.xs,
+      ...theme.textStyles.label,
       fontWeight: theme.fontWeight.bold,
       color: theme.colors.accentPrimary,
     },
@@ -175,11 +165,9 @@ export const styles = StyleSheet.create((theme) => {
       gap: theme.space[1],
     },
     evidenceRailLabel: {
-      fontSize: theme.size.xs,
-      fontFamily: theme.fontFamily.mono,
+      ...theme.textStyles.label,
       color: theme.colors.success,
       textTransform: "uppercase",
-      letterSpacing: theme.letterSpacing.wide,
     },
     evidenceRailRow: {
       flexDirection: "row",
@@ -203,10 +191,9 @@ export const styles = StyleSheet.create((theme) => {
       fontSize: 14,
     },
     evidenceChipText: {
-      fontSize: theme.size.xs,
-      fontFamily: theme.fontFamily.mono,
+      ...theme.textStyles.label,
       color: theme.colors.accentMintFg,
-      maxWidth: 180,
+      maxWidth: 200,
     },
     // Quiet "set this step aside" — inline text, not a button (L3). Keeps a 44pt
     // hit area for the touch-target contract while reading as a calm control.
@@ -217,19 +204,19 @@ export const styles = StyleSheet.create((theme) => {
       minHeight: 44,
     },
     setAsideText: {
-      fontSize: theme.size.sm,
+      ...theme.textStyles.label,
       fontWeight: theme.fontWeight.semibold,
       color: theme.colors.textSecondary,
     },
     // Reassurance line — centered, under the Add button; shown only before any
     // evidence is captured (the no-evidence in-progress branch, L6).
     helperLine: {
-      fontSize: theme.size.sm,
+      ...theme.textStyles.body,
       color: theme.colors.textSecondary,
       textAlign: "center",
     },
     bodyText: {
-      fontSize: theme.size.md,
+      ...theme.textStyles.body,
       color: theme.colors.text,
     },
     // All-steps-done trophy callout box (L7). Prototype: 3×3 shadow (`cardElevation`)
@@ -250,9 +237,8 @@ export const styles = StyleSheet.create((theme) => {
     },
     calloutText: {
       flex: 1,
-      fontSize: theme.size.sm,
+      ...theme.textStyles.body,
       color: theme.colors.text,
-      lineHeight: theme.size.sm * 1.45,
     },
     // Pinned to the card's bottom edge: the CTA lands in the same spot every time.
     footRow: {
@@ -268,7 +254,7 @@ export const styles = StyleSheet.create((theme) => {
     },
     // Prototype CTA text is 17–18px; `lg` (18) is the nearest token. (R4)
     primaryCtaText: {
-      fontSize: theme.size.lg,
+      ...theme.textStyles.title,
       fontWeight: theme.fontWeight.bold,
       color: theme.action.actionPrimaryFg,
     },
@@ -279,7 +265,7 @@ export const styles = StyleSheet.create((theme) => {
       backgroundColor: theme.action.actionSecondaryBg,
     },
     secondaryCtaText: {
-      fontSize: theme.size.lg,
+      ...theme.textStyles.title,
       fontWeight: theme.fontWeight.semibold,
       color: theme.action.actionSecondaryFg,
     },

@@ -1,0 +1,183 @@
+appId: dev.rollercoaster.app
+tags:
+  - optional
+env:
+  METRO_HOST: localhost
+  METRO_PORT: "8081"
+  DEV_CLIENT_SCHEME: exp+rollercoasterdev
+  GOAL_TITLE: "Curate the complete history of our coastal neighborhood archive across every generation and preserve detailed records of the people places and stories that shaped our community over many decades"
+  STEP_TITLE: "Read the complete typography guidance and verify every long title"
+  CAPTION: "A detailed photo of the community archive after several careful revisions"
+---
+# Issue #684 evidence capture: long titles stay two-line previews and expand
+# in place. Lives under e2e/reports/ (not e2e/flows/) so the suite never runs
+# it: it needs a simulator at accessibility-large text size, see index.md.
+# Inlined prologue: at accessibility-large the welcome theme-swatch rail sits
+# below the fold, so the shared subflow's swatch tap cannot land. The default
+# theme is already selected, so it is simply skipped.
+- launchApp:
+    clearState: true
+    clearKeychain: true
+- stopApp
+- openLink: "${DEV_CLIENT_SCHEME}://expo-development-client/?url=http%3A%2F%2F${METRO_HOST}%3A${METRO_PORT}"
+- extendedWaitUntil:
+    visible:
+      id: "welcome-get-started"
+    timeout: 60000
+- takeScreenshot: welcome-large-text
+- tapOn:
+    id: "welcome-get-started"
+# The empty-state CTA sits below the fold at accessibility-large (#684 made the
+# empty state scrollable so it can be reached at all).
+- scrollUntilVisible:
+    element:
+      id: "goals-cockpit-new-goal"
+    direction: DOWN
+    centerElement: true
+
+# --- Long goal + long step through the wizard ---
+- tapOn:
+    id: "goals-cockpit-new-goal"
+- assertVisible:
+    id: "new-goal-wizard-content"
+- tapOn:
+    id: "new-goal-title-input"
+- inputText: ${GOAL_TITLE}
+- pressKey: Enter
+- tapOn:
+    id: "new-goal-next-button"
+- tapOn:
+    id: "new-goal-first-step-input"
+- inputText: ${STEP_TITLE}
+- pressKey: Enter
+# Steps default to a planned Note, so the evidence sheet is not needed here.
+- tapOn:
+    id: "new-goal-next-button"
+- tapOn:
+    id: "new-goal-build-ready-button"
+- assertVisible:
+    id: "new-goal-start-working-button"
+- tapOn:
+    id: "new-goal-start-working-button"
+
+# --- Focus: goal header and step title ---
+- extendedWaitUntil:
+    visible:
+      id: "focus-current-task-add-text"
+    timeout: 15000
+- takeScreenshot: focus-compact
+- tapOn:
+    id: "focus-goal-title-toggle"
+- takeScreenshot: focus-goal-expanded
+- tapOn:
+    id: "focus-goal-title-toggle"
+# At accessibility-large the card body is shorter than the two-line step title,
+# so the "Show full title" control sits below the pinned footer until the body
+# is scrolled. The clamped title itself is the tap target, so tap that.
+- tapOn:
+    id: "focus-current-task-title"
+- takeScreenshot: focus-step-expanded
+
+# --- Goals cockpit hero ---
+- tapOn:
+    id: "tab-GoalsTab"
+- assertVisible:
+    id: "goals-cockpit-hero-title"
+- takeScreenshot: goals-compact
+- tapOn:
+    id: "goals-cockpit-hero-title-toggle"
+- takeScreenshot: goals-hero-expanded
+- tapOn:
+    id: "goals-cockpit-hero-title-toggle"
+
+# --- Evidence viewer with a long caption ---
+- tapOn:
+    id: "goals-cockpit-start-resume"
+- extendedWaitUntil:
+    visible:
+      id: "focus-current-task-add-text"
+    timeout: 15000
+- tapOn:
+    id: "focus-current-task-add-text"
+- tapOn:
+    id: "capture-text-body"
+- inputText: "Archive note"
+- tapOn:
+    id: "capture-text-caption"
+- inputText: ${CAPTION}
+- pressKey: Enter
+- tapOn:
+    id: "capture-text-save"
+- extendedWaitUntil:
+    visible:
+      id: "focus-current-task-mark-complete"
+    timeout: 15000
+# The viewer opens from the Timeline: the step header ("<title>, <status>")
+# expands its evidence section, and the evidence card ("Note evidence: <label>")
+# opens the viewer. The anchored regex avoids the "Go to step 1: …" node.
+- tapOn:
+    id: "focus-progress-strip"
+- assertVisible: "Timeline"
+- tapOn:
+    text: "Read the complete typography guidance.*"
+- scrollUntilVisible:
+    element:
+      text: "A detailed photo of the community archive.*"
+    direction: DOWN
+    centerElement: true
+- tapOn:
+    text: "A detailed photo of the community archive.*"
+- extendedWaitUntil:
+    visible:
+      id: "evidence-viewer-active-title"
+    timeout: 15000
+- takeScreenshot: viewer-compact
+- tapOn:
+    id: "evidence-viewer-active-title-toggle"
+- takeScreenshot: viewer-expanded
+- tapOn: "Go back"
+- assertVisible: "Timeline"
+- tapOn:
+    id: "timeline-back-button"
+
+# --- Complete, bake, badge spotlight ---
+- extendedWaitUntil:
+    visible:
+      id: "focus-current-task-mark-complete"
+    timeout: 15000
+- tapOn:
+    id: "focus-current-task-mark-complete"
+- extendedWaitUntil:
+    visible:
+      id: "focus-current-task-design-badge"
+    timeout: 15000
+- tapOn:
+    id: "focus-current-task-design-badge"
+- extendedWaitUntil:
+    visible:
+      id: "finish-celebrate-stage"
+    timeout: 15000
+- tapOn:
+    id: "finish-celebrate-cta"
+- assertVisible:
+    id: "finish-design-stage"
+- tapOn:
+    id: "finish-design-bake"
+- extendedWaitUntil:
+    visible:
+      id: "finish-reveal-stage"
+    timeout: 20000
+- tapOn:
+    id: "finish-reveal-view-badge"
+- extendedWaitUntil:
+    visible:
+      id: "verified-credential-chip"
+    timeout: 15000
+- tapOn:
+    id: "tab-BadgesTab"
+- scrollUntilVisible:
+    element:
+      id: "badges-wall-spotlight"
+    direction: DOWN
+    centerElement: true
+- takeScreenshot: badge-scrolled

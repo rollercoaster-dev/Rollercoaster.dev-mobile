@@ -5,12 +5,15 @@ import { useThemeScale } from "../../hooks/useTypeScale";
 import { capFor } from "../../utils/typeScale";
 
 export type TextVariant =
+  | "screenTitle"
+  | "taskTitle"
   | "display"
   | "headline"
   | "title"
   | "body"
   | "caption"
   | "label"
+  | "metadata"
   | "mono";
 
 export interface TextProps extends RNTextProps {
