@@ -1,9 +1,10 @@
 import React from "react";
-import { Alert } from "react-native";
+import { AccessibilityInfo, Alert } from "react-native";
 import {
   renderWithProviders,
   screen,
   fireEvent,
+  act,
 } from "../../../__tests__/test-utils";
 import { TopInsetColorProvider } from "../../../navigation/TopInsetColor";
 import { BadgeDetailScreen } from "../BadgeDetailScreen";
@@ -619,6 +620,84 @@ describe("BadgeDetailScreen", () => {
         screen.getByTestId("share-row-image").props.accessibilityLabel,
       ).toMatch(/may drop the credential/);
     });
+  });
+
+  // The hero, body, and CTA are siblings of the sheet, which hides them only
+  // from VoiceOver; TalkBack needs them hidden explicitly (#686).
+  describe("share sheet accessibility contract (#686)", () => {
+    const TRIGGER_TAG = 9001;
+    let setFocus: jest.SpyInstance;
+
+    beforeEach(() => {
+      jest.useFakeTimers();
+      setFocus = jest
+        .spyOn(AccessibilityInfo, "setAccessibilityFocus")
+        .mockImplementation(() => undefined);
+    });
+
+    afterEach(() => {
+      act(() => {
+        jest.runOnlyPendingTimers();
+      });
+      jest.useRealTimers();
+      setFocus.mockRestore();
+    });
+
+    const pressWithTag = (testID: string) =>
+      fireEvent.press(screen.getByTestId(testID), {
+        nativeEvent: { target: TRIGGER_TAG },
+      });
+
+    it.each([
+      {
+        entry: "the Share CTA",
+        dismiss: "badge-share-close",
+        open: () => pressWithTag("badge-share-cta"),
+      },
+      {
+        entry: "the ⋯ menu's Share row",
+        dismiss: "badge-share-backdrop",
+        open: () => {
+          pressWithTag("celebration-hero-overflow");
+          fireEvent.press(screen.getByTestId("overflow-row-share"));
+        },
+      },
+    ])(
+      "opened from $entry, hides the screen and returns focus to that control",
+      ({ open, dismiss }) => {
+        mockUseQuery.mockReturnValue([makeRow()]);
+        renderWithProviders(
+          <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+        );
+
+        open();
+        expect(screen.queryByTestId("celebration-hero-overflow")).toBeNull();
+        expect(screen.queryByTestId("badge-detail-view-timeline")).toBeNull();
+        expect(screen.queryByTestId("badge-share-cta")).toBeNull();
+        expect(screen.getByTestId("share-row-verifiable")).toBeOnTheScreen();
+        act(() => {
+          jest.runAllTimers();
+        });
+        // Focus must land on a control that is back in the a11y tree, not one
+        // still hidden behind the closing sheet.
+        let ctaReachableAtRestore: boolean | undefined;
+        setFocus.mockClear().mockImplementation(() => {
+          ctaReachableAtRestore =
+            screen.queryByTestId("badge-share-cta") !== null;
+        });
+
+        fireEvent.press(screen.getByTestId(dismiss));
+        act(() => {
+          jest.runAllTimers();
+        });
+        expect(
+          screen.getByTestId("celebration-hero-overflow"),
+        ).toBeOnTheScreen();
+        expect(screen.getByTestId("badge-share-cta")).toBeOnTheScreen();
+        expect(setFocus).toHaveBeenCalledWith(TRIGGER_TAG);
+        expect(ctaReachableAtRestore).toBe(true);
+      },
+    );
   });
 
   describe("proof spine", () => {

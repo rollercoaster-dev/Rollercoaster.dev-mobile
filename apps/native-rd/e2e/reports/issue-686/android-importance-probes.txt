@@ -1,0 +1,8 @@
+A1-plan-open tab-GoalsTab=false Go back=false focus-current-task-change-plan=false focus-current-task-add-text=false focus-evidence-plan-close=true
+A2-plan-closed tab-GoalsTab=true Go back=true focus-current-task-change-plan=true focus-current-task-add-text=true focus-evidence-plan-close=absent
+B1-capture-open tab-GoalsTab=false Go back=false focus-current-task-mark-complete=false capture-sheet-close=true
+B2-capture-closed tab-GoalsTab=true Go back=true focus-current-task-mark-complete=true capture-sheet-close=absent
+C1-share-cta-open tab-BadgesTab=false tab-GoalsTab=false celebration-hero-overflow=false badge-share-cta=false share-row-verifiable=true
+C2-share-closed tab-BadgesTab=true tab-GoalsTab=true celebration-hero-overflow=true badge-share-cta=true share-row-verifiable=absent
+C3-share-overflow-open tab-BadgesTab=false tab-GoalsTab=false celebration-hero-overflow=false badge-share-cta=false share-row-verifiable=true
+D1-goals-tab-sheet-left-open tab-BadgesTab=true tab-GoalsTab=true goals-cockpit-new-goal=true

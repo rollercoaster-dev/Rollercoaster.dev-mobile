@@ -17,6 +17,7 @@ import { getTimingConfig } from "../../utils/animation";
 import { focusAccessibilityRef } from "../../utils/accessibilityFocus";
 import { sheetStyles } from "./AnimatedSheet.styles";
 import { SheetSurface } from "./SheetSurface";
+import { useOpenSheetRegistration } from "./sheetAccessibility";
 
 export interface AnimatedSheetProps {
   /** Whether the sheet is open (drives the slide-up/scrim animation). */
@@ -122,6 +123,10 @@ export function AnimatedSheet({
       });
     }
   }, [visible, animationPref, progress, restoreFocusRef]);
+
+  // Background regions (screen body, sub-header, tab bar) hide from assistive
+  // tech while this is true — see sheetAccessibility.tsx (#686).
+  useOpenSheetRegistration(visible);
 
   // Drop any pending focus request if the sheet unmounts before it fires.
   useEffect(() => () => pendingFocusCancel.current?.(), []);

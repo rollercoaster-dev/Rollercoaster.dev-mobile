@@ -4,6 +4,7 @@ import {
   renderWithProviders,
   screen,
   fireEvent,
+  act,
 } from "../../../__tests__/test-utils";
 import { reportError } from "../../../services/sentry-report";
 import { i18n } from "../../../i18n";
@@ -1194,6 +1195,102 @@ describe("FocusModeScreen", () => {
       expect(mockUpdateStep).toHaveBeenCalledWith("step-1", {
         plannedEvidenceTypes: ["photo"],
       });
+    });
+  });
+
+  // Both sheets mount inside the screen body; the header and tab bar sit
+  // outside it, so isolation can't rest on accessibilityViewIsModal (#686).
+  describe("sheet accessibility contract (#686)", () => {
+    const TRIGGER_TAG = 4242;
+    let setFocus: jest.SpyInstance;
+
+    beforeEach(() => {
+      jest.useFakeTimers();
+      setFocus = jest
+        .spyOn(AccessibilityInfo, "setAccessibilityFocus")
+        .mockImplementation(() => undefined);
+    });
+
+    afterEach(() => {
+      act(() => {
+        jest.runOnlyPendingTimers();
+      });
+      jest.useRealTimers();
+      setFocus.mockRestore();
+    });
+
+    it.each([
+      {
+        sheet: "capture",
+        trigger: "focus-current-task-add-more",
+        dismiss: "capture-sheet-backdrop",
+      },
+      {
+        sheet: "evidence plan",
+        trigger: "focus-current-task-change-plan",
+        dismiss: "focus-evidence-plan-close",
+      },
+    ])(
+      "$sheet sheet hides the screen behind it and returns focus to its trigger",
+      ({ trigger, dismiss }) => {
+        setupQueries({
+          steps: [step("step-1", { plannedEvidenceTypes: '["photo"]' })],
+          stepEvidence: [{ id: "ev-1", type: "photo", stepId: "step-1" }],
+        });
+        renderWithProviders(<FocusModeScreen {...routeProps} />);
+        const editGoal = t("focusMode:header.editGoal");
+        expect(screen.getByLabelText("Go back")).toBeOnTheScreen();
+        expect(screen.getByLabelText(editGoal)).toBeOnTheScreen();
+
+        fireEvent.press(screen.getByTestId(trigger), {
+          nativeEvent: { target: TRIGGER_TAG },
+        });
+        // Header back button and body controls leave the a11y tree.
+        expect(screen.queryByLabelText("Go back")).toBeNull();
+        expect(screen.queryByLabelText(editGoal)).toBeNull();
+        act(() => {
+          jest.runAllTimers();
+        });
+        setFocus.mockClear();
+
+        fireEvent.press(screen.getByTestId(dismiss));
+        act(() => {
+          jest.runAllTimers();
+        });
+        expect(screen.getByLabelText("Go back")).toBeOnTheScreen();
+        expect(screen.getByLabelText(editGoal)).toBeOnTheScreen();
+        expect(setFocus).toHaveBeenCalledWith(TRIGGER_TAG);
+      },
+    );
+
+    it("does not pull focus back once a capture type is picked", () => {
+      setupQueries({
+        steps: [step("step-1", { plannedEvidenceTypes: '["photo"]' })],
+        stepEvidence: [{ id: "ev-1", type: "photo", stepId: "step-1" }],
+      });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+      fireEvent.press(screen.getByTestId("focus-current-task-add-more"), {
+        nativeEvent: { target: TRIGGER_TAG },
+      });
+      act(() => {
+        jest.runAllTimers();
+      });
+      setFocus.mockClear();
+
+      fireEvent.press(
+        screen.getByRole("radio", { name: evidenceLabel(t, "link") }),
+      );
+      act(() => {
+        jest.runAllTimers();
+      });
+      expect(mockNavigate).toHaveBeenCalledWith("CaptureLink", {
+        goalId: "goal-1",
+        stepId: "step-1",
+      });
+      // The sheet really closed (its exit ran), so the negative below means
+      // the trigger was cleared rather than that no restore was attempted.
+      expect(screen.getByLabelText("Go back")).toBeOnTheScreen();
+      expect(setFocus).not.toHaveBeenCalledWith(TRIGGER_TAG);
     });
   });
 

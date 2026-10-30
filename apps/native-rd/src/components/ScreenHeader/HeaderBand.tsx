@@ -1,5 +1,5 @@
 import React from "react";
-import { View } from "react-native";
+import { View, type ViewProps } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { styles } from "./ScreenHeader.styles";
 
@@ -7,15 +7,25 @@ import { styles } from "./ScreenHeader.styles";
 // navigator by insets.top), so the band uses plain symmetric padding.
 // Detached presentations that escape that offset (a fullScreen RN Modal
 // with its own SafeAreaProvider) pass `safeAreaTop` to pay the inset here.
-export interface HeaderBandProps {
+export interface HeaderBandProps extends Pick<
+  ViewProps,
+  "accessibilityElementsHidden" | "importantForAccessibility"
+> {
   children: React.ReactNode;
   safeAreaTop?: boolean;
 }
 
-export function HeaderBand({ children, safeAreaTop = false }: HeaderBandProps) {
+export function HeaderBand({
+  children,
+  safeAreaTop = false,
+  ...a11yProps
+}: HeaderBandProps) {
   const insets = useSafeAreaInsets();
   return (
-    <View style={[styles.band, safeAreaTop && styles.bandSafeTop(insets.top)]}>
+    <View
+      style={[styles.band, safeAreaTop && styles.bandSafeTop(insets.top)]}
+      {...a11yProps}
+    >
       {children}
     </View>
   );
