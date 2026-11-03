@@ -36,7 +36,7 @@
  * Drag orchestration lives in useEditGoalDrag; the row anatomy in
  * EditGoalStepRow; the ⋯ menu content in EditGoalOverflowMenu.
  */
-import React, { useRef, useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text as RNText,
@@ -54,7 +54,11 @@ import { IconButton } from "../IconButton";
 import { Button } from "../Button";
 import { ScreenSubHeader } from "../ScreenHeader/ScreenSubHeader";
 import { EvidenceTypePicker } from "../EvidenceTypePicker";
-import { AnimatedSheet } from "../AnimatedSheet";
+import {
+  AnimatedSheet,
+  SheetBackground,
+  useSheetTrigger,
+} from "../AnimatedSheet";
 import type { EvidenceTypeValue } from "../../types/evidence";
 import type { StepDayMark } from "../StepDayGrid";
 import type {
@@ -514,17 +518,12 @@ export function EditGoalView({
   // RNGH's gesture tree, so otherwise it wins the pan and the row never moves.
   const [rowDragging, setRowDragging] = useState(false);
 
-  // Native tag of the evidence chip that opened the sheet, captured from the
-  // Pressable's press event (#501). Threaded straight into AnimatedSheet's
-  // restoreFocusRef so focus returns to that chip on any dismissal — avoids
-  // threading a View ref down through the list/row layers (D2). A RefObject
-  // whose current is a number; focusAccessibilityRef uses it as the tag.
-  const restoreFocusTagRef = useRef<number | null>(null);
+  // The evidence chip that opened the sheet (#501), so focus returns to that
+  // chip on any dismissal — avoids threading a View ref down through the
+  // list/row layers (D2).
+  const evidenceTrigger = useSheetTrigger();
   function handleEvidenceChipPress(id: string, event: GestureResponderEvent) {
-    // RN types nativeEvent.target as string, but it's the numeric react tag at
-    // runtime — the exact input setAccessibilityFocus expects.
-    restoreFocusTagRef.current =
-      (event?.nativeEvent?.target as unknown as number | undefined) ?? null;
+    evidenceTrigger.rememberTrigger(event);
     setEditingEvidenceId(id);
   }
 
@@ -593,17 +592,11 @@ export function EditGoalView({
 
   return (
     <View style={styles.container}>
-      {/* Everything except the sheet. iOS gets modal isolation from
-          AnimatedSheet's accessibilityViewIsModal; Android has no equivalent
-          (accessibilityViewIsModal is iOS-only in RN 0.85), so hide this
-          subtree from TalkBack while the sheet is open so swiping past the last
-          sheet control can't reach content behind it (#501). Accessibility-tree
-          only — no layout/visual change. */}
-      <View
-        testID="edit-goal-content"
-        style={styles.content}
-        importantForAccessibility={sheetOpen ? "no-hide-descendants" : "auto"}
-      >
+      {/* Everything except the sheet, hidden from VoiceOver and TalkBack
+          while it is open so swiping past the last sheet control can't reach
+          content behind it (accessibilityViewIsModal is iOS-only; #501, #686).
+          Accessibility-tree only — no layout/visual change. */}
+      <SheetBackground testID="edit-goal-content" style={styles.content}>
         <ScreenSubHeader
           label={headerLabel}
           onBack={onBack}
@@ -750,7 +743,7 @@ export function EditGoalView({
             />
           </Animated.View>
         </KeyboardAvoidingFrame>
-      </View>
+      </SheetBackground>
 
       {/* Evidence-type picker (D8/D12): the reused multi-select authoring grid
           in the shared AnimatedSheet chrome (#493). A root-level sibling of the
@@ -768,7 +761,7 @@ export function EditGoalView({
         closeLabel={closeLabel}
         closeTestID="edit-goal-evidence-close"
         backdropTestID="edit-goal-evidence-backdrop"
-        restoreFocusRef={restoreFocusTagRef}
+        restoreFocusRef={evidenceTrigger.restoreFocusRef}
       >
         {sheetEvidenceTypes ? (
           <EvidenceTypePicker

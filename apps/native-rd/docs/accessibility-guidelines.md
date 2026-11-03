@@ -252,19 +252,34 @@ layer for focus behaviour. It implements the contract itself (#501):
   trigger behind it.
 - **Focus returns to the trigger on close.** Every dismissal path — the × close,
   a backdrop tap, a row/selection that closes it, and Android hardware back —
-  restores focus to the control that opened the sheet, via
-  `restoreFocusRef`. Pass it a `View` ref when the trigger is a direct sibling,
-  or a `RefObject` holding the pressed element's native tag
-  (`event.nativeEvent.target`) when the trigger is nested several layers down.
-- **Siblings are hidden on Android.** iOS gets isolation from
-  `accessibilityViewIsModal`, which has **no Android implementation** in RN. So
-  every screen that mounts an `AnimatedSheet` alongside other content wraps that
-  content in a `View` with
-  `importantForAccessibility={sheetOpen ? "no-hide-descendants" : "auto"}`, so
-  swiping past the last sheet control can't reach content behind it. The
-  Edit Goal and New Goal wizards do this today; `BadgeShareSheet` has no sibling
-  content of its own to hide, so the wrap becomes a prerequisite for whichever
-  issue mounts it into `BadgeDetailScreen` alongside the rest of the screen.
+  restores focus to the control that opened the sheet, via `restoreFocusRef`.
+  When the trigger is a direct sibling of the sheet, pass its `View` ref (as
+  `BadgeShareSheet` does for its own CTA). When it sits several layers down (a
+  card footer, a list row) or the sheet has more than one opener, use
+  `useSheetTrigger()`: call `rememberTrigger(event)` from the opening press
+  handler and pass its `restoreFocusRef` to the sheet. It records the
+  Pressable's own host view (`event.currentTarget`), not the label or icon
+  under the finger. A selection that moves on to another screen calls
+  `rememberTrigger()` with no event first, so focus isn't pulled back to the
+  screen being left.
+- **Everything behind the sheet is hidden, on both platforms (#686).**
+  `accessibilityViewIsModal` is iOS-only and hides only the overlay's own
+  siblings, so it can't reach the screen's sub-header or the navigator's tab
+  bar, and does nothing on Android. Instead, each `AnimatedSheet` registers
+  itself as open, and background regions opt in to hiding while any sheet is
+  open (`accessibilityElementsHidden` + `importantForAccessibility=
+"no-hide-descendants"`):
+  - `ScreenSubHeader` (the stacked-screen header) and `FocusPillTabBar` opt in
+    centrally, so no screen has to hide them itself. The tab-root
+    `ScreenHeader` hosts no sheet today and is not opted in.
+  - A sheet only counts as open while its own screen is focused: bottom tabs
+    keep an unfocused tab mounted, and a sheet left open there must not hide
+    the tab bar and headers of the tab the user moved to.
+  - A screen wraps its own body in `<SheetBackground>` and mounts the sheet as
+    a sibling **outside** it. Never wrap a sheet in `SheetBackground` (or spread
+    `useSheetBackgroundA11yProps()` onto its ancestor) — it would hide the
+    sheet too. A lone control beside the sheet (the Share CTA) spreads
+    `useSheetBackgroundA11yProps()` itself.
 
 The shared helper `focusAccessibilityRef` (`src/utils/accessibilityFocus.ts`)
 resolves the tag and calls `AccessibilityInfo.setAccessibilityFocus` after a

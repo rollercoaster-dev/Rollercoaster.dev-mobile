@@ -1,5 +1,10 @@
 import React from "react";
-import { View, Text, Pressable } from "react-native";
+import {
+  View,
+  Text,
+  Pressable,
+  type GestureResponderEvent,
+} from "react-native";
 import { useTranslation } from "react-i18next";
 import {
   stepStateColorMap,
@@ -164,7 +169,7 @@ export function PlannedEvidenceBox({
   onChangeEvidencePlan,
 }: {
   plannedTypes: readonly string[];
-  onChangeEvidencePlan: () => void;
+  onChangeEvidencePlan: (event: GestureResponderEvent) => void;
 }) {
   const { t } = useTranslation(["common", "focusMode"]);
   const entries = plannedTypes.map((raw, index) => {

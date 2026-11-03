@@ -1,5 +1,10 @@
 import React from "react";
-import { Pressable, Text, ActivityIndicator } from "react-native";
+import {
+  Pressable,
+  Text,
+  ActivityIndicator,
+  type GestureResponderEvent,
+} from "react-native";
 import { useUnistyles } from "react-native-unistyles";
 import {
   styles,
@@ -31,7 +36,7 @@ interface ButtonBaseProps {
    * stays the human-readable `label` text.
    */
   icon?: React.ReactNode;
-  onPress: () => void;
+  onPress: (event: GestureResponderEvent) => void;
   size?: ButtonSize;
   /** Quiet text-level action with a 44pt touch target; use with ghost. */
   inline?: boolean;

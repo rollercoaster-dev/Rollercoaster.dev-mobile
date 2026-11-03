@@ -216,7 +216,7 @@ function InProgressView({
               testID="focus-current-task-mark-complete"
             />
             <Button
-              onPress={() => onAddEvidence()}
+              onPress={(event) => onAddEvidence(undefined, event)}
               label={t("focusMode:currentTask.inProgress.addMoreEvidenceCta")}
               variant="secondary"
               size="lg"

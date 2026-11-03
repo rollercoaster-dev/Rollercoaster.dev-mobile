@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<testsuites>
+  <testsuite name="Test Suite" device="Pixel_8_API_36" tests="1" failures="0" time="105.138" timestamp="2026-10-22T15:00:26">
+    <testcase id="sheet-isolation" name="sheet-isolation" classname="sheet-isolation" file="flows/sheet-isolation.yaml" time="105.125" timestamp="2026-10-22T15:00:26" status="SUCCESS"/>
+  </testsuite>
+</testsuites>

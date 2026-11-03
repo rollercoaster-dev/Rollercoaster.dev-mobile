@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<testsuites>
+  <testsuite name="Test Suite" device="rd-verify-686 - iOS 26.5 - ACA2BEF9-18E8-4BA4-95FF-B9D84CF0BB45" tests="1" failures="0" time="57.379" timestamp="2026-10-22T15:02:37">
+    <testcase id="sheet-isolation" name="sheet-isolation" classname="sheet-isolation" file="flows/sheet-isolation.yaml" time="57.364" timestamp="2026-10-22T15:02:37" status="SUCCESS"/>
+  </testsuite>
+</testsuites>

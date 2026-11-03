@@ -6,6 +6,7 @@ import {
   fireEvent,
 } from "../../../__tests__/test-utils";
 import { IconButton } from "../../IconButton";
+import { AnimatedSheet } from "../../AnimatedSheet";
 import { ScreenHeader } from "../ScreenHeader";
 import { ScreenSubHeader } from "../ScreenSubHeader";
 
@@ -54,8 +55,31 @@ describe("ScreenSubHeader", () => {
   it("fires onBack when the back button is pressed", () => {
     const onBack = jest.fn();
     renderWithProviders(<ScreenSubHeader label="Focus Mode" onBack={onBack} />);
-    fireEvent.press(screen.getByLabelText("Go back"));
+    fireEvent.press(screen.getByTestId("screen-sub-header-back"));
     expect(onBack).toHaveBeenCalledTimes(1);
+  });
+
+  // A screen's sheet mounts inside its body, out of reach of the overlay's iOS
+  // accessibilityViewIsModal, so the header hides itself (#686).
+  it("hides its back button from assistive tech while a sheet is open", () => {
+    const withSheet = (visible: boolean) => (
+      <>
+        <ScreenSubHeader label="Focus Mode" onBack={() => {}} />
+        <AnimatedSheet
+          visible={visible}
+          onClose={() => {}}
+          title="Sheet"
+          closeLabel="Close"
+        >
+          {null}
+        </AnimatedSheet>
+      </>
+    );
+    const { rerender } = renderWithProviders(withSheet(true));
+    expect(screen.queryByLabelText("Go back")).toBeNull();
+
+    rerender(withSheet(false));
+    expect(screen.getByLabelText("Go back")).toBeOnTheScreen();
   });
 
   it("omits the back button when onBack is not provided", () => {
