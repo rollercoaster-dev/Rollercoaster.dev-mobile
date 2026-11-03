@@ -75,8 +75,6 @@ module.exports = {
     "^@react-navigation/native$": "<rootDir>/src/__tests__/mocks/navigation.ts",
 
     // Other native modules
-    "^react-native-view-shot$":
-      "<rootDir>/src/__tests__/mocks/react-native-view-shot.ts",
     "^react-native-keyboard-controller$":
       "<rootDir>/src/__tests__/mocks/keyboard-controller.ts",
 
