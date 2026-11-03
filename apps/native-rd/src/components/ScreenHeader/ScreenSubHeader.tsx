@@ -37,6 +37,7 @@ export function ScreenSubHeader({
           onPress={onBack}
           tone="chrome"
           accessibilityLabel={t("common:screenHeader.a11y.goBack")}
+          testID="screen-sub-header-back"
         />
       ) : (
         // Leading spacer mirrors the trailing one, keeping the label centered

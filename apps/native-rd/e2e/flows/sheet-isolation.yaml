@@ -1,4 +1,6 @@
 appId: dev.rollercoaster.app
+tags:
+  - required
 env:
   METRO_HOST: localhost
   METRO_PORT: "8081"
@@ -61,7 +63,8 @@ env:
     timeout: 15000
 - assertVisible:
     id: "tab-GoalsTab"
-- assertVisible: "Go back"
+- assertVisible:
+    id: "screen-sub-header-back"
 
 # --- 1. Focus › evidence-plan sheet ------------------------------------------
 - tapOn:
@@ -76,14 +79,16 @@ env:
           id: "tab-GoalsTab"
       - assertNotVisible:
           id: "focus-current-task-add-text"
-      - assertNotVisible: "Go back"
+      - assertNotVisible:
+          id: "screen-sub-header-back"
 - tapOn:
     id: "focus-evidence-plan-close"
 - assertVisible:
     id: "tab-GoalsTab"
 - assertVisible:
     id: "focus-current-task-add-text"
-- assertVisible: "Go back"
+- assertVisible:
+    id: "screen-sub-header-back"
 
 # --- 2. Focus › capture sheet ("Add more evidence") --------------------------
 - tapOn:
@@ -109,7 +114,8 @@ env:
           id: "tab-GoalsTab"
       - assertNotVisible:
           id: "focus-current-task-mark-complete"
-      - assertNotVisible: "Go back"
+      - assertNotVisible:
+          id: "screen-sub-header-back"
 - tapOn:
     id: "capture-sheet-close"
 - assertVisible:

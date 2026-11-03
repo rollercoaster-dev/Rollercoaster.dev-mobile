@@ -55,7 +55,7 @@ describe("ScreenSubHeader", () => {
   it("fires onBack when the back button is pressed", () => {
     const onBack = jest.fn();
     renderWithProviders(<ScreenSubHeader label="Focus Mode" onBack={onBack} />);
-    fireEvent.press(screen.getByLabelText("Go back"));
+    fireEvent.press(screen.getByTestId("screen-sub-header-back"));
     expect(onBack).toHaveBeenCalledTimes(1);
   });
 
