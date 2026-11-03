@@ -55,6 +55,12 @@ updates:
       # Lift once #675 lands the migration.
       - dependency-name: "@evolu/*"
         update-types: ["version-update:semver-major"]
+      # tsup 9 requires Node ^22.18.0 || ^24.11.0 || >=26.0.0, but
+      # packages/openbadges-core still declares engines.node >=18.12.0, so
+      # Node 18 and early-22 consumers could no longer build it (#763 review
+      # hold). Lift once openbadges-core raises its Node support floor.
+      - dependency-name: "tsup"
+        update-types: ["version-update:semver-major"]
       # React Native ecosystem: must be bumped in coordination with the Expo SDK,
       # not piecemeal by Dependabot. Expo's jest preset asserts exact-match peers
       # (react / react-test-renderer) and the RN install layout changes between
