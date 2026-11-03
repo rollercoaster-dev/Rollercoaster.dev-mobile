@@ -13,6 +13,19 @@ describe("Button", () => {
     expect(screen.getByText("Click me")).toBeOnTheScreen();
   });
 
+  it("caps the label and icon at the 1.25x control scale", () => {
+    renderWithProviders(
+      <Button label="Get Started" icon="→" onPress={jest.fn()} />,
+    );
+    expect(screen.getByText("Get Started").props.maxFontSizeMultiplier).toBe(
+      1.25,
+    );
+    expect(
+      screen.getByTestId("button-icon-run", { includeHiddenElements: true })
+        .props.maxFontSizeMultiplier,
+    ).toBe(1.25);
+  });
+
   it("calls onPress when pressed", () => {
     const onPress = jest.fn();
     renderWithProviders(<Button label="Press" onPress={onPress} />);

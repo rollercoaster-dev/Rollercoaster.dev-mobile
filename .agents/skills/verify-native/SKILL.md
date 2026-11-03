@@ -9,11 +9,11 @@ The deliverable is a verdict for each observable requirement, backed by the app 
 
 ## Choose the verification mode
 
-| Mode    | Target                                     | Evidence destination                                                        |
-| ------- | ------------------------------------------ | --------------------------------------------------------------------------- |
-| Feature | Your implementation or requested UI change | Local report and captures; the issue workflow may attach them to its own PR |
-| Bug     | Your fix with a reproducible prior failure | Matched before/after captures and a local report                            |
-| Review  | Someone else's PR                          | Local report and captures only; do not edit or upload to their PR           |
+| Mode    | Target                                     | Evidence destination                                                     |
+| ------- | ------------------------------------------ | ------------------------------------------------------------------------ |
+| Feature | Your implementation or requested UI change | Local report and captures; finalize attaches captures to its own PR body |
+| Bug     | Your fix with a reproducible prior failure | Matched before/after captures and a local report                         |
+| Review  | Someone else's PR                          | Local report and captures only; do not edit or upload to their PR        |
 
 Read the issue's acceptance criteria and comments, the implementation plan's **Intent Verification** and **Not in Scope**, and the exact PR diff if a PR exists. Pass the explicit PR number to every `gh pr` command. Compare the claims in the issue, plan, and PR with the behavior the code actually changes; record material documentation drift. Without a PR, compare the branch with fresh `origin/main`, including uncommitted changes. Do not infer success from a filename, commit message, or a test that computes its expected value from the same resource being tested.
 
@@ -45,4 +45,4 @@ Complete `tmp/native-verify/<issue-or-pr>/index.md` with the issue/PR URLs, base
 
 Use **Verified**, **Failed**, or **Not checked** per row. Link local captures by absolute path and distinguish observed native behavior from Jest, Storybook, or source evidence. Name every gap and the next action that would resolve it. The overall verdict is **failed** when a required behavior was observed wrong, **blocked** when a required behavior could not be checked, and **verified on the named environment** only when its required rows passed. Do not claim coverage for another platform, device size, theme, locale, or assistive technology from this run.
 
-For your own issue PR, pass the report and capture paths to `.agents/skills/finalize/` so its PR description can state truthful evidence and limitations. Do not create or merge a PR here. For someone else's PR, report local findings to the requester without changing its body, comments, review state, or attachments.
+For your own issue PR, pass the report and capture paths to `.agents/skills/finalize/` so its PR description can state truthful evidence and limitations. Never commit captures or post them as a PR comment; they reach GitHub only through the PR body (`.claude/rules/no-committed-review-screenshots.md`). Do not create or merge a PR here. For someone else's PR, report local findings to the requester without changing its body, comments, review state, or attachments.

@@ -1,44 +1,45 @@
 ---
 name: self-review
-description: Pre-PR self-review gate. Runs local validation, CodeRabbit CLI, and Claude review agents. Blocks PR creation if critical findings remain unresolved after auto-fix loop. Call between /implement and /finalize.
+description: Pre-PR self-review gate. Runs local validation and the expert-review panel, then auto-fixes confirmed blockers. Blocks PR creation if blockers remain unresolved after the fix loop. Call between /implement and /finalize.
 ---
 
 # Self-Review — Pre-PR Quality Gate
 
-The "Ralph Wiggum Loop": agents iterate with agent reviewers until all are satisfied, before a PR is ever created.
+Agents iterate against verified reviewer findings until no blocker remains,
+before a PR is ever created.
 
 ## Contract
 
 ### Input
 
-| Field             | Type    | Required | Description                                        |
-| ----------------- | ------- | -------- | -------------------------------------------------- |
-| `issue_number`    | number  | Yes      | GitHub issue number                                |
-| `max_retry`       | number  | No       | Max fix attempts per critical finding (default: 3) |
-| `skip_coderabbit` | boolean | No       | Skip CodeRabbit CLI review (default: false)        |
+| Field          | Type   | Required | Description                               |
+| -------------- | ------ | -------- | ----------------------------------------- |
+| `issue_number` | number | Yes      | GitHub issue number                       |
+| `max_retry`    | number | No       | Max fix attempts per blocker (default: 3) |
 
 ### Output
 
 | Field                | Type    | Description                           |
 | -------------------- | ------- | ------------------------------------- |
 | `ready`              | boolean | Whether PR creation should proceed    |
-| `summary.total`      | number  | Total findings across all reviewers   |
-| `summary.critical`   | number  | Critical findings count               |
-| `summary.fixed`      | number  | Successfully auto-fixed count         |
-| `summary.unresolved` | number  | Critical findings not fixed           |
-| `blockers`           | array   | Unresolved critical findings (if any) |
+| `summary.total`      | number  | Confirmed findings from the panel     |
+| `summary.blockers`   | number  | Confirmed blockers                    |
+| `summary.fixed`      | number  | Findings fixed by this run            |
+| `summary.unresolved` | number  | Blockers not fixed                    |
+| `blockers`           | array   | Unresolved blockers (if any)          |
+| `report`             | string  | Path to the expert-review `report.md` |
 
 ### Side Effects
 
-- Auto-fix commits on current branch
-- Console output with finding details
+- Fix commits on the current branch
+- An expert-review run directory under `tmp/expert-review/`
 
 ## When to Use
 
 Call between `/implement` and `/finalize`:
 
 ```
-/implement  -->  /self-review  -->  /finalize
+/implement  -->  /self-review  -->  /acceptance-validator  -->  /finalize
 ```
 
 Invoke as: `/self-review` or `Run /self-review before creating PR for issue #<N>`
@@ -47,13 +48,15 @@ Invoke as: `/self-review` or `Run /self-review before creating PR for issue #<N>
 
 ### Step 1: Local Validation
 
-Run the standard validation suite. If any step fails, report and attempt fix before proceeding.
+From the repo root:
 
 ```bash
-bun run typecheck
+bun run type-check
 bun run lint
-npx jest --no-coverage
+bun run test
 ```
+
+Never `npx jest` or `bun test` — see `apps/native-rd/AGENTS.md` → "Tests".
 
 If validation fails:
 
@@ -61,140 +64,60 @@ If validation fails:
 2. Re-run the failing command
 3. If still failing after 2 attempts, add to blockers and continue to review
 
-### Step 2: CodeRabbit CLI Review
+### Step 2: Expert Review
 
-Skip if `skip_coderabbit` is true.
+Run the `expert-review` skill (`.agents/skills/expert-review/SKILL.md`) with
+the argument `issue <issue_number>` — not the bare number, which it would
+read as a PR number. It routes the diff to the
+`review-*` panel, verifies every finding against the code and drops
+hypotheticals, and writes `tmp/expert-review/<run>/findings.json` and
+`report.md`.
 
-```bash
-~/.local/bin/coderabbit review --plain --base main
-```
+Use only its **confirmed** findings. Severity maps directly:
 
-Parse the output for findings. CodeRabbit categories:
+| expert-review | self-review action                                            |
+| ------------- | ------------------------------------------------------------- |
+| `blocker`     | Must fix (Step 3); blocks PR creation if unresolved           |
+| `should-fix`  | Fix when in scope; otherwise track per AGENTS.md (see Step 5) |
+| `nit`         | Optional; list for reviewer awareness                         |
 
-- **"Potential issue"** or **"Bug"** --> CRITICAL
-- **"Improvement"** or **"Suggestion"** --> MEDIUM
-- **"Nitpick"** --> LOW
+Provisional security findings and verification gaps are listed, not fixed;
+an expert that errored makes the result `degraded`.
 
-### Step 3: Agent Review (Parallel)
+### Step 3: Fix Loop
 
-Spawn review agents in parallel using the Agent tool. Append the **No-hypotheticals
-rule** (below) verbatim to every agent prompt — it bars speculative findings at the
-source, before they're ever generated.
-
-```text
-Agent(pr-review-toolkit:code-reviewer):
-  "Review the diff on branch <branch> against main for issue #<N>.
-   Focus on code quality, patterns, and correctness.
-   Report findings with confidence scores.
-   <NO-HYPOTHETICALS RULE>"
-
-Agent(pr-review-toolkit:pr-test-analyzer):
-  "Analyze test coverage for changes on branch <branch> against main.
-   Report coverage gaps with gap ratings.
-   <NO-HYPOTHETICALS RULE>"
-
-Agent(pr-review-toolkit:silent-failure-hunter):
-  "Check for silent failures, inadequate error handling, and inappropriate
-   fallback behavior in changes on branch <branch> against main.
-   <NO-HYPOTHETICALS RULE>"
-```
-
-**No-hypotheticals rule** (substitute for `<NO-HYPOTHETICALS RULE>` in each prompt):
-
-> Report ONLY defects triggerable on the code as it stands in this diff. For every
-> finding, name the concrete input or call path — reachable today, from code that
-> exists in this PR or on main — that triggers it. If stating the bug requires "a
-> future caller", "if someone later refactors X", "if the button were hoisted", "if
-> a not-yet-existing failure mode", or any change to code not present in this PR, DO
-> NOT report it. Do not defend against callers, states, or refactors that do not
-> exist. A documented invariant that current code already upholds is not a finding.
-> Prefer reporting nothing over reporting a hypothetical.
-
-### Step 4: Normalize Findings
-
-**First, drop hypotheticals.** Before classifying, discard any finding that fails the
-trigger test: _"What concrete input, on the current diff as it stands, makes this
-happen?"_ If the answer names code that doesn't exist in this PR or on main — a future
-caller, a hypothetical refactor, a not-yet-existing failure mode, or a state the
-current code already prevents — drop it. Do not surface dropped findings, not even
-under "for reviewer awareness". A finding survives only if you can state its trigger in
-one sentence referencing code that exists right now. When in doubt, drop it. Count how
-many were dropped and report the count (not the contents) in the output so the filter's
-action is visible.
-
-Then normalize the survivors to a common schema:
-
-```json
-{
-  "source": "<coderabbit|code-reviewer|test-analyzer|silent-failure-hunter>",
-  "severity": "CRITICAL|HIGH|MEDIUM|LOW",
-  "file": "<file-path>",
-  "line": "<line-number>",
-  "message": "<description>",
-  "fixed": false
-}
-```
-
-Classification thresholds (same as the `review` skill):
-
-| Source                | CRITICAL                             | HIGH             | MEDIUM/LOW      |
-| --------------------- | ------------------------------------ | ---------------- | --------------- |
-| CodeRabbit            | "Potential issue" / "Bug"            | "Improvement"    | "Nitpick"       |
-| code-reviewer         | Confidence >= 91 OR label="Critical" | Confidence >= 75 | Confidence < 75 |
-| silent-failure-hunter | Severity="CRITICAL"                  | Severity="HIGH"  | MEDIUM/LOW      |
-| pr-test-analyzer      | Gap rating >= 8                      | Gap rating >= 5  | Gap rating < 5  |
-
-### Step 5: Auto-Fix Loop
-
-For each CRITICAL finding:
+For each blocker (then each in-scope should-fix):
 
 ```
 attempt = 0
 while not fixed AND attempt < max_retry:
     attempt++
-    Attempt to fix the issue (edit the file, apply the correction)
-    Run validation: bun run typecheck && bun run lint
+    Apply the finding's fix
+    Run validation: bun run type-check && bun run lint
     If validation passes:
-        Stage and commit: git add <file> && git commit -m "fix: <description>"
+        Stage the touched files and commit: "fix: <description>"
         Mark finding as fixed
     Else:
-        Revert: git restore <file>
-        Try next approach
+        Revert only this attempt's edit and try the next approach
 ```
 
-### Step 6: Re-validate After Fixes
+Commits go through the husky hooks (DCO sign-off) — never `--no-verify`.
 
-If any fixes were made, re-run:
+### Step 4: Re-validate After Fixes
 
-```bash
-bun run typecheck
-bun run lint
-npx jest --no-coverage
-```
+If any fixes were made, re-run Step 1. When a fix changed behaviour beyond
+the finding, re-run `expert-review` once on the new HEAD.
 
-### Step 7: Decision
+### Step 5: Decision
 
-Calculate summary:
+- **No unresolved blockers** → `{ ready: true, summary, report }`; print
+  "Self-review PASSED. Ready for /finalize."
+- **Unresolved blockers** → `{ ready: false, summary, blockers, report }`;
+  print them; do not proceed to `/finalize`.
 
-```json
-{
-  "total": "<all-findings>",
-  "critical": "<critical-count>",
-  "fixed": "<successfully-fixed>",
-  "unresolved": "<critical-not-fixed>"
-}
-```
-
-**If `unresolved == 0`:**
-
-- Return `{ ready: true, summary }`
-- Print: "Self-review PASSED. Ready for /finalize."
-
-**If `unresolved > 0`:**
-
-- Return `{ ready: false, summary, blockers }`
-- Print the unresolved findings
-- BLOCK: Do not proceed to /finalize
+Every confirmed should-fix not fixed in scope is tracked as a GH issue or in
+the active plan's Follow-ups (`apps/native-rd/AGENTS.md` → "Handling
+Review-Skipped Findings") before returning — never chat-only.
 
 ## Output Format
 
@@ -202,31 +125,21 @@ Calculate summary:
 SELF-REVIEW COMPLETE
 
 Local Validation: PASS
-CodeRabbit: <N> findings (<N> critical)
-Code Reviewer: <N> findings (<N> critical)
-Test Analyzer: <N> findings (<N> critical)
-Silent Failure Hunter: <N> findings (<N> critical)
-
-Hypotheticals dropped (Step 4 filter): <N>
-
-Auto-Fixed: <N>/<N> critical issues
+Expert review: <experts run> · <N> confirmed (<N> blockers, <N> should-fix, <N> nits) · <N> rejected
+Fixed: <N> · Tracked as follow-ups: <N>
 
 UNRESOLVED (blocking PR creation):
-1. [source] file:line - message
-2. [source] file:line - message
+1. file:line - title
 
-NON-CRITICAL (for reviewer awareness):
-- [source] file:line - message
-
+Report: tmp/expert-review/<run>/report.md
 Result: READY / BLOCKED
 ```
 
 ## Error Handling
 
-| Condition              | Behavior                                                                                                                                                    |
-| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CodeRabbit CLI missing | Warn, skip CodeRabbit. Output must show "CodeRabbit: SKIPPED". Result reads "READY (degraded — CodeRabbit skipped)".                                        |
-| Agent fails to spawn   | Log error with agent name and error type. Continue with other agents. Output must show "<Agent>: SKIPPED (spawn error)". Include `degraded` flag in result. |
-| All agents fail        | Report error with per-agent failure details. Mark as BLOCKED.                                                                                               |
-| Fix breaks validation  | Revert fix, mark as unresolved                                                                                                                              |
-| Max retry exceeded     | Mark as unresolved, continue                                                                                                                                |
+| Condition             | Behavior                                                                                    |
+| --------------------- | ------------------------------------------------------------------------------------------- |
+| An expert errors      | Continue with the others; output shows it under "Experts with errors"; result is `degraded` |
+| Every expert errors   | Mark as BLOCKED with the per-expert errors                                                  |
+| Fix breaks validation | Revert that fix, mark as unresolved                                                         |
+| Max retry exceeded    | Mark as unresolved, continue                                                                |

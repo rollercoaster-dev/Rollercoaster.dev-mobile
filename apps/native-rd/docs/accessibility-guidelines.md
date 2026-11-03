@@ -7,6 +7,7 @@ This document outlines accessibility requirements and best practices for the nat
 - [WCAG AA Requirements](#wcag-aa-requirements)
 - [Color Contrast](#color-contrast)
 - [Touch Targets](#touch-targets)
+- [Text Scaling](#text-scaling)
 - [Screen Reader Support](#screen-reader-support)
 - [Focus Management](#focus-management)
 - [Component Checklist](#component-checklist)
@@ -123,6 +124,46 @@ Ensure adequate spacing between touch targets to prevent accidental taps:
   <Button />
 </View>
 ```
+
+## Text Scaling
+
+React Native multiplies every `<Text>` by the OS font scale (iOS Dynamic Type, Android font size). iOS accessibility sizes report a font scale of about 1.8x (AX1) to 3.6x (AX5), and Loud & Clear's 1.25x token scale stacks on top. The policy bounds the combined growth per text role. It lives in `src/utils/typeScale.ts`; do not restate the numbers elsewhere.
+
+### Caps
+
+| Role                                        | Max combined size | Why                                                      |
+| ------------------------------------------- | ----------------- | -------------------------------------------------------- |
+| `display`, `headline`                       | 1.0x (no growth)  | Already 24–40pt; growing them only breaks words mid-word |
+| `title`, `body`, `label`, `caption`, `mono` | 2.0x              | WCAG 1.4.4 asks for 200% on content text                 |
+| Chrome (`<Text chrome>`)                    | 1.3x              | Tab labels, pills, counters, overlines                   |
+| `Button` labels                             | 1.25x             | Sits beside body text; a pinned button stays small       |
+
+Caps are measured against the default theme's base size. Loud & Clear composes with the OS scale but stays inside the same bound: its body text reaches 2.0x of the default base, not 2.5x. A theme's own scale is never undone, so Loud & Clear headings stay at their 1.25x.
+
+The shared `Text` and `Input` apply this by default through `maxFontSizeMultiplier` (cap ÷ theme scale, never below 1). Pass `chrome` for chrome text. An explicit `maxFontSizeMultiplier` from the caller still wins; use it only with a reason in a comment. Text rendered through `Text` from `react-native` gets no cap, so prefer the shared component.
+
+### Reading the scale in layout
+
+`useTypeScale()` in `src/hooks/useTypeScale.ts` is the only place that reads the OS font scale:
+
+```typescript
+const { fontScale, isLargeType, isAccessibilitySize, themeScale, scaleFor } =
+  useTypeScale();
+```
+
+- `isLargeType`: OS scale ≥ 1.3, or a theme with larger type (Loud & Clear). Switch layouts on this, e.g. one-column tiles.
+- `isAccessibilitySize`: OS scale ≥ 1.6, iOS's accessibility sizes.
+- `scaleFor(role)`: the multiplier RN actually applies to that role after its cap. Use it when a box must track rendered text, e.g. `headline.lineHeight * scaleFor("headline")`.
+
+Never call `PixelRatio.getFontScale()` or read `useWindowDimensions().fontScale` directly; the first does not re-render when the user changes the setting, and both bypass the caps.
+
+### Shrink-to-fit
+
+Never use `adjustsFontSizeToFit` on content text; it undoes the user's size choice. The one exception is `ProgressRing`'s centered percentage, a short numeric label that must stay inside the ring's stroke.
+
+### Tests
+
+Jest pins the font scale to 1 (`src/__tests__/setup-font-scale.ts`). Call `mockFontScale(n)` from `src/__tests__/fontScale.ts` to render at another size. `src/__tests__/typeScaleAudit.test.tsx` renders every variant at AX5 (3.571x) on the default and Loud & Clear themes and fails when one outgrows its cap.
 
 ## Screen Reader Support
 

@@ -6,6 +6,13 @@ rollercoaster.dev (native) — a personal learning and goal tracking app for neu
 
 See `docs/vision/product-vision.md` for full context.
 
+## Hard Rules
+
+- **NEVER run interactive CLI commands** (auth flows, prompts, `git rebase -i`, etc.) — they hang.
+- **Always use native builds** — run `npx expo run:ios` (not `npx expo start`). This is a dev client app, not Expo Go.
+  - **Exception:** if the user names a GUI tool (e.g. "set this up in Xcode", "open in Android Studio"), give them the GUI flow — `npx expo prebuild --platform ios` → `cd ios && pod install` → `open ios/Rollercoasterdev.xcworkspace` → walk them through team signing + ▶ in Xcode.app. The CLI rule above governs autonomous agent work; it is **not** what to give a user who explicitly asked for the GUI.
+- **Always check PR review comments before merging** — even when CI is green. Run the full review cycle every time.
+
 ## Quick Reference
 
 | Question                | Where to look                                                          |
@@ -47,15 +54,19 @@ src/
 └── utils/           # Utility functions
 ```
 
-## Development Commands
+## Commands
 
-| Command              | Purpose                                              |
-| -------------------- | ---------------------------------------------------- |
-| `bun run type-check` | TypeScript type checking                             |
-| `bun run lint`       | ESLint                                               |
-| `bun run test`       | Run Jest test suite (Node-wrapped; never `bun test`) |
-| `bun run test:ci`    | CI test run                                          |
-| `npx expo run:ios`   | Build and run on iOS (NEVER use `expo start`)        |
+| Task      | Command                                                                          |
+| --------- | -------------------------------------------------------------------------------- |
+| Typecheck | `bun run type-check`                                                             |
+| Lint      | `bun run lint`                                                                   |
+| Test      | `bun run test` (scope with `--testPathPatterns <pattern>`) — never `bun test`    |
+| CI test   | `bun run test:ci`                                                                |
+| Build iOS | `npx expo run:ios` (sim) or `bun run ios` (uses `.env.local` for device default) |
+
+**Releasing?** See `docs/release.md` for the pipeline + runbook.
+
+**Any build target?** Load the `native-rd-build` skill — covers local iOS sim/device, Release builds, EAS profiles, and Android (when set up). Each section is tagged `[VERIFIED <date>]` / `[UNTESTED]` / `[BROKEN]` so you know what's battle-tested. **Update the skill as you use it** — promote tags, add gotchas, bump version.
 
 ## App Legibility Commands
 
@@ -75,6 +86,61 @@ src/
 3. **Every component has:** `index.ts` (barrel export), `*.styles.ts` (unistyles stylesheet), test file, optional `.stories.tsx`.
 4. **Local-first always.** No feature requires network connectivity. Sync is optional.
 5. **Neurodivergent-first.** Design decisions are driven by ND needs. See `docs/vision/design-principles.md`.
+
+## Tests
+
+- Jest 30, `@testing-library/react-native` v13
+- **Run with `bun run test`** — it goes through `scripts/jest-node.sh`, which runs Jest under real Node. Plain `jest`/`npx jest` and `bun test` (Bun's own runner) both reintroduce Bun/Jest runtime failures. See `README.md`.
+- Use `--testPathPatterns` (plural, not `--testPathPattern`)
+- Test files live in `src/__tests__/` mirroring `src/` structure
+- Use `test.each` instead of duplicating tests that follow the same pattern
+- Don't write tests that assert nothing beyond "it renders"
+- **Never commit an assertion that cannot fail** — see [`.claude/rules/no-unfalsifiable-assertions.md`](../../.claude/rules/no-unfalsifiable-assertions.md). Sweep every negative assertion before committing: if no plausible regression makes it fail, delete it.
+- Before deleting a test, grep the codebase to confirm something else covers that behavior
+- Never delete a11y contract tests or regression tests tied to bug fixes
+
+## Design System
+
+Neo-brutalist visual language with hard shadows, bold borders, and confident typography. **Theme inventory:** `docs/design/nd-themes.md`. **Component contract** (typography, elevation, action states, inputs): `docs/design/design-language.md`.
+
+- **Tokens from:** `@rollercoaster-dev/design-tokens` (workspace package at `packages/design-tokens/`)
+- **Adapter layer:** `src/themes/adapter.ts` — the single import boundary from the package
+- **Theme composition:** `src/themes/compose.ts` — 7 product themes (`productThemeEntries`); dark (`dark-default`, Night Ride) is one of the seven, not an axis
+- **Shadows:** `src/styles/shadows.ts` — `shadowStyle(theme, role)` with semantic roles `cardElevation` / `cardElevationSmall` / `modalElevation`; Bold Ink, Still Water and Loud & Clear render none
+- **Fonts:** Anybody (headlines), Instrument Sans (body), DM Mono (code); Warm Studio uses Lexend and Loud & Clear uses Atkinson Hyperlegible for body and headlines
+- **Storybook:** `bun run storybook:web` — `src/stories/design-system/` token stories, `src/stories/composed/` screens in the app shell
+
+Theme ids follow `{colorMode}-{variant}` (e.g. `light-default`, `light-dyslexia`). Other pairs (`largeText`, `dark-<variant>`) compose for tests only and are not product themes.
+
+### Styling
+
+- **react-native-unistyles v3** with Babel plugin (ADR-0002)
+- `StyleSheet.create((theme) => ...)` IS reactive to theme changes via `setTheme()`
+- Use theme tokens, never hardcoded colors
+
+## ND Accessibility
+
+Targets WCAG 2.1 AA. Five accessibility themes ship beside The Full Ride and Night Ride as day-one requirements, not afterthoughts:
+
+- **Bold Ink** (`light-highContrast`) — WCAG AAA (7:1), no shadows, strong borders
+- **Warm Studio** (`light-dyslexia`) — Lexend font, cream bg, relaxed line height
+- **Still Water** (`light-autismFriendly`) — muted/desaturated colors, no shadows
+- **Loud & Clear** (`light-lowVision`) — max contrast, Atkinson Hyperlegible, 1.25× text, no shadows
+- **Clean Signal** (`light-lowInfo`) — reduced visual complexity
+
+Key files: `src/utils/accessibility.ts` (contrast checker), `docs/accessibility-guidelines.md`, `src/__tests__/accessibility.test.tsx` (a11y contract tests), `src/themes/__tests__/contrast.test.ts`.
+
+All interactive elements require: `accessibilityRole`, `accessibilityLabel`, 44x44pt minimum touch targets.
+
+## OpenBadges Core
+
+Badge logic lives in `@rollercoaster-dev/openbadges-core` (workspace package at `packages/openbadges-core/`).
+
+- **What native-rd uses:** credential building, Ed25519 signing, key pair generation, PNG baking
+- **Key abstraction:** `KeyProvider` interface — server uses `FileSystemKeyProvider`, native app will use `SecureStoreKeyProvider` (Expo SecureStore)
+- **RN concerns:** `jose` works as-is; Node `crypto` -> `expo-crypto`; Node `zlib` -> `pako`
+- **Architecture doc:** `docs/architecture/openbadges-core.md`
+- **Data model:** `src/db/schema.ts` (Evolu tables for goals, evidence, badges)
 
 ## Documentation
 
@@ -106,25 +172,49 @@ Each `docs/` subdirectory has an `index.md` with a summary and links:
 
 ## Agent Workflow
 
-- **Planning**: repository docs and issue acceptance criteria; graph-flow may be used when available. Automated prioritization uses `.agents/skills/project-manager/`.
+- **Planning**: repository docs and issue acceptance criteria. Automated prioritization uses `.agents/skills/project-manager/`.
 - **Issue tracking**: GitHub Issues + GitHub Project board
-- **Code review**: independent code, test, and failure-handling review through `.agents/skills/review/`; CodeRabbit locally when available and on GitHub where configured.
+- **Code review**: independent code, test, and failure-handling review through `.agents/skills/review/`.
+- **Expert review**: `.agents/skills/expert-review/` — a report-only panel of `review-*` subagents (`.claude/agents/`) grounded in this repo's docs and ADRs, with every finding verified against the code. `/self-review` runs it before a PR; run it alone for a report without fixes.
 - **Skills**: See `.claude/skills/` (project skills) and `.agents/skills/` (shared agent skills)
 - **Dev plans**: `.claude/dev-plans/` for issue-specific implementation plans
+
+### Issue Workflow
+
+| Command                 | What it does                                                                      |
+| ----------------------- | --------------------------------------------------------------------------------- |
+| `/start-issue <#>`      | Fetches the issue, researches the codebase, writes the plan; stops for your input |
+| `/implement`            | Implements code from a dev plan with atomic commits                               |
+| `/self-review`          | Pre-PR gate: local validation + `expert-review`, auto-fixes confirmed blockers    |
+| `/expert-review`        | Report-only domain panel; every finding verified against the code                 |
+| `/review`               | Portable review-and-fix loop with acceptance checks (Codex and automation)        |
+| `/acceptance-validator` | Validates the branch diff against issue acceptance criteria                       |
+| `/finalize`             | Pushes branch, creates PR, updates board                                          |
+| `/review-to-task <pr>`  | Converts unresolved PR comments to tracked issues                                 |
+| `/quality-scorer`       | Grades codebase domains, updates docs/quality/grades.md                           |
+| `/auto-issue`           | Runs an issue end to end (automation)                                             |
 
 ### Recommended Pre-PR Cycle
 
 ```
-/implement  -->  /self-review  -->  /accept-check  -->  /finalize
+/implement  -->  /self-review  -->  /acceptance-validator  -->  /finalize
 ```
 
 1. `/implement` — execute the dev plan with atomic commits
-2. `/self-review` — pre-PR gate: local validation and independent reviewers. Codex uses the portable `.agents/skills/review/` workflow. Blocks on unresolved critical findings.
-3. `/accept-check` — validate diff against issue acceptance criteria. Flags gaps.
+2. `/self-review` — pre-PR gate: local validation and the `/expert-review` panel, auto-fixing confirmed blockers. Codex uses the portable `.agents/skills/review/` workflow. Blocks on unresolved confirmed blockers.
+3. `/acceptance-validator` — validate diff against issue acceptance criteria. Flags gaps.
 4. `/finalize` — push branch, create PR, update board
 
 After merge: `/review-to-task <pr-number>` to convert unresolved review comments into tracked issues.
 
 ### Handling Review-Skipped Findings
 
-Every review finding (`/simplify`, `/review`, `/self-review`, CodeRabbit) you choose not to fix in scope must be tracked as a **GH issue** (preferred) and/or a **"Follow-ups" section in the active plan** under `apps/native-rd/docs/plans/`. Never chat-only.
+Every review finding (`/simplify`, `/review`, `/self-review`, `/expert-review`, GitHub PR reviews) you choose not to fix in scope must be tracked as a **GH issue** (preferred) and/or a **"Follow-ups" section in the active plan** under `apps/native-rd/docs/plans/`. Never chat-only.
+
+## After Making Changes
+
+| Changed           | Run                                         |
+| ----------------- | ------------------------------------------- |
+| React Native code | `npx expo run:ios` (native build)           |
+| Test files        | `bun run test --testPathPatterns <pattern>` |
+| Theme/style files | Build + visually verify on device           |

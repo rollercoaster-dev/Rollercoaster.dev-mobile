@@ -29,7 +29,7 @@ Analyzes codebase domains and assigns grades (A/B/C/D/F). Updates `docs/quality/
 
 - After a PR cycle to track quality trends
 - After `/finalize`, as post-PR quality tracking
-- On demand: `/quality-score`
+- On demand: `/quality-scorer`
 
 ## Domains and Grading Criteria
 
@@ -83,7 +83,7 @@ Count errors and warnings from output.
 ### Step 4: Typecheck
 
 ```bash
-bun run typecheck 2>&1
+bun run type-check 2>&1
 ```
 
 Count errors from output.
@@ -97,7 +97,7 @@ bun run test:a11y:json 2>&1
 Parse pass/fail counts. If command not available, run:
 
 ```bash
-npx jest --no-coverage --testPathPatterns accessibility
+bun run test --testPathPatterns accessibility
 ```
 
 ### Step 6: Screen E2E Coverage

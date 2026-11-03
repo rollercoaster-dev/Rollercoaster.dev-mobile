@@ -40,6 +40,27 @@ updates:
       # Revisit when prettier 3.10 (or a fixed 3.9.x) lands.
       - dependency-name: "prettier"
         versions: ["3.9.x"]
+      # react-native-unistyles is vendored-patched (patches/react-native-unistyles@3.3.0.patch,
+      # the shadow-tree double-free fix from #588). Bun keys patches by exact
+      # name@version, so any bump silently drops the patch and `check:patches`
+      # fails (#732: "Patched dependency check failed."). Lift this once the patch
+      # is re-applied against the new version (#738).
+      - dependency-name: "react-native-unistyles"
+        versions: ["> 3.3.0"]
+      # Evolu majors (common 8, react 11, react-native 16) are one coordinated
+      # migration, not three piecemeal bumps: createEvolu now returns a Result
+      # (#771: "Property 'createQuery' does not exist on type 'Ok<Evolu<...>>'"),
+      # @evolu/react dropped useQuery/EvoluProvider/createUseEvolu (#773), and
+      # @evolu/react-native/expo-sqlite dropped evoluReactNativeDeps (#770).
+      # Lift once #675 lands the migration.
+      - dependency-name: "@evolu/*"
+        update-types: ["version-update:semver-major"]
+      # tsup 9 requires Node ^22.18.0 || ^24.11.0 || >=26.0.0, but
+      # packages/openbadges-core still declares engines.node >=18.12.0, so
+      # Node 18 and early-22 consumers could no longer build it (#763 review
+      # hold). Lift once openbadges-core raises its Node support floor.
+      - dependency-name: "tsup"
+        update-types: ["version-update:semver-major"]
       # React Native ecosystem: must be bumped in coordination with the Expo SDK,
       # not piecemeal by Dependabot. Expo's jest preset asserts exact-match peers
       # (react / react-test-renderer) and the RN install layout changes between
