@@ -1,10 +1,11 @@
 import React, { memo, useMemo } from "react";
-import { View, Text, Pressable, PixelRatio } from "react-native";
+import { View, Text as RNText, Pressable } from "react-native";
 import * as Haptics from "expo-haptics";
 import { useTranslation } from "react-i18next";
 import { useUnistyles } from "react-native-unistyles";
 import Animated from "react-native-reanimated";
 import { Card } from "../Card";
+import { Text } from "../Text";
 import { StatusBadge } from "../StatusBadge";
 import {
   BadgeRenderer,
@@ -13,6 +14,7 @@ import {
 import { getBadgeLayoutBoxes } from "../../badges/layoutBoxes";
 import { createDefaultBadgeDesign, parseBadgeDesign } from "../../badges/types";
 import { useFlashOnIncrease } from "../../hooks/useFlashOnIncrease";
+import { useTypeScale } from "../../hooks/useTypeScale";
 import { formatEvidenceLabel } from "../../utils/formatEvidenceLabel";
 import { styles } from "./GoalEvidenceCard.styles";
 
@@ -55,14 +57,17 @@ export const GoalEvidenceCard = memo(function GoalEvidenceCard({
     [goalDesignJson, goalTitle, goalColor],
   );
 
-  const fontScale = PixelRatio.getFontScale();
+  const { scaleFor } = useTypeScale();
   const { headline, body } = theme.textStyles;
   // Title can wrap to 2 lines and description to 3; the row uses flex-start so
   // text just grows past the badge in those cases — don't widen the multiplier
   // to "fix" the asymmetry between numberOfLines and this calc.
+  // Each line grows by its own role's capped scale, matching the Text nodes.
   const textColumnHeight =
-    headline.lineHeight + theme.space[1] + body.lineHeight * 2;
-  const badgeSize = Math.round(textColumnHeight * fontScale);
+    headline.lineHeight * scaleFor("headline") +
+    theme.space[1] +
+    body.lineHeight * 2 * scaleFor("body");
+  const badgeSize = Math.round(textColumnHeight);
 
   // Banner / bottomLabel can overflow the badge square — size the wrapper to
   // the full SVG viewBox so overflow grows the card (vertically for banners,
@@ -84,9 +89,9 @@ export const GoalEvidenceCard = memo(function GoalEvidenceCard({
       <Card fill>
         <View style={styles.container}>
           <View style={styles.metaRow}>
-            <Text style={styles.metaLabel}>
+            <RNText style={styles.metaLabel}>
               {t("common:goalCard.metaLabel")}
-            </Text>
+            </RNText>
             {onMarkComplete && (
               <StatusBadge
                 variant="active"
@@ -113,6 +118,7 @@ export const GoalEvidenceCard = memo(function GoalEvidenceCard({
             </Pressable>
             <View style={styles.textColumn}>
               <Text
+                variant="headline"
                 style={styles.title}
                 accessible
                 accessibilityRole="header"
@@ -121,7 +127,11 @@ export const GoalEvidenceCard = memo(function GoalEvidenceCard({
                 {goalTitle}
               </Text>
               {goalDescription ? (
-                <Text style={styles.description} numberOfLines={3}>
+                <Text
+                  variant="body"
+                  style={styles.description}
+                  numberOfLines={3}
+                >
                   {goalDescription}
                 </Text>
               ) : null}
@@ -137,7 +147,7 @@ export const GoalEvidenceCard = memo(function GoalEvidenceCard({
                 count: evidenceCount,
               })}
             >
-              <Text style={styles.evidenceText}>{evidenceLabel}</Text>
+              <RNText style={styles.evidenceText}>{evidenceLabel}</RNText>
             </Pressable>
             <Animated.View
               style={[styles.evidenceFlash, flashStyle]}
@@ -166,9 +176,9 @@ export const GoalEvidenceCard = memo(function GoalEvidenceCard({
                     the tap navigates to CompletionFlow rather than toggling a
                     persistent checked state, so we never render a checkmark. */}
                 <View style={styles.markCompleteBox} />
-                <Text style={styles.markCompleteLabel}>
+                <RNText style={styles.markCompleteLabel}>
                   {t("common:goalCard.markComplete")}
-                </Text>
+                </RNText>
               </Pressable>
             </View>
           )}

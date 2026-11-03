@@ -104,7 +104,7 @@ src/
 ├── screens/         # Screen components
 ├── stories/         # Storybook stories
 ├── styles/          # Global styles, shadows helper
-├── themes/          # Design token adapter, theme composition (14 themes)
+├── themes/          # Design token adapter, theme composition (7 product themes)
 └── utils/           # Accessibility, evidence cleanup, formatting, etc.
 ```
 
@@ -135,19 +135,19 @@ Tab: Settings
 
 ## Design System
 
-14 themes: 2 color modes × 7 variants — all shipped from day one, not as an afterthought.
+Seven peer themes, all shipped from day one, not as an afterthought:
 
-| Variant          | Purpose                                            |
-| ---------------- | -------------------------------------------------- |
-| `default`        | Standard                                           |
-| `highContrast`   | WCAG AAA (7:1), no shadows                         |
-| `largeText`      | 1.25× font scale                                   |
-| `dyslexia`       | Lexend font, cream background, relaxed line height |
-| `lowVision`      | Max contrast + large text                          |
-| `autismFriendly` | Muted colors, no shadows, reduced visual noise     |
-| `lowInfo`        | Minimal visual complexity                          |
+| Theme                  | Name          | Purpose                                                     |
+| ---------------------- | ------------- | ----------------------------------------------------------- |
+| `light-default`        | The Full Ride | Standard                                                    |
+| `dark-default`         | Night Ride    | Dark mode                                                   |
+| `light-highContrast`   | Bold Ink      | WCAG AAA (7:1), no shadows                                  |
+| `light-dyslexia`       | Warm Studio   | Lexend font, cream background, relaxed line height          |
+| `light-autismFriendly` | Still Water   | Muted colors, no shadows, reduced visual noise              |
+| `light-lowVision`      | Loud & Clear  | Max contrast, Atkinson Hyperlegible, 1.25× text, no shadows |
+| `light-lowInfo`        | Clean Signal  | Minimal visual complexity                                   |
 
-Theme names follow `{colorMode}-{variant}` (e.g. `light-default`, `dark-highContrast`).
+The full inventory is [ND Themes](docs/design/nd-themes.md); the component contract is [Design Language](docs/design/design-language.md).
 
 See `src/themes/` for composition and `@rollercoaster-dev/design-tokens` for the token source.
 
@@ -164,8 +164,8 @@ See `src/themes/` for composition and `@rollercoaster-dev/design-tokens` for the
 | [ADR-0003: Sync Layer](docs/decisions/ADR-0003-sync-layer-decision.md)        | Why Evolu                                              |
 | [ADR-0004: Data Model](docs/decisions/ADR-0004-data-model-storage.md)         | Schema decisions, ULID strategy                        |
 | [Data Model](docs/architecture/data-model.md)                                 | All entities across iterations A–D                     |
-| [Design Language](docs/design/design-language.md)                             | Typography, color, spacing reference                   |
-| [ND Themes](docs/design/nd-themes.md)                                         | All 14 theme definitions                               |
+| [Design Language](docs/design/design-language.md)                             | Component contract: type, elevation, actions, inputs   |
+| [ND Themes](docs/design/nd-themes.md)                                         | The seven product themes                               |
 | [User Flows](docs/design/user-flows.md)                                       | Screen-by-screen flows for Iteration A                 |
 | [Accessibility Guidelines](docs/accessibility-guidelines.md)                  | WCAG AA target, 44pt touch targets, testing            |
 

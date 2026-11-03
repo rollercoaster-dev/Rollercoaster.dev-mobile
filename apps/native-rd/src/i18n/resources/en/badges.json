@@ -1,7 +1,8 @@
 {
   "header": "Badges",
   "wall": {
-    "count": "{{count}} badges",
+    "count_one": "{{count}} badge",
+    "count_other": "{{count}} badges",
     "allVerifiable": "A WALL OF PROOF · ALL VERIFIABLE",
     "justEarned": "JUST EARNED",
     "empty": {

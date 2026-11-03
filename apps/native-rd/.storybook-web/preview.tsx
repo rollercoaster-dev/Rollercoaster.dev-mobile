@@ -36,10 +36,8 @@ const FONT_FACE_CSS = `
 @font-face { font-family: 'Atkinson Hyperlegible'; font-weight: 700; font-display: swap; src: url('./fonts/AtkinsonHyperlegible-Bold.ttf') format('truetype'); }
 @font-face { font-family: 'OpenDyslexic'; font-weight: 400; font-display: swap; src: url('./fonts/OpenDyslexic-Regular.otf') format('opentype'); }
 @font-face { font-family: 'OpenDyslexic'; font-weight: 700; font-display: swap; src: url('./fonts/OpenDyslexic-Bold.otf') format('opentype'); }
-@font-face { font-family: 'Lexend'; font-weight: 400; font-display: swap; src: url('./fonts/Lexend-Regular.woff2') format('woff2'); }
-@font-face { font-family: 'Lexend'; font-weight: 500; font-display: swap; src: url('./fonts/Lexend-Medium.woff2') format('woff2'); }
-@font-face { font-family: 'Lexend'; font-weight: 600; font-display: swap; src: url('./fonts/Lexend-SemiBold.woff2') format('woff2'); }
-@font-face { font-family: 'Lexend'; font-weight: 700; font-display: swap; src: url('./fonts/Lexend-Bold.woff2') format('woff2'); }
+@font-face { font-family: 'Lexend'; font-weight: 400; font-display: swap; src: url('./fonts/Lexend-Regular.ttf') format('truetype'); }
+@font-face { font-family: 'Lexend'; font-weight: 700; font-display: swap; src: url('./fonts/Lexend-Bold.ttf') format('truetype'); }
 `;
 
 if (
@@ -54,6 +52,9 @@ if (
 
 const ThemeDecorator = (Story: React.ComponentType, context: any) => {
   const selectedTheme = context.globals?.theme as ThemeName | undefined;
+  // Composed-screen stories draw their own phone frames, so the story padding
+  // would only offset them from the canvas edge.
+  const fullscreen = context.parameters?.layout === "fullscreen";
 
   React.useEffect(() => {
     if (selectedTheme && themeNames.includes(selectedTheme)) {
@@ -69,7 +70,7 @@ const ThemeDecorator = (Story: React.ComponentType, context: any) => {
         <KeyboardProvider>
           <ScrollView
             style={styles.container}
-            contentContainerStyle={styles.content}
+            contentContainerStyle={fullscreen ? undefined : styles.content}
           >
             <Story />
           </ScrollView>

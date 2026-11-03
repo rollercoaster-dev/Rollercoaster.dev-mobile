@@ -35,7 +35,7 @@
   },
   "discardConfirm": {
     "title": "Aufnahme verwerfen?",
-    "message": "Diese Aufnahme geht verloren.",
+    "message": "Diese Aufnahme und ihre Notiz gehen verloren.",
     "keep": "Behalten",
     "discard": "Verwerfen"
   },

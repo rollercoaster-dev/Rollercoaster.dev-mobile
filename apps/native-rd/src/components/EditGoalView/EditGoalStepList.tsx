@@ -68,6 +68,9 @@ export interface EditGoalStepListProps {
    */
   onReparentStep?: (stepId: string, newParentStepId: string | null) => void;
   onAddStep: (title: string) => void;
+  /** Optional controlled add-row draft, for hosts that preserve it across unmounts. */
+  addStepDraft?: string;
+  onAddStepDraftChange?: (title: string) => void;
   /**
    * The add-step input gained focus. The host owns the ScrollView this list
    * sits in and scrolls it to the end, so the add row — the last thing in the
@@ -176,6 +179,8 @@ export function EditGoalStepList({
   onReorderSubSteps,
   onReparentStep,
   onAddStep,
+  addStepDraft,
+  onAddStepDraftChange,
   onAddStepInputFocus,
   onStepTitleChange,
   onEvidenceChipPress,
@@ -220,7 +225,9 @@ export function EditGoalStepList({
   const { theme } = useUnistyles();
   const { animationPref } = useAnimationPref();
 
-  const [newStepTitle, setNewStepTitle] = useState("");
+  const [localStepDraft, setLocalStepDraft] = useState("");
+  const newStepTitle = addStepDraft ?? localStepDraft;
+  const setNewStepTitle = onAddStepDraftChange ?? setLocalStepDraft;
   // A single "which id is being renamed" source, keyed by step OR sub-step id
   // (ids are unique across both). commitEditing routes to the right callback.
   const [editingId, setEditingId] = useState<string | null>(null);
