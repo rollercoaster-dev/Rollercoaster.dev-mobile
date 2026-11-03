@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "phosphor-react-native";
 import { Text } from "../Text";
 import { IconButton } from "../IconButton";
+import { useSheetBackgroundA11yProps } from "../AnimatedSheet";
 import { HeaderBand } from "./HeaderBand";
 import { styles } from "./ScreenHeader.styles";
 
@@ -24,15 +25,19 @@ export function ScreenSubHeader({
   right,
 }: ScreenSubHeaderProps) {
   const { t } = useTranslation(["common"]);
+  // A screen's sheet mounts inside its body, so the overlay's iOS
+  // accessibilityViewIsModal can't reach this header (#686).
+  const sheetA11yProps = useSheetBackgroundA11yProps();
 
   return (
-    <HeaderBand>
+    <HeaderBand {...sheetA11yProps}>
       {onBack ? (
         <IconButton
           icon={<ArrowLeft size={24} weight="bold" />}
           onPress={onBack}
           tone="chrome"
           accessibilityLabel={t("common:screenHeader.a11y.goBack")}
+          testID="screen-sub-header-back"
         />
       ) : (
         // Leading spacer mirrors the trailing one, keeping the label centered

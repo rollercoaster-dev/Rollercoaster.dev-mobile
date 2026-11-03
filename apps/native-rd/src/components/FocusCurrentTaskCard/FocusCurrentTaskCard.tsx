@@ -223,7 +223,7 @@ function InProgressView({
               </Text>
             </Pressable>
             <Pressable
-              onPress={() => onAddEvidence()}
+              onPress={(event) => onAddEvidence(undefined, event)}
               style={styles.secondaryCta}
               accessible
               accessibilityRole="button"

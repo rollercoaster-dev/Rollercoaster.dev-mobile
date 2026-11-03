@@ -39,7 +39,11 @@ import { IconButton } from "../IconButton";
 import { Button } from "../Button";
 import { ScreenSubHeader } from "../ScreenHeader/ScreenSubHeader";
 import { EvidenceTypePicker } from "../EvidenceTypePicker";
-import { AnimatedSheet } from "../AnimatedSheet";
+import {
+  AnimatedSheet,
+  SheetBackground,
+  useSheetTrigger,
+} from "../AnimatedSheet";
 import { EditGoalStepList, type EditGoalStep } from "../EditGoalView";
 import type { DragScrollController } from "../StepList/dragAutoScroll";
 import { EvidenceType } from "../../db";
@@ -391,15 +395,12 @@ export function NewGoalWizard({
   // from the list row's press event (#501) — threaded into AnimatedSheet's
   // restoreFocusRef so focus returns to that chip on any dismissal. Mirrors
   // EditGoalView; avoids threading a View ref through the list/row layers (D2).
-  const buildRestoreFocusTagRef = useRef<number | null>(null);
+  const buildEvidenceTrigger = useSheetTrigger();
   function handleBuildEvidenceChipPress(
     id: string,
     event: GestureResponderEvent,
   ) {
-    // RN types nativeEvent.target as string, but it's the numeric react tag at
-    // runtime — the exact input setAccessibilityFocus expects.
-    buildRestoreFocusTagRef.current =
-      (event?.nativeEvent?.target as unknown as number | undefined) ?? null;
+    buildEvidenceTrigger.rememberTrigger(event);
     setEditingEvidenceId(id);
   }
 
@@ -464,24 +465,13 @@ export function NewGoalWizard({
     }
   }
 
-  // Either sheet (step-2 capture or build-step multi-select) shares the same
-  // in-tree AnimatedSheet/overlay, and neither isolates Android from the rest
-  // of the wizard (accessibilityViewIsModal is iOS-only). Hide the wizard body
-  // from TalkBack while either is open (#501).
-  const anySheetOpen = evidencePickerOpen || editingEvidenceTypes !== undefined;
-
   return (
     <View style={styles.container}>
-      {/* Everything except the two sheets — hidden from TalkBack while a sheet
-          is open so swiping past the last sheet control can't reach wizard
-          content behind it. Accessibility-tree only, no layout change. */}
-      <View
-        testID="new-goal-wizard-content"
-        style={styles.content}
-        importantForAccessibility={
-          anySheetOpen ? "no-hide-descendants" : "auto"
-        }
-      >
+      {/* Everything except the two sheets — hidden from VoiceOver and
+          TalkBack while either sheet is open so swiping past the last sheet
+          control can't reach wizard content behind it (#501, #686).
+          Accessibility-tree only, no layout change. */}
+      <SheetBackground testID="new-goal-wizard-content" style={styles.content}>
         {/* Shared header chrome (D8). Back arrow is omitted on the first step —
             nowhere to go back to; ScreenSubHeader renders a leading spacer so
             the label stays centered. The × close lives in the right slot. */}
@@ -782,7 +772,7 @@ export function NewGoalWizard({
             </>
           ) : null}
         </KeyboardAvoidingFrame>
-      </View>
+      </SheetBackground>
 
       {/* Step 2 · planned-evidence picker — reuse #409's capture sheet whole
           (D2), no fork. Single-select, serves only step 2's planned-evidence
@@ -817,7 +807,7 @@ export function NewGoalWizard({
         closeLabel={closeLabel}
         closeTestID="new-goal-evidence-close"
         backdropTestID="new-goal-evidence-backdrop"
-        restoreFocusRef={buildRestoreFocusTagRef}
+        restoreFocusRef={buildEvidenceTrigger.restoreFocusRef}
       >
         {sheetEvidenceTypes ? (
           <EvidenceTypePicker

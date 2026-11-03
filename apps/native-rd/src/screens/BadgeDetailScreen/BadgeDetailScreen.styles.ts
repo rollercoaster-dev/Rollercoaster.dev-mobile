@@ -13,6 +13,11 @@ export const styles = StyleSheet.create((theme) => ({
   scroll: {
     flex: 1,
   },
+  // Wraps hero + scroll so they hide together behind the share sheet; flex:1
+  // keeps the scroll filling the space above the pinned Share CTA.
+  sheetBackground: {
+    flex: 1,
+  },
   scrollContent: {
     paddingBottom: theme.space[12],
   },
