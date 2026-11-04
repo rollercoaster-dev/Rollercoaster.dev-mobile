@@ -111,6 +111,30 @@ describe("EvidenceViewerScreen", () => {
     expect(screen.getByText("1 / 2")).toBeOnTheScreen();
   });
 
+  it("keeps a compact evidence title that expands in place", () => {
+    const title =
+      "A detailed photo of the community archive after several careful revisions";
+    mockUseAllEvidenceForGoal.mockReturnValue([
+      ITEMS[0],
+      { ...ITEMS[1], title },
+    ]);
+    renderWithProviders(<EvidenceViewerScreen {...routeProps} />);
+    const heading = screen.getByTestId("evidence-viewer-active-title");
+    expect(heading.props.children).toBe(title);
+    expect(heading.props.numberOfLines).toBe(2);
+    fireEvent(
+      screen.getByTestId("evidence-viewer-active-title-measure", {
+        includeHiddenElements: true,
+      }),
+      "textLayout",
+      { nativeEvent: { lines: [{ text: "a" }, { text: "b" }, { text: "c" }] } },
+    );
+    fireEvent.press(screen.getByTestId("evidence-viewer-active-title-toggle"));
+    expect(
+      screen.getByTestId("evidence-viewer-active-title").props.numberOfLines,
+    ).toBeUndefined();
+  });
+
   it("hides counter and strip when only one item exists", () => {
     mockUseAllEvidenceForGoal.mockReturnValue([ITEMS[0]]);
     renderWithProviders(<EvidenceViewerScreen {...routeProps} />);

@@ -12,6 +12,7 @@ import { useAllEvidenceForGoal } from "../../hooks/useAllEvidenceForGoal";
 import type { GoalId } from "../../db";
 import type { EvidenceViewerScreenProps } from "../../navigation/types";
 import { styles } from "./EvidenceViewerScreen.styles";
+import { ExpandableTitle } from "../../components/ExpandableTitle";
 
 // Hardcoded; useBottomTabBarHeight requires extra Jest ESM transform config.
 const TAB_BAR_HEIGHT = 12;
@@ -69,13 +70,22 @@ function ViewerContent({
 
   return (
     <View style={styles.container}>
-      {evidence.length > 1 ? (
-        <View style={styles.counterBar}>
+      <View style={styles.counterBar}>
+        {/* The counter below is already a polite live region; a second one
+            here would announce out of order on Android. */}
+        <ExpandableTitle
+          title={active.title}
+          variant="title"
+          style={styles.activeTitle}
+          align="center"
+          testID="evidence-viewer-active-title"
+        />
+        {evidence.length > 1 ? (
           <Text style={styles.counter} accessibilityLiveRegion="polite">
             {activeIndex + 1} / {evidence.length}
           </Text>
-        </View>
-      ) : null}
+        ) : null}
+      </View>
       <View style={styles.body}>
         <EvidenceContent evidence={active} />
       </View>

@@ -24,7 +24,7 @@
     "message": "Something went wrong. Please try again."
   },
   "cockpit": {
-    "doThisNext": "Do this next · {{title}}",
+    "doThisNext": "Do this next",
     "ringSteps": "{{completed}} / {{total}} steps",
     "start": "Start",
     "resume": "Resume",

@@ -24,7 +24,7 @@
     "message": "Etwas ist schiefgelaufen. Versuch es nochmal."
   },
   "cockpit": {
-    "doThisNext": "Mach das nächste · {{title}}",
+    "doThisNext": "Als Nächstes",
     "ringSteps": "{{completed}} / {{total}} Schritte",
     "start": "Start",
     "resume": "Weitermachen",

@@ -127,6 +127,21 @@ describe("BadgesWall", () => {
       ).toBeOnTheScreen();
     });
 
+    it("keeps the spotlight title to two lines; the card opens the full badge", () => {
+      const goalTitle =
+        "Document every step of the accessible community archive project";
+      renderWithProviders(
+        <BadgesWall
+          count={1}
+          spotlight={{ ...SPOTLIGHT, goalTitle }}
+          gallery={[]}
+          onOpenBadge={noop}
+          onSeeGoals={noop}
+        />,
+      );
+      expect(screen.getByText(goalTitle).props.numberOfLines).toBe(2);
+    });
+
     it("renders the spotlight badge art via BadgeRenderer when a design is set", () => {
       const design: BadgeDesign = {
         shape: BadgeShape.star,

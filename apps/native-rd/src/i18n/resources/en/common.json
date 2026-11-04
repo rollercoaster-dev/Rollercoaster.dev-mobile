@@ -11,6 +11,10 @@
     "retry": "Retry",
     "undo": "Undo"
   },
+  "expandableTitle": {
+    "showMore": "Show full title",
+    "showLess": "Show less"
+  },
   "unsavedChanges": {
     "title": "Discard unsaved changes?",
     "message": "Your unfinished work will be lost if you leave.",

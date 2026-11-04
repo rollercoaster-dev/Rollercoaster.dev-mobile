@@ -16,11 +16,14 @@ import { size } from "../themes/tokens";
  */
 export const CAPS: Record<TextVariant, number> = {
   display: 1.0,
+  screenTitle: 1.0,
+  taskTitle: 1.0,
   headline: 1.0,
   title: 2.0,
   body: 2.0,
   label: 2.0,
   caption: 2.0,
+  metadata: 2.0,
   mono: 2.0,
 };
 

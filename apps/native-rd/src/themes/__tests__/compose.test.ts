@@ -2,6 +2,55 @@ import { themeNames, themes, composeTheme } from "../compose";
 import { variantOverrides } from "../variants";
 
 describe("theme registry", () => {
+  it("uses the reading font and size scale for semantic text roles", () => {
+    const warm = themes["light-dyslexia"];
+    const loud = themes["light-lowVision"];
+
+    for (const role of [
+      "screenTitle",
+      "taskTitle",
+      "body",
+      "label",
+      "metadata",
+    ] as const) {
+      expect(warm.textStyles[role].fontFamily).toBe("Lexend");
+      expect(loud.textStyles[role].fontFamily).toBe("Atkinson Hyperlegible");
+    }
+    for (const theme of Object.values(themes)) {
+      expect(theme.textStyles.body.fontSize).toBeGreaterThanOrEqual(
+        theme.size.md,
+      );
+      expect(theme.textStyles.label.fontSize).toBeGreaterThanOrEqual(
+        theme.size.sm,
+      );
+      expect(theme.textStyles.metadata.fontSize).toBeGreaterThanOrEqual(
+        theme.size.sm,
+      );
+    }
+    expect(loud.textStyles.body.fontSize).toBeGreaterThan(
+      themes["light-default"].textStyles.body.fontSize,
+    );
+    expect(loud.textStyles.metadata.fontSize).toBeGreaterThan(
+      themes["light-default"].textStyles.metadata.fontSize,
+    );
+  });
+
+  it("increases multiline spacing in the dyslexia theme", () => {
+    const regular = themes["light-default"].textStyles;
+    const warm = themes["light-dyslexia"].textStyles;
+    for (const role of [
+      "screenTitle",
+      "taskTitle",
+      "body",
+      "label",
+      "metadata",
+    ] as const) {
+      expect(warm[role].lineHeight / warm[role].fontSize).toBeGreaterThan(
+        regular[role].lineHeight / regular[role].fontSize,
+      );
+    }
+  });
+
   it("registers only the seven product themes exposed by the app", () => {
     expect(themeNames).toEqual([
       "light-default",
