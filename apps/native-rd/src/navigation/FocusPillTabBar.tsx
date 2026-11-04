@@ -15,6 +15,8 @@ import { useTranslation } from "react-i18next";
 import { shadowStyle } from "../styles/shadows";
 import { borderWidth } from "../themes/tokens";
 import { useAnimationPref } from "../hooks/useAnimationPref";
+import { useTypeScale } from "../hooks/useTypeScale";
+import { capForRole } from "../utils/typeScale";
 import { useSheetBackgroundA11yProps } from "../components/AnimatedSheet";
 import type { RootTabParamList } from "./types";
 
@@ -57,6 +59,10 @@ export function FocusPillTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const { shouldAnimate } = useAnimationPref();
   const { t } = useTranslation();
+  // At accessibility sizes no label fits a third of the pill, so the knob goes
+  // icon-only; the slot's accessibilityLabel still names the tab (#746).
+  const { isAccessibilitySize, themeScale } = useTypeScale();
+  const labelCap = capForRole("chrome", themeScale);
   // Rendered by the navigator outside every screen, so a screen's sheet can't
   // isolate it; hide it from assistive tech while any sheet is open (#686).
   const sheetA11yProps = useSheetBackgroundA11yProps();
@@ -188,12 +194,16 @@ export function FocusPillTabBar({ state, navigation }: BottomTabBarProps) {
                 ]}
               >
                 <TabIcon name={activeSlot.name} color={activeKnob.fg} />
-                <RNText
-                  numberOfLines={1}
-                  style={[styles.label, { color: activeKnob.fg }]}
-                >
-                  {tabLabels[activeSlot.name]}
-                </RNText>
+                {isAccessibilitySize ? null : (
+                  <RNText
+                    testID="tab-slide-knob-label"
+                    numberOfLines={1}
+                    maxFontSizeMultiplier={labelCap}
+                    style={[styles.label, { color: activeKnob.fg }]}
+                  >
+                    {tabLabels[activeSlot.name]}
+                  </RNText>
+                )}
               </Animated.View>
             ) : null}
 
@@ -267,9 +277,13 @@ const styles = StyleSheet.create((theme) => ({
     alignItems: "center" as const,
     justifyContent: "center" as const,
     gap: 8,
+    // Keeps a long label ("Einstellungen" at 1.3x) inside the knob's border.
+    paddingHorizontal: 12,
     ...shadowStyle(theme, "cardElevation"),
   },
   label: {
+    // Shrink and ellipsize rather than spill past the knob.
+    flexShrink: 1,
     fontFamily: theme.fontFamily.body,
     fontWeight: theme.fontWeight.bold,
     fontSize: theme.size.sm,
