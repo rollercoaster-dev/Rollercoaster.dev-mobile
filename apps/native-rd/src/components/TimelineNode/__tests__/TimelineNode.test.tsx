@@ -5,6 +5,7 @@ import {
   fireEvent,
 } from "../../../__tests__/test-utils";
 import { TimelineNode } from "../TimelineNode";
+import { i18n } from "../../../i18n";
 
 describe("TimelineNode", () => {
   const baseProps = {
@@ -184,5 +185,20 @@ describe("TimelineNode at large type", () => {
       <TimelineNode status="pending" accessibilityLabel="node" {...props} />,
     );
     expect(screen.getByText(glyph).props.maxFontSizeMultiplier).toBe(1.3);
+  });
+});
+
+describe("TimelineNode state badge at large type", () => {
+  it("chrome-caps the state word under the node", () => {
+    renderWithProviders(
+      <TimelineNode
+        status="pending"
+        stepNumber={1}
+        accessibilityLabel="node"
+        showStateBadge
+      />,
+    );
+    const word = i18n.t("timelineJourney:step.stateWord.pending");
+    expect(screen.getByText(word).props.maxFontSizeMultiplier).toBe(1.3);
   });
 });

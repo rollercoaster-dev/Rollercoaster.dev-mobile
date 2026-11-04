@@ -6,6 +6,7 @@ import {
 } from "../../../__tests__/test-utils";
 import { ViewerStripThumb } from "../ViewerStripThumb";
 import type { ViewerEvidence } from "../../../hooks/useAllEvidenceForGoal";
+import { EVIDENCE_TYPE_ICONS } from "../../../constants/evidenceIcons";
 
 const goalEvidence: ViewerEvidence = {
   id: "ev-goal",
@@ -113,5 +114,21 @@ describe("ViewerStripThumb at large type", () => {
     expect(screen.getByText("Final photo").props.maxFontSizeMultiplier).toBe(
       1.3,
     );
+  });
+});
+
+describe("ViewerStripThumb icon at large type", () => {
+  it("chrome-caps the type icon", () => {
+    renderWithProviders(
+      <ViewerStripThumb
+        evidence={goalEvidence}
+        isActive={false}
+        onPress={jest.fn()}
+      />,
+    );
+    const icon = screen.getByText(EVIDENCE_TYPE_ICONS.photo, {
+      includeHiddenElements: true,
+    });
+    expect(icon.props.maxFontSizeMultiplier).toBe(1.3);
   });
 });

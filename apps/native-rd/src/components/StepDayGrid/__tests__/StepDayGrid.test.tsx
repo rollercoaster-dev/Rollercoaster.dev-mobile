@@ -229,3 +229,15 @@ describe("StepDayGrid at large type", () => {
     expect(screen.getByText("Q").props.maxFontSizeMultiplier).toBe(1.3);
   });
 });
+
+describe("StepDayGrid weekday header at large type", () => {
+  it("chrome-caps every weekday initial", () => {
+    renderWithProviders(<StepDayGrid {...baseProps} />);
+    // Weekday cells hide from assistive tech, so query hidden elements.
+    const initials = new Intl.DateTimeFormat("en", {
+      weekday: "narrow",
+    }).format(new Date(2026, 5, 24)); // Wed -> "W"
+    const label = screen.getByText(initials, { includeHiddenElements: true });
+    expect(label.props.maxFontSizeMultiplier).toBe(1.3);
+  });
+});

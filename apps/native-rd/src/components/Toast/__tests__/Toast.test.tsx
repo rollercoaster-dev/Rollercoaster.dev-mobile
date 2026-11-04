@@ -349,3 +349,32 @@ describe("Toast at large type", () => {
     expect(screen.getByText("Undo").props.maxFontSizeMultiplier).toBe(1.25);
   });
 });
+
+describe("Toast stacked layout", () => {
+  it.each([
+    [1, 1, undefined],
+    [2, 0, "flex-start"],
+  ])(
+    "at fontScale %s gives the message flex %s and the action alignSelf %s",
+    (scale, flex, alignSelf) => {
+      mockFontScale(scale);
+      renderWithProviders(
+        <Toast
+          visible
+          message="Deleted"
+          action={{ label: "Undo", onPress() {} }}
+        />,
+      );
+      const message = StyleSheet.flatten(
+        screen.getByText("Deleted", { includeHiddenElements: true }).props
+          .style,
+      );
+      expect(message.flex).toBe(flex);
+      const action = StyleSheet.flatten(
+        screen.getByLabelText("Undo", { includeHiddenElements: true }).props
+          .style,
+      );
+      expect(action.alignSelf).toBe(alignSelf);
+    },
+  );
+});
