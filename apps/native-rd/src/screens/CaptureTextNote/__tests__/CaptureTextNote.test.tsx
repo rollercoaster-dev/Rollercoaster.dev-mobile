@@ -401,6 +401,7 @@ describe("CaptureTextNote", () => {
       mockFontScale(2);
       const fields = screen.getByTestId("capture-text-fields");
       expect(fields.type).toBe("RCTScrollView");
+      expect(fields.props.automaticallyAdjustKeyboardInsets).toBe(true);
       expect(within(fields).getByTestId("capture-text-caption")).toBeTruthy();
       expect(within(fields).queryByTestId("capture-text-save")).toBeNull();
       expect(screen.getByTestId("capture-text-save")).toBeOnTheScreen();

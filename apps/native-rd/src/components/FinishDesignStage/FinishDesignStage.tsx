@@ -40,7 +40,8 @@ import {
 } from "../../badges/types";
 import { styles } from "./FinishDesignStage.styles";
 
-/** Preview scale at large type — 150pt → 90pt, keeping the shape readable. */
+/** Visual preview scale at large type — 150pt → 90pt on screen. The
+ *  renderer keeps its full size so the baked capture is unchanged. */
 const LARGE_TYPE_PREVIEW_RATIO = 0.6;
 /** Goal subtitle wraps at large type, bounded so the pinned header can't grow
  *  without limit on a very long title. */
@@ -178,12 +179,16 @@ export function FinishDesignStage({
   // Header + preview are pinned above the sections scroll and the Bake footer
   // below it, so at large type they left ~1/3 of the screen to scroll in
   // (#754). Shrink the preview and let the goal subtitle wrap instead of
-  // truncating. The baked PNG is captured at explicit dimensions, so the
-  // smaller on-screen preview doesn't change the badge.
+  // truncating. The preview is the capture target (previewRef), and iOS
+  // `toDataURL` renders at the Svg's layout size (see captureBadge.ts), so the
+  // renderer itself must stay at `badgeSize`: it is shrunk with a scale
+  // transform (which leaves its layout size alone) and the wrapper's
+  // negative margins give back the space the transform frees.
   const { isLargeType } = useTypeScale();
-  const previewSize = isLargeType
-    ? Math.round(badgeSize * LARGE_TYPE_PREVIEW_RATIO)
-    : badgeSize;
+  const [previewHeight, setPreviewHeight] = useState(0);
+  const previewShrinkMargin = isLargeType
+    ? (-previewHeight * (1 - LARGE_TYPE_PREVIEW_RATIO)) / 2
+    : 0;
 
   // Single-open: opening any section replaces the current one; pressing the
   // open header collapses it, leaving every section closed. Mirrors
@@ -375,12 +380,23 @@ export function FinishDesignStage({
       </View>
 
       <View style={[styles.preview, isLargeType && styles.previewCompact]}>
-        <BadgeRenderer
-          ref={previewRef}
-          design={design}
-          size={previewSize}
-          testID="finish-design-preview"
-        />
+        <View
+          onLayout={(e) => setPreviewHeight(e.nativeEvent.layout.height)}
+          style={
+            isLargeType && {
+              transform: [{ scale: LARGE_TYPE_PREVIEW_RATIO }],
+              marginVertical: previewShrinkMargin,
+            }
+          }
+          testID="finish-design-preview-scale"
+        >
+          <BadgeRenderer
+            ref={previewRef}
+            design={design}
+            size={badgeSize}
+            testID="finish-design-preview"
+          />
+        </View>
       </View>
 
       {/* [sections][footer] inside a KeyboardAvoidingView: the inscription

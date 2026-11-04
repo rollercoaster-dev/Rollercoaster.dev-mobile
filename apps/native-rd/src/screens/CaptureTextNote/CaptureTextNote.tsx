@@ -128,6 +128,9 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
           style={styles.fields}
           contentContainerStyle={styles.fieldsScrollContent}
           testID="capture-text-fields"
+          // iOS: the note autofocuses at its 200pt minimum, so the caption can
+          // start under the keyboard; this scrolls it into view on focus.
+          automaticallyAdjustKeyboardInsets
         >
           {/* eslint-disable-next-line local/no-shared-component-reimplementation */}
           <TextInput

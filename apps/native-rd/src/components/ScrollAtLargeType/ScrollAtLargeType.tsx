@@ -13,6 +13,8 @@
  *   centered while it still fits; once it doesn't, it scrolls from the top
  *   instead of overflowing both edges.
  * - `scrollStyle` — extra frame style for the ScrollView (background etc.).
+ * - `automaticallyAdjustKeyboardInsets` — iOS: pass through to the ScrollView
+ *   so a focused input lower in a form scrolls into view above the keyboard.
  */
 import React from "react";
 import {
@@ -28,12 +30,14 @@ import { styles } from "./ScrollAtLargeType.styles";
 export interface ScrollAtLargeTypeProps extends ViewProps {
   contentContainerStyle?: StyleProp<ViewStyle>;
   scrollStyle?: StyleProp<ViewStyle>;
+  automaticallyAdjustKeyboardInsets?: boolean;
 }
 
 export function ScrollAtLargeType({
   style,
   contentContainerStyle,
   scrollStyle,
+  automaticallyAdjustKeyboardInsets,
   children,
   ...rest
 }: ScrollAtLargeTypeProps) {
@@ -55,6 +59,7 @@ export function ScrollAtLargeType({
       // Taps on inputs and buttons inside must land, not just dismiss the
       // keyboard (same as every other form ScrollView in the app).
       keyboardShouldPersistTaps="handled"
+      automaticallyAdjustKeyboardInsets={automaticallyAdjustKeyboardInsets}
     >
       {children}
     </ScrollView>

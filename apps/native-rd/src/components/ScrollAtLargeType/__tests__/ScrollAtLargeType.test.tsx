@@ -2,7 +2,11 @@ import React from "react";
 import { Text } from "react-native";
 import { renderWithProviders, screen } from "../../../__tests__/test-utils";
 import { mockFontScale } from "../../../__tests__/fontScale";
+import { composeTheme } from "../../../themes/compose";
 import { ScrollAtLargeType } from "../ScrollAtLargeType";
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const unistylesMock = require("react-native-unistyles");
 
 function renderBody() {
   renderWithProviders(
@@ -36,6 +40,24 @@ describe("ScrollAtLargeType", () => {
     });
     expect(body.props.keyboardShouldPersistTaps).toBe("handled");
     expect(screen.getByText("content")).toBeTruthy();
+  });
+
+  describe("in-app text size (theme scale)", () => {
+    afterEach(() => {
+      unistylesMock.useUnistyles.mockReturnValue({
+        theme: unistylesMock.mockTheme,
+        rt: unistylesMock.UnistylesRuntime,
+      });
+    });
+
+    it("scrolls under Low Vision (1.25x) at OS font scale 1", () => {
+      unistylesMock.useUnistyles.mockReturnValue({
+        theme: composeTheme("light", "lowVision"),
+        rt: unistylesMock.UnistylesRuntime,
+      });
+      renderBody();
+      expect(screen.getByTestId("body").type).toBe("RCTScrollView");
+    });
   });
 
   it("stays fixed just below the large-type threshold", () => {

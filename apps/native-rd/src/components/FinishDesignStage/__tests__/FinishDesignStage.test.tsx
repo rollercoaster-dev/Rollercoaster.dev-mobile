@@ -600,15 +600,30 @@ describe("FinishDesignStage", () => {
       ).toBe(3);
     });
 
-    it("shrinks the pinned preview at font scale 2", () => {
+    it("keeps the preview unscaled at default size", () => {
       renderWithProviders(<FinishDesignStage {...makeProps()} />);
-      const defaultWidth = screen.getByTestId("finish-design-preview").props
-        .width as number;
+      expect(
+        screen.getByTestId("finish-design-preview-scale").props.style,
+      ).toBeFalsy();
+    });
+
+    it("shrinks the preview visually at font scale 2 without resizing the capture target", () => {
+      renderWithProviders(<FinishDesignStage {...makeProps()} />);
+      const preview = () => screen.getByTestId("finish-design-preview");
+      const defaultSize = [preview().props.width, preview().props.height];
       mockFontScale(2);
-      const largeWidth = screen.getByTestId("finish-design-preview").props
-        .width as number;
-      // 150pt → 90pt badge; the viewBox adds a few points of shadow/stroke.
-      expect(largeWidth).toBeLessThan(defaultWidth * 0.7);
+      // previewRef captures this Svg; iOS bakes at its layout size, so it must
+      // not change with font scale (#790 review).
+      expect([preview().props.width, preview().props.height]).toEqual(
+        defaultSize,
+      );
+      const wrapper = screen.getByTestId("finish-design-preview-scale");
+      fireEvent(wrapper, "layout", {
+        nativeEvent: { layout: { x: 0, y: 0, width: 160, height: 160 } },
+      });
+      expect(
+        screen.getByTestId("finish-design-preview-scale").props.style,
+      ).toEqual({ transform: [{ scale: 0.6 }], marginVertical: -32 });
     });
   });
 });
