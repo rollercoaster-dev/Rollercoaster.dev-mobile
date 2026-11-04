@@ -5,6 +5,7 @@ import { useUnistyles } from "react-native-unistyles";
 import { BadgeRenderer } from "../../badges/BadgeRenderer";
 import { type BadgeDesign } from "../../badges/types";
 import { Button } from "../Button";
+import { ScrollAtLargeType } from "../ScrollAtLargeType";
 import { Text } from "../Text";
 import { styles } from "./FinishBakingStage.styles";
 
@@ -144,7 +145,12 @@ export function FinishBakingStage({
 
   if (status === "no-key") {
     return (
-      <View style={styles.container} testID="finish-baking-stage">
+      <ScrollAtLargeType
+        style={styles.container}
+        scrollStyle={styles.scrollFrame}
+        contentContainerStyle={styles.scrollContent}
+        testID="finish-baking-stage"
+      >
         <View style={styles.badgeDim} testID="finish-baking-badge-dim">
           {badge}
         </View>
@@ -168,7 +174,7 @@ export function FinishBakingStage({
             />
           ) : null}
         </View>
-      </View>
+      </ScrollAtLargeType>
     );
   }
 
@@ -181,7 +187,12 @@ export function FinishBakingStage({
         ? errorMessage
         : DEFAULT_ERROR_MESSAGE;
     return (
-      <View style={styles.container} testID="finish-baking-stage">
+      <ScrollAtLargeType
+        style={styles.container}
+        scrollStyle={styles.scrollFrame}
+        contentContainerStyle={styles.scrollContent}
+        testID="finish-baking-stage"
+      >
         <View style={styles.badgeDim} testID="finish-baking-badge-dim">
           {badge}
         </View>
@@ -206,7 +217,7 @@ export function FinishBakingStage({
             />
           ) : null}
         </View>
-      </View>
+      </ScrollAtLargeType>
     );
   }
 

@@ -4,7 +4,9 @@ import {
   renderWithProviders,
   screen,
   fireEvent,
+  within,
 } from "../../../__tests__/test-utils";
+import { mockFontScale } from "../../../__tests__/fontScale";
 import { createDefaultBadgeDesign } from "../../../badges/types";
 import {
   FinishRevealStage,
@@ -111,4 +113,23 @@ describe("FinishRevealStage", () => {
       }
     },
   );
+
+  describe("center stack at large type (#754)", () => {
+    it("stays a fixed View at default size", () => {
+      renderWithProviders(<FinishRevealStage {...makeProps()} />);
+      expect(screen.getByTestId("finish-reveal-center").type).toBe("View");
+    });
+
+    it("scrolls above the pinned CTA at font scale 2", () => {
+      renderWithProviders(<FinishRevealStage {...makeProps()} />);
+      mockFontScale(2);
+      const center = screen.getByTestId("finish-reveal-center");
+      expect(center.type).toBe("RCTScrollView");
+      expect(within(center).getByText("Rewire the workshop")).toBeOnTheScreen();
+      expect(
+        within(center).queryByTestId("finish-reveal-view-badge"),
+      ).toBeNull();
+      expect(screen.getByTestId("finish-reveal-view-badge")).toBeOnTheScreen();
+    });
+  });
 });

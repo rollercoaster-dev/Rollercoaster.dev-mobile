@@ -16,7 +16,9 @@ import {
   screen,
   fireEvent,
   act,
+  within,
 } from "../../../__tests__/test-utils";
+import { mockFontScale } from "../../../__tests__/fontScale";
 import { i18n } from "../../../i18n";
 import { VoiceMemoScreen } from "../VoiceMemoScreen";
 import type { CaptureVoiceMemoScreenProps } from "../../../navigation/types";
@@ -553,6 +555,40 @@ describe("VoiceMemoScreen", () => {
       mockDurationMs = 0;
       renderScreen();
       expect(screen.getByTestId("voice-timer")).toHaveTextContent("00:00");
+    });
+  });
+
+  describe("body at large type (#754)", () => {
+    beforeEach(() => {
+      mockStatus = "recorded";
+      mockDurationMs = 10000;
+      mockUri = "file:///recording.m4a";
+    });
+
+    it("stays a fixed View at default size", () => {
+      renderScreen();
+      expect(screen.getByTestId("voice-memo-body").type).toBe("View");
+    });
+
+    it("scrolls with Save inside it at font scale 2", () => {
+      renderScreen();
+      mockFontScale(2);
+      const body = screen.getByTestId("voice-memo-body");
+      expect(body.type).toBe("RCTScrollView");
+      expect(
+        within(body).getByText(i18n.t("captureVoice:actions.attach")),
+      ).toBeOnTheScreen();
+    });
+
+    it("scrolls the permission card at font scale 2", () => {
+      mockStatus = "permission-denied";
+      renderScreen();
+      mockFontScale(2);
+      const body = screen.getByTestId("voice-memo-permission-body");
+      expect(body.type).toBe("RCTScrollView");
+      expect(
+        within(body).getByText(i18n.t("permissions:microphone.settingsCta")),
+      ).toBeOnTheScreen();
     });
   });
 });

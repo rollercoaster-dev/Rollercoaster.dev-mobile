@@ -10,6 +10,20 @@ export const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: theme.space[6],
     backgroundColor: theme.colors.background,
   },
+  // The no-key / error stacks at large type (#754): `container` split into the
+  // ScrollAtLargeType frame and its content, so the dimmed badge + message +
+  // Retry scroll instead of overflowing a fixed, centered column.
+  scrollFrame: {
+    backgroundColor: theme.colors.background,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: theme.space[5],
+    paddingHorizontal: theme.space[6],
+    paddingVertical: theme.space[5],
+  },
   badgeDim: {
     opacity: 0.5,
   },

@@ -6,7 +6,9 @@ import {
   fireEvent,
   renderWithProviders,
   screen,
+  within,
 } from "../../../__tests__/test-utils";
+import { mockFontScale } from "../../../__tests__/fontScale";
 import { createDefaultBadgeDesign } from "../../../badges/types";
 import { FinishBakingStage } from "../FinishBakingStage";
 
@@ -266,5 +268,42 @@ describe("FinishBakingStage", () => {
       fireEvent.press(retry);
       expect(onRetry).toHaveBeenCalledTimes(2);
     });
+  });
+
+  describe("no-key / error stacks at large type (#754)", () => {
+    const cases = [
+      ["no-key", "finish-baking-exit-button"],
+      ["error", "finish-baking-retry-button"],
+    ] as const;
+
+    it.each(cases)("%s stays a fixed View at default size", (status) => {
+      renderWithProviders(
+        <FinishBakingStage
+          badgeDesign={badgeDesign}
+          status={status}
+          onRetry={jest.fn()}
+          onExitWithoutBadge={jest.fn()}
+        />,
+      );
+      expect(screen.getByTestId("finish-baking-stage").type).toBe("View");
+    });
+
+    it.each(cases)(
+      "%s scrolls with its action inside at font scale 2",
+      (status, actionTestID) => {
+        renderWithProviders(
+          <FinishBakingStage
+            badgeDesign={badgeDesign}
+            status={status}
+            onRetry={jest.fn()}
+            onExitWithoutBadge={jest.fn()}
+          />,
+        );
+        mockFontScale(2);
+        const stage = screen.getByTestId("finish-baking-stage");
+        expect(stage.type).toBe("RCTScrollView");
+        expect(within(stage).getByTestId(actionTestID)).toBeOnTheScreen();
+      },
+    );
   });
 });

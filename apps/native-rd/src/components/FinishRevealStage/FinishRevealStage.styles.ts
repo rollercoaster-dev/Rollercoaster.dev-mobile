@@ -17,6 +17,15 @@ export const styles = StyleSheet.create((theme) => ({
     justifyContent: "center",
     paddingHorizontal: theme.space[6],
   },
+  // `center` as ScrollAtLargeType's scroll content: centered while it fits,
+  // scrolling from the top once the large-type stack doesn't.
+  centerScrollContent: {
+    flexGrow: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: theme.space[6],
+    paddingVertical: theme.space[5],
+  },
   eyebrow: {
     color: theme.chrome.celebrationFg,
     textTransform: "uppercase",

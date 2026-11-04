@@ -315,11 +315,22 @@ export const styles = StyleSheet.create((theme) => ({
     alignItems: "center" as const,
     padding: theme.space[4],
   },
+  // maxHeight + flexShrink cap the card at the overlay so the target list
+  // (pickerList) is what gives way and scrolls; title and Cancel stay put (#754).
   pickerContainer: {
     width: "100%" as const,
     maxWidth: 400,
+    maxHeight: "100%" as const,
+  },
+  pickerList: {
+    flexGrow: 0,
+    flexShrink: 1,
+  },
+  pickerListContent: {
+    gap: theme.space[2],
   },
   pickerCard: {
+    flexShrink: 1,
     backgroundColor: theme.colors.background,
     borderWidth: theme.borderWidth.thick,
     borderColor: theme.colors.border,

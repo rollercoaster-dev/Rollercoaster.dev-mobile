@@ -65,6 +65,16 @@ export const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: theme.space[5],
     gap: theme.space[3],
   },
+  // The same body at large type, as ScrollAtLargeType's scroll content (#754).
+  // flexGrow keeps it centered while it still fits; once it doesn't, it scrolls
+  // from the top above the pinned footer instead of drawing under the CTA.
+  stepBodyScrollContent: {
+    flexGrow: 1,
+    justifyContent: "center" as const,
+    paddingHorizontal: theme.space[5],
+    paddingVertical: theme.space[4],
+    gap: theme.space[3],
+  },
   footer: {
     paddingHorizontal: theme.space[4],
     paddingTop: theme.space[3],

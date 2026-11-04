@@ -14,6 +14,7 @@ import { getSpringConfig } from "../../utils/animation";
 import { Text } from "../Text";
 import { Button } from "../Button";
 import { CelebrationSparkles } from "../CelebrationSparkles";
+import { ScrollAtLargeType } from "../ScrollAtLargeType";
 import { styles } from "./FinishRevealStage.styles";
 
 const DEFAULT_BADGE_SIZE = 200;
@@ -97,7 +98,13 @@ export function FinishRevealStage({
         />
       ) : null}
 
-      <View style={styles.center}>
+      {/* At large type the 2x title under the badge outgrows the band, so the
+          stack scrolls above the pinned footer instead of clipping (#754). */}
+      <ScrollAtLargeType
+        style={styles.center}
+        contentContainerStyle={styles.centerScrollContent}
+        testID="finish-reveal-center"
+      >
         <Text variant="mono" style={styles.eyebrow}>
           {eyebrow}
         </Text>
@@ -121,7 +128,7 @@ export function FinishRevealStage({
         <Text variant="mono" style={styles.earnedDate}>
           {earnedDateLabel}
         </Text>
-      </View>
+      </ScrollAtLargeType>
 
       <View style={styles.footer}>
         <Button

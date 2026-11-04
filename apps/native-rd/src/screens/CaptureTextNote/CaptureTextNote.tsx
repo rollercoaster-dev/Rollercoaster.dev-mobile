@@ -16,6 +16,8 @@ import { Text } from "../../components/Text";
 import { Button } from "../../components/Button";
 import { Input } from "../../components/Input";
 import { ScreenSubHeader } from "../../components/ScreenHeader";
+import { ScrollAtLargeType } from "../../components/ScrollAtLargeType";
+import { useTypeScale } from "../../hooks/useTypeScale";
 import { createEvidence, EvidenceType, TEXT_EVIDENCE_PREFIX } from "../../db";
 import type { GoalId, StepId } from "../../db";
 import { reportError } from "../../services/sentry-report";
@@ -53,6 +55,11 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
       paddingBottom: Math.max(tabBarInset, keyboardPad),
     };
   });
+
+  // At large type the flex:1 note input collapsed between the caption and the
+  // Save row once the keyboard opened (#754). There the fields scroll and the
+  // note keeps a fixed minimum height; the count/Save row stays pinned below.
+  const { isLargeType } = useTypeScale();
 
   const [content, setContent] = useState("");
   const [caption, setCaption] = useState("");
@@ -117,37 +124,47 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
       <ScreenSubHeader label={t("captureText:title")} onBack={requestExit} />
 
       <Animated.View style={[styles.content, contentAnimatedStyle]}>
-        {/* eslint-disable-next-line local/no-shared-component-reimplementation */}
-        <TextInput
-          ref={textInputRef}
-          testID="capture-text-body"
-          style={[styles.textInput, isFocused && styles.textInputFocused]}
-          placeholder={t("captureText:input.placeholder")}
-          placeholderTextColor={theme.colors.textMuted}
-          value={content}
-          onChangeText={setContent}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-          multiline
-          textAlignVertical="top"
-          autoFocus
-          maxLength={MAX_CONTENT_LENGTH + 100}
-          accessible
-          accessibilityLabel={t("captureText:input.label")}
-          accessibilityHint={t("captureText:input.hint")}
-        />
-
-        <View style={styles.captionContainer}>
-          <Input
-            label={t("captureText:caption.label")}
-            placeholder={t("captureText:caption.placeholder")}
-            value={caption}
-            onChangeText={setCaption}
-            maxLength={1000}
-            returnKeyType="done"
-            testID="capture-text-caption"
+        <ScrollAtLargeType
+          style={styles.fields}
+          contentContainerStyle={styles.fieldsScrollContent}
+          testID="capture-text-fields"
+        >
+          {/* eslint-disable-next-line local/no-shared-component-reimplementation */}
+          <TextInput
+            ref={textInputRef}
+            testID="capture-text-body"
+            style={[
+              styles.textInput,
+              isLargeType && styles.textInputLargeType,
+              isFocused && styles.textInputFocused,
+            ]}
+            placeholder={t("captureText:input.placeholder")}
+            placeholderTextColor={theme.colors.textMuted}
+            value={content}
+            onChangeText={setContent}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+            multiline
+            textAlignVertical="top"
+            autoFocus
+            maxLength={MAX_CONTENT_LENGTH + 100}
+            accessible
+            accessibilityLabel={t("captureText:input.label")}
+            accessibilityHint={t("captureText:input.hint")}
           />
-        </View>
+
+          <View style={styles.captionContainer}>
+            <Input
+              label={t("captureText:caption.label")}
+              placeholder={t("captureText:caption.placeholder")}
+              value={caption}
+              onChangeText={setCaption}
+              maxLength={1000}
+              returnKeyType="done"
+              testID="capture-text-caption"
+            />
+          </View>
+        </ScrollAtLargeType>
 
         <View style={styles.footer}>
           <Text

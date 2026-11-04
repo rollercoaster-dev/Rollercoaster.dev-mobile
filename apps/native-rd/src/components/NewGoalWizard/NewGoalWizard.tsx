@@ -33,6 +33,7 @@ import {
   type GestureResponderEvent,
 } from "react-native";
 import { KeyboardAvoidingFrame } from "../KeyboardAvoidingFrame";
+import { ScrollAtLargeType } from "../ScrollAtLargeType";
 import { X } from "phosphor-react-native";
 import { useUnistyles } from "react-native-unistyles";
 import { IconButton } from "../IconButton";
@@ -532,7 +533,11 @@ export function NewGoalWizard({
         <KeyboardAvoidingFrame style={styles.stepFrame}>
           {currentStep === "name" ? (
             <>
-              <View style={styles.stepBody}>
+              <ScrollAtLargeType
+                style={styles.stepBody}
+                contentContainerStyle={styles.stepBodyScrollContent}
+                testID="new-goal-step-body-name"
+              >
                 <RNText style={styles.eyebrow}>{nameEyebrow}</RNText>
                 <RNText style={styles.nameHeadline} accessibilityRole="header">
                   {nameTitle}
@@ -552,7 +557,7 @@ export function NewGoalWizard({
                   testID="new-goal-title-input"
                 />
                 <RNText style={styles.hint}>{nameHint}</RNText>
-              </View>
+              </ScrollAtLargeType>
               <Animated.View style={[styles.footer, nameFooterPadding]}>
                 <Button
                   label={nextLabel}
@@ -581,7 +586,11 @@ export function NewGoalWizard({
             </>
           ) : currentStep === "step" ? (
             <>
-              <View style={styles.stepBody}>
+              <ScrollAtLargeType
+                style={styles.stepBody}
+                contentContainerStyle={styles.stepBodyScrollContent}
+                testID="new-goal-step-body-step"
+              >
                 {/* Goal recap: the title from step 1, echoed so the first-step
                 input has context (prototype's "Goal" eyebrow + title line). */}
                 <RNText style={styles.eyebrow}>{stepGoalEyebrow}</RNText>
@@ -634,7 +643,7 @@ export function NewGoalWizard({
                     </RNText>
                   </Pressable>
                 </View>
-              </View>
+              </ScrollAtLargeType>
               <Animated.View
                 style={[
                   styles.footer,
@@ -735,7 +744,11 @@ export function NewGoalWizard({
             </>
           ) : currentStep === "ready" ? (
             <>
-              <View style={styles.stepBody}>
+              <ScrollAtLargeType
+                style={styles.stepBody}
+                contentContainerStyle={styles.stepBodyScrollContent}
+                testID="new-goal-step-body-ready"
+              >
                 <RNText style={styles.readyHeadline} accessibilityRole="header">
                   {readyHeadline}
                 </RNText>
@@ -755,7 +768,7 @@ export function NewGoalWizard({
                   </RNText>
                   <RNText style={styles.badgeNoteText}>{badgeNote}</RNText>
                 </View>
-              </View>
+              </ScrollAtLargeType>
               <Animated.View
                 style={[
                   styles.footer,

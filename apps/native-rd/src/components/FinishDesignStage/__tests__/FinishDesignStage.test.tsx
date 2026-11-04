@@ -5,6 +5,7 @@ import {
   screen,
   fireEvent,
 } from "../../../__tests__/test-utils";
+import { mockFontScale } from "../../../__tests__/fontScale";
 import {
   FinishDesignStage,
   type FinishDesignStageProps,
@@ -581,5 +582,33 @@ describe("FinishDesignStage", () => {
     expect(screen.getByTestId("finish-design-preview")).toBeOnTheScreen();
     expect(previewRef.current).not.toBeNull();
     expect(typeof previewRef.current?.captureAsPng).toBe("function");
+  });
+
+  describe("pinned chrome at large type (#754)", () => {
+    it("truncates the goal subtitle to one line at default size", () => {
+      renderWithProviders(<FinishDesignStage {...makeProps()} />);
+      expect(
+        screen.getByTestId("finish-design-goal-subtitle").props.numberOfLines,
+      ).toBe(1);
+    });
+
+    it("lets the goal subtitle wrap at font scale 2", () => {
+      renderWithProviders(<FinishDesignStage {...makeProps()} />);
+      mockFontScale(2);
+      expect(
+        screen.getByTestId("finish-design-goal-subtitle").props.numberOfLines,
+      ).toBe(3);
+    });
+
+    it("shrinks the pinned preview at font scale 2", () => {
+      renderWithProviders(<FinishDesignStage {...makeProps()} />);
+      const defaultWidth = screen.getByTestId("finish-design-preview").props
+        .width as number;
+      mockFontScale(2);
+      const largeWidth = screen.getByTestId("finish-design-preview").props
+        .width as number;
+      // 150pt → 90pt badge; the viewBox adds a few points of shadow/stroke.
+      expect(largeWidth).toBeLessThan(defaultWidth * 0.7);
+    });
   });
 });

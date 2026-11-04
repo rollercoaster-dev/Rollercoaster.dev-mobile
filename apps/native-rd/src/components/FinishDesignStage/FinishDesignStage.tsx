@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { ScrollView, TextInput, View } from "react-native";
 import { KeyboardAvoidingFrame } from "../KeyboardAvoidingFrame";
+import { useTypeScale } from "../../hooks/useTypeScale";
 import { useUnistyles } from "react-native-unistyles";
 import { ArrowLeft } from "phosphor-react-native";
 
@@ -38,6 +39,12 @@ import {
   type FrameDataParams,
 } from "../../badges/types";
 import { styles } from "./FinishDesignStage.styles";
+
+/** Preview scale at large type — 150pt → 90pt, keeping the shape readable. */
+const LARGE_TYPE_PREVIEW_RATIO = 0.6;
+/** Goal subtitle wraps at large type, bounded so the pinned header can't grow
+ *  without limit on a very long title. */
+const LARGE_TYPE_SUBTITLE_LINES = 3;
 
 /** The five accordion sections, in top-to-bottom order. */
 export type FinishDesignSection =
@@ -168,6 +175,15 @@ export function FinishDesignStage({
   previewRef,
 }: FinishDesignStageProps) {
   const { theme } = useUnistyles();
+  // Header + preview are pinned above the sections scroll and the Bake footer
+  // below it, so at large type they left ~1/3 of the screen to scroll in
+  // (#754). Shrink the preview and let the goal subtitle wrap instead of
+  // truncating. The baked PNG is captured at explicit dimensions, so the
+  // smaller on-screen preview doesn't change the badge.
+  const { isLargeType } = useTypeScale();
+  const previewSize = isLargeType
+    ? Math.round(badgeSize * LARGE_TYPE_PREVIEW_RATIO)
+    : badgeSize;
 
   // Single-open: opening any section replaces the current one; pressing the
   // open header collapses it, leaving every section closed. Mirrors
@@ -347,7 +363,8 @@ export function FinishDesignStage({
             <Text
               variant="mono"
               style={styles.headerSubtitle}
-              numberOfLines={1}
+              numberOfLines={isLargeType ? LARGE_TYPE_SUBTITLE_LINES : 1}
+              testID="finish-design-goal-subtitle"
             >
               {goalTitle}
             </Text>
@@ -357,11 +374,11 @@ export function FinishDesignStage({
         <View style={styles.headerSpacer} />
       </View>
 
-      <View style={styles.preview}>
+      <View style={[styles.preview, isLargeType && styles.previewCompact]}>
         <BadgeRenderer
           ref={previewRef}
           design={design}
-          size={badgeSize}
+          size={previewSize}
           testID="finish-design-preview"
         />
       </View>

@@ -5,7 +5,9 @@ import {
   screen,
   fireEvent,
   act,
+  within,
 } from "../../../__tests__/test-utils";
+import { mockFontScale } from "../../../__tests__/fontScale";
 import {
   NewGoalWizard,
   type NewGoalWizardProps,
@@ -972,6 +974,52 @@ describe("NewGoalWizard", () => {
         jest.runAllTimers();
       });
       expect(setFocus).toHaveBeenCalledWith(111);
+    });
+  });
+
+  // #754: at large type the fixed step bodies ran under the pinned CTA (step 2's
+  // evidence chip could not be tapped at AX5). The body becomes a ScrollView
+  // above the footer; the CTA stays pinned outside it.
+  describe("step bodies at large type (#754)", () => {
+    const cases: [NewGoalWizardStep, string, string][] = [
+      ["name", "new-goal-quick-add", "new-goal-next-button"],
+      ["step", "new-goal-evidence-chip", "new-goal-next-button"],
+      [
+        "ready",
+        "new-goal-start-working-button",
+        "new-goal-start-working-button",
+      ],
+    ];
+
+    it.each(cases)(
+      "%s body stays a fixed View at default size",
+      (currentStep) => {
+        renderWizard({ currentStep });
+        expect(
+          screen.getByTestId(`new-goal-step-body-${currentStep}`).type,
+        ).toBe("View");
+      },
+    );
+
+    it.each(cases)(
+      "%s body scrolls above the pinned CTA at font scale 2",
+      (currentStep, _footerItem, cta) => {
+        renderWizard({ currentStep });
+        mockFontScale(2);
+        const body = screen.getByTestId(`new-goal-step-body-${currentStep}`);
+        expect(body.type).toBe("RCTScrollView");
+        expect(within(body).queryByTestId(cta)).toBeNull();
+        expect(screen.getByTestId(cta)).toBeTruthy();
+      },
+    );
+
+    it("keeps step 2's evidence chip inside the scrollable body", () => {
+      const onOpenEvidencePicker = jest.fn();
+      renderWizard({ currentStep: "step", onOpenEvidencePicker });
+      mockFontScale(2);
+      const body = screen.getByTestId("new-goal-step-body-step");
+      fireEvent.press(within(body).getByTestId("new-goal-evidence-chip"));
+      expect(onOpenEvidencePicker).toHaveBeenCalledTimes(1);
     });
   });
 });
