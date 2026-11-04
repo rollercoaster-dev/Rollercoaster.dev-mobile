@@ -1,5 +1,7 @@
 # Issue #684 — compact title reader native recheck
 
+> **Superseded treatment.** This run checked the earlier modal title reader at `ffdb144`. #708 later replaced it with the in-place `ExpandableTitle` (two-line preview, **Show full title** / **Show less**), which this record does not cover; the 2026-11-04 merge with `main` was checked with Jest and type-check only.
+
 Issue: https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/684  
 PR: https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/pull/708  
 Base: `a6061736f106095133547703a59348e3128037ca`  

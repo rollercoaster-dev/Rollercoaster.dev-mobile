@@ -82,7 +82,7 @@ UI changes are checked against all seven product themes:
 
 Additionally:
 
-- [ ] OS Dynamic Type at 200%
+- [ ] OS Dynamic Type at 200% and the largest accessibility size, against the caps in [Text Scaling](../accessibility-guidelines.md#text-scaling)
 - [ ] OS Bold Text enabled
 - [ ] OS Reduce Motion enabled
 - [ ] VoiceOver (iOS) and TalkBack (Android)

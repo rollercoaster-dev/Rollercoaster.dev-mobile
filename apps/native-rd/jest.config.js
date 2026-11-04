@@ -75,8 +75,6 @@ module.exports = {
     "^@react-navigation/native$": "<rootDir>/src/__tests__/mocks/navigation.ts",
 
     // Other native modules
-    "^react-native-view-shot$":
-      "<rootDir>/src/__tests__/mocks/react-native-view-shot.ts",
     "^react-native-keyboard-controller$":
       "<rootDir>/src/__tests__/mocks/keyboard-controller.ts",
 
@@ -108,6 +106,9 @@ module.exports = {
     "./src/db/__tests__/setup.ts",
     "./src/i18n/index.ts",
   ],
+
+  // Runs after the test framework so it can register afterEach.
+  setupFilesAfterEnv: ["./src/__tests__/setup-font-scale.ts"],
 
   // Tests colocated under src/__tests__/ mirroring the src/ directory structure,
   // plus pure script tests under scripts/**/__tests__/ (no RN globals needed).

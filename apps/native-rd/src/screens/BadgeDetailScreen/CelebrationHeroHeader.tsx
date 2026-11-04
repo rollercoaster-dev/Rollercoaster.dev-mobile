@@ -17,7 +17,7 @@
  * finishing flow's reveal stage renders with its full-surface layout.
  */
 import React from "react";
-import { View } from "react-native";
+import { View, type GestureResponderEvent } from "react-native";
 import { ArrowLeft, Check, DotsThree } from "phosphor-react-native";
 import { useUnistyles } from "react-native-unistyles";
 import { Text } from "../../components/Text";
@@ -47,7 +47,8 @@ export interface CelebrationHeroHeaderProps {
   /** Whether the celebratory sparkle decoration is shown in the band. */
   showConfetti: boolean;
   onBack: () => void;
-  onOverflow: () => void;
+  /** Receives the press event so the screen can return focus to ⋯ (#686). */
+  onOverflow: (event: GestureResponderEvent) => void;
   /** Localised back-button label. Defaults to English; #380 passes t() output. */
   backAccessibilityLabel?: string;
   /** Localised overflow-button label. Defaults to English; #380 passes t() output. */

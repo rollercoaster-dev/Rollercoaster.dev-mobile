@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, Pressable, ScrollView } from "react-native";
+import { View, Text, ScrollView } from "react-native";
 import { useTranslation } from "react-i18next";
 import { evidenceShortLabel } from "../../i18n/labels";
 import {
@@ -8,6 +8,7 @@ import {
 } from "../../types/evidence";
 import { getMissingQuickEvidenceOptions } from "../StepCard/StepCardEvidenceCapture";
 import { ExpandableTitle } from "../ExpandableTitle";
+import { Button } from "../Button";
 import { styles } from "./FocusCurrentTaskCard.styles";
 import {
   StateWordPill,
@@ -196,51 +197,39 @@ function InProgressView({
             items={captured}
             label={t("focusMode:currentTask.inProgress.evidenceRailLabel")}
           />
-          <Pressable
+          <Button
             onPress={onPause}
-            style={styles.setAside}
-            accessible
-            accessibilityRole="button"
+            label={t("focusMode:currentTask.inProgress.pauseCta")}
+            variant="ghost"
+            size="sm"
+            inline
             accessibilityLabel={t("focusMode:currentTask.inProgress.pauseA11y")}
             testID="focus-current-task-set-aside"
-          >
-            <Text style={styles.setAsideText}>
-              {t("focusMode:currentTask.inProgress.pauseCta")}
-            </Text>
-          </Pressable>
+          />
         </>
       }
       footer={
         completionReady ? (
           <>
-            <Pressable
+            <Button
               onPress={onMarkComplete}
-              style={styles.primaryCta}
-              accessible
-              accessibilityRole="button"
+              label={t("focusMode:currentTask.inProgress.markCompleteCta")}
+              size="lg"
               accessibilityLabel={t(
                 "focusMode:currentTask.inProgress.markCompleteA11y",
               )}
               testID="focus-current-task-mark-complete"
-            >
-              <Text style={styles.primaryCtaText}>
-                {t("focusMode:currentTask.inProgress.markCompleteCta")}
-              </Text>
-            </Pressable>
-            <Pressable
-              onPress={() => onAddEvidence()}
-              style={styles.secondaryCta}
-              accessible
-              accessibilityRole="button"
+            />
+            <Button
+              onPress={(event) => onAddEvidence(undefined, event)}
+              label={t("focusMode:currentTask.inProgress.addMoreEvidenceCta")}
+              variant="secondary"
+              size="lg"
               accessibilityLabel={t(
                 "focusMode:currentTask.inProgress.addMoreEvidenceA11y",
               )}
               testID="focus-current-task-add-more"
-            >
-              <Text style={styles.secondaryCtaText}>
-                {t("focusMode:currentTask.inProgress.addMoreEvidenceCta")}
-              </Text>
-            </Pressable>
+            />
           </>
         ) : (
           <>
@@ -250,31 +239,16 @@ function InProgressView({
                 type: evidenceShortLabel(t, option.type),
               });
               return (
-                <Pressable
+                <Button
                   key={option.type}
                   onPress={() => onAddEvidence(option.type)}
-                  style={primary ? styles.primaryCta : styles.secondaryCta}
-                  accessible
-                  accessibilityRole="button"
+                  label={label}
+                  icon={option.icon}
+                  variant={primary ? "primary" : "secondary"}
+                  size="lg"
                   accessibilityLabel={label}
                   testID={`focus-current-task-add-${option.type}`}
-                >
-                  <Text
-                    style={
-                      primary ? styles.primaryCtaText : styles.secondaryCtaText
-                    }
-                    importantForAccessibility="no"
-                  >
-                    {option.icon}
-                  </Text>
-                  <Text
-                    style={
-                      primary ? styles.primaryCtaText : styles.secondaryCtaText
-                    }
-                  >
-                    {label}
-                  </Text>
-                </Pressable>
+                />
               );
             })}
             <Text style={styles.helperLine}>
@@ -303,18 +277,13 @@ function PausedView({ title, onPickUp }: FocusPausedCardProps) {
         </>
       }
       footer={
-        <Pressable
+        <Button
           onPress={onPickUp}
-          style={styles.primaryCta}
-          accessible
-          accessibilityRole="button"
+          label={t("focusMode:currentTask.paused.pickUpCta")}
+          size="lg"
           accessibilityLabel={t("focusMode:currentTask.paused.pickUpA11y")}
           testID="focus-current-task-pick-up"
-        >
-          <Text style={styles.primaryCtaText}>
-            {t("focusMode:currentTask.paused.pickUpCta")}
-          </Text>
-        </Pressable>
+        />
       }
     />
   );
@@ -342,18 +311,14 @@ function CompletedView({
         </>
       }
       footer={
-        <Pressable
+        <Button
           onPress={onReopen}
-          style={styles.secondaryCta}
-          accessible
-          accessibilityRole="button"
+          label={t("focusMode:currentTask.completed.reopenCta")}
+          variant="secondary"
+          size="lg"
           accessibilityLabel={t("focusMode:currentTask.completed.reopenA11y")}
           testID="focus-current-task-reopen"
-        >
-          <Text style={styles.secondaryCtaText}>
-            {t("focusMode:currentTask.completed.reopenCta")}
-          </Text>
-        </Pressable>
+        />
       }
     />
   );
@@ -388,16 +353,13 @@ function AllCompleteView({ onDesignBadge, sealed }: FocusAllCompleteCardProps) {
         </>
       }
       footer={
-        <Pressable
+        <Button
           onPress={onDesignBadge}
-          style={styles.primaryCta}
-          accessible
-          accessibilityRole="button"
+          label={ctaText}
+          size="lg"
           accessibilityLabel={ctaA11yLabel}
           testID="focus-current-task-design-badge"
-        >
-          <Text style={styles.primaryCtaText}>{ctaText}</Text>
-        </Pressable>
+        />
       }
     />
   );

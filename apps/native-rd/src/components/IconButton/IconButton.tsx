@@ -1,5 +1,10 @@
 import React from "react";
-import { Pressable, type StyleProp, type TextStyle } from "react-native";
+import {
+  Pressable,
+  type GestureResponderEvent,
+  type StyleProp,
+  type TextStyle,
+} from "react-native";
 import { useUnistyles } from "react-native-unistyles";
 import {
   hitSlopValues,
@@ -15,7 +20,7 @@ export interface IconButtonProps {
   // ReactElement (not ReactNode) so callers can't pass strings/fragments/arrays
   // that would silently bypass injectIconColor and leak un-toned icons.
   icon: React.ReactElement;
-  onPress: () => void;
+  onPress: (event: GestureResponderEvent) => void;
   size?: IconButtonSize;
   tone?: IconButtonTone;
   disabled?: boolean;

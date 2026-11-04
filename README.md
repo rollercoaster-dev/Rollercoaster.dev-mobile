@@ -38,8 +38,8 @@ bun run test
 
 | Topic                  | Path                                                      |
 | ---------------------- | --------------------------------------------------------- |
-| App-level instructions | `apps/native-rd/AGENTS.md`, `apps/native-rd/CLAUDE.md`    |
-| Build targets          | `apps/native-rd/CLAUDE.md` (load `native-rd-build` skill) |
+| App-level instructions | `apps/native-rd/AGENTS.md`                                |
+| Build targets          | `native-rd-build` skill (see `apps/native-rd/AGENTS.md`)  |
 | CI contract            | `docs/architecture/ci-contract.md`                        |
 | E2E runner plans       | `docs/plans/active/mac-mini-*.md`, `ios-usb-e2e-pivot.md` |
 | Extraction history     | `docs/plans/completed/2026-05-14-mobile-extraction.md`    |

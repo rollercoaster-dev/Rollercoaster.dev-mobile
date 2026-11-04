@@ -1,5 +1,6 @@
 import React from "react";
-import { Pressable, View, useWindowDimensions } from "react-native";
+import { Pressable, View } from "react-native";
+import { useTypeScale } from "../../hooks/useTypeScale";
 import { useTranslation } from "react-i18next";
 import { useUnistyles } from "react-native-unistyles";
 import Svg, { Circle } from "react-native-svg";
@@ -122,10 +123,9 @@ export function GoalsCockpit({
 }: GoalsCockpitProps) {
   const { t } = useTranslation(["goals", "common"]);
   const { theme } = useUnistyles();
-  const { fontScale } = useWindowDimensions();
   // One column for keep-warm tiles whenever type is large, whether that comes
   // from the Low Vision theme or from the OS text-size setting.
-  const isLargeType = theme.variant === "lowVision" || fontScale >= 1.3;
+  const { isLargeType } = useTypeScale();
 
   if (!hero) {
     return (
@@ -227,15 +227,13 @@ export function GoalsCockpit({
         <View style={styles.heroAction}>
           <Button
             label={resumeLabel}
-            // `fill` reads as a solid play mark at the hero's scale. Sized to
-            // the lg label and colored `background` to match `labelPrimary` on
-            // the primary variant's dark fill — the `▶` this replaces could do
-            // neither, being an emoji-presentation codepoint (Rule 8).
+            // Match the shared primary action foreground in every theme.
+            // `background` diverges from it in dark and several ND variants.
             icon={
               <Play
                 size={theme.size.lg}
                 weight="fill"
-                color={theme.colors.background}
+                color={theme.action.actionPrimaryFg}
               />
             }
             size="lg"

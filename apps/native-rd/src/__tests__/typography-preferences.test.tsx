@@ -51,7 +51,6 @@ describe("essential text follows typography preferences", () => {
       });
 
       expect(focus.bodyText.fontFamily).toBe(family);
-      expect(focus.primaryCtaText.fontFamily).toBe(family);
       expect(cockpit.overline.fontFamily).toBe(family);
       expect(badge.emptyBody.fontFamily).toBe(family);
       expect(badge.spotlightDate.fontFamily).toBe(family);
@@ -73,17 +72,15 @@ describe("essential text follows typography preferences", () => {
     },
   );
 
-  it("gives Focus body and action text the reading font and task titles multiline spacing", () => {
+  it("gives Focus body text the reading font and task titles multiline spacing", () => {
     const title = StyleSheet.flatten(focusStyles.title);
     const body = StyleSheet.flatten(focusStyles.bodyText);
-    const action = StyleSheet.flatten(focusStyles.primaryCtaText);
     const metadata = StyleSheet.flatten(focusStyles.metadataText);
 
     expect(title.fontFamily).toBe(mockTheme.fontFamily.headline);
     expect(title.lineHeight).toBeGreaterThan(title.fontSize! * 1.2);
     expect(body.fontFamily).toBe(mockTheme.fontFamily.body);
     expect(body.fontSize).toBeGreaterThanOrEqual(mockTheme.size.md);
-    expect(action.fontFamily).toBe(mockTheme.fontFamily.body);
     expect(metadata.fontSize).toBeGreaterThanOrEqual(mockTheme.size.sm);
   });
 

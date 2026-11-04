@@ -6,11 +6,16 @@ import {
   fireEvent,
 } from "../../../__tests__/test-utils";
 import { i18n } from "../../../i18n";
+import { Play } from "phosphor-react-native";
+import { useUnistyles } from "react-native-unistyles";
+import { composeTheme } from "../../../themes/compose";
+import { mockTheme } from "../../../__tests__/mocks/unistyles";
 import {
   GoalsCockpit,
   type CockpitHeroGoal,
   type CockpitKeepWarmGoal,
 } from "../GoalsCockpit";
+import { mockFontScale } from "../../../__tests__/fontScale";
 
 /** Simulate the hidden measuring twin reporting how many lines the text needs. */
 function measureLines(testID: string, lineCount: number) {
@@ -61,6 +66,26 @@ const handlers = () => ({
 });
 
 describe("GoalsCockpit", () => {
+  it("matches the leading Play icon to the dark-theme action foreground", () => {
+    const dark = composeTheme("dark", "default");
+    jest
+      .mocked(useUnistyles)
+      .mockReturnValue({ theme: dark } as ReturnType<typeof useUnistyles>);
+    try {
+      renderWithProviders(
+        <GoalsCockpit hero={makeHero()} keepWarm={[]} {...handlers()} />,
+      );
+      expect(screen.UNSAFE_getByType(Play).props.color).toBe(
+        dark.action.actionPrimaryFg,
+      );
+    } finally {
+      jest
+        .mocked(useUnistyles)
+        .mockReturnValue({ theme: mockTheme } as ReturnType<
+          typeof useUnistyles
+        >);
+    }
+  });
   it.each([
     { stepsCompleted: 0, expectStart: true },
     { stepsCompleted: 3, expectStart: false },
@@ -126,28 +151,15 @@ describe("GoalsCockpit", () => {
   });
 
   it("uses a full-width keep-warm card when OS text is enlarged", () => {
-    const dimensions = jest
-      .spyOn(ReactNative, "useWindowDimensions")
-      .mockReturnValue({
-        width: 320,
-        height: 640,
-        scale: 2,
-        fontScale: 1.5,
-      });
-    try {
-      renderWithProviders(
-        <GoalsCockpit hero={makeHero()} keepWarm={keepWarm} {...handlers()} />,
-      );
-      const cell = screen.getByTestId("keep-warm-cell-kw-1");
-      expect(ReactNative.StyleSheet.flatten(cell.props.style).width).toBe(
-        "100%",
-      );
-      expect(
-        screen.getByText("Build a component library").props.numberOfLines,
-      ).toBe(2);
-    } finally {
-      dimensions.mockRestore();
-    }
+    mockFontScale(1.5);
+    renderWithProviders(
+      <GoalsCockpit hero={makeHero()} keepWarm={keepWarm} {...handlers()} />,
+    );
+    const cell = screen.getByTestId("keep-warm-cell-kw-1");
+    expect(ReactNative.StyleSheet.flatten(cell.props.style).width).toBe("100%");
+    expect(
+      screen.getByText("Build a component library").props.numberOfLines,
+    ).toBe(2);
   });
 
   it("fires onStartResume with the hero id", () => {

@@ -15,6 +15,7 @@ import { useTranslation } from "react-i18next";
 import { shadowStyle } from "../styles/shadows";
 import { borderWidth } from "../themes/tokens";
 import { useAnimationPref } from "../hooks/useAnimationPref";
+import { useSheetBackgroundA11yProps } from "../components/AnimatedSheet";
 import type { RootTabParamList } from "./types";
 
 type RouteName = keyof RootTabParamList;
@@ -56,6 +57,9 @@ export function FocusPillTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const { shouldAnimate } = useAnimationPref();
   const { t } = useTranslation();
+  // Rendered by the navigator outside every screen, so a screen's sheet can't
+  // isolate it; hide it from assistive tech while any sheet is open (#686).
+  const sheetA11yProps = useSheetBackgroundA11yProps();
 
   const tabLabels = useMemo<Record<RouteName, string>>(
     () => ({
@@ -154,6 +158,7 @@ export function FocusPillTabBar({ state, navigation }: BottomTabBarProps) {
 
   return (
     <View
+      {...sheetA11yProps}
       style={[
         styles.container,
         {

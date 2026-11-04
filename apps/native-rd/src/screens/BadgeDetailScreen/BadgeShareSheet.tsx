@@ -21,6 +21,7 @@ import {
   View,
   Pressable,
   ActivityIndicator,
+  type GestureResponderEvent,
   type StyleProp,
   type ViewStyle,
 } from "react-native";
@@ -32,14 +33,18 @@ import {
 } from "phosphor-react-native";
 import { useUnistyles } from "react-native-unistyles";
 import { Text } from "../../components/Text";
-import { AnimatedSheet } from "../../components/AnimatedSheet";
+import {
+  AnimatedSheet,
+  useSheetBackgroundA11yProps,
+} from "../../components/AnimatedSheet";
 import { styles } from "./BadgeShareSheet.styles";
 
 export interface BadgeShareSheetProps {
   /** Goal title, interpolated into the sheet header via {{goalTitle}}. */
   goalTitle: string;
   isSheetOpen: boolean;
-  onOpenSheet: () => void;
+  /** Receives the CTA press event, so a caller can record it as the trigger. */
+  onOpenSheet: (event: GestureResponderEvent) => void;
   onCloseSheet: () => void;
   onShareVerifiable: () => void;
   onSaveImage: () => void;
@@ -60,6 +65,12 @@ export interface BadgeShareSheetProps {
    * rides along outside the scroll body's gutter and needs its own.
    */
   ctaStyle?: StyleProp<ViewStyle>;
+  /**
+   * Where focus returns when the sheet closes. Defaults to the Share CTA; the
+   * screen passes its own when the sheet can also open from elsewhere (the ⋯
+   * overflow menu, #686).
+   */
+  restoreFocusRef?: React.RefObject<View | number | null>;
 
   // --- Copy (i18n-free per D6; English defaults, #380 passes t() output). ---
   ctaLabel?: string;
@@ -90,6 +101,7 @@ export function BadgeShareSheet({
   isExportingImage,
   isExportingJSON,
   ctaStyle,
+  restoreFocusRef,
   ctaLabel = "Share badge",
   sheetTitleTemplate = "Share “{{goalTitle}}”",
   sheetSubtitle = "Keep it provable, or just share the picture.",
@@ -107,6 +119,9 @@ export function BadgeShareSheet({
   // The CTA is a direct sibling of the sheet, so a plain local ref restores
   // screen-reader focus to it when the sheet closes (#501, via AnimatedSheet).
   const ctaRef = useRef<View>(null);
+  // The CTA is a sibling of the sheet, not inside it, so it hides from
+  // assistive tech with the rest of the screen while the sheet is open (#686).
+  const ctaA11yProps = useSheetBackgroundA11yProps();
 
   // split/join, not String.replace: a goal title containing `$` sequences
   // ($$, $&, $`, $') would otherwise be reinterpreted as replacement patterns
@@ -133,6 +148,7 @@ export function BadgeShareSheet({
         accessible
         accessibilityRole="button"
         accessibilityLabel={ctaLabel}
+        {...ctaA11yProps}
         testID="badge-share-cta"
         style={({ pressed }) => [
           styles.cta,
@@ -162,7 +178,7 @@ export function BadgeShareSheet({
         closeLabel={closeLabel}
         closeTestID="badge-share-close"
         backdropTestID="badge-share-backdrop"
-        restoreFocusRef={ctaRef}
+        restoreFocusRef={restoreFocusRef ?? ctaRef}
       >
         {/* Row 1 — verifiable badge (recommended). */}
         {/* eslint-disable-next-line local/no-shared-component-reimplementation */}
