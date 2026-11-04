@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, Pressable } from "react-native";
 import { useTranslation } from "react-i18next";
+import { useTypeScale } from "../../hooks/useTypeScale";
 import { styles } from "./FocusParkedState.styles";
 
 export interface FocusParkedRow {
@@ -59,13 +60,16 @@ export function FocusParkedState({ rows }: FocusParkedStateProps) {
  */
 function ParkedRow({ row }: { row: FocusParkedRow }) {
   const { t } = useTranslation(["common", "focusMode"]);
+  // At accessibility sizes the pill and "resume" squeeze the title into
+  // mid-word breaks; stack pill, title and resume instead (#753).
+  const { isAccessibilitySize } = useTypeScale();
   return (
     <Pressable
       onPress={row.onResume}
       accessible
       accessibilityRole="button"
       accessibilityLabel={t("focusMode:parked.rowA11y", { title: row.title })}
-      style={styles.row}
+      style={[styles.row, isAccessibilitySize && styles.rowStacked]}
       testID={`focus-parked-row-${row.id}`}
     >
       <View style={styles.pill}>
@@ -73,7 +77,11 @@ function ParkedRow({ row }: { row: FocusParkedRow }) {
           {t("common:stepCard.status.paused")}
         </Text>
       </View>
-      <Text style={styles.rowTitle}>{row.title}</Text>
+      <Text
+        style={[styles.rowTitle, isAccessibilitySize && styles.rowTitleStacked]}
+      >
+        {row.title}
+      </Text>
       <Text style={styles.resume}>{t("focusMode:parked.resumeCta")}</Text>
     </Pressable>
   );

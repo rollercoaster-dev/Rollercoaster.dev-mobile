@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { Pause, Play } from "phosphor-react-native";
 import { Text } from "../Text";
 import { formatDuration } from "../../utils/format";
+import { useTypeScale } from "../../hooks/useTypeScale";
 import { styles } from "./AudioPlayer.styles";
 
 /** Matches the `fontSize: 16` the play/pause text glyph used before Rule 8. */
@@ -19,6 +20,7 @@ export interface AudioPlayerProps {
 export function AudioPlayer({ uri, durationMs }: AudioPlayerProps) {
   const { t } = useTranslation(["common"]);
   const { theme } = useUnistyles();
+  const { isLargeType } = useTypeScale();
   const player = useAudioPlayer(uri);
   const status = useAudioPlayerStatus(player);
 
@@ -41,6 +43,19 @@ export function AudioPlayer({ uri, durationMs }: AudioPlayerProps) {
       console.error("[AudioPlayer] Playback error", { uri, error });
     }
   }
+
+  const timeText = (
+    <Text
+      style={styles.timeText}
+      accessibilityLabel={t("common:audioPlayer.a11y.progress", {
+        current: formatDuration(currentMs),
+        total: formatDuration(totalMs),
+      })}
+      accessibilityLiveRegion="polite"
+    >
+      {formatDuration(currentMs)}
+    </Text>
+  );
 
   return (
     <View
@@ -100,18 +115,14 @@ export function AudioPlayer({ uri, durationMs }: AudioPlayerProps) {
             ]}
           />
         </View>
+        {/* At large type the time beside the track squeezes it to nothing;
+            it moves under the track instead (#753). */}
+        {isLargeType ? (
+          <View style={styles.timeTextStacked}>{timeText}</View>
+        ) : null}
       </View>
 
-      <Text
-        style={styles.timeText}
-        accessibilityLabel={t("common:audioPlayer.a11y.progress", {
-          current: formatDuration(currentMs),
-          total: formatDuration(totalMs),
-        })}
-        accessibilityLiveRegion="polite"
-      >
-        {formatDuration(currentMs)}
-      </Text>
+      {isLargeType ? null : timeText}
     </View>
   );
 }

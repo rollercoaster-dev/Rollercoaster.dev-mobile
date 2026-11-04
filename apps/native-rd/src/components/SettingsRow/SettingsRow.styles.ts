@@ -18,7 +18,20 @@ export const styles = StyleSheet.create((theme) => ({
     fontFamily: theme.fontFamily.body,
     color: theme.colors.text,
   },
+  stack: {
+    flex: 1,
+  },
+  stackedLabel: {
+    fontSize: theme.size.md,
+    fontFamily: theme.fontFamily.body,
+    color: theme.colors.text,
+  },
+  stackedValue: {
+    marginLeft: 0,
+    marginTop: theme.space[1],
+  },
   value: {
+    flexShrink: 1,
     fontSize: theme.size.sm,
     fontFamily: theme.fontFamily.body,
     color: theme.colors.textSecondary,

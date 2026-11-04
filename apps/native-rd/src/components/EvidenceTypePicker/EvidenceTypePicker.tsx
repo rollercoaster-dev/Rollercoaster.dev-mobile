@@ -6,6 +6,7 @@ import { EVIDENCE_OPTIONS, type EvidenceTypeValue } from "../../types/evidence";
 import { EvidenceType } from "../../db";
 import { evidenceLabel } from "../../i18n/labels";
 import { AnimatedSheet, sheetStyles } from "../AnimatedSheet";
+import { useTypeScale } from "../../hooks/useTypeScale";
 import { styles } from "./EvidenceTypePicker.styles";
 
 /**
@@ -212,6 +213,14 @@ interface CaptureGridProps {
  */
 function CaptureGrid({ selectedType, onSelectType }: CaptureGridProps) {
   const { t } = useTranslation(["common"]);
+  // A third of the sheet can't hold "Voice memo" at large type without
+  // mid-word breaks: 2-up at large type, 1-up at accessibility sizes (#753).
+  const { isLargeType, isAccessibilitySize } = useTypeScale();
+  const cellWidthStyle = isAccessibilitySize
+    ? styles.cellOneUp
+    : isLargeType
+      ? styles.cellTwoUp
+      : null;
   // "Note" is the easy default when the caller hasn't picked a type yet (D5).
   const effectiveSelected = selectedType ?? EvidenceType.text;
 
@@ -224,7 +233,11 @@ function CaptureGrid({ selectedType, onSelectType }: CaptureGridProps) {
           <Pressable
             key={opt.type}
             testID={`evidence-type-cell-${opt.type}`}
-            style={[styles.cell, isSelected && styles.cellSelected]}
+            style={[
+              styles.cell,
+              cellWidthStyle,
+              isSelected && styles.cellSelected,
+            ]}
             onPress={() => onSelectType(opt.type)}
             accessibilityRole="radio"
             accessibilityState={{ checked: isSelected }}

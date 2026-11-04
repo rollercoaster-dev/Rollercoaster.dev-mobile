@@ -12,6 +12,8 @@ import {
   act,
   within,
 } from "../../../__tests__/test-utils";
+import { mockFontScale } from "../../../__tests__/fontScale";
+import { closestStyle } from "../../../__tests__/styleHelpers";
 import {
   EditGoalView,
   type EditGoalStep,
@@ -1400,5 +1402,34 @@ describe("reorderStepIds (D6)", () => {
     },
   ])("$name", ({ ids, from, to, expected }) => {
     expect(reorderStepIds(ids, from, to)).toEqual(expected);
+  });
+
+  // #753: at accessibility sizes the fixed-width controls squeezed step titles
+  // to one letter per line. Rows stack: title on top, controls end-aligned below.
+  describe("EditGoalView at accessibility sizes", () => {
+    it.each([
+      { fontScale: 1, direction: "row" },
+      { fontScale: 2, direction: "column" },
+    ])(
+      "lays step and sub-step rows out as $direction at fontScale $fontScale",
+      ({ fontScale, direction }) => {
+        renderWithProviders(
+          <EditGoalView {...makeProps({ steps: withSub })} />,
+        );
+        mockFontScale(fontScale);
+        for (const id of [
+          "edit-goal-step-evidence-s2",
+          "edit-goal-substep-evidence-sub1",
+        ]) {
+          const controls = screen.getByTestId(id);
+          const cluster = closestStyle(controls, "flexShrink");
+          const row = closestStyle(controls, "columnGap");
+          expect(row.flexDirection).toBe(direction);
+          expect(cluster.alignSelf).toBe(
+            direction === "column" ? "flex-end" : undefined,
+          );
+        }
+      },
+    );
   });
 });

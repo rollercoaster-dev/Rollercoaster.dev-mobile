@@ -147,6 +147,21 @@ export const styles = StyleSheet.create((theme) => ({
     gap: theme.space[2],
     flexShrink: 0,
   },
+  // Accessibility-size fallback for rowMain / subStepRow (#753): the title
+  // takes the full width and the controls drop to their own line, end-aligned.
+  rowStacked: {
+    flexDirection: "column" as const,
+    alignItems: "stretch" as const,
+    rowGap: theme.space[1],
+  },
+  // flexBasis 0 would collapse the lead to zero height in a column.
+  rowLeadStacked: {
+    flexGrow: 0,
+    flexBasis: "auto" as const,
+  },
+  rowControlsStacked: {
+    alignSelf: "flex-end" as const,
+  },
   dragHandle: {
     fontSize: theme.size.md,
     color: theme.colors.textMuted,

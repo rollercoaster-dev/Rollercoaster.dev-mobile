@@ -7,6 +7,8 @@ import {
   act,
 } from "../../../__tests__/test-utils";
 import { BadgeShareSheet, type BadgeShareSheetProps } from "../BadgeShareSheet";
+import { mockFontScale } from "../../../__tests__/fontScale";
+import { closestStyle } from "../../../__tests__/styleHelpers";
 
 // findNodeHandle is a lazy getter on react-native's index — redefine it so the
 // shared AnimatedSheet's title/CTA refs resolve to a fixed tag under test
@@ -334,5 +336,18 @@ describe("BadgeShareSheet", () => {
       expect(onCloseSheet).toHaveBeenCalledTimes(1);
       addSpy.mockRestore();
     });
+  });
+
+  // #753: the Recommended tag squeezed "Share verifiable badge" into mid-word
+  // breaks at large type; the header wraps so the tag drops below the label.
+  it("wraps the highlighted header and chrome-caps the tag at large type", () => {
+    renderWithProviders(<BadgeShareSheet {...makeProps()} />);
+    const tag = screen.getByTestId("share-recommended-tag");
+    expect(closestStyle(tag, "flexDirection").flexWrap).toBeUndefined();
+    mockFontScale(1.3);
+    expect(
+      closestStyle(screen.getByTestId("share-recommended-tag"), "flexDirection")
+        .flexWrap,
+    ).toBe("wrap");
   });
 });

@@ -52,6 +52,16 @@ export const styles = StyleSheet.create((theme) => ({
     paddingVertical: theme.space[3],
     ...shadowStyle(theme, "cardElevationSmall"),
   },
+  rowStacked: {
+    flexDirection: "column",
+    alignItems: "flex-start",
+  },
+  // flex: 1 (basis 0) would collapse the title's height in a column.
+  rowTitleStacked: {
+    flexGrow: 0,
+    flexBasis: "auto",
+    alignSelf: "stretch",
+  },
   // "Paused" state pill — bg/ink resolve through the #406 map (one color language
   // with the sibling card); border stays neutral so the light paused fill reads
   // clearly. Matches StateWordPill's shape; no uppercase transform (Title-Case).

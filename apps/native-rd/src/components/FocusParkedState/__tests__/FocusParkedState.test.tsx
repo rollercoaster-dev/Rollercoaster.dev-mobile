@@ -1,3 +1,4 @@
+import { StyleSheet } from "react-native";
 import React from "react";
 import {
   renderWithProviders,
@@ -5,6 +6,7 @@ import {
   fireEvent,
 } from "../../../__tests__/test-utils";
 import { FocusParkedState, type FocusParkedRow } from "../FocusParkedState";
+import { mockFontScale } from "../../../__tests__/fontScale";
 
 const makeRows = (n: number): FocusParkedRow[] =>
   Array.from({ length: n }, (_, i) => ({
@@ -70,4 +72,19 @@ describe("FocusParkedState", () => {
       expect(rowEl.props.accessibilityLabel).toContain(row.title);
     });
   });
+
+  // #753: at accessibility sizes the pill and "resume" squeezed the title into
+  // mid-word breaks; the row stacks instead.
+  it.each([
+    { fontScale: 1, direction: "row" },
+    { fontScale: 2, direction: "column" },
+  ])(
+    "lays the parked row out as $direction at fontScale $fontScale",
+    ({ fontScale, direction }) => {
+      renderWithProviders(<FocusParkedState rows={makeRows(1)} />);
+      mockFontScale(fontScale);
+      const row = screen.getByTestId("focus-parked-row-s1");
+      expect(StyleSheet.flatten(row.props.style).flexDirection).toBe(direction);
+    },
+  );
 });

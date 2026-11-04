@@ -96,6 +96,12 @@ export const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.background,
     ...shadowStyle(theme, "cardElevationSmall"),
   },
+  cellTwoUp: {
+    flexBasis: "45%",
+  },
+  cellOneUp: {
+    flexBasis: "100%",
+  },
   cellSelected: {
     backgroundColor: theme.colors.accentPrimary,
   },

@@ -37,6 +37,7 @@ import {
   AnimatedSheet,
   useSheetBackgroundA11yProps,
 } from "../../components/AnimatedSheet";
+import { useTypeScale } from "../../hooks/useTypeScale";
 import { styles } from "./BadgeShareSheet.styles";
 
 export interface BadgeShareSheetProps {
@@ -115,6 +116,9 @@ export function BadgeShareSheet({
   exportCredentialDetail = "For verifiers & wallets.",
 }: BadgeShareSheetProps) {
   const { theme } = useUnistyles();
+  // At large type the Recommended tag squeezes the label into mid-word
+  // breaks; the header wraps and the tag drops to its own line (#753).
+  const { isLargeType } = useTypeScale();
 
   // The CTA is a direct sibling of the sheet, so a plain local ref restores
   // screen-reader focus to it when the sheet closes (#501, via AnimatedSheet).
@@ -199,7 +203,12 @@ export function BadgeShareSheet({
             !canShareImage && styles.rowDisabled,
           ]}
         >
-          <View style={styles.rowHighlightedHeader}>
+          <View
+            style={[
+              styles.rowHighlightedHeader,
+              isLargeType && styles.rowHighlightedHeaderWrap,
+            ]}
+          >
             {isExportingImage ? (
               <ActivityIndicator
                 size="small"
@@ -215,12 +224,16 @@ export function BadgeShareSheet({
             )}
             <Text
               variant="body"
-              style={[styles.rowLabel, styles.rowLabelOnHighlight]}
+              style={[
+                styles.rowLabel,
+                styles.rowLabelOnHighlight,
+                isLargeType && styles.rowLabelWrap,
+              ]}
             >
               {verifiableLabel}
             </Text>
             <View style={styles.tag} testID="share-recommended-tag">
-              <Text variant="caption" style={styles.tagLabel}>
+              <Text variant="caption" chrome style={styles.tagLabel}>
                 {recommendedLabel}
               </Text>
             </View>

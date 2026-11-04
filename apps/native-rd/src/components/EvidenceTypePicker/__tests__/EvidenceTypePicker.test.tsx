@@ -1,5 +1,10 @@
 import React from "react";
-import { BackHandler, AccessibilityInfo, type View } from "react-native";
+import {
+  BackHandler,
+  AccessibilityInfo,
+  StyleSheet,
+  type View,
+} from "react-native";
 import {
   renderWithProviders,
   screen,
@@ -12,6 +17,7 @@ import { EVIDENCE_OPTIONS } from "../../../types/evidence";
 import type { EvidenceTypeValue } from "../../../types/evidence";
 import { i18n } from "../../../i18n";
 import { evidenceLabel } from "../../../i18n/labels";
+import { mockFontScale } from "../../../__tests__/fontScale";
 
 // findNodeHandle is a lazy getter on react-native's index — redefine it so the
 // capture sheet's restoreFocusRef resolves to a fixed tag under test (#501).
@@ -390,6 +396,32 @@ describe("EvidenceTypePicker", () => {
         expect(
           screen.getByTestId(`evidence-type-cell-${type}`),
         ).toBeOnTheScreen();
+      },
+    );
+  });
+
+  // #753: a third of the sheet broke "Voice memo" mid-word at large type.
+  describe("EvidenceTypePicker capture grid at large type", () => {
+    it.each([
+      { fontScale: 1, basis: "30%" },
+      { fontScale: 1.3, basis: "45%" },
+      { fontScale: 2, basis: "100%" },
+    ])(
+      "sizes cells to $basis at fontScale $fontScale",
+      ({ fontScale, basis }) => {
+        renderWithProviders(
+          <EvidenceTypePicker
+            mode="capture"
+            visible
+            onSelectType={jest.fn()}
+            onClose={jest.fn()}
+          />,
+        );
+        mockFontScale(fontScale);
+        const cell = screen.getByTestId(
+          `evidence-type-cell-${EvidenceType.photo}`,
+        );
+        expect(StyleSheet.flatten(cell.props.style).flexBasis).toBe(basis);
       },
     );
   });
