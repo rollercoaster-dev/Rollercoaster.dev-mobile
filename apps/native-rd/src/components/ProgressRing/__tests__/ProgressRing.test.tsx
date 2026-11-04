@@ -87,7 +87,8 @@ describe("ProgressRing", () => {
     const sublabel = screen.getByText("0 / 1 steps");
     expect(sublabel.props.maxFontSizeMultiplier).toBe(1.3);
     expect(StyleSheet.flatten(sublabel.props.style).maxWidth).toBe(
-      Math.round((124 - 10 * 2) * 0.8),
+      // 80% of the 104pt inner diameter (124 - 2 × 10).
+      83,
     );
   });
 
