@@ -21,10 +21,10 @@ export const styles = StyleSheet.create((theme) => ({
   stack: {
     flex: 1,
   },
+  // Layered on `label`: flex: 1 (basis 0) would collapse it in the column.
   stackedLabel: {
-    fontSize: theme.size.md,
-    fontFamily: theme.fontFamily.body,
-    color: theme.colors.text,
+    flexGrow: 0,
+    flexBasis: "auto",
   },
   stackedValue: {
     marginLeft: 0,

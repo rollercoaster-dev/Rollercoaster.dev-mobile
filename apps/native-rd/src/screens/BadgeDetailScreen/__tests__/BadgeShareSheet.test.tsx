@@ -349,5 +349,8 @@ describe("BadgeShareSheet", () => {
       closestStyle(screen.getByTestId("share-recommended-tag"), "flexDirection")
         .flexWrap,
     ).toBe("wrap");
+    expect(screen.getByText("RECOMMENDED").props.maxFontSizeMultiplier).toBe(
+      1.3,
+    );
   });
 });

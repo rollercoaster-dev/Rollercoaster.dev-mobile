@@ -46,6 +46,6 @@ export const styles = StyleSheet.create((theme) => ({
     textAlign: "right",
   },
   timeTextStacked: {
-    marginTop: 4,
+    marginTop: theme.space[1],
   },
 }));

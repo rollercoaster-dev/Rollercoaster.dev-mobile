@@ -67,7 +67,7 @@ export function SettingsRow({
     <>
       {isLargeType && value ? (
         <View style={styles.stack} testID="settings-row-stack">
-          <Text style={styles.stackedLabel}>{label}</Text>
+          <Text style={[styles.label, styles.stackedLabel]}>{label}</Text>
           <Text style={[styles.value, styles.stackedValue]}>{value}</Text>
         </View>
       ) : (
