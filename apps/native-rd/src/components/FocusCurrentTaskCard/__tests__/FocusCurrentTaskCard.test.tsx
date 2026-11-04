@@ -78,6 +78,36 @@ function renderCard(overrides: TestOverrides = {}) {
 }
 
 describe("FocusCurrentTaskCard", () => {
+  it("uses the shared action state for the leading and alternate footer controls", () => {
+    renderCard({
+      status: "in-progress",
+      plannedEvidenceTypes: ["photo"],
+      capturedEvidence: captured,
+    });
+    const leading = screen.getByTestId("focus-current-task-mark-complete");
+    const alternate = screen.getByTestId("focus-current-task-add-more");
+    expect(leading.props.accessibilityState).toEqual({
+      disabled: false,
+      busy: false,
+    });
+    expect(alternate.props.accessibilityState).toEqual({
+      disabled: false,
+      busy: false,
+    });
+  });
+
+  it("lets the quiet set-aside control use the shared button hit target", () => {
+    renderCard({ status: "in-progress" });
+    const quiet = screen.getByTestId("focus-current-task-set-aside");
+    expect(quiet.props.accessibilityState).toEqual({
+      disabled: false,
+      busy: false,
+    });
+    expect(
+      StyleSheet.flatten(quiet.props.style).minHeight,
+    ).toBeGreaterThanOrEqual(44);
+  });
+
   it.each(ALL_STATES)("renders %s without crashing", (status) => {
     renderCard({ status, capturedEvidence: captured });
     if (status === "all-complete") {

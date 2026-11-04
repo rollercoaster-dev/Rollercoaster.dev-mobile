@@ -5,6 +5,10 @@ import {
   fireEvent,
 } from "../../../__tests__/test-utils";
 import { i18n } from "../../../i18n";
+import { Play } from "phosphor-react-native";
+import { useUnistyles } from "react-native-unistyles";
+import { composeTheme } from "../../../themes/compose";
+import { mockTheme } from "../../../__tests__/mocks/unistyles";
 import {
   GoalsCockpit,
   type CockpitHeroGoal,
@@ -47,6 +51,26 @@ const handlers = () => ({
 });
 
 describe("GoalsCockpit", () => {
+  it("matches the leading Play icon to the dark-theme action foreground", () => {
+    const dark = composeTheme("dark", "default");
+    jest
+      .mocked(useUnistyles)
+      .mockReturnValue({ theme: dark } as ReturnType<typeof useUnistyles>);
+    try {
+      renderWithProviders(
+        <GoalsCockpit hero={makeHero()} keepWarm={[]} {...handlers()} />,
+      );
+      expect(screen.UNSAFE_getByType(Play).props.color).toBe(
+        dark.action.actionPrimaryFg,
+      );
+    } finally {
+      jest
+        .mocked(useUnistyles)
+        .mockReturnValue({ theme: mockTheme } as ReturnType<
+          typeof useUnistyles
+        >);
+    }
+  });
   it.each([
     { stepsCompleted: 0, expectStart: true },
     { stepsCompleted: 3, expectStart: false },

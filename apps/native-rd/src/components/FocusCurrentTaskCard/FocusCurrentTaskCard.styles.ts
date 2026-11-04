@@ -13,23 +13,6 @@ import {
 // `stepStateColorMap` so the pill stays one language with TimelineNode/TimelineStep.
 // No hardcoded hex: every color is a theme token.
 export const styles = StyleSheet.create((theme) => {
-  // Shared CTA shape — neo-brutalist: bold border, hard shadow, prototype's 54pt
-  // height (well above the 44pt a11y floor). Primary actions in the prototype carry
-  // a 4×4 hard shadow (`modalElevation`) and a 4px corner (`radius.md`). (R4)
-  const ctaBase = {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-    gap: theme.space[2],
-    minHeight: 54,
-    paddingHorizontal: theme.space[4],
-    paddingVertical: theme.space[3],
-    borderWidth: theme.borderWidth.thick,
-    borderColor: theme.colors.border,
-    borderRadius: theme.radius.md,
-    ...shadowStyle(theme, "modalElevation"),
-  };
-
   return {
     // Frameless: no fill, border, radius, padding, or card-level shadow — only the
     // inner box/chips/CTA are shadowed, and screen padding is the host's. Fills its
@@ -208,19 +191,6 @@ export const styles = StyleSheet.create((theme) => {
       color: theme.colors.accentMintFg,
       maxWidth: 180,
     },
-    // Quiet "set this step aside" — inline text, not a button (L3). Keeps a 44pt
-    // hit area for the touch-target contract while reading as a calm control.
-    setAside: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: theme.space[1],
-      minHeight: 44,
-    },
-    setAsideText: {
-      fontSize: theme.size.sm,
-      fontWeight: theme.fontWeight.semibold,
-      color: theme.colors.textSecondary,
-    },
     // Reassurance line — centered, under the Add button; shown only before any
     // evidence is captured (the no-evidence in-progress branch, L6).
     helperLine: {
@@ -258,30 +228,6 @@ export const styles = StyleSheet.create((theme) => {
     footRow: {
       gap: theme.space[2],
       paddingTop: theme.space[3],
-    },
-    // Primary action (Add / Mark complete / Pick back up / Design badge): filled
-    // blue (#2563eb light) via the contrast-validated `action` group — flips
-    // correctly across all 7 ND variants where a raw accent token would not.
-    primaryCta: {
-      ...ctaBase,
-      backgroundColor: theme.action.actionPrimaryBg,
-    },
-    // Prototype CTA text is 17–18px; `lg` (18) is the nearest token. (R4)
-    primaryCtaText: {
-      fontSize: theme.size.lg,
-      fontWeight: theme.fontWeight.bold,
-      color: theme.action.actionPrimaryFg,
-    },
-    // Secondary action (Reopen; Add once evidence exists): outline button so a
-    // single filled-blue primary leads at a time (F5 synthesis).
-    secondaryCta: {
-      ...ctaBase,
-      backgroundColor: theme.action.actionSecondaryBg,
-    },
-    secondaryCtaText: {
-      fontSize: theme.size.lg,
-      fontWeight: theme.fontWeight.semibold,
-      color: theme.action.actionSecondaryFg,
     },
   };
 });
