@@ -38,6 +38,7 @@ import {
   useSheetBackgroundA11yProps,
 } from "../../components/AnimatedSheet";
 import { useTypeScale } from "../../hooks/useTypeScale";
+import { PILL_LIFT } from "../../navigation/FocusPillTabBar";
 import { styles } from "./BadgeShareSheet.styles";
 
 export interface BadgeShareSheetProps {
@@ -183,6 +184,7 @@ export function BadgeShareSheet({
         closeTestID="badge-share-close"
         backdropTestID="badge-share-backdrop"
         restoreFocusRef={restoreFocusRef ?? ctaRef}
+        bottomClearance={PILL_LIFT}
       >
         {/* Row 1 — verifiable badge (recommended). */}
         {/* eslint-disable-next-line local/no-shared-component-reimplementation */}

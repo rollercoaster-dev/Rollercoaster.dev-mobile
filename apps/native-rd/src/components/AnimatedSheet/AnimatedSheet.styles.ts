@@ -17,6 +17,9 @@ export const sheetStyles = StyleSheet.create((theme) => ({
     right: 0,
     bottom: 0,
     justifyContent: "flex-end",
+    // Keeps a strip of scrim above a sheet that has grown to fill the frame
+    // (large type), so the title never sits flush against the sub-header.
+    paddingTop: theme.space[6],
     zIndex: 20,
   },
   // Fading scrim layer: theme.colors.shadow at ~80% alpha (the `cc` suffix).
@@ -33,10 +36,19 @@ export const sheetStyles = StyleSheet.create((theme) => ({
   backdrop: {
     flex: 1,
   },
+  // Wrapper around the sliding sheet: may shrink to the overlay's height so a
+  // tall sheet (large type) is bounded by the frame instead of rising past its
+  // top edge. Yoga's min-height is 0, so the shrink reaches the ScrollView.
+  sheetSlot: {
+    flexShrink: 1,
+    maxHeight: "100%",
+  },
   // Sheet chrome: opaque surface, medium top border + thin side borders,
-  // rounded top corners. Bottom safe-area inset is
-  // folded into paddingBottom (the root is a plain View, not SafeAreaView —
-  // unistyles styles on SafeAreaView are dropped on web).
+  // rounded top corners. Bottom safe-area inset (or floating tab-bar clearance,
+  // whichever is larger) is folded into paddingBottom (the root is a plain
+  // View, not SafeAreaView — unistyles styles on SafeAreaView are dropped on
+  // web). Shrinks with its slot so the body ScrollView takes the squeeze while
+  // the header stays put.
   sheet: (bottomInset: number) => ({
     borderTopLeftRadius: theme.radius.xl,
     borderTopRightRadius: theme.radius.xl,
@@ -52,7 +64,18 @@ export const sheetStyles = StyleSheet.create((theme) => ({
     paddingBottom: theme.space[4] + bottomInset,
     gap: theme.space[3],
     overflow: "hidden" as const,
+    flexShrink: 1,
+    maxHeight: "100%" as const,
   }),
+  // Body scroller: content-sized (no grow) until the sheet hits its bound,
+  // then shrinks and scrolls.
+  body: {
+    flexGrow: 0,
+    flexShrink: 1,
+  },
+  bodyContent: {
+    gap: theme.space[3],
+  },
   handle: {
     alignSelf: "center",
     width: 40,
@@ -65,7 +88,11 @@ export const sheetStyles = StyleSheet.create((theme) => ({
     alignItems: "center",
     justifyContent: "space-between",
   },
+  // Shrinks against the × control so a long or large title wraps instead of
+  // pushing the close button off the row.
   sheetTitle: {
+    flex: 1,
+    flexShrink: 1,
     fontSize: theme.size.lg,
     fontWeight: theme.fontWeight.bold,
     fontFamily: theme.fontFamily.headline,

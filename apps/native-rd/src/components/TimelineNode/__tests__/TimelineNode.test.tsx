@@ -171,3 +171,18 @@ describe("TimelineNode", () => {
     });
   });
 });
+
+// #751: the glyph sits in a fixed 24/32/40pt circle, so it stops growing at
+// the chrome cap (1.3x) instead of the 2.0x body text gets.
+describe("TimelineNode at large type", () => {
+  it.each([
+    ["a step number", { stepNumber: 12 }, "12"],
+    ["a sub-step letter", { size: "sm" as const, label: "a" }, "a"],
+    ["the goal star", { isGoalNode: true }, "\u2605"],
+  ])("chrome-caps %s", (_name, props, glyph) => {
+    renderWithProviders(
+      <TimelineNode status="pending" accessibilityLabel="node" {...props} />,
+    );
+    expect(screen.getByText(glyph).props.maxFontSizeMultiplier).toBe(1.3);
+  });
+});

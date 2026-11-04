@@ -7,7 +7,9 @@ import Animated, {
   runOnJS,
 } from "react-native-reanimated";
 import { useAnimationPref } from "../../hooks/useAnimationPref";
+import { useTypeScale } from "../../hooks/useTypeScale";
 import { Text } from "../Text";
+import { capForRole } from "../../utils/typeScale";
 import { styles } from "./Toast.styles";
 
 export interface ToastAction {
@@ -37,6 +39,10 @@ export function Toast({
   onExitComplete,
 }: ToastProps) {
   const { shouldAnimate } = useAnimationPref();
+  // At accessibility sizes the action label would squeeze the message to a
+  // sliver beside it, so the action stacks under the message instead (#751).
+  const { isAccessibilitySize, themeScale } = useTypeScale();
+  const stacked = isAccessibilitySize && action != null;
   const translateY = useSharedValue(SLIDE_DISTANCE);
   const opacity = useSharedValue(0);
   // `mounted` lags `visible`: it stays true through the slide-out so the exit
@@ -108,18 +114,25 @@ export function Toast({
 
   return (
     <Animated.View
-      style={[styles.container, animatedStyle]}
+      style={[
+        styles.container,
+        stacked && styles.containerStacked,
+        animatedStyle,
+      ]}
       accessible
       accessibilityRole="alert"
       accessibilityLiveRegion="assertive"
       accessibilityLabel={message}
     >
-      <Text variant="body" style={styles.message}>
+      <Text
+        variant="body"
+        style={[styles.message, stacked && styles.messageStacked]}
+      >
         {message}
       </Text>
       {action && (
         <Pressable
-          style={styles.actionButton}
+          style={[styles.actionButton, stacked && styles.actionButtonStacked]}
           onPress={() => {
             if (timerRef.current) clearTimeout(timerRef.current);
             action.onPress();
@@ -127,7 +140,11 @@ export function Toast({
           accessibilityRole="button"
           accessibilityLabel={action.label}
         >
-          <Text variant="label" style={styles.actionLabel}>
+          <Text
+            variant="label"
+            style={styles.actionLabel}
+            maxFontSizeMultiplier={capForRole("control", themeScale)}
+          >
             {action.label}
           </Text>
         </Pressable>

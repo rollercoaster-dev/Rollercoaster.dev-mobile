@@ -198,7 +198,9 @@ function StepDayGridComponent({
             style={styles.cell}
             importantForAccessibility="no-hide-descendants"
           >
-            <Text style={styles.weekdayLabel}>{label}</Text>
+            <Text style={styles.weekdayLabel} chrome>
+              {label}
+            </Text>
           </View>
         ))}
       </View>

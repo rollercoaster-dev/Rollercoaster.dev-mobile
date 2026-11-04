@@ -8,7 +8,14 @@ import {
 } from "../../../__tests__/test-utils";
 import { Toast } from "../Toast";
 import { ToastProvider, useToast } from "../ToastContext";
-import { AccessibilityInfo, Platform, Pressable, Text } from "react-native";
+import {
+  AccessibilityInfo,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+} from "react-native";
+import { mockFontScale } from "../../../__tests__/fontScale";
 
 // Platform.OS is a runtime property; defineProperty swaps it without re-mocking
 // the whole react-native module.
@@ -301,5 +308,44 @@ describe("ToastContext", () => {
       render(<TestConsumer />);
     }).toThrow("useToast must be used within a ToastProvider");
     consoleError.mockRestore();
+  });
+});
+
+// #751: at accessibility sizes the 2.0x action label squeezed the message to a
+// sliver, so the action stacks under the message there.
+describe("Toast at large type", () => {
+  it.each([
+    [1, "row"],
+    [1.3, "row"],
+    [2, "column"],
+  ])("at fontScale %s lays message and action out as a %s", (scale, dir) => {
+    mockFontScale(scale);
+    renderWithProviders(
+      <Toast
+        visible
+        message="Deleted"
+        action={{ label: "Undo", onPress() {} }}
+      />,
+    );
+    const container = StyleSheet.flatten(screen.getByRole("alert").props.style);
+    expect(container.flexDirection).toBe(dir);
+  });
+
+  it("keeps a message-only toast in a row at accessibility sizes", () => {
+    mockFontScale(2);
+    renderWithProviders(<Toast visible message="Saved" />);
+    const container = StyleSheet.flatten(screen.getByRole("alert").props.style);
+    expect(container.flexDirection).toBe("row");
+  });
+
+  it("caps the action label at the control cap", () => {
+    renderWithProviders(
+      <Toast
+        visible
+        message="Deleted"
+        action={{ label: "Undo", onPress() {} }}
+      />,
+    );
+    expect(screen.getByText("Undo").props.maxFontSizeMultiplier).toBe(1.25);
   });
 });

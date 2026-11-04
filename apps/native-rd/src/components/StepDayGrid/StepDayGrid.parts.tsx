@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable, View } from "react-native";
 import { Text } from "../Text";
+import { useTypeScale } from "../../hooks/useTypeScale";
 import { styles } from "./StepDayGrid.styles";
 
 /**
@@ -44,7 +45,10 @@ export function DayCell({
         pressed && !isSelected && styles.dayPressed,
       ]}
     >
+      {/* Day numbers and marks sit in 1/7-width cells, so they grow only as
+          far as chrome text (1.3x) at large type (#751). */}
       <Text
+        chrome
         style={[
           styles.dayNumber,
           isPast && styles.dayNumberPast,
@@ -89,12 +93,19 @@ function MarkBadge({
   onSelectedDay: boolean;
   testID?: string;
 }) {
+  // The badge circle grows with its chrome-capped label, so the ordinal is
+  // never clipped by the fixed 16pt height at large type (#751). 1 at default.
+  const { scaleFor } = useTypeScale();
   return (
     <View
       testID={testID}
-      style={[styles.mark, onSelectedDay && styles.markOnSelected]}
+      style={[
+        styles.mark(scaleFor("chrome")),
+        onSelectedDay && styles.markOnSelected,
+      ]}
     >
       <Text
+        chrome
         style={[styles.markLabel, onSelectedDay && styles.markLabelOnSelected]}
       >
         {label}

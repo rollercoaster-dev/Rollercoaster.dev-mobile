@@ -46,6 +46,12 @@ export interface AnimatedSheetProps {
    * (`event.nativeEvent.target`). Omit it and no focus is restored on close.
    */
   restoreFocusRef?: React.RefObject<View | number | null>;
+  /**
+   * Bottom clearance for chrome floating over the frame. Screens inside the
+   * tab navigator pass `PILL_LIFT` so the lifted tab pill doesn't cover the
+   * sheet's last row; full-screen modals (the New Goal wizard) omit it.
+   */
+  bottomClearance?: number;
   /** Body content rendered below the header (the picker grid). */
   children: React.ReactNode;
 }
@@ -77,6 +83,7 @@ export function AnimatedSheet({
   closeTestID,
   backdropTestID = "capture-sheet-backdrop",
   restoreFocusRef,
+  bottomClearance,
   children,
 }: AnimatedSheetProps) {
   const { animationPref } = useAnimationPref();
@@ -169,7 +176,7 @@ export function AnimatedSheet({
           accessibilityLabel={closeLabel}
         />
       </Animated.View>
-      <Animated.View style={sheetAnimStyle}>
+      <Animated.View style={[sheetStyles.sheetSlot, sheetAnimStyle]}>
         <SheetSurface
           title={title}
           subLine={subLine}
@@ -177,6 +184,7 @@ export function AnimatedSheet({
           onClose={onClose}
           closeTestID={closeTestID}
           titleRef={titleRef}
+          bottomClearance={bottomClearance}
         >
           {children}
         </SheetSurface>

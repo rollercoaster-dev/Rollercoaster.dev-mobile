@@ -58,11 +58,12 @@ export function ViewerStripThumb({
         style={styles.sourceDot(evidence.source)}
         accessibilityElementsHidden
       />
-      <Text style={styles.icon} accessibilityElementsHidden>
+      {/* Chrome-capped: the thumb is a fixed 104pt wide (#751). */}
+      <Text style={styles.icon} chrome accessibilityElementsHidden>
         {icon}
       </Text>
       <View style={styles.labelWrap}>
-        <Text style={styles.label} numberOfLines={3}>
+        <Text style={styles.label} chrome numberOfLines={3}>
           {evidence.title}
         </Text>
       </View>

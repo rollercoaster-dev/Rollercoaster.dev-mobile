@@ -1,5 +1,5 @@
 import React from "react";
-import { Text as RNText } from "react-native";
+import { StyleSheet, Text as RNText } from "react-native";
 import {
   renderWithProviders,
   screen,
@@ -112,5 +112,23 @@ describe("ScreenSubHeader", () => {
     renderWithProviders(<ScreenSubHeader label="Settings" onBack={() => {}} />);
     // Spacer fallback keeps the label centered against the back button.
     expect(screen.queryByLabelText("Save note")).toBeNull();
+  });
+});
+
+// #751: the sub-header label grew to 2.0x with no shrink, pushing the trailing
+// action off the row on every sub-screen.
+describe("ScreenSubHeader at large type", () => {
+  it("chrome-caps the label and lets it shrink between the side controls", () => {
+    renderWithProviders(
+      <ScreenSubHeader
+        label="A long localized sub-screen label"
+        onBack={() => {}}
+      />,
+    );
+    const label = screen.getByText("A long localized sub-screen label");
+    expect(label.props.maxFontSizeMultiplier).toBe(1.3);
+    const style = StyleSheet.flatten(label.props.style);
+    expect(style.flex).toBe(1);
+    expect(style.flexShrink).toBe(1);
   });
 });
