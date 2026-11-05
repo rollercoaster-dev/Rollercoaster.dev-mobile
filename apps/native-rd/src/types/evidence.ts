@@ -78,4 +78,3 @@ export const EVIDENCE_OPTIONS: readonly EvidenceOption[] = [
   { type: EvidenceType.link, icon: "\u{1F517}" },
   { type: EvidenceType.file, icon: "\u{1F4CE}" },
 ];
-
