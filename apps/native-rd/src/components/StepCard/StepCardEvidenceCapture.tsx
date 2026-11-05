@@ -2,14 +2,14 @@ import React from "react";
 import { View, Text, Pressable } from "react-native";
 import { useTranslation } from "react-i18next";
 import {
-  EVIDENCE_CAPTURE_OPTIONS,
-  type EvidenceCaptureOption,
+  EVIDENCE_OPTIONS,
+  type EvidenceOption,
   type QuickEvidenceType,
 } from "../../types/evidence";
 import { evidenceShortLabel } from "../../i18n/labels";
 import { styles } from "./StepCard.styles";
 
-type QuickEvidenceCaptureOption = EvidenceCaptureOption & {
+type QuickEvidenceOption = EvidenceOption & {
   readonly type: QuickEvidenceType;
 };
 
@@ -23,9 +23,9 @@ type QuickEvidenceCaptureOption = EvidenceCaptureOption & {
 export function getMissingQuickEvidenceOptions(
   plannedTypes: readonly string[],
   capturedTypes: readonly string[],
-): readonly QuickEvidenceCaptureOption[] {
-  return EVIDENCE_CAPTURE_OPTIONS.filter(
-    (option): option is QuickEvidenceCaptureOption =>
+): readonly QuickEvidenceOption[] {
+  return EVIDENCE_OPTIONS.filter(
+    (option): option is QuickEvidenceOption =>
       plannedTypes.includes(option.type) &&
       !capturedTypes.includes(option.type),
   );
@@ -35,7 +35,7 @@ export interface EvidenceCaptureButtonsProps {
   /** Step the captured evidence attaches to (leaf step or parent). */
   stepId: string;
   /** Pre-filtered options from {@link getMissingQuickEvidenceOptions}. */
-  options: readonly QuickEvidenceCaptureOption[];
+  options: readonly QuickEvidenceOption[];
   onQuickEvidence: (stepId: string, type: QuickEvidenceType) => void;
 }
 
