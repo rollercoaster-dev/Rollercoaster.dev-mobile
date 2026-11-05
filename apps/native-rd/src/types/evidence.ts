@@ -79,7 +79,3 @@ export const EVIDENCE_OPTIONS: readonly EvidenceOption[] = [
   { type: EvidenceType.file, icon: "\u{1F4CE}" },
 ];
 
-export type EvidenceCaptureOption = EvidenceOption;
-
-export const EVIDENCE_CAPTURE_OPTIONS: readonly EvidenceCaptureOption[] =
-  EVIDENCE_OPTIONS;
