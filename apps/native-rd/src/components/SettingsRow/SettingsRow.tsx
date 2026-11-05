@@ -7,6 +7,7 @@ import {
   type AccessibilityActionEvent,
 } from "react-native";
 import { useUnistyles } from "react-native-unistyles";
+import { useTypeScale } from "../../hooks/useTypeScale";
 import { styles } from "./SettingsRow.styles";
 
 export interface SettingsRowProps {
@@ -47,6 +48,9 @@ export function SettingsRow({
   toggle,
 }: SettingsRowProps) {
   const { theme } = useUnistyles();
+  // At large type a value beside the label squeezes it into mid-word breaks
+  // ("Co/m/pa/ct"); stack the value under the label instead (#753).
+  const { isLargeType } = useTypeScale();
   const accessibleName = accessibilityLabel ?? label;
   const longPressAccessibilityProps = onLongPress
     ? {
@@ -61,8 +65,17 @@ export function SettingsRow({
 
   const content = (
     <>
-      <Text style={styles.label}>{label}</Text>
-      {value && <Text style={styles.value}>{value}</Text>}
+      {isLargeType && value ? (
+        <View style={styles.stack} testID="settings-row-stack">
+          <Text style={[styles.label, styles.stackedLabel]}>{label}</Text>
+          <Text style={[styles.value, styles.stackedValue]}>{value}</Text>
+        </View>
+      ) : (
+        <>
+          <Text style={styles.label}>{label}</Text>
+          {value && <Text style={styles.value}>{value}</Text>}
+        </>
+      )}
       {toggle && (
         <Switch
           value={toggle.value}

@@ -45,4 +45,7 @@ export const styles = StyleSheet.create((theme) => ({
     minWidth: 40,
     textAlign: "right",
   },
+  timeTextStacked: {
+    marginTop: theme.space[1],
+  },
 }));

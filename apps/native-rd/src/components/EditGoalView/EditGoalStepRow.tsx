@@ -42,6 +42,7 @@ import Animated, {
 } from "react-native-reanimated";
 import type { AnimationPref } from "../../hooks/useAnimationPref";
 import { getTimingConfig } from "../../utils/animation";
+import { useTypeScale } from "../../hooks/useTypeScale";
 import { Button } from "../Button";
 import { EvidenceTypePicker } from "../EvidenceTypePicker";
 import { styles } from "./EditGoalView.styles";
@@ -205,6 +206,9 @@ export function EditGoalStepRow({
   timingCopy,
 }: EditGoalStepRowProps) {
   const { theme } = useUnistyles();
+  // At accessibility sizes the fixed-width controls squeeze the title to one
+  // letter per line; stack them under the title instead (#753).
+  const { isAccessibilitySize } = useTypeScale();
   const translateY = useSharedValue(0);
   const scale = useSharedValue(1);
   const isDragging = useSharedValue(false);
@@ -305,9 +309,11 @@ export function EditGoalStepRow({
       <View
         ref={headerRef}
         onLayout={measureAndRegister}
-        style={styles.rowMain}
+        style={[styles.rowMain, isAccessibilitySize && styles.rowStacked]}
       >
-        <View style={styles.rowLead}>
+        <View
+          style={[styles.rowLead, isAccessibilitySize && styles.rowLeadStacked]}
+        >
           <RNText
             style={styles.dragHandle}
             accessibilityElementsHidden
@@ -327,7 +333,12 @@ export function EditGoalStepRow({
             <RNText style={styles.rowTitleText}>{step.title}</RNText>
           </Pressable>
         </View>
-        <View style={styles.rowControls}>
+        <View
+          style={[
+            styles.rowControls,
+            isAccessibilitySize && styles.rowControlsStacked,
+          ]}
+        >
           <Pressable
             style={styles.evidenceChip}
             onPress={onEvidenceChipPress}

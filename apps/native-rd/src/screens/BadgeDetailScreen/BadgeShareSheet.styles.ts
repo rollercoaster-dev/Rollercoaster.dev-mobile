@@ -59,6 +59,16 @@ export const styles = StyleSheet.create((theme) => ({
     gap: theme.space[2],
     marginBottom: theme.space[1],
   },
+  rowHighlightedHeaderWrap: {
+    flexWrap: "wrap",
+    rowGap: theme.space[1],
+  },
+  // A 70% basis leaves no room for the tag, so it wraps under the label.
+  rowLabelWrap: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: "70%",
+  },
 
   // Rows 2 & 3 share a white card container with a divider between them.
   rowCard: {

@@ -4,6 +4,7 @@ import {
   screen,
   fireEvent,
 } from "../../../__tests__/test-utils";
+import { mockFontScale } from "../../../__tests__/fontScale";
 
 import { SettingsRow } from "../SettingsRow";
 
@@ -229,4 +230,25 @@ describe("SettingsRow", () => {
     renderWithProviders(<SettingsRow label="Version" />);
     expect(screen.queryByText("1.2.3")).toBeNull();
   });
+
+  // #753: at large type the value beside the label squeezed "Compact" to one
+  // letter per line; the value stacks under the label instead.
+  it.each([
+    { fontScale: 1, stacked: false },
+    { fontScale: 1.3, stacked: true },
+  ])(
+    "stacks label and value at fontScale $fontScale: $stacked",
+    ({ fontScale, stacked }) => {
+      renderWithProviders(
+        <SettingsRow
+          label="Compact"
+          value="Tighter spacing"
+          onPress={() => {}}
+        />,
+      );
+      mockFontScale(fontScale);
+      expect(screen.queryByTestId("settings-row-stack") !== null).toBe(stacked);
+      expect(screen.getByText("Tighter spacing")).toBeOnTheScreen();
+    },
+  );
 });

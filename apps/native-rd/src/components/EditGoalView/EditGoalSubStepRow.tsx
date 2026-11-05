@@ -27,6 +27,7 @@ import Animated, {
 } from "react-native-reanimated";
 import type { AnimationPref } from "../../hooks/useAnimationPref";
 import { getTimingConfig } from "../../utils/animation";
+import { useTypeScale } from "../../hooks/useTypeScale";
 import { EvidenceTypePicker } from "../EvidenceTypePicker";
 import { styles } from "./EditGoalView.styles";
 import type { EditGoalSubStep, EditGoalTimingCopy } from "./EditGoalView";
@@ -157,6 +158,9 @@ export function EditGoalSubStepRow({
   timingCopy,
 }: EditGoalSubStepRowProps) {
   const { theme } = useUnistyles();
+  // At accessibility sizes the fixed-width controls squeeze the title to one
+  // letter per line; stack them under the title instead (#753).
+  const { isAccessibilitySize } = useTypeScale();
   const translateY = useSharedValue(0);
   const scale = useSharedValue(1);
   const isDragging = useSharedValue(false);
@@ -267,7 +271,9 @@ export function EditGoalSubStepRow({
 
   const body = (
     <>
-      <View style={styles.rowLead}>
+      <View
+        style={[styles.rowLead, isAccessibilitySize && styles.rowLeadStacked]}
+      >
         {marker}
         <Pressable
           style={styles.subStepTitlePress}
@@ -280,7 +286,12 @@ export function EditGoalSubStepRow({
           <RNText style={styles.subStepTitleText}>{subStep.title}</RNText>
         </Pressable>
       </View>
-      <View style={styles.rowControls}>
+      <View
+        style={[
+          styles.rowControls,
+          isAccessibilitySize && styles.rowControlsStacked,
+        ]}
+      >
         <Pressable
           style={styles.evidenceChip}
           onPress={onEvidenceChipPress}
@@ -334,7 +345,11 @@ export function EditGoalSubStepRow({
     <View
       ref={rowRef}
       onLayout={measureAndRegister}
-      style={[styles.subStepRow, isBeingDragged && styles.subStepRowDragging]}
+      style={[
+        styles.subStepRow,
+        isAccessibilitySize && styles.rowStacked,
+        isBeingDragged && styles.subStepRowDragging,
+      ]}
     >
       {body}
     </View>

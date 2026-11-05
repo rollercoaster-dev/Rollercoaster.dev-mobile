@@ -3,6 +3,8 @@ import { render, screen, fireEvent } from "@testing-library/react-native";
 
 import { AudioPlayer } from "../AudioPlayer";
 import { i18n } from "../../../i18n";
+import { mockFontScale } from "../../../__tests__/fontScale";
+import { closestStyle } from "../../../__tests__/styleHelpers";
 
 const mockPlay = jest.fn();
 const mockPause = jest.fn();
@@ -166,5 +168,14 @@ describe("AudioPlayer", () => {
       expect(screen.getByLabelText(play)).toBeTruthy();
       expect(screen.getByLabelText(container)).toBeTruthy();
     });
+  });
+
+  // #753: beside the track at large type the time squeezed the track to
+  // nothing; it moves into the progress column, under the track.
+  it("moves the time under the progress track at large type", () => {
+    render(<AudioPlayer uri="/audio.m4a" />);
+    expect(() => closestStyle(screen.getByText("00:00"), "flex")).toThrow();
+    mockFontScale(1.3);
+    expect(closestStyle(screen.getByText("00:00"), "flex").flex).toBe(1);
   });
 });

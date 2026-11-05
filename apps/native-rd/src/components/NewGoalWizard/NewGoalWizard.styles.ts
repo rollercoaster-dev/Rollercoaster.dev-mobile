@@ -189,8 +189,11 @@ export const styles = StyleSheet.create((theme) => ({
     fontSize: theme.size.sm,
     color: theme.colors.textSecondary,
   },
+  // Wraps only when it overflows (large type), so the eyebrow, chip and
+  // "change" drop to new lines instead of running off-screen (#753).
   evidenceRow: {
     flexDirection: "row" as const,
+    flexWrap: "wrap" as const,
     alignItems: "center" as const,
     gap: theme.space[2],
   },
@@ -198,6 +201,8 @@ export const styles = StyleSheet.create((theme) => ({
   // honest even though the chip itself is compact.
   evidencePress: {
     flexDirection: "row" as const,
+    flexWrap: "wrap" as const,
+    flexShrink: 1,
     alignItems: "center" as const,
     gap: theme.space[2],
     minHeight: 44,
