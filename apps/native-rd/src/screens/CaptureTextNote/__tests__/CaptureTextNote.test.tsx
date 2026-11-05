@@ -6,7 +6,9 @@ import {
   screen,
   fireEvent,
   act,
+  within,
 } from "../../../__tests__/test-utils";
+import { mockFontScale } from "../../../__tests__/fontScale";
 import { i18n } from "../../../i18n";
 import { CaptureTextNote } from "../CaptureTextNote";
 
@@ -371,6 +373,43 @@ describe("CaptureTextNote", () => {
       });
       expect(pseudo.startsWith("[")).toBe(true);
       expect(screen.getByLabelText(pseudo)).toBeOnTheScreen();
+    });
+  });
+
+  describe("fields at large type (#754)", () => {
+    function flatStyle(style: unknown): Record<string, unknown> {
+      return Object.assign(
+        {},
+        ...(Array.isArray(style) ? style : [style]).filter(Boolean),
+      );
+    }
+
+    it("keeps the note flex-filling a fixed View at default size", () => {
+      renderWithProviders(
+        <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
+      );
+      expect(screen.getByTestId("capture-text-fields").type).toBe("View");
+      expect(
+        flatStyle(screen.getByTestId("capture-text-body").props.style).flex,
+      ).toBe(1);
+    });
+
+    it("scrolls note + caption above the pinned Save at font scale 2", () => {
+      renderWithProviders(
+        <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
+      );
+      mockFontScale(2);
+      const fields = screen.getByTestId("capture-text-fields");
+      expect(fields.type).toBe("RCTScrollView");
+      expect(fields.props.automaticallyAdjustKeyboardInsets).toBe(true);
+      expect(within(fields).getByTestId("capture-text-caption")).toBeTruthy();
+      expect(within(fields).queryByTestId("capture-text-save")).toBeNull();
+      expect(screen.getByTestId("capture-text-save")).toBeOnTheScreen();
+      const noteStyle = flatStyle(
+        screen.getByTestId("capture-text-body").props.style,
+      );
+      expect(noteStyle.flex).toBe(0);
+      expect(noteStyle.minHeight).toBe(200);
     });
   });
 });

@@ -1214,6 +1214,24 @@ describe("EditGoalView", () => {
       expect(screen.getByRole("button", { name: "Cancel" })).toBeOnTheScreen();
     });
 
+    it("scrolls the nest-under targets between the title and a pinned Cancel (#754)", () => {
+      mockAnimationPref = "none";
+      renderWithProviders(
+        <EditGoalView
+          {...makeProps({ steps: withSub, onReparentStep: jest.fn() })}
+        />,
+      );
+      fireEvent.press(screen.getByTestId("edit-goal-step-nest-under-s2"));
+      const list = screen.getByTestId("edit-goal-step-nest-targets-s2");
+      expect(list.type).toBe("RCTScrollView");
+      expect(
+        within(list).getByTestId("edit-goal-step-nest-target-s2-s1"),
+      ).toBeOnTheScreen();
+      // Cancel sits outside the scroll so it can't scroll away.
+      expect(within(list).queryByRole("button", { name: "Cancel" })).toBeNull();
+      expect(screen.getByRole("button", { name: "Cancel" })).toBeOnTheScreen();
+    });
+
     it("renders no Nest-under control on a parent-with-children", () => {
       mockAnimationPref = "none";
       const onReparentStep = jest.fn();

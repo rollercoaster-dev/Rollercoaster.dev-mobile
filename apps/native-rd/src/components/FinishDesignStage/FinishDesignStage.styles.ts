@@ -37,6 +37,11 @@ export const styles = StyleSheet.create((theme) => ({
     alignItems: "center",
     paddingVertical: theme.space[5],
   },
+  // Large type (#754): less padding around the shrunken preview so the
+  // sections scroll keeps the space.
+  previewCompact: {
+    paddingVertical: theme.space[2],
+  },
   // KeyboardAvoidingFrame frame around the body + footer: flex:1 so it owns the
   // space under the header and shrinks with the soft keyboard, lifting the
   // footer CTA above it instead of leaving it covered.

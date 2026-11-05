@@ -18,6 +18,15 @@ export const styles = StyleSheet.create((theme) => ({
     alignItems: "center",
     gap: theme.space[4],
   },
+  // `content` as ScrollAtLargeType's scroll content (#754): centered while it
+  // fits, scrolling from the top once the large-type stack doesn't.
+  contentScroll: {
+    flexGrow: 1,
+    padding: theme.space[4],
+    justifyContent: "center",
+    alignItems: "center",
+    gap: theme.space[4],
+  },
   timerText: {
     fontSize: 48,
     lineHeight: 60,

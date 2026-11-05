@@ -27,6 +27,7 @@ import {
   TextInput,
   Pressable,
   Modal,
+  ScrollView,
   type GestureResponderEvent,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -431,28 +432,39 @@ export function EditGoalStepRow({
             { backgroundColor: `${theme.colors.shadow}80` },
           ]}
         >
-          <SafeAreaView edges={["bottom"]} style={styles.pickerContainer}>
+          <SafeAreaView
+            edges={["top", "bottom"]}
+            style={styles.pickerContainer}
+          >
             <View style={styles.pickerCard}>
               <RNText style={styles.pickerTitle} accessibilityRole="header">
                 {nestUnderPickerTitle}
               </RNText>
-              {nestTargets.map((target) => (
-                <Pressable
-                  key={target.id}
-                  style={styles.pickerRow}
-                  onPress={() => {
-                    onNestUnder(target.id);
-                    setPickerOpen(false);
-                  }}
-                  accessibilityRole="button"
-                  accessibilityLabel={nestUnderRowA11yLabel(target.title)}
-                  testID={`edit-goal-step-nest-target-${step.id}-${target.id}`}
-                >
-                  <RNText style={styles.pickerRowText}>
-                    {nestUnderRowLabel(target.title)}
-                  </RNText>
-                </Pressable>
-              ))}
+              {/* Targets scroll between the pinned title and Cancel so a long
+                  list at large type can't push Cancel off-screen (#754). */}
+              <ScrollView
+                style={styles.pickerList}
+                contentContainerStyle={styles.pickerListContent}
+                testID={`edit-goal-step-nest-targets-${step.id}`}
+              >
+                {nestTargets.map((target) => (
+                  <Pressable
+                    key={target.id}
+                    style={styles.pickerRow}
+                    onPress={() => {
+                      onNestUnder(target.id);
+                      setPickerOpen(false);
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel={nestUnderRowA11yLabel(target.title)}
+                    testID={`edit-goal-step-nest-target-${step.id}-${target.id}`}
+                  >
+                    <RNText style={styles.pickerRowText}>
+                      {nestUnderRowLabel(target.title)}
+                    </RNText>
+                  </Pressable>
+                ))}
+              </ScrollView>
               <Button
                 label={nestUnderCancelLabel}
                 variant="secondary"

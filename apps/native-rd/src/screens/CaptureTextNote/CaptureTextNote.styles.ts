@@ -12,6 +12,15 @@ export const styles = StyleSheet.create((theme) => ({
     paddingTop: theme.space[4],
     gap: theme.space[3],
   },
+  // Note + caption. At default size a flex:1 View (the note fills it); at
+  // large type the ScrollAtLargeType scroll above the pinned count/Save row.
+  fields: {
+    flex: 1,
+    gap: theme.space[3],
+  },
+  fieldsScrollContent: {
+    gap: theme.space[3],
+  },
   textInput: {
     flex: 1,
     borderWidth: theme.borderWidth.medium,
@@ -26,6 +35,12 @@ export const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.backgroundSecondary,
     textAlignVertical: "top",
     ...shadowStyle(theme, "cardElevation"),
+  },
+  // Inside the large-type scroll flex:1 has nothing to fill, so the note
+  // keeps a usable height of its own instead (#754).
+  textInputLargeType: {
+    flex: 0,
+    minHeight: 200,
   },
   textInputFocused: {
     borderColor: theme.colors.focusRing,

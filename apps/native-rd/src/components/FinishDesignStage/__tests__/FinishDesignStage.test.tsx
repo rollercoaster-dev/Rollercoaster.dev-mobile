@@ -5,6 +5,7 @@ import {
   screen,
   fireEvent,
 } from "../../../__tests__/test-utils";
+import { mockFontScale } from "../../../__tests__/fontScale";
 import {
   FinishDesignStage,
   type FinishDesignStageProps,
@@ -581,5 +582,48 @@ describe("FinishDesignStage", () => {
     expect(screen.getByTestId("finish-design-preview")).toBeOnTheScreen();
     expect(previewRef.current).not.toBeNull();
     expect(typeof previewRef.current?.captureAsPng).toBe("function");
+  });
+
+  describe("pinned chrome at large type (#754)", () => {
+    it("truncates the goal subtitle to one line at default size", () => {
+      renderWithProviders(<FinishDesignStage {...makeProps()} />);
+      expect(
+        screen.getByTestId("finish-design-goal-subtitle").props.numberOfLines,
+      ).toBe(1);
+    });
+
+    it("lets the goal subtitle wrap at font scale 2", () => {
+      renderWithProviders(<FinishDesignStage {...makeProps()} />);
+      mockFontScale(2);
+      expect(
+        screen.getByTestId("finish-design-goal-subtitle").props.numberOfLines,
+      ).toBe(3);
+    });
+
+    it("keeps the preview unscaled at default size", () => {
+      renderWithProviders(<FinishDesignStage {...makeProps()} />);
+      expect(
+        screen.getByTestId("finish-design-preview-scale").props.style,
+      ).toBeFalsy();
+    });
+
+    it("shrinks the preview visually at font scale 2 without resizing the capture target", () => {
+      renderWithProviders(<FinishDesignStage {...makeProps()} />);
+      const preview = () => screen.getByTestId("finish-design-preview");
+      const defaultSize = [preview().props.width, preview().props.height];
+      mockFontScale(2);
+      // previewRef captures this Svg; iOS bakes at its layout size, so it must
+      // not change with font scale (#790 review).
+      expect([preview().props.width, preview().props.height]).toEqual(
+        defaultSize,
+      );
+      const wrapper = screen.getByTestId("finish-design-preview-scale");
+      fireEvent(wrapper, "layout", {
+        nativeEvent: { layout: { x: 0, y: 0, width: 160, height: 160 } },
+      });
+      expect(
+        screen.getByTestId("finish-design-preview-scale").props.style,
+      ).toEqual({ transform: [{ scale: 0.6 }], marginVertical: -32 });
+    });
   });
 });

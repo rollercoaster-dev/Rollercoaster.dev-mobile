@@ -15,6 +15,7 @@ import { Card } from "../../components/Card";
 import { Button } from "../../components/Button";
 import { IconButton } from "../../components/IconButton";
 import { ScreenSubHeader } from "../../components/ScreenHeader";
+import { ScrollAtLargeType } from "../../components/ScrollAtLargeType";
 import { useAudioRecorder } from "../../hooks/useAudioRecorder";
 import { useUnsavedExitGuard } from "../../hooks/useUnsavedExitGuard";
 import { createEvidence, EvidenceType } from "../../db";
@@ -121,7 +122,11 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
     return (
       <View style={styles.container}>
         <ScreenSubHeader label={t("captureVoice:title")} onBack={requestExit} />
-        <View style={styles.content}>
+        <ScrollAtLargeType
+          style={styles.content}
+          contentContainerStyle={styles.contentScroll}
+          testID="voice-memo-permission-body"
+        >
           <Card>
             <View style={styles.permissionContent}>
               <Text style={styles.permissionIcon} accessibilityElementsHidden>
@@ -145,7 +150,7 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
               />
             </View>
           </Card>
-        </View>
+        </ScrollAtLargeType>
       </View>
     );
   }
@@ -155,9 +160,15 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
       <ScreenSubHeader label={t("captureVoice:title")} onBack={requestExit} />
 
       {/* Keeps the Save/Discard row above the keyboard while the caption has
-          focus; header stays outside so no vertical offset is needed. */}
+          focus; header stays outside so no vertical offset is needed. At large
+          type the body scrolls inside it so the 2x timer, controls and caption
+          can't push Save off-screen (#754). */}
       <KeyboardAvoidingFrame style={styles.keyboardFrame}>
-        <View style={styles.content}>
+        <ScrollAtLargeType
+          style={styles.content}
+          contentContainerStyle={styles.contentScroll}
+          testID="voice-memo-body"
+        >
           {/* Timer display */}
           <Text
             style={styles.timerText}
@@ -358,7 +369,7 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
               </View>
             </>
           )}
-        </View>
+        </ScrollAtLargeType>
       </KeyboardAvoidingFrame>
     </View>
   );
