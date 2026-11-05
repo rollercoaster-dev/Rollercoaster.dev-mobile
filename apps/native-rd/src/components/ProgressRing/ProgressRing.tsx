@@ -44,6 +44,9 @@ export function ProgressRing({
   // like "100%" the rest of the way.
   const innerDiameter = Math.max(0, size - strokeWidth * 2);
   const labelFontSize = Math.round(size * 0.25);
+  // The circle narrows away from its middle; 80% of the inner diameter keeps a
+  // two-line sublabel clear of the stroke.
+  const sublabelMaxWidth = Math.round(innerDiameter * 0.8);
 
   return (
     <View
@@ -98,7 +101,14 @@ export function ProgressRing({
             </Text>
           ) : null}
           {centerSublabel ? (
-            <Text variant="mono" style={styles.centerSublabel}>
+            // Chrome-capped and bounded to the ring's inner width, so "0 / 1
+            // STEPS" wraps inside the stroke at large type instead of
+            // spilling over it (#756).
+            <Text
+              variant="mono"
+              chrome
+              style={[styles.centerSublabel, { maxWidth: sublabelMaxWidth }]}
+            >
               {centerSublabel}
             </Text>
           ) : null}

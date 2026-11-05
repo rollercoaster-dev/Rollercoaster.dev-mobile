@@ -13,6 +13,7 @@ import { i18n } from "../i18n";
 import { composeTheme } from "../themes/compose";
 import { FocusPillTabBar } from "../navigation/FocusPillTabBar";
 import { AnimatedSheet } from "../components/AnimatedSheet";
+import { mockFontScale } from "./fontScale";
 import {
   expectAccessibleRole,
   expectAccessibleLabel,
@@ -224,6 +225,32 @@ describe("FocusPillTabBar", () => {
 
     rerender(withSheet(false));
     expect(screen.getAllByRole("tab")).toHaveLength(3);
+  });
+
+  // #746: at accessibility sizes the knob label clipped to "Bad…" / spilled
+  // out of the pill. It now caps at the chrome scale and drops to icon-only.
+  describe("large type", () => {
+    it("caps the knob label at the chrome scale", () => {
+      const { props } = buildProps();
+      renderWithProviders(<FocusPillTabBar {...props} />);
+      expect(
+        screen.getByTestId("tab-slide-knob-label", {
+          includeHiddenElements: true,
+        }).props.maxFontSizeMultiplier,
+      ).toBe(1.3);
+    });
+
+    it("renders the knob icon-only at accessibility sizes, keeping tab labels", () => {
+      const { props } = buildProps({ activeIndex: 1 });
+      renderWithProviders(<FocusPillTabBar {...props} />);
+      mockFontScale(2.35);
+      expect(
+        screen.queryByTestId("tab-slide-knob-label", {
+          includeHiddenElements: true,
+        }),
+      ).toBeNull();
+      expectAccessibleLabel(screen.getByTestId("tab-BadgesTab"), "Badges");
+    });
   });
 
   describe("pseudo locale", () => {

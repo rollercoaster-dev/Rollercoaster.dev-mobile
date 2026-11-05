@@ -20,6 +20,7 @@ export const styles = StyleSheet.create((theme) => ({
     fontSize: 10,
     letterSpacing: 0.5,
     textTransform: "uppercase",
+    textAlign: "center",
     marginTop: theme.space[1],
   },
 }));

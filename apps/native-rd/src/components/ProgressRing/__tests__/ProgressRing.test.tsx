@@ -73,6 +73,25 @@ describe("ProgressRing", () => {
     expect(flattened.maxWidth).toBe(124 - 10 * 2);
   });
 
+  // #756: at large type the "0 / 1 STEPS" sublabel grew to 2x and spilled
+  // over the stroke. It caps at the chrome scale and wraps within the ring.
+  it("chrome-caps the sublabel and bounds it inside the ring", () => {
+    renderWithProviders(
+      <ProgressRing
+        progress={0}
+        size={124}
+        strokeWidth={10}
+        centerSublabel="0 / 1 steps"
+      />,
+    );
+    const sublabel = screen.getByText("0 / 1 steps");
+    expect(sublabel.props.maxFontSizeMultiplier).toBe(1.3);
+    expect(StyleSheet.flatten(sublabel.props.style).maxWidth).toBe(
+      // 80% of the 104pt inner diameter (124 - 2 × 10).
+      83,
+    );
+  });
+
   // Regression: strokeWidth >= size made (size - strokeWidth) / 2 negative,
   // producing an invalid SVG radius (blank ring + RN warnings). Both the radius
   // and the label's maxWidth (innerDiameter) must clamp to 0 instead.
