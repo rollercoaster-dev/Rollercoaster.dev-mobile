@@ -152,7 +152,7 @@ function InProgressView({
   // Normalize both plan and capture keys through the same `file` fallback the
   // planned box and captured rail use (`validateEvidenceType`). Without this an
   // unknown planned key (e.g. "sketch") would never appear in
-  // `EVIDENCE_CAPTURE_OPTIONS`, so the gate below would silently drop it —
+  // `EVIDENCE_OPTIONS`, so the gate below would silently drop it —
   // treating a plan that is *not* satisfied as satisfied. Normalizing makes it
   // gate as `file`, matching what the planned box already shows.
   const capturedTypes = captured.map((item) => validateEvidenceType(item.type));
