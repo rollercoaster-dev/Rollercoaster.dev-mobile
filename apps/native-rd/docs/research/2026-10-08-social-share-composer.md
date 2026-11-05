@@ -59,17 +59,17 @@ Output
 
 ## RN implementation sketch
 
-- Already in deps: `react-native-gesture-handler` + `reanimated` (gestures), `react-native-view-shot` (capture), `expo-sharing`.
+- Already in deps: `react-native-gesture-handler` + `reanimated` (gestures), `expo-sharing`. Capture needs a new dep either way (`react-native-view-shot` is **not** installed).
 - Gestures: `Gesture.Simultaneous(Pan, Pinch)` per layer, using shared values for x/y/scale. Selection is held in React state.
 - Rendering and export choice:
-  - **view-shot** (no new dep): capture an offscreen `View` laid out at preset px ÷ PixelRatio. Risks: fonts and exact pixel size vary by device, and capturing a large offscreen view is fiddly.
-  - **@shopify/react-native-skia** (new dep): draw the same scene on a Skia canvas and export with `makeImageSnapshot` at exact pixels. That gives deterministic output and the same code for preview and export. **Recommended** if we accept the dependency.
+  - **view-shot** (`react-native-view-shot`, new dep, small): capture an offscreen `View` laid out at preset px ÷ PixelRatio. Risks: fonts and exact pixel size vary by device, and capturing a large offscreen view is fiddly.
+  - **@shopify/react-native-skia** (new dep): draw the same scene on a Skia canvas and export with `makeImageSnapshot` at exact pixels. That gives deterministic output and the same code for preview and export. **Recommended**: both options add a dependency, so pick the one with deterministic output.
 - Model: `ShareComposition { format, photo: {uri, zoom, cx, cy}, layers: [...] , layoutsByFormat }`. It is ephemeral, so no Evolu persistence in v1.
 - Entry point: a "Share" button on the badge detail screen (and maybe on the evidence viewer). Pick a photo from the goal's evidence.
 
 ## Open questions
 
 1. ~~Does a verify URL exist?~~ **No (2026-10-08).** Ship the chip off and hidden; enable it once a public verify page exists.
-2. Skia dependency: yes or no?
+2. Skia vs view-shot (both are new deps)?
 3. Video evidence (Reels/TikTok are video-first): out of scope for v1?
 4. Rotation of layers: skipped in the prototype. Is it wanted?
