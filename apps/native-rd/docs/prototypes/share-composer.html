@@ -1,0 +1,512 @@
+<!doctype html>
+<!--
+  PROTOTYPE — throwaway. Question: what does the "share evidence with badge on top"
+  composer need? Single-file canvas editor: pick a social format, drag/resize the
+  badge, add/edit text, check platform safe zones, export at real pixel size.
+  Assumption: v1 = image evidence only (video/text evidence out of scope).
+  Research + RN implementation notes: ../research/2026-10-08-social-share-composer.md
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Share Composer — Prototype</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Anybody:wght@700;900&family=Instrument+Sans:wght@400;600;700&family=Lexend:wght@500;700&family=Atkinson+Hyperlegible:wght@400;700&family=DM+Mono:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #fafafa;
+        --text: #262626;
+        --text-sec: #737373;
+        --accent-purple: #a78bfa;
+        --accent-mint: #d4f4e7;
+        --accent-yellow: #ffe50c;
+        --border: #262626;
+        --error: #dc2626;
+        --font-body: "Instrument Sans", system-ui, sans-serif;
+        --font-headline: "Anybody", system-ui, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; background: #1a1033; color: var(--text); font-family: var(--font-body); }
+      .page { max-width: 1280px; margin: 0 auto; padding: 24px 16px 64px; }
+      header { color: #fafafa; margin-bottom: 20px; }
+      header h1 { font-family: var(--font-headline); font-size: 26px; margin: 0 0 6px; }
+      header p { margin: 0; opacity: 0.8; font-size: 14px; }
+      .layout { display: grid; grid-template-columns: 1fr 360px; gap: 20px; align-items: start; }
+      @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+      .stage { display: flex; justify-content: center; align-items: center; min-height: 300px;
+        background: repeating-conic-gradient(#2a1f4a 0 25%, #221840 0 50%) 0 0/24px 24px;
+        border: 3px solid #000; border-radius: 12px; padding: 16px; }
+      canvas { display: block; touch-action: none; border: 3px solid #000; box-shadow: 6px 6px 0 #000; background: #fff; cursor: grab; }
+      canvas.dragging { cursor: grabbing; }
+      .formats { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+      .fmt { background: var(--bg); border: 3px solid var(--border); box-shadow: 3px 3px 0 #000; border-radius: 8px;
+        padding: 8px 10px; min-height: 44px; font: 600 13px var(--font-body); cursor: pointer; text-align: left; }
+      .fmt small { display: block; font-weight: 400; color: var(--text-sec); font-size: 11px; }
+      .fmt[aria-pressed="true"] { background: var(--accent-yellow); }
+      .panel { background: var(--bg); border: 3px solid #000; box-shadow: 6px 6px 0 #000; border-radius: 12px; padding: 16px; }
+      .panel h2 { font-family: var(--font-headline); font-size: 16px; margin: 16px 0 8px; }
+      .panel h2:first-child { margin-top: 0; }
+      .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
+      button.b { min-height: 44px; min-width: 44px; padding: 0 12px; border: 3px solid #000; border-radius: 8px; background: #fff;
+        font: 600 14px var(--font-body); box-shadow: 3px 3px 0 #000; cursor: pointer; }
+      button.b:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #000; }
+      button.b.primary { background: var(--accent-purple); }
+      button.b.go { background: var(--accent-mint); }
+      button.b[aria-pressed="true"] { background: var(--accent-yellow); }
+      .layers { list-style: none; padding: 0; margin: 0 0 8px; }
+      .layers li button { width: 100%; text-align: left; margin-bottom: 6px; }
+      textarea, select, input[type="text"] { width: 100%; font: 16px var(--font-body); border: 3px solid #000; border-radius: 8px; padding: 8px; }
+      textarea { min-height: 72px; resize: vertical; }
+      label { font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px; }
+      .swatch { width: 44px; height: 44px; border: 3px solid #000; border-radius: 8px; cursor: pointer; }
+      .swatch[aria-pressed="true"] { outline: 3px solid #3b82f6; outline-offset: 2px; }
+      .warn { background: #fee2e2; border: 2px solid var(--error); border-radius: 8px; padding: 8px; font-size: 13px; margin: 8px 0; }
+      .meta { color: #fafafa; font-size: 13px; margin-top: 10px; opacity: 0.85; }
+      details { margin-top: 12px; }
+      pre { background: #111; color: #d4f4e7; font: 11px "DM Mono", monospace; padding: 10px; border-radius: 8px; overflow: auto; max-height: 260px; }
+      .hint { font-size: 12px; color: var(--text-sec); margin: 4px 0 0; }
+      input[type="range"] { width: 100%; }
+      .sr { position: absolute; left: -9999px; }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header>
+        <h1>Share Composer · prototype</h1>
+        <p>Evidence photo + badge + text → social-ready image. Drag to move, corner handle / pinch / scroll to resize, drag the background to reposition the photo. Keyboard: Tab cycles layers, arrows nudge, +/− resize.</p>
+      </header>
+
+      <div class="formats" role="group" aria-label="Output format" id="formats"></div>
+
+      <div class="layout">
+        <div>
+          <div class="stage" id="stage">
+            <canvas id="cv" tabindex="0" aria-label="Share image editor canvas"></canvas>
+          </div>
+          <div class="meta" id="meta"></div>
+        </div>
+
+        <aside class="panel">
+          <h2>Evidence photo</h2>
+          <div class="row">
+            <label class="b" style="display:inline-flex;align-items:center;margin:0;border:3px solid #000;border-radius:8px;padding:0 12px;min-height:44px;background:#fff;box-shadow:3px 3px 0 #000;cursor:pointer">
+              Choose photo…<input type="file" accept="image/*" id="bgFile" class="sr" />
+            </label>
+            <button class="b" id="fitBtn">Re-center</button>
+          </div>
+          <label for="zoom">Photo zoom</label>
+          <input type="range" id="zoom" min="1" max="4" step="0.01" value="1" />
+
+          <h2>Layers</h2>
+          <ul class="layers" id="layers"></ul>
+          <div class="row">
+            <button class="b" id="addText">+ Text</button>
+            <button class="b" id="delLayer">Delete</button>
+            <label class="b" style="display:inline-flex;align-items:center;margin:0;border:3px solid #000;border-radius:8px;padding:0 12px;min-height:44px;background:#fff;box-shadow:3px 3px 0 #000;cursor:pointer">
+              Badge PNG…<input type="file" accept="image/png,image/*" id="badgeFile" class="sr" />
+            </label>
+          </div>
+
+          <div id="nudge">
+            <label>Move / size (no-drag alternative)</label>
+            <div class="row">
+              <button class="b" data-n="-1,0" aria-label="Move left">←</button>
+              <button class="b" data-n="0,-1" aria-label="Move up">↑</button>
+              <button class="b" data-n="0,1" aria-label="Move down">↓</button>
+              <button class="b" data-n="1,0" aria-label="Move right">→</button>
+              <button class="b" data-s="0.9" aria-label="Smaller">−</button>
+              <button class="b" data-s="1.1" aria-label="Bigger">+</button>
+              <button class="b" id="centerX" aria-label="Center horizontally">⇹</button>
+            </div>
+          </div>
+
+          <div id="textEdit" hidden>
+            <h2>Text</h2>
+            <label for="txt">Words</label>
+            <textarea id="txt"></textarea>
+            <div class="row" style="margin-top:8px">
+              <div style="flex:1">
+                <label for="font">Font</label>
+                <select id="font">
+                  <option value="Anybody|900">Anybody (headline)</option>
+                  <option value="Instrument Sans|700">Instrument Sans</option>
+                  <option value="Lexend|700">Lexend (dyslexia)</option>
+                  <option value="Atkinson Hyperlegible|700">Atkinson (low vision)</option>
+                </select>
+              </div>
+              <div style="flex:1">
+                <label for="style">Style</label>
+                <select id="style">
+                  <option value="box">Box (always readable)</option>
+                  <option value="plain">Plain + shadow</option>
+                  <option value="outline">Outline</option>
+                </select>
+              </div>
+            </div>
+            <label>Colour</label>
+            <div class="row" id="swatches"></div>
+          </div>
+
+          <h2>Overlays</h2>
+          <div class="row">
+            <button class="b" id="safeBtn" aria-pressed="true">Safe zones</button>
+            <button class="b" id="chipBtn" aria-pressed="false">Verify chip</button>
+          </div>
+          <div id="warnings"></div>
+
+          <h2>Export</h2>
+          <div class="row">
+            <button class="b go" id="shareBtn">Share…</button>
+            <button class="b primary" id="dlBtn">Download PNG</button>
+            <button class="b" id="dlJpg">JPEG</button>
+          </div>
+          <p class="hint">Exports at the format's true pixel size. Re-encoding drops the photo's EXIF/GPS.</p>
+
+          <details>
+            <summary>State</summary>
+            <pre id="state"></pre>
+          </details>
+        </aside>
+      </div>
+    </div>
+
+    <script>
+      // ---------- formats (research doc has sources) ----------
+      // safe: fractions of canvas covered by platform UI. Rects: [x0,y0,x1,y1] in 0..1.
+      const FORMATS = {
+        story: { w: 1080, h: 1920, label: "Story / Reel 9:16", uses: "IG & FB Stories, Reels, TikTok, Shorts, Snapchat, WhatsApp Status",
+          safe: [ { r: [0, 0, 1, 0.14], t: "Profile / progress bar" }, { r: [0, 0.8, 1, 1], t: "Reply bar · caption" }, { r: [0.86, 0.45, 1, 0.8], t: "Reels/TikTok buttons" } ] },
+        portrait: { w: 1080, h: 1350, label: "Portrait 4:5", uses: "Instagram feed, Facebook, LinkedIn, Threads",
+          safe: [ { r: [0, 0, 0.031, 1], t: "" }, { r: [0.969, 0, 1, 1], t: "IG grid crop (3:4)" } ] },
+        tall: { w: 1080, h: 1440, label: "Tall 3:4", uses: "Instagram (grid-native), Threads", safe: [] },
+        square: { w: 1080, h: 1080, label: "Square 1:1", uses: "Works everywhere · Mastodon, Bluesky, LinkedIn, WhatsApp", safe: [] },
+        landscape: { w: 1600, h: 900, label: "Landscape 16:9", uses: "X, Bluesky, LinkedIn, Mastodon, Discord", safe: [] },
+        link: { w: 1200, h: 630, label: "Link card 1.91:1", uses: "Open Graph preview for the badge's verify page", safe: [] },
+      };
+      const SWATCHES = ["#ffe50c", "#ffffff", "#d4f4e7", "#a78bfa", "#fb7185", "#262626"];
+
+      // ---------- state ----------
+      let uid = 0;
+      const state = {
+        format: "story",
+        bg: { zoom: 1, cx: 0.5, cy: 0.5 },
+        showSafe: true,
+        chip: false, // no public verify URL yet — chip opt-in only
+        selected: null,
+        layers: [
+          { id: ++uid, type: "badge", x: 0.5, y: 0.4, size: 0.5 },
+          { id: ++uid, type: "text", x: 0.5, y: 0.68, size: 0.075, text: "I ran my first 5K!", font: "Anybody|900", style: "box", color: "#ffe50c" },
+          { id: ++uid, type: "chip", x: 0.5, y: 0.76, size: 0.03, text: "✓ Verifiable Open Badge · rollercoaster.dev/v/7Q2K" },
+        ],
+      };
+      state.selected = state.layers[0].id;
+      let bgImg = null, badgeImg = null, guides = { v: false, h: false };
+
+      const cv = document.getElementById("cv");
+      const ctx = cv.getContext("2d");
+      const fmt = () => FORMATS[state.format];
+      const sel = () => state.layers.find((l) => l.id === state.selected);
+      const minSide = () => Math.min(fmt().w, fmt().h);
+
+      // ---------- sample assets (so it works without uploads) ----------
+      function sampleEvidence() {
+        const c = document.createElement("canvas"); c.width = 1600; c.height = 1200;
+        const g = c.getContext("2d");
+        const sky = g.createLinearGradient(0, 0, 0, 1200); sky.addColorStop(0, "#fb923c"); sky.addColorStop(0.55, "#fde68a"); sky.addColorStop(1, "#86efac");
+        g.fillStyle = sky; g.fillRect(0, 0, 1600, 1200);
+        g.fillStyle = "#fff7ed"; g.beginPath(); g.arc(1150, 380, 130, 0, 7); g.fill();
+        g.fillStyle = "#4d7c0f"; g.beginPath(); g.moveTo(0, 800); g.quadraticCurveTo(500, 600, 900, 780); g.quadraticCurveTo(1300, 940, 1600, 720); g.lineTo(1600, 1200); g.lineTo(0, 1200); g.fill();
+        g.fillStyle = "#a16207"; g.beginPath(); g.moveTo(760, 1200); g.quadraticCurveTo(820, 950, 980, 820); g.lineTo(1010, 830); g.quadraticCurveTo(900, 980, 980, 1200); g.fill();
+        g.fillStyle = "#1f2937"; g.font = "bold 40px DM Mono, monospace"; g.fillText("sample evidence photo", 40, 70);
+        return c;
+      }
+      function sampleBadge() {
+        const c = document.createElement("canvas"); c.width = 600; c.height = 600;
+        const g = c.getContext("2d");
+        g.fillStyle = "#000"; g.beginPath(); g.arc(318, 318, 262, 0, 7); g.fill();
+        g.fillStyle = "#a78bfa"; g.beginPath(); g.arc(290, 290, 262, 0, 7); g.fill();
+        g.lineWidth = 18; g.strokeStyle = "#000"; g.stroke();
+        g.fillStyle = "#ffe50c"; g.beginPath();
+        for (let i = 0; i < 10; i++) { const r = i % 2 ? 70 : 150, a = -Math.PI / 2 + (i * Math.PI) / 5; g.lineTo(290 + r * Math.cos(a), 250 + r * Math.sin(a)); }
+        g.closePath(); g.fill(); g.lineWidth = 12; g.stroke();
+        g.fillStyle = "#000"; g.font = "900 64px Anybody, sans-serif"; g.textAlign = "center"; g.fillText("FIRST 5K", 290, 470);
+        return c;
+      }
+
+      // ---------- drawing ----------
+      function drawBg(g, W, H) {
+        if (!bgImg) return;
+        const iw = bgImg.width, ih = bgImg.height;
+        const s = Math.max(W / iw, H / ih) * state.bg.zoom;
+        const dw = iw * s, dh = ih * s;
+        let dx = W / 2 - state.bg.cx * dw, dy = H / 2 - state.bg.cy * dh;
+        dx = Math.min(0, Math.max(W - dw, dx)); dy = Math.min(0, Math.max(H - dh, dy));
+        // write back clamped focal point so panning never shows gaps
+        state.bg.cx = (W / 2 - dx) / dw; state.bg.cy = (H / 2 - dy) / dh;
+        g.drawImage(bgImg, dx, dy, dw, dh);
+        state.bg._dw = dw; state.bg._dh = dh;
+      }
+      function wrap(g, text, maxW) {
+        const out = [];
+        for (const para of text.split("\n")) {
+          let line = "";
+          for (const w of para.split(" ")) {
+            const t = line ? line + " " + w : w;
+            if (g.measureText(t).width > maxW && line) { out.push(line); line = w; } else line = t;
+          }
+          out.push(line);
+        }
+        return out;
+      }
+      function drawLayer(g, l, W, H) {
+        const m = Math.min(W, H), cx = l.x * W, cy = l.y * H;
+        if (l.type === "badge") {
+          const side = l.size * m;
+          if (badgeImg) g.drawImage(badgeImg, cx - side / 2, cy - side / 2, side, side);
+          l._b = [cx - side / 2, cy - side / 2, cx + side / 2, cy + side / 2];
+          return;
+        }
+        const px = l.size * m;
+        const [family, weight] = (l.font || "DM Mono|500").split("|");
+        g.font = `${weight} ${px}px "${family}"`;
+        g.textAlign = "center"; g.textBaseline = "middle";
+        const lines = wrap(g, l.text || " ", W * 0.84);
+        const lh = px * 1.2, tw = Math.max(...lines.map((s) => g.measureText(s).width));
+        const pad = l.type === "chip" ? px * 0.6 : px * 0.45;
+        const bw = tw + pad * 2, bh = lines.length * lh + pad * 1.2;
+        const x0 = cx - bw / 2, y0 = cy - bh / 2;
+        l._b = [x0, y0, x0 + bw, y0 + bh];
+        const style = l.type === "chip" ? "chip" : l.style;
+        if (style === "box" || style === "chip") {
+          const sh = style === "chip" ? px * 0.18 : px * 0.12;
+          g.fillStyle = "#000"; g.fillRect(x0 + sh, y0 + sh, bw, bh);
+          g.fillStyle = style === "chip" ? "#fff" : l.color; g.fillRect(x0, y0, bw, bh);
+          g.lineWidth = Math.max(3, px * 0.08); g.strokeStyle = "#000"; g.strokeRect(x0, y0, bw, bh);
+        }
+        lines.forEach((s, i) => {
+          const ty = y0 + pad * 0.6 + lh * i + lh / 2;
+          if (style === "box" || style === "chip") { g.fillStyle = l.color === "#262626" && style === "box" ? "#fff" : "#000"; g.fillText(s, cx, ty); }
+          else if (style === "plain") {
+            g.fillStyle = "rgba(0,0,0,.75)"; g.fillText(s, cx + px * 0.06, ty + px * 0.06);
+            g.fillStyle = l.color; g.fillText(s, cx, ty);
+          } else {
+            g.lineJoin = "round"; g.lineWidth = px * 0.16; g.strokeStyle = "#000"; g.strokeText(s, cx, ty);
+            g.fillStyle = l.color; g.fillText(s, cx, ty);
+          }
+        });
+      }
+      function render(g, exporting) {
+        const { w: W, h: H } = fmt();
+        g.clearRect(0, 0, W, H);
+        g.fillStyle = "#fff"; g.fillRect(0, 0, W, H);
+        drawBg(g, W, H);
+        for (const l of state.layers) if (l.type !== "chip" || state.chip !== false) drawLayer(g, l, W, H);
+        if (exporting) return;
+        const k = W / cv.clientWidth; // canvas px per CSS px
+        if (state.showSafe) {
+          for (const z of fmt().safe) {
+            const [a, b, c, d] = z.r;
+            g.fillStyle = "rgba(220,38,38,.28)"; g.fillRect(a * W, b * H, (c - a) * W, (d - b) * H);
+            g.strokeStyle = "rgba(220,38,38,.9)"; g.lineWidth = 2 * k; g.setLineDash([8 * k, 6 * k]);
+            g.strokeRect(a * W, b * H, (c - a) * W, (d - b) * H); g.setLineDash([]);
+            if (z.t) { g.font = `600 ${12 * k}px "Instrument Sans"`; g.textAlign = "left"; g.textBaseline = "top"; g.fillStyle = "#fff";
+              g.fillText(z.t, Math.min(a * W + 6 * k, W - g.measureText(z.t).width - 6 * k), b * H + 6 * k); }
+          }
+        }
+        g.strokeStyle = "#3b82f6"; g.lineWidth = 2 * k;
+        if (guides.v) { g.beginPath(); g.moveTo(W / 2, 0); g.lineTo(W / 2, H); g.stroke(); }
+        if (guides.h) { g.beginPath(); g.moveTo(0, H / 2); g.lineTo(W, H / 2); g.stroke(); }
+        const s = sel();
+        if (s && s._b) {
+          const [x0, y0, x1, y1] = s._b;
+          g.setLineDash([6 * k, 4 * k]); g.strokeStyle = "#3b82f6"; g.lineWidth = 2.5 * k;
+          g.strokeRect(x0, y0, x1 - x0, y1 - y0); g.setLineDash([]);
+          g.fillStyle = "#fff"; g.lineWidth = 3 * k; g.strokeStyle = "#000";
+          g.beginPath(); g.arc(x1, y1, 11 * k, 0, 7); g.fill(); g.stroke();
+        }
+      }
+
+      // ---------- layout / UI sync ----------
+      function sizeCanvas() {
+        const { w, h } = fmt();
+        cv.width = w; cv.height = h;
+        const stage = document.getElementById("stage");
+        const maxW = stage.clientWidth - 40, maxH = window.innerHeight * 0.72;
+        const scale = Math.min(maxW / w, maxH / h);
+        cv.style.width = w * scale + "px"; cv.style.height = h * scale + "px";
+      }
+      function overlaps(b, r, W, H) {
+        return b && b[0] < r[2] * W && b[2] > r[0] * W && b[1] < r[3] * H && b[3] > r[1] * H;
+      }
+      function sync() {
+        render(ctx, false);
+        const f = fmt();
+        document.getElementById("meta").textContent = `${f.w}×${f.h}px · ${f.uses}`;
+        document.querySelectorAll(".fmt").forEach((b) => b.setAttribute("aria-pressed", b.dataset.f === state.format));
+        document.getElementById("layers").innerHTML = state.layers
+          .filter((l) => l.type !== "chip" || state.chip !== false)
+          .map((l) => `<li><button class="b" aria-pressed="${l.id === state.selected}" data-id="${l.id}">${
+            l.type === "badge" ? "🏅 Badge" : l.type === "chip" ? "✓ Verify chip" : "T  " + (l.text || "").slice(0, 26)}</button></li>`).join("");
+        const s = sel();
+        const te = document.getElementById("textEdit");
+        te.hidden = !s || s.type !== "text";
+        if (s && s.type === "text") {
+          const txt = document.getElementById("txt");
+          if (document.activeElement !== txt) txt.value = s.text;
+          document.getElementById("font").value = s.font; document.getElementById("style").value = s.style;
+          document.querySelectorAll(".swatch").forEach((w) => w.setAttribute("aria-pressed", w.dataset.c === s.color));
+        }
+        document.getElementById("delLayer").disabled = !s || s.type === "badge";
+        document.getElementById("zoom").value = state.bg.zoom;
+        // safe-zone warnings
+        const W = f.w, H = f.h, warns = [];
+        for (const l of state.layers) {
+          if (l.type === "chip" && state.chip === false) continue;
+          if (f.safe.some((z) => overlaps(l._b, z.r, W, H))) warns.push(l.type === "badge" ? "Badge" : l.type === "chip" ? "Verify chip" : `“${l.text.slice(0, 20)}”`);
+          if (l._b && (l._b[0] < 0 || l._b[1] < 0 || l._b[2] > W || l._b[3] > H)) warns.push(`${l.type} is cut off at the edge`);
+        }
+        document.getElementById("warnings").innerHTML = warns.length && state.showSafe
+          ? `<div class="warn" role="status">⚠ May be hidden by app UI: ${[...new Set(warns)].join(", ")}</div>` : "";
+        const dump = JSON.parse(JSON.stringify(state, (k, v) => (k.startsWith("_") ? undefined : v)));
+        document.getElementById("state").textContent = JSON.stringify(dump, null, 2);
+      }
+
+      // ---------- pointer interaction ----------
+      const pointers = new Map();
+      let drag = null;
+      const toCanvas = (e) => { const r = cv.getBoundingClientRect(); return { x: ((e.clientX - r.left) / r.width) * cv.width, y: ((e.clientY - r.top) / r.height) * cv.height }; };
+      const hit = (p) => [...state.layers].reverse().find((l) => (l.type !== "chip" || state.chip !== false) && l._b && p.x >= l._b[0] && p.x <= l._b[2] && p.y >= l._b[1] && p.y <= l._b[3]);
+      const onHandle = (p) => { const s = sel(); if (!s || !s._b) return false; const k = cv.width / cv.clientWidth; return Math.hypot(p.x - s._b[2], p.y - s._b[3]) < 26 * k; };
+      const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+      const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+      const limits = { badge: [0.1, 1.2], text: [0.025, 0.25], chip: [0.018, 0.06] };
+
+      cv.addEventListener("pointerdown", (e) => {
+        cv.setPointerCapture(e.pointerId);
+        const p = toCanvas(e); pointers.set(e.pointerId, p);
+        cv.classList.add("dragging");
+        if (pointers.size === 2) {
+          const [a, b] = [...pointers.values()]; const s = sel();
+          drag = { mode: "pinch", d0: dist(a, b), size0: s ? s.size : null, zoom0: state.bg.zoom };
+          return;
+        }
+        const { w: W, h: H } = fmt();
+        if (onHandle(p)) { const s = sel(); drag = { mode: "resize", d0: Math.max(8, dist(p, { x: s.x * W, y: s.y * H })), size0: s.size }; return; }
+        const l = hit(p);
+        if (l) { state.selected = l.id; drag = { mode: "move", ox: p.x - l.x * W, oy: p.y - l.y * H }; }
+        else { state.selected = null; drag = { mode: "pan", p0: p, cx0: state.bg.cx, cy0: state.bg.cy }; }
+        sync();
+      });
+      cv.addEventListener("pointermove", (e) => {
+        if (!pointers.has(e.pointerId) || !drag) return;
+        const p = toCanvas(e); pointers.set(e.pointerId, p);
+        const { w: W, h: H } = fmt(); const s = sel();
+        if (drag.mode === "pinch" && pointers.size === 2) {
+          const [a, b] = [...pointers.values()]; const r = dist(a, b) / drag.d0;
+          if (s) s.size = clamp(drag.size0 * r, ...limits[s.type]); else state.bg.zoom = clamp(drag.zoom0 * r, 1, 4);
+        } else if (drag.mode === "resize" && s) {
+          s.size = clamp(drag.size0 * (dist(p, { x: s.x * W, y: s.y * H }) / drag.d0), ...limits[s.type]);
+        } else if (drag.mode === "move" && s) {
+          let x = (p.x - drag.ox) / W, y = (p.y - drag.oy) / H;
+          guides.v = Math.abs(x - 0.5) < 0.015; guides.h = Math.abs(y - 0.5) < 0.012;
+          if (guides.v) x = 0.5; if (guides.h) y = 0.5;
+          s.x = clamp(x, 0, 1); s.y = clamp(y, 0, 1);
+        } else if (drag.mode === "pan" && state.bg._dw) {
+          state.bg.cx = drag.cx0 - (p.x - drag.p0.x) / state.bg._dw;
+          state.bg.cy = drag.cy0 - (p.y - drag.p0.y) / state.bg._dh;
+        }
+        sync();
+      });
+      const end = (e) => { pointers.delete(e.pointerId); if (!pointers.size) { drag = null; guides = { v: false, h: false }; cv.classList.remove("dragging"); sync(); } };
+      cv.addEventListener("pointerup", end); cv.addEventListener("pointercancel", end);
+      cv.addEventListener("wheel", (e) => {
+        e.preventDefault(); const f = e.deltaY < 0 ? 1.05 : 0.95; const s = sel();
+        if (s) s.size = clamp(s.size * f, ...limits[s.type]); else state.bg.zoom = clamp(state.bg.zoom * f, 1, 4);
+        sync();
+      }, { passive: false });
+      cv.addEventListener("dblclick", () => { const s = sel(); if (s && s.type === "text") document.getElementById("txt").focus(); });
+
+      // ---------- keyboard + buttons (non-drag alternatives, WCAG 2.5.7) ----------
+      function nudge(dx, dy, big) { const s = sel(); if (!s) return; const st = big ? 0.05 : 0.01; s.x = clamp(s.x + dx * st, 0, 1); s.y = clamp(s.y + dy * st, 0, 1); sync(); }
+      function scaleSel(f) { const s = sel(); if (!s) return; s.size = clamp(s.size * f, ...limits[s.type]); sync(); }
+      cv.addEventListener("keydown", (e) => {
+        const map = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+        if (map[e.key]) { e.preventDefault(); nudge(...map[e.key], e.shiftKey); }
+        else if (e.key === "+" || e.key === "=") scaleSel(1.08);
+        else if (e.key === "-") scaleSel(0.92);
+        else if (e.key === "Tab") {
+          const vis = state.layers.filter((l) => l.type !== "chip" || state.chip !== false);
+          const i = vis.findIndex((l) => l.id === state.selected);
+          const n = i + (e.shiftKey ? -1 : 1);
+          if (n >= 0 && n < vis.length) { e.preventDefault(); state.selected = vis[n].id; sync(); }
+        } else if ((e.key === "Delete" || e.key === "Backspace") && sel()?.type === "text") { removeSel(); }
+      });
+      document.querySelectorAll("[data-n]").forEach((b) => b.addEventListener("click", () => nudge(...b.dataset.n.split(",").map(Number), false)));
+      document.querySelectorAll("[data-s]").forEach((b) => b.addEventListener("click", () => scaleSel(Number(b.dataset.s))));
+      document.getElementById("centerX").addEventListener("click", () => { const s = sel(); if (s) { s.x = 0.5; sync(); } });
+
+      // ---------- panel wiring ----------
+      document.getElementById("formats").innerHTML = Object.entries(FORMATS)
+        .map(([k, f]) => `<button class="fmt" data-f="${k}">${f.label}<small>${f.w}×${f.h}</small></button>`).join("");
+      document.getElementById("formats").addEventListener("click", (e) => {
+        const b = e.target.closest(".fmt"); if (!b) return;
+        state.format = b.dataset.f; sizeCanvas(); sync();
+      });
+      document.getElementById("layers").addEventListener("click", (e) => {
+        const b = e.target.closest("[data-id]"); if (b) { state.selected = Number(b.dataset.id); sync(); cv.focus(); }
+      });
+      document.getElementById("addText").addEventListener("click", () => {
+        const l = { id: ++uid, type: "text", x: 0.5, y: 0.25, size: 0.06, text: "New text", font: "Instrument Sans|700", style: "box", color: "#ffffff" };
+        const chipIdx = state.layers.findIndex((x) => x.type === "chip");
+        state.layers.splice(chipIdx < 0 ? state.layers.length : chipIdx, 0, l);
+        state.selected = l.id; sync();
+        const t = document.getElementById("txt"); t.focus(); t.select();
+      });
+      function removeSel() { const s = sel(); if (!s || s.type === "badge") return; if (s.type === "chip") state.chip = false; else state.layers = state.layers.filter((l) => l !== s); state.selected = null; syncChipBtn(); sync(); }
+      document.getElementById("delLayer").addEventListener("click", removeSel);
+      document.getElementById("txt").addEventListener("input", (e) => { const s = sel(); if (s) { s.text = e.target.value; sync(); } });
+      document.getElementById("font").addEventListener("change", (e) => { sel().font = e.target.value; sync(); });
+      document.getElementById("style").addEventListener("change", (e) => { const s = sel(); s.style = e.target.value; if (s.style !== "box" && s.color === "#ffe50c") s.color = "#ffffff"; sync(); });
+      document.getElementById("swatches").innerHTML = SWATCHES.map((c) => `<button class="swatch" data-c="${c}" style="background:${c}" aria-label="Colour ${c}"></button>`).join("");
+      document.getElementById("swatches").addEventListener("click", (e) => { const b = e.target.closest(".swatch"); if (b) { sel().color = b.dataset.c; sync(); } });
+      document.getElementById("zoom").addEventListener("input", (e) => { state.bg.zoom = Number(e.target.value); sync(); });
+      document.getElementById("fitBtn").addEventListener("click", () => { state.bg = { zoom: 1, cx: 0.5, cy: 0.5 }; sync(); });
+      document.getElementById("safeBtn").addEventListener("click", (e) => { state.showSafe = !state.showSafe; e.target.setAttribute("aria-pressed", state.showSafe); sync(); });
+      const syncChipBtn = () => document.getElementById("chipBtn").setAttribute("aria-pressed", state.chip !== false);
+      document.getElementById("chipBtn").addEventListener("click", () => { state.chip = state.chip === false; syncChipBtn(); sync(); });
+      function loadFile(input, cb) {
+        input.addEventListener("change", () => { const f = input.files[0]; if (!f) return; const img = new Image(); img.onload = () => { cb(img); sync(); }; img.src = URL.createObjectURL(f); });
+      }
+      loadFile(document.getElementById("bgFile"), (img) => { bgImg = img; state.bg = { zoom: 1, cx: 0.5, cy: 0.5 }; });
+      loadFile(document.getElementById("badgeFile"), (img) => { badgeImg = img; });
+
+      // ---------- export ----------
+      function exportBlob(type) {
+        const { w, h } = fmt(); const c = document.createElement("canvas"); c.width = w; c.height = h;
+        render(c.getContext("2d"), true);
+        return new Promise((r) => c.toBlob(r, type, 0.92));
+      }
+      async function download(type, ext) {
+        const blob = await exportBlob(type); const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob); a.download = `badge-share-${state.format}-${fmt().w}x${fmt().h}.${ext}`; a.click();
+      }
+      document.getElementById("dlBtn").addEventListener("click", () => download("image/png", "png"));
+      document.getElementById("dlJpg").addEventListener("click", () => download("image/jpeg", "jpg"));
+      document.getElementById("shareBtn").addEventListener("click", async () => {
+        const blob = await exportBlob("image/jpeg");
+        const file = new File([blob], `badge-share-${state.format}.jpg`, { type: "image/jpeg" });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try { await navigator.share({ files: [file], text: "I earned a badge on rollercoaster.dev" }); } catch (_) {}
+        } else download("image/jpeg", "jpg");
+      });
+
+      // ---------- boot ----------
+      window.addEventListener("resize", () => { sizeCanvas(); sync(); });
+      document.fonts.ready.then(() => { bgImg = sampleEvidence(); badgeImg = sampleBadge(); sizeCanvas(); sync(); });
+      sizeCanvas();
+    </script>
+  </body>
+</html>
