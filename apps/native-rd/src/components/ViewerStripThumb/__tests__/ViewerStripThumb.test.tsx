@@ -6,6 +6,7 @@ import {
 } from "../../../__tests__/test-utils";
 import { ViewerStripThumb } from "../ViewerStripThumb";
 import type { ViewerEvidence } from "../../../hooks/useAllEvidenceForGoal";
+import { EVIDENCE_TYPE_ICONS } from "../../../constants/evidenceIcons";
 
 const goalEvidence: ViewerEvidence = {
   id: "ev-goal",
@@ -96,5 +97,38 @@ describe("ViewerStripThumb", () => {
       ).toBeNull();
       expect(screen.getByText("Mid-week note")).toBeOnTheScreen();
     });
+  });
+});
+
+// #751: the thumb is a fixed 104pt wide, so its icon and label stop growing at
+// the chrome cap (1.3x) rather than clipping at 2.0x.
+describe("ViewerStripThumb at large type", () => {
+  it("chrome-caps the label", () => {
+    renderWithProviders(
+      <ViewerStripThumb
+        evidence={goalEvidence}
+        isActive={false}
+        onPress={jest.fn()}
+      />,
+    );
+    expect(screen.getByText("Final photo").props.maxFontSizeMultiplier).toBe(
+      1.3,
+    );
+  });
+});
+
+describe("ViewerStripThumb icon at large type", () => {
+  it("chrome-caps the type icon", () => {
+    renderWithProviders(
+      <ViewerStripThumb
+        evidence={goalEvidence}
+        isActive={false}
+        onPress={jest.fn()}
+      />,
+    );
+    const icon = screen.getByText(EVIDENCE_TYPE_ICONS.photo, {
+      includeHiddenElements: true,
+    });
+    expect(icon.props.maxFontSizeMultiplier).toBe(1.3);
   });
 });

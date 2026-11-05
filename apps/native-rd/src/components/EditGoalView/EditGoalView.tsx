@@ -762,6 +762,7 @@ export function EditGoalView({
         closeTestID="edit-goal-evidence-close"
         backdropTestID="edit-goal-evidence-backdrop"
         restoreFocusRef={evidenceTrigger.restoreFocusRef}
+        bottomClearance={PILL_LIFT}
       >
         {sheetEvidenceTypes ? (
           <EvidenceTypePicker

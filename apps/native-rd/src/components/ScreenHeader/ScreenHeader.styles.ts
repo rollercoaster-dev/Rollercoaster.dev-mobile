@@ -28,7 +28,13 @@ export const styles = StyleSheet.create((theme) => ({
   title: {
     color: theme.chrome.screenHeaderFg,
   },
+  // flex:1 + centered text matches the old space-between centring for a short
+  // label, and lets a long one shrink and wrap between the side controls.
   subLabel: {
+    flex: 1,
+    flexShrink: 1,
+    textAlign: "center" as const,
+    marginHorizontal: theme.space[2],
     color: theme.chrome.screenHeaderFg,
     fontWeight: theme.fontWeight.bold,
   },

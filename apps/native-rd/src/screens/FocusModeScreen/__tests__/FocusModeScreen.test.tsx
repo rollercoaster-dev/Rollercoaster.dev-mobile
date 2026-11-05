@@ -1,5 +1,7 @@
 import React from "react";
-import { AccessibilityInfo } from "react-native";
+import { AccessibilityInfo, StyleSheet } from "react-native";
+import { PILL_LIFT } from "../../../navigation/FocusPillTabBar";
+import { mockTheme } from "../../../__tests__/mocks/unistyles";
 import {
   renderWithProviders,
   screen,
@@ -1286,6 +1288,26 @@ describe("FocusModeScreen", () => {
         expect(setFocus).toHaveBeenCalledWith(TRIGGER_TAG);
       },
     );
+
+    // Focus Mode is a tab screen: the lifted tab pill covers the bottom
+    // PILL_LIFT of the frame, so both sheets clear it (#751).
+    it.each([
+      ["capture", "focus-current-task-add-more"],
+      ["evidence plan", "focus-current-task-change-plan"],
+    ])("%s sheet clears the floating tab pill", (_sheet, trigger) => {
+      setupQueries({
+        steps: [step("step-1", { plannedEvidenceTypes: '["photo"]' })],
+        stepEvidence: [{ id: "ev-1", type: "photo", stepId: "step-1" }],
+      });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+      fireEvent.press(screen.getByTestId(trigger), {
+        nativeEvent: { target: TRIGGER_TAG },
+      });
+      const sheet = StyleSheet.flatten(
+        screen.getByTestId("sheet-surface").props.style,
+      );
+      expect(sheet.paddingBottom).toBe(mockTheme.space[4] + PILL_LIFT);
+    });
 
     it("does not pull focus back once a capture type is picked", () => {
       setupQueries({

@@ -2,6 +2,8 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { useUnistyles } from "react-native-unistyles";
 import { useTranslation } from "react-i18next";
+import { useThemeScale } from "../../hooks/useTypeScale";
+import { capForRole } from "../../utils/typeScale";
 import type { StepStatus } from "../../types/steps";
 import { stepStateColorMap, stepStateNodeFg } from "./stepStateColorMap";
 import {
@@ -60,6 +62,9 @@ export function TimelineNode({
 }: TimelineNodeProps) {
   const isSmall = size === "sm";
   const { theme } = useUnistyles();
+  // The glyph sits in a fixed 24/32/40pt circle, so it grows only as far as
+  // chrome text does (1.3x) and stays inside the ring at large type (#751).
+  const chromeCap = capForRole("chrome", useThemeScale());
 
   const nodeStyle = [
     styles.node,
@@ -105,7 +110,7 @@ export function TimelineNode({
       testID={`timeline-node-state-icon-${status}`}
     />
   ) : (
-    <Text style={textStyle}>
+    <Text style={textStyle} maxFontSizeMultiplier={chromeCap}>
       {isGoalNode
         ? "★"
         : (stepStateColorMap[status].nodeGlyph ??
@@ -162,10 +167,11 @@ export function TimelineNode({
 
 function StateBadge({ status }: { status: StepStatus }) {
   const { t } = useTranslation(["timelineJourney"]);
+  const chromeCap = capForRole("chrome", useThemeScale());
 
   return (
     <View accessibilityRole="text" style={styles.stateBadge}>
-      <Text style={styles.stateBadgeText}>
+      <Text style={styles.stateBadgeText} maxFontSizeMultiplier={chromeCap}>
         {t(stepStateColorMap[status].stateWordI18nKey)}
       </Text>
     </View>

@@ -9,6 +9,8 @@ import {
 import { BadgeShareSheet, type BadgeShareSheetProps } from "../BadgeShareSheet";
 import { mockFontScale } from "../../../__tests__/fontScale";
 import { closestStyle } from "../../../__tests__/styleHelpers";
+import { PILL_LIFT } from "../../../navigation/FocusPillTabBar";
+import { mockTheme } from "../../../__tests__/mocks/unistyles";
 
 // findNodeHandle is a lazy getter on react-native's index — redefine it so the
 // shared AnimatedSheet's title/CTA refs resolve to a fixed tag under test
@@ -353,4 +355,14 @@ describe("BadgeShareSheet", () => {
       1.3,
     );
   });
+});
+
+// Badge detail is a tab screen: the lifted tab pill covers the bottom
+// PILL_LIFT of the frame, so the share sheet's last row clears it (#751).
+it("clears the floating tab pill at the share sheet's bottom", () => {
+  renderWithProviders(<BadgeShareSheet {...makeProps()} />);
+  const sheet = StyleSheet.flatten(
+    screen.getByTestId("sheet-surface").props.style,
+  );
+  expect(sheet.paddingBottom).toBe(mockTheme.space[4] + PILL_LIFT);
 });

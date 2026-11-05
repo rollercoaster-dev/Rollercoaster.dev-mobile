@@ -3,8 +3,11 @@ import {
   AccessibilityInfo,
   BackHandler,
   Keyboard,
+  StyleSheet,
   type ScrollView,
 } from "react-native";
+import { PILL_LIFT } from "../../../navigation/FocusPillTabBar";
+import { mockTheme } from "../../../__tests__/mocks/unistyles";
 import {
   renderWithProviders,
   screen,
@@ -566,6 +569,17 @@ describe("EditGoalView", () => {
       fireEvent.press(screen.getByTestId("edit-goal-step-evidence-s1"));
       expect(screen.getByTestId("edit-goal-evidence-close")).toBeOnTheScreen();
       expect(screen.getAllByRole("checkbox")).toHaveLength(6);
+    });
+
+    // The lifted tab pill covers the bottom PILL_LIFT of the screen; without
+    // the clearance the sheet's last row sat under it (Android, font scale 2).
+    it("clears the floating tab pill at the sheet's bottom", () => {
+      renderWithProviders(<EditGoalView {...makeProps({ steps: soloStep })} />);
+      fireEvent.press(screen.getByTestId("edit-goal-step-evidence-s1"));
+      const sheet = StyleSheet.flatten(
+        screen.getByTestId("sheet-surface").props.style,
+      );
+      expect(sheet.paddingBottom).toBe(mockTheme.space[4] + PILL_LIFT);
     });
 
     it("adds a type on toggle via onStepEvidenceChange", () => {

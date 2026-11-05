@@ -44,7 +44,15 @@ export function ScreenSubHeader({
         // when there's no back target.
         <View style={styles.spacer} />
       )}
-      <Text variant="title" style={styles.subLabel} accessibilityRole="header">
+      {/* Chrome-capped and flexed: a long, localized or large-type label wraps
+          inside the middle slot instead of pushing the trailing action off the
+          row (#751). */}
+      <Text
+        variant="title"
+        chrome
+        style={styles.subLabel}
+        accessibilityRole="header"
+      >
         {label}
       </Text>
       {/* Empty spacer keeps the label optically centered when no trailing action. */}

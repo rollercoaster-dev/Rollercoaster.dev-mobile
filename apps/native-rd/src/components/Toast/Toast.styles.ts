@@ -19,9 +19,19 @@ export const styles = StyleSheet.create((theme) => ({
     paddingHorizontal: theme.space[4],
     ...shadowStyle(theme, "modalElevation"),
   },
+  // Accessibility sizes: message on top, action below it (#751).
+  containerStacked: {
+    flexDirection: "column" as const,
+    alignItems: "stretch" as const,
+  },
   message: {
     flex: 1,
     fontWeight: theme.fontWeight.bold,
+  },
+  // In a column, flex:1 would size the message from a zero basis; size it to
+  // its text instead.
+  messageStacked: {
+    flex: 0,
   },
   actionButton: {
     backgroundColor: theme.colors.warning,
@@ -33,6 +43,9 @@ export const styles = StyleSheet.create((theme) => ({
     minHeight: 44,
     alignItems: "center" as const,
     justifyContent: "center" as const,
+  },
+  actionButtonStacked: {
+    alignSelf: "flex-start" as const,
   },
   actionLabel: {
     fontWeight: theme.fontWeight.bold,

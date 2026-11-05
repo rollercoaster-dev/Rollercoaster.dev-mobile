@@ -1,10 +1,12 @@
 import React from "react";
-import { Text as RNText } from "react-native";
+import { StyleSheet, Text as RNText } from "react-native";
 import {
   renderWithProviders,
   screen,
   fireEvent,
+  within,
 } from "../../../__tests__/test-utils";
+import { mockFontScale } from "../../../__tests__/fontScale";
 import { IconButton } from "../../IconButton";
 import { AnimatedSheet } from "../../AnimatedSheet";
 import { ScreenHeader } from "../ScreenHeader";
@@ -112,5 +114,42 @@ describe("ScreenSubHeader", () => {
     renderWithProviders(<ScreenSubHeader label="Settings" onBack={() => {}} />);
     // Spacer fallback keeps the label centered against the back button.
     expect(screen.queryByLabelText("Save note")).toBeNull();
+  });
+});
+
+// #751: the sub-header label grew to 2.0x with no shrink, pushing the trailing
+// action off the row on every sub-screen.
+describe("ScreenSubHeader at large type", () => {
+  it("at fontScale 2 chrome-caps the label and shrinks it beside a trailing action", () => {
+    mockFontScale(2);
+    renderWithProviders(
+      <ScreenSubHeader
+        label="A long localized sub-screen label"
+        onBack={() => {}}
+        right={
+          <IconButton
+            icon={<RNText>S</RNText>}
+            onPress={() => {}}
+            accessibilityLabel="Save note"
+          />
+        }
+      />,
+    );
+    const label = screen.getByText("A long localized sub-screen label");
+    // RN draws min(fontScale, cap): 2.0 OS scale lands at 1.3 for this label.
+    expect(label.props.maxFontSizeMultiplier).toBe(1.3);
+    const style = StyleSheet.flatten(label.props.style);
+    expect(style.flex).toBe(1);
+    expect(style.flexShrink).toBe(1);
+    // The action renders in the label's own row, not pushed to another line.
+    let row = label.parent;
+    while (
+      row &&
+      StyleSheet.flatten(row.props.style)?.flexDirection !== "row"
+    ) {
+      row = row.parent;
+    }
+    expect(row).not.toBeNull();
+    expect(within(row!).getByLabelText("Save note")).toBeOnTheScreen();
   });
 });

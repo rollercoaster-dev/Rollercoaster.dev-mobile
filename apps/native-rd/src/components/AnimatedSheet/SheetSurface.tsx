@@ -1,6 +1,8 @@
 import React from "react";
-import { View, Pressable, Text as RNText } from "react-native";
+import { View, Pressable, ScrollView, Text as RNText } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useThemeScale } from "../../hooks/useTypeScale";
+import { capForRole } from "../../utils/typeScale";
 import { sheetStyles } from "./AnimatedSheet.styles";
 
 export interface SheetSurfaceProps {
@@ -19,6 +21,13 @@ export interface SheetSurfaceProps {
    * focus lands on the title when the sheet opens; standalone callers omit it.
    */
   titleRef?: React.Ref<RNText>;
+  /**
+   * Extra bottom clearance for chrome floating over the sheet's frame — pass
+   * `PILL_LIFT` on screens inside the tab navigator, whose lifted tab pill
+   * otherwise covers the sheet's last row. Used instead of the bottom
+   * safe-area inset when larger (the tab bar already pays that inset).
+   */
+  bottomClearance?: number;
   /** Body content rendered below the header. */
   children: React.ReactNode;
 }
@@ -45,18 +54,24 @@ export function SheetSurface({
   onClose,
   closeTestID,
   titleRef,
+  bottomClearance = 0,
   children,
 }: SheetSurfaceProps) {
   const insets = useSafeAreaInsets();
+  const themeScale = useThemeScale();
 
   return (
-    <View style={sheetStyles.sheet(insets.bottom)}>
+    <View
+      testID="sheet-surface"
+      style={sheetStyles.sheet(Math.max(insets.bottom, bottomClearance))}
+    >
       <View style={sheetStyles.handle} />
       <View style={sheetStyles.sheetHeader}>
         <RNText
           ref={titleRef}
           style={sheetStyles.sheetTitle}
           accessibilityRole="header"
+          maxFontSizeMultiplier={capForRole("title", themeScale)}
         >
           {title}
         </RNText>
@@ -68,11 +83,28 @@ export function SheetSurface({
           hitSlop={8}
           testID={closeTestID}
         >
-          <RNText style={sheetStyles.closeIcon}>{"✕"}</RNText>
+          <RNText
+            style={sheetStyles.closeIcon}
+            maxFontSizeMultiplier={capForRole("chrome", themeScale)}
+          >
+            {"✕"}
+          </RNText>
         </Pressable>
       </View>
-      {subLine ? <RNText style={sheetStyles.subLine}>{subLine}</RNText> : null}
-      {children}
+      {/* Handle and header stay fixed; everything below scrolls once the
+          sheet reaches its bound (large type), so title and × stay visible. */}
+      <ScrollView
+        testID="sheet-surface-body"
+        style={sheetStyles.body}
+        contentContainerStyle={sheetStyles.bodyContent}
+        keyboardShouldPersistTaps="handled"
+        bounces={false}
+      >
+        {subLine ? (
+          <RNText style={sheetStyles.subLine}>{subLine}</RNText>
+        ) : null}
+        {children}
+      </ScrollView>
     </View>
   );
 }

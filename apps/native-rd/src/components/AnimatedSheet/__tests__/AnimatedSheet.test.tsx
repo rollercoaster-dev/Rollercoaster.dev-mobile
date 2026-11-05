@@ -1,13 +1,16 @@
 import React from "react";
-import { Text, AccessibilityInfo, BackHandler } from "react-native";
+import { Text, AccessibilityInfo, BackHandler, StyleSheet } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   renderWithProviders,
   screen,
   fireEvent,
   act,
+  within,
 } from "../../../__tests__/test-utils";
 import { AnimatedSheet } from "../AnimatedSheet";
 import { expectModalAccessibility } from "../../../__tests__/a11y-helpers";
+import { mockTheme } from "../../../__tests__/mocks/unistyles";
 
 // findNodeHandle is a lazy getter on react-native's index — jest.spyOn can't
 // replace it in place, so redefine it to resolve any view instance to a fixed
@@ -189,4 +192,53 @@ describe("AnimatedSheet", () => {
     expect(close.props.accessibilityLabel).toBe("Close");
     fireEvent.press(close);
   });
+
+  // #751: at large type the sheet is bounded to its frame and the body scrolls,
+  // so the header (title + ×) can't slide off the top.
+  it("keeps the header outside the scrolling body", () => {
+    renderWithProviders(<Sheet visible={true} closeTestID="sheet-close" />);
+    const body = screen.getByTestId("sheet-surface-body");
+    expect(body.type).toBe("RCTScrollView");
+    expect(within(body).getByText("Body")).toBeOnTheScreen();
+    expect(within(body).queryByText("Sheet title")).toBeNull();
+    expect(within(body).queryByTestId("sheet-close")).toBeNull();
+  });
+
+  it("lets the title shrink against the close control", () => {
+    renderWithProviders(<Sheet visible={true} />);
+    const title = StyleSheet.flatten(
+      screen.getByText("Sheet title").props.style,
+    );
+    expect(title.flexShrink).toBe(1);
+  });
+
+  // The floating tab pill covers the bottom PILL_LIFT of a tab screen; the
+  // Planned evidence sheet's last row sat under it at Android font scale 2.0.
+  it.each([
+    ["no clearance", undefined, 0, mockTheme.space[4]],
+    ["clearance above the inset", 34, 20, mockTheme.space[4] + 34],
+    ["an inset above the clearance", 34, 40, mockTheme.space[4] + 40],
+  ])(
+    "pads the sheet bottom for %s",
+    (_label, bottomClearance, insetBottom, expected) => {
+      const insets = useSafeAreaInsets as jest.Mock;
+      insets.mockReturnValue({
+        top: 0,
+        right: 0,
+        bottom: insetBottom,
+        left: 0,
+      });
+      try {
+        renderWithProviders(
+          <Sheet visible={true} bottomClearance={bottomClearance} />,
+        );
+        const sheet = StyleSheet.flatten(
+          screen.getByTestId("sheet-surface").props.style,
+        );
+        expect(sheet.paddingBottom).toBe(expected);
+      } finally {
+        insets.mockReturnValue({ top: 0, right: 0, bottom: 0, left: 0 });
+      }
+    },
+  );
 });

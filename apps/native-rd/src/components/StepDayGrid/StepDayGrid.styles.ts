@@ -94,16 +94,17 @@ export const styles = StyleSheet.create((theme) => ({
   },
   // Same circle rule as the editor's ordinal badge: minWidth === height, no
   // horizontal padding, so a single ordinal is round rather than oval.
-  mark: {
-    minWidth: theme.space[4],
-    height: theme.space[4],
+  // `scale` is the chrome multiplier the label renders at (1 at default size).
+  mark: (scale: number) => ({
+    minWidth: Math.ceil(theme.space[4] * scale),
+    height: Math.ceil(theme.space[4] * scale),
     borderWidth: theme.borderWidth.thin,
     borderColor: theme.colors.border,
     borderRadius: theme.radius.full,
     backgroundColor: theme.colors.accentMint,
-    alignItems: "center",
-    justifyContent: "center",
-  },
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  }),
   // The badge sits on the selected day's filled ground, so it needs its own.
   markOnSelected: {
     backgroundColor: theme.colors.background,

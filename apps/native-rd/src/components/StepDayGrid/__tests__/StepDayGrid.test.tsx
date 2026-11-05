@@ -4,7 +4,10 @@ import {
   screen,
   fireEvent,
 } from "../../../__tests__/test-utils";
+import { StyleSheet } from "react-native";
 import { StepDayGrid, type StepDayMark } from "../StepDayGrid";
+import { mockFontScale } from "../../../__tests__/fontScale";
+import { mockTheme } from "../../../__tests__/mocks/unistyles";
 
 // The prototype's pinned instant — Wed 24 June 2026. Never `new Date()`: the
 // grid's today-ring and past-day quieting are both derived from `now`.
@@ -197,5 +200,44 @@ describe("StepDayGrid a11y and localisation", () => {
     expect(screen.getByTestId("step-day-grid-month-label")).toHaveTextContent(
       "Juni 2026",
     );
+  });
+});
+
+// #751: day numbers and marks sit in 1/7-width cells. They stop at the chrome
+// cap (1.3x), and the mark circle grows with its label instead of clipping it
+// in a fixed 16pt height.
+describe("StepDayGrid at large type", () => {
+  const marks: StepDayMark[] = [{ date: "2026-06-30", label: "Q" }];
+  const markStyle = () =>
+    StyleSheet.flatten(
+      screen.getByTestId("step-day-grid-day-2026-06-30-mark-0").props.style,
+    );
+
+  it.each([
+    [1, mockTheme.space[4]],
+    [2, Math.ceil(mockTheme.space[4] * 1.3)],
+  ])("at fontScale %s sizes the mark to %spt", (scale, expected) => {
+    mockFontScale(scale);
+    renderWithProviders(<StepDayGrid {...baseProps} marks={marks} />);
+    expect(markStyle().height).toBe(expected);
+    expect(markStyle().minWidth).toBe(expected);
+  });
+
+  it("chrome-caps the day number and mark label", () => {
+    renderWithProviders(<StepDayGrid {...baseProps} marks={marks} />);
+    expect(screen.getByText("30").props.maxFontSizeMultiplier).toBe(1.3);
+    expect(screen.getByText("Q").props.maxFontSizeMultiplier).toBe(1.3);
+  });
+});
+
+describe("StepDayGrid weekday header at large type", () => {
+  it("chrome-caps every weekday initial", () => {
+    renderWithProviders(<StepDayGrid {...baseProps} />);
+    // Weekday cells hide from assistive tech, so query hidden elements.
+    const initials = new Intl.DateTimeFormat("en", {
+      weekday: "narrow",
+    }).format(new Date(2026, 5, 24)); // Wed -> "W"
+    const label = screen.getByText(initials, { includeHiddenElements: true });
+    expect(label.props.maxFontSizeMultiplier).toBe(1.3);
   });
 });

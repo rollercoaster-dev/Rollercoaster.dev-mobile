@@ -56,6 +56,12 @@ export interface CaptureEvidenceTypePickerProps {
    * restored (e.g. the theme-matrix story).
    */
   restoreFocusRef?: React.RefObject<View | number | null>;
+  /**
+   * Bottom clearance for the floating tab pill, forwarded to
+   * {@link AnimatedSheet}. Focus Mode (a tab screen) passes `PILL_LIFT`; the
+   * New Goal wizard is a full-screen modal and omits it.
+   */
+  bottomClearance?: number;
 }
 
 /**
@@ -173,6 +179,7 @@ function CaptureSheet({
   onSelectType,
   onClose,
   restoreFocusRef,
+  bottomClearance,
 }: Omit<CaptureEvidenceTypePickerProps, "mode">) {
   const { t } = useTranslation(["common"]);
   const title = headerTitle ?? t("common:evidenceTypePicker.addEvidence");
@@ -191,6 +198,7 @@ function CaptureSheet({
       closeLabel={t("common:actions.close")}
       closeTestID="capture-sheet-close"
       restoreFocusRef={restoreFocusRef}
+      bottomClearance={bottomClearance}
     >
       <CaptureGrid selectedType={selectedType} onSelectType={onSelectType} />
     </AnimatedSheet>

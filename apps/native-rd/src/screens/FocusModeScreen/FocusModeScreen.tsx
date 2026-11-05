@@ -72,6 +72,7 @@ import { Logger } from "../../shims/rd-logger";
 import { reportError, breadcrumb } from "../../services/sentry-report";
 import { runEvoluMutation } from "../../utils/evoluMutation";
 import { styles } from "./FocusModeScreen.styles";
+import { PILL_LIFT } from "../../navigation/FocusPillTabBar";
 import { ExpandableTitle } from "../../components/ExpandableTitle";
 
 const logger = new Logger("FocusModeScreen");
@@ -668,6 +669,7 @@ function FocusContent({
         onSelectType={handleSelectCaptureType}
         onClose={() => setIsCaptureSheetOpen(false)}
         restoreFocusRef={captureTrigger.restoreFocusRef}
+        bottomClearance={PILL_LIFT}
       />
 
       {/* Evidence-plan sheet — change *which* types this step plans. The
@@ -681,6 +683,7 @@ function FocusContent({
         closeTestID="focus-evidence-plan-close"
         backdropTestID="focus-evidence-plan-backdrop"
         restoreFocusRef={planTrigger.restoreFocusRef}
+        bottomClearance={PILL_LIFT}
       >
         <EvidenceTypePicker
           selectedTypes={plannedEvidenceTypes}
