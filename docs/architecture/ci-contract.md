@@ -245,21 +245,27 @@ By design, the following do not run for native-rd:
 
 ## Branch Protection
 
-The required status checks on `main` should be:
+`main` is protected by the repository ruleset `rulez` (no classic branch
+protection rule; `gh api repos/<owner>/<repo>/branches/main/protection` → 404
+is expected). Since 2026-11-09 it enforces:
 
-- `ci-native-rd / Native-RD Validate`
-- `ci-packages / Packages Validate`
-- `ci-format / Format Check`
-- `dco-check / Verify Signed-off-by`
-- (optional) `CodeQL Security Scanning / Analyze JavaScript/TypeScript`
+- No deletion, no force-push (`non_fast_forward`)
+- Changes land via pull request only (0 required approvals, so the sole
+  maintainer can merge their own PRs)
+- Required status checks: `ci-format / Format Check` and
+  `dco-check / Verify Signed-off-by`
+- Copilot review requested on PRs
 
-As of 2026-09-03 this list is **not enforced**: `main` has no classic
-branch protection rule (`gh api repos/<owner>/<repo>/branches/main/protection`
-→ 404), and the one active repository ruleset targeting the default
-branch requires no status checks (it only blocks deletion and requests
-Copilot review). Enabling it is a repo-settings change tracked separately from
-this document. When it is enabled, use the job names above (the
-`ci-docs / Docs Format Check` name no longer exists).
+Only checks that run on **every** PR can be required. `ci-native-rd /
+Native-RD Validate` and `ci-packages / Packages Validate` are path-filtered,
+so requiring them would leave docs-only PRs waiting forever on a check that
+never starts. They are not required; do not merge while they are red.
+(`CodeQL Security Scanning / Analyze JavaScript/TypeScript` is likewise
+optional.) The `ci-docs / Docs Format Check` name no longer exists.
+
+PR creation is restricted to collaborators (`pull_request_creation_policy:
+collaborators_only`), and secret scanning with push protection and Dependabot
+security updates are enabled.
 
 ## Project manager automation
 
