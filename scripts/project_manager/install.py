@@ -84,10 +84,10 @@ StandardOutput=append:{state / 'heartbeat.log'}
 StandardError=append:{state / 'heartbeat.log'}
 """)
     _write_private(units / HEARTBEAT_TIMER, """[Unit]
-Description=Rollercoaster.dev project manager heartbeat at 09:00 and 21:00 Berlin
+Description=Rollercoaster.dev project manager heartbeat at 09:00 and 21:00 Berlin, weekdays
 
 [Timer]
-OnCalendar=*-*-* 09,21:00:00 Europe/Berlin
+OnCalendar=Mon..Fri *-*-* 09,21:00:00 Europe/Berlin
 Persistent=true
 
 [Install]

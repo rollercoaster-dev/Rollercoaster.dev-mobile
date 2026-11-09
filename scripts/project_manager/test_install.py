@@ -41,7 +41,7 @@ class InstallTests(unittest.TestCase):
             heartbeat = (units / HEARTBEAT_UNIT).read_text()
             self.assertIn(f"ExecStart={link / 'scripts/project_manager/heartbeat.sh'}", heartbeat)
             timer = (units / HEARTBEAT_TIMER).read_text()
-            self.assertIn('OnCalendar=*-*-* 09,21:00:00 Europe/Berlin', timer)
+            self.assertIn('OnCalendar=Mon..Fri *-*-* 09,21:00:00 Europe/Berlin', timer)
             self.assertIn('Persistent=true', timer)
             self.assertFalse((home / 'Library').exists())
 
