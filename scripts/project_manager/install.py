@@ -2,7 +2,7 @@
 """Install a versioned local PM runtime plus the Telegram receiver service.
 
 macOS: a user LaunchAgent for the receiver.
-Linux: systemd user units for the receiver and a 09:00/21:00 heartbeat timer.
+Linux: systemd user units for the receiver and weekday plan/tick/recap timers.
 """
 import argparse
 import os
@@ -15,8 +15,14 @@ import tempfile
 
 LABEL = 'dev.rollercoaster.project-manager-telegram'
 RECEIVER_UNIT = 'rollercoaster-pm-telegram.service'
-HEARTBEAT_UNIT = 'rollercoaster-pm-heartbeat.service'
-HEARTBEAT_TIMER = 'rollercoaster-pm-heartbeat.timer'
+WAKEUP_UNIT = 'rollercoaster-pm@.service'
+# Weekdays only, Europe/Berlin. Ticks skip 09:00 (plan) and 18:00 (recap).
+TIMERS = {
+    'plan': ('Mon..Fri *-*-* 09:00:00 Europe/Berlin',),
+    'tick': ('Mon..Fri *-*-* 09:30:00 Europe/Berlin', 'Mon..Fri *-*-* 10..17:00,30:00 Europe/Berlin'),
+    'recap': ('Mon..Fri *-*-* 18:00:00 Europe/Berlin',),
+}
+LEGACY_UNITS = ('rollercoaster-pm-heartbeat.timer', 'rollercoaster-pm-heartbeat.service')
 
 
 def _receiver_args(python, link, state, home):
@@ -69,35 +75,36 @@ StandardError=append:{state / 'telegram.stderr.log'}
 [Install]
 WantedBy=default.target
 """)
-    _write_private(units / HEARTBEAT_UNIT, f"""[Unit]
-Description=Rollercoaster.dev project manager heartbeat (one wakeup cycle)
+    _write_private(units / WAKEUP_UNIT, f"""[Unit]
+Description=Rollercoaster.dev project manager wakeup (%i)
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=oneshot
-ExecStart={link / 'scripts/project_manager/heartbeat.sh'}
+ExecStart={link / 'scripts/project_manager/heartbeat.sh'} %i
 Environment=HOME={home}
 Environment=PATH={path_env}
 TimeoutStartSec=4h
 StandardOutput=append:{state / 'heartbeat.log'}
 StandardError=append:{state / 'heartbeat.log'}
 """)
-    _write_private(units / HEARTBEAT_TIMER, """[Unit]
-Description=Rollercoaster.dev project manager heartbeat at 09:00 and 21:00 Berlin, weekdays
-
-[Timer]
-OnCalendar=Mon..Fri *-*-* 09,21:00:00 Europe/Berlin
-Persistent=true
-
-[Install]
-WantedBy=timers.target
-""")
+    for mode, calendars in TIMERS.items():
+        # Only the morning plan catches up after sleep; a missed tick or recap is just skipped.
+        _write_private(units / f'rollercoaster-pm-{mode}.timer', '[Unit]\nDescription=Rollercoaster.dev project manager {}\n\n[Timer]\n{}\nUnit=rollercoaster-pm@{}.service\nPersistent={}\n\n[Install]\nWantedBy=timers.target\n'.format(
+            mode, '\n'.join('OnCalendar=' + c for c in calendars), mode, 'true' if mode == 'plan' else 'false'))
+    timers = [f'rollercoaster-pm-{mode}.timer' for mode in TIMERS]
+    if start:
+        legacy = [name for name in LEGACY_UNITS if (units / name).exists()]
+        if legacy:
+            subprocess.run(['systemctl', '--user', 'disable', '--now', *legacy], check=False)
+    for name in LEGACY_UNITS:
+        (units / name).unlink(missing_ok=True)
     if start:
         subprocess.run(['systemctl', '--user', 'daemon-reload'], check=True)
-        subprocess.run(['systemctl', '--user', 'enable', RECEIVER_UNIT, HEARTBEAT_TIMER], check=True)
+        subprocess.run(['systemctl', '--user', 'enable', RECEIVER_UNIT, *timers], check=True)
         subprocess.run(['systemctl', '--user', 'restart', RECEIVER_UNIT], check=True)
-        subprocess.run(['systemctl', '--user', 'start', HEARTBEAT_TIMER], check=True)
+        subprocess.run(['systemctl', '--user', 'restart', *timers], check=True)
     return receiver
 
 

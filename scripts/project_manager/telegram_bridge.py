@@ -19,10 +19,40 @@ import sys
 import time
 import urllib.request
 import uuid
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 
 class BridgeError(Exception):
     pass
+
+
+class RefusedError(BridgeError):
+    """A deliberate no: too long, quiet hours, weekend, muted, or a question already open."""
+
+
+BERLIN = ZoneInfo('Europe/Berlin')
+MAX_LINES = 5
+MAX_CHARS = 700
+MUTE_SECONDS = 30 * 60
+# Plain words, case and punctuation ignored: "OFF!" == off.
+CONTROLS = {'status': 'status', 'pause': 'pause', 'off': 'pause', 'resume': 'resume', 'on': 'resume',
+            'help': 'help', 'stop': 'stop', 'go': 'go', 'skip': 'skip', 'tasks': 'tasks'}
+HELP = ('go / skip: today\'s plan\n'
+        'status, tasks: where things stand\n'
+        'stop: mute 30 min (work continues)\n'
+        'off / on: pause or resume work\n'
+        'Anything else: I answer in about a minute.')
+
+
+def control_word(text):
+    word = re.sub(r'[^a-z]', '', text.lower())
+    return CONTROLS.get(word) if len(text) <= 20 else None
+
+
+def check_length(text):
+    if len(text.strip().splitlines()) > MAX_LINES or len(text) > MAX_CHARS:
+        raise RefusedError(f'Too long: max {MAX_LINES} lines / {MAX_CHARS} characters. Cut it down.')
 
 
 @dataclass(frozen=True)
@@ -96,30 +126,39 @@ class TelegramHTTP:
 
 
 def format_status(data):
+    """At most five short lines: the picture, never a dump."""
     if 'occupied' not in data:
-        return 'Project manager\n' + '\n'.join(
-            '{}: {}'.format(key.replace('_', ' '), json.dumps(value, ensure_ascii=False) if isinstance(value, (dict, list)) else value)
-            for key, value in data.items())
-    synced = data.get('synced_at')
-    age = '{} seconds ago'.format(max(0, int(time.time() - synced))) if synced else 'never refreshed'
-    remaining = len(data.get('unaudited', []))
-    lines = ['Project manager: {}{}'.format(data.get('mode', 'unknown'), ' (dispatch paused)' if data.get('paused') else ''),
-             'Slots: {}/{}'.format(data.get('occupied', 0), data.get('limit', 5)),
-             'Issues: {}. Audit: {} assessed, {} remaining.'.format(data.get('issue_count', 0), len(data.get('audits', {})), remaining),
-             'Priorities: {}'.format('approved' if data.get('queue_approved') else 'awaiting approval'),
-             'Next queue issues: ' + (', '.join('#' + str(n) for n in data.get('pending_queue', data.get('queue', []))[:3]) or 'none'),
-             'Snapshot: {} (the heartbeat refreshes it).'.format(age)]
+        lines = ['{}: {}'.format(key.replace('_', ' '), json.dumps(value, ensure_ascii=False) if isinstance(value, (dict, list)) else value)
+                 for key, value in data.items()]
+        return '\n'.join(lines[:MAX_LINES])
+    plan = data.get('plan')
+    if data.get('pending_queue'):
+        today = 'Queue: ' + ', '.join('#' + str(n) for n in data['pending_queue'][:3])
+    elif plan:
+        label = {'approved': 'go given', 'proposed': 'waiting for your go', 'skipped': 'skipped'}.get(plan['status'], plan['status'])
+        today = 'Plan: {} ({})'.format(' '.join('#' + str(n) for n in plan['items']), label)
+    else:
+        today = 'Plan: none yet'
+    state = 'Off' if data.get('paused') else 'On'
+    if data.get('weekend'):
+        state += ', weekend'
     active = [key for key, item in data.get('reservations', {}).items() if item.get('pr') is None]
-    lines.append('Active implementations: ' + (', '.join('#' + key for key in active[:5]) or 'none'))
     prs = [item for item in data.get('prs', []) if item.get('state', '').lower() == 'open']
-    lines.append('Open PRs: {}'.format(len(prs)))
-    for pr in prs[:5]:
-        lines.append('#{} {}'.format(pr.get('number'), pr.get('html_url') or pr.get('url') or ''))
+    synced = data.get('synced_at')
+    age = '{} min ago'.format(max(0, int((time.time() - synced) / 60))) if synced else 'never'
+    lines = ['{}. {}'.format(state, today),
+             'Working on: ' + (', '.join('#' + key for key in active[:3]) or 'nothing'),
+             'Open PRs: ' + (' '.join(item.get('html_url') or item.get('url') or '#' + str(item.get('number')) for item in prs[:3]) or 'none'),
+             'Open tasks: {}'.format(len(data.get('open_tasks', []))),
+             'Slots {}/{} · audit {} remaining · synced {}'.format(
+                 data.get('occupied', 0), data.get('limit', 5), len(data.get('unaudited', [])), age)]
     return '\n'.join(lines)
 
 
 class Bridge:
-    def __init__(self, state_dir, repo_root, config, http=None):
+    def __init__(self, state_dir, repo_root, config, http=None, now=time.time):
+        self.now = now
+        self.listener = None
         self.state_dir = Path(state_dir).expanduser().resolve()
         self.repo_root = Path(repo_root).expanduser().resolve()
         self.config = config
@@ -138,6 +177,7 @@ class Bridge:
             CREATE TABLE IF NOT EXISTS outbox (
                 id INTEGER PRIMARY KEY, dedup_key TEXT NOT NULL UNIQUE, text TEXT NOT NULL,
                 update_id INTEGER, sent INTEGER NOT NULL DEFAULT 0, created_at REAL NOT NULL);
+            CREATE TABLE IF NOT EXISTS listened (update_id INTEGER PRIMARY KEY, started_at REAL NOT NULL);
         ''')
 
     def offset(self):
@@ -166,11 +206,32 @@ class Bridge:
             self.db.execute('INSERT OR IGNORE INTO outbox (dedup_key,text,update_id,created_at) VALUES (?,?,?,?)',
                             (key + ':' + str(index), chunk, update_id, time.time()))
 
-    def send(self, text, key=None):
+    def _meta(self, key, default=None):
+        row = self.db.execute('SELECT value FROM metadata WHERE key=?', (key,)).fetchone()
+        return row[0] if row else default
+
+    def _berlin(self):
+        return datetime.fromtimestamp(self.now(), BERLIN)
+
+    def send(self, text, key=None, ask=False):
+        """A notification Joe didn't ask for. Refused when it would interrupt rest."""
+        check_length(text)
+        now = self._berlin()
+        if now.weekday() >= 5:
+            raise RefusedError('Weekend: no notifications. Hold it for Monday.')
+        if now.hour >= 21 or now.hour < 8:
+            raise RefusedError('Quiet hours (21:00-08:00): hold it for the morning.')
+        if float(self._meta('muted_until', '0')) > self.now():
+            raise RefusedError('Joe muted the bot; send nothing.')
+        if ask and self._meta('open_ask_date') == now.date().isoformat():
+            raise RefusedError('A question is already open; wait for the answer.')
         with self.db:
             self._enqueue(text, 'notification:' + (key or str(uuid.uuid4())))
+            if ask:
+                self.db.execute("INSERT OR REPLACE INTO metadata VALUES ('open_ask_date', ?)", (now.date().isoformat(),))
 
     def reply(self, update_id, text):
+        check_length(text)
         with self.db:
             if not self.db.execute('SELECT 1 FROM inbox WHERE update_id=?', (update_id,)).fetchone():
                 raise BridgeError('Unknown inbox update ID.')
@@ -203,28 +264,93 @@ class Bridge:
                 and not any(key.startswith('forward_') for key in message)
                 and isinstance(message.get('text'), str))
 
+    def _pm(self, *args):
+        return subprocess.run([sys.executable, str(self.repo_root / 'scripts/project_manager/pm.py'),
+                               '--state-dir', str(self.state_dir), *args],
+                              capture_output=True, text=True, timeout=60)
+
+    def _answer(self, row):
+        command = row['command']
+        if command == 'help':
+            return HELP
+        if command == 'stop':
+            self._record('muted_until', self.now() + MUTE_SECONDS)
+            self._stop_listener()
+            return 'Muted for 30 min. Work continues. Any message unmutes.'
+        args = {'go': ('plan-approve', '--approval-ref', 'Telegram update {}: go'.format(row['update_id'])),
+                'skip': ('plan-skip',)}.get(command, (command,))
+        result = self._pm(*args)
+        data = json.loads(result.stdout)
+        if result.returncode != 0:
+            if isinstance(data, dict) and data.get('error'):
+                return data['error'] + '.'  # A gate said no: answer it, don't retry.
+            raise ValueError()
+        if command == 'status':
+            return format_status(data)
+        if command == 'pause':
+            return 'Off. No new work until you say on.'
+        if command == 'resume':
+            return 'On.'
+        if command == 'go':
+            return 'Go: {}. Starts at the next work tick (within 30 min).'.format(
+                ', '.join('#' + str(n) for n in data.get('items', [])))
+        if command == 'skip':
+            return 'Skipped today. Nothing starts.'
+        if command == 'tasks':
+            if not data:
+                return 'No open tasks.'
+            return '\n'.join('{}. {}'.format(t['id'], t['text'][:80]) for t in data[:MAX_LINES])
+        return format_status(data)
+
     def _commands(self):
         for row in self.db.execute('SELECT * FROM inbox WHERE handled=0 AND command IS NOT NULL ORDER BY update_id').fetchall():
             if self.db.execute('SELECT 1 FROM outbox WHERE update_id=?', (row['update_id'],)).fetchone():
                 continue
-            if row['command'] == 'help':
-                answer = 'Commands: /status, /pause, /resume, /help. Pause and resume control dispatch only; resume never approves priorities. Other messages are saved for the project manager.'
-            else:
-                try:
-                    result = subprocess.run([sys.executable, str(self.repo_root / 'scripts/project_manager/pm.py'),
-                                             '--state-dir', str(self.state_dir), row['command']],
-                                            capture_output=True, text=True, timeout=30, check=True)
-                    data = json.loads(result.stdout)
-                    answer = format_status(data)
-                except (OSError, subprocess.SubprocessError, ValueError, AttributeError):
-                    self._record('last_error', 'Project manager command failed; saved for retry.')
-                    # Keep the command unhandled and retry on the next poll.
-                    with self.db:
-                        self._enqueue('The project manager command could not run. It is saved and will be retried.', 'command-error:' + str(row['update_id']))
-                    # Preserve user intent ordering: do not let a later pause or
-                    # resume execute before this older command can be retried.
-                    break
+            try:
+                answer = self._answer(row)
+            except (OSError, subprocess.SubprocessError, ValueError, AttributeError, TypeError):
+                self._record('last_error', 'Project manager command failed; saved for retry.')
+                # Keep the command unhandled and retry on the next poll.
+                with self.db:
+                    self._enqueue('That command could not run. Saved; retrying.', 'command-error:' + str(row['update_id']))
+                # Preserve user intent ordering: do not let a later pause or
+                # resume execute before this older command can be retried.
+                break
             self.reply(row['update_id'], answer)
+
+    # --- Listener: an instant, read-only answer to free text ---
+
+    def _stop_listener(self):
+        if self.listener and self.listener[0].poll() is None:
+            self.listener[0].terminate()
+
+    def _listen(self):
+        if self.listener:
+            process, uid = self.listener
+            if process.poll() is None:
+                return
+            self.listener = None
+            if not self.db.execute('SELECT 1 FROM outbox WHERE update_id=?', (uid,)).fetchone():
+                with self.db:  # Honest fallback; the message stays in the inbox for the next tick.
+                    self._enqueue("Couldn't answer that one right now. Saved for the next work tick.", 'listen-fail:' + str(uid))
+        row = self.db.execute('SELECT update_id FROM inbox WHERE handled=0 AND command IS NULL AND update_id NOT IN '
+                              '(SELECT update_id FROM listened) ORDER BY update_id LIMIT 1').fetchone()
+        if not row:
+            return
+        uid = row['update_id']
+        with self.db:
+            self.db.execute('INSERT INTO listened VALUES (?, ?)', (uid, self.now()))
+        script = self.repo_root / 'scripts/project_manager/listen.sh'
+        try:
+            if not script.is_file():
+                raise OSError()
+            log = open(self.state_dir / 'listen.log', 'a')
+            self.listener = (subprocess.Popen([str(script), str(uid)], stdout=log, stderr=log,
+                                              stdin=subprocess.DEVNULL, start_new_session=True), uid)
+            log.close()
+        except OSError:
+            with self.db:
+                self._enqueue('Saved. No instant answer available; the next work tick picks it up.', 'ack:' + str(uid))
 
     def once(self, timeout=0):
         self._record('last_error', '')
@@ -245,14 +371,17 @@ class Bridge:
             with self.db:
                 if self._authorized(message):
                     text = message['text']
-                    command = text.strip().lower().lstrip('/')
-                    command = command if command in ('status', 'pause', 'resume', 'help') else None
+                    command = control_word(text)
                     inserted = self.db.execute('INSERT OR IGNORE INTO inbox (update_id,text,message_id,command,received_at) VALUES (?,?,?,?,?)',
                                                (uid, text, message['message_id'], command, time.time())).rowcount
-                    if inserted and command is None:
-                        self._enqueue('Received and saved for the project manager. I will reply after processing your message.', 'ack:' + str(uid))
+                    if inserted:
+                        # Any message from Joe answers the open question; anything but stop unmutes.
+                        self.db.execute("DELETE FROM metadata WHERE key='open_ask_date'")
+                        if command != 'stop':
+                            self.db.execute("DELETE FROM metadata WHERE key='muted_until'")
                 self.db.execute("UPDATE metadata SET value=? WHERE key='offset'", (str(uid + 1),))
         self._commands()
+        self._listen()
         self.flush()
 
 
@@ -267,6 +396,7 @@ def main(argv=None):
     send = sub.add_parser('send')
     send.add_argument('text')
     send.add_argument('--key')
+    send.add_argument('--ask', action='store_true', help='This message asks Joe a question (one open at a time).')
     reply = sub.add_parser('reply')
     reply.add_argument('update_id', type=int)
     reply.add_argument('text')
@@ -293,12 +423,15 @@ def main(argv=None):
             print(json.dumps(bridge.health()))
         else:
             if args.command == 'send':
-                bridge.send(args.text, args.key)
+                bridge.send(args.text, args.key, args.ask)
             else:
                 bridge.reply(args.update_id, args.text)
             bridge.flush()
             print(json.dumps(bridge.health()))
         return 0
+    except RefusedError as refused:
+        print(json.dumps({'refused': str(refused)}))
+        return 3
     except (BridgeError, OSError, sqlite3.Error):
         print('Telegram bridge failed; check configuration, state permissions, and receiver lock.', file=sys.stderr)
         return 1

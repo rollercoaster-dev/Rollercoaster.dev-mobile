@@ -2,7 +2,7 @@ import plistlib
 import tempfile
 import unittest
 from pathlib import Path
-from install import install, HEARTBEAT_TIMER, HEARTBEAT_UNIT
+from install import install, WAKEUP_UNIT
 
 
 class InstallTests(unittest.TestCase):
@@ -38,11 +38,17 @@ class InstallTests(unittest.TestCase):
             self.assertIn(f"{link / 'scripts/project_manager/telegram_bridge.py'} ", text)
             self.assertIn('Restart=always', text)
             self.assertNotIn(str(source), text)
-            heartbeat = (units / HEARTBEAT_UNIT).read_text()
-            self.assertIn(f"ExecStart={link / 'scripts/project_manager/heartbeat.sh'}", heartbeat)
-            timer = (units / HEARTBEAT_TIMER).read_text()
-            self.assertIn('OnCalendar=Mon..Fri *-*-* 09,21:00:00 Europe/Berlin', timer)
-            self.assertIn('Persistent=true', timer)
+            wakeup = (units / WAKEUP_UNIT).read_text()
+            self.assertIn(f"ExecStart={link / 'scripts/project_manager/heartbeat.sh'} %i", wakeup)
+            plan = (units / 'rollercoaster-pm-plan.timer').read_text()
+            self.assertIn('OnCalendar=Mon..Fri *-*-* 09:00:00 Europe/Berlin', plan)
+            self.assertIn('Unit=rollercoaster-pm@plan.service', plan)
+            self.assertIn('Persistent=true', plan)
+            tick = (units / 'rollercoaster-pm-tick.timer').read_text()
+            self.assertIn('Persistent=false', tick)
+            self.assertTrue(all('Mon..Fri' in line for line in tick.splitlines() if line.startswith('OnCalendar')))
+            self.assertIn('OnCalendar=Mon..Fri *-*-* 18:00:00', (units / 'rollercoaster-pm-recap.timer').read_text())
+            self.assertFalse((units / 'rollercoaster-pm-heartbeat.timer').exists())
             self.assertFalse((home / 'Library').exists())
 
     def test_unsupported_platform_is_refused(self):

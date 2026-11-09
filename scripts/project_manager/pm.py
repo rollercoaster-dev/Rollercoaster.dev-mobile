@@ -7,10 +7,14 @@ import re
 import sqlite3
 import subprocess
 import time
+from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 REPO = 'rollercoaster-dev/Rollercoaster.dev-mobile'
 DEFAULT_STATE = Path.home() / '.local/state/rollercoaster-pm'
+BERLIN = ZoneInfo('Europe/Berlin')
+PLAN_CAP = 3
 
 
 class GateError(Exception):
@@ -33,7 +37,8 @@ def linked_issues(pr):
 
 
 class Manager:
-    def __init__(self, directory=DEFAULT_STATE):
+    def __init__(self, directory=DEFAULT_STATE, now=time.time):
+        self.now = now
         self.directory = Path(directory).expanduser()
         self.directory.mkdir(parents=True, exist_ok=True, mode=0o700)
         self.db = self.directory / 'manager.sqlite3'
@@ -50,6 +55,8 @@ class Manager:
         try:
             conn.execute('BEGIN IMMEDIATE')
             state = json.loads(conn.execute('SELECT data FROM state WHERE id=1').fetchone()[0])
+            state.setdefault('plan', None)
+            state.setdefault('tasks', [])
             yield state
             conn.execute('UPDATE state SET data=? WHERE id=1', (json.dumps(state),))
             conn.commit()
@@ -132,7 +139,79 @@ class Manager:
                 next_auto_issue=self._next_auto_issue(s) if s['snapshot'] and not s['queue'] else None,
                 prs=list(s['prs'].values()), reservations=s['reservations'], queue=s['queue'],
                 audits=s['audits'], unaudited=self._unaudited(s),
-                issue_count=len((s['snapshot'] or {}).get('issues', [])), synced_at=s['synced_at'])
+                issue_count=len((s['snapshot'] or {}).get('issues', [])), synced_at=s['synced_at'],
+                plan=self._today_plan(s), weekend=self._weekend(),
+                open_tasks=[t for t in s['tasks'] if t['status'] == 'open'])
+
+    # --- Daily plan (Joe approves with "go"; nothing starts without it) ---
+
+    def _today(self):
+        return datetime.fromtimestamp(self.now(), BERLIN).date().isoformat()
+
+    def _weekend(self):
+        return datetime.fromtimestamp(self.now(), BERLIN).weekday() >= 5
+
+    def _today_plan(self, s):
+        plan = s['plan']
+        return plan if plan and plan['date'] == self._today() else None
+
+    def plan_propose(self, issues):
+        if self._weekend(): raise GateError('Weekend: no plan')
+        if not issues: raise GateError('A plan needs at least one issue')
+        if len(set(issues)) != len(issues): raise GateError('Duplicate plan issue')
+        if len(issues) > PLAN_CAP: raise GateError(f'Plan is capped at {PLAN_CAP} issues')
+        with self.transaction() as s:
+            s['plan'] = dict(date=self._today(), items=issues, status='proposed', ref=None, at=self.now())
+            return s['plan']
+
+    def plan_approve(self, reference):
+        if not reference.strip(): raise GateError('Explicit user approval reference required')
+        with self.transaction() as s:
+            plan = self._today_plan(s)
+            if not plan: raise GateError('No plan for today yet')
+            if plan['status'] == 'skipped': raise GateError('Today was skipped')
+            plan.update(status='approved', ref=reference, approved_at=self.now())
+            return plan
+
+    def plan_skip(self):
+        with self.transaction() as s:
+            plan = self._today_plan(s)
+            if not plan: raise GateError('No plan for today yet')
+            plan['status'] = 'skipped'
+            return plan
+
+    def plan_add(self, issue, anyway=False):
+        with self.transaction() as s:
+            plan = self._today_plan(s)
+            if not plan: raise GateError('No plan for today yet')
+            if issue in plan['items']: raise GateError('Already in today\'s plan')
+            if len(plan['items']) >= PLAN_CAP and not anyway:
+                raise GateError(f'Today is full ({PLAN_CAP}). Say "add anyway" to override.')
+            plan['items'].append(issue)
+            return plan
+
+    # --- Task ledger: every promise is a task, so none can vanish ---
+
+    def task_add(self, text, source=None):
+        if not text.strip(): raise GateError('Task text is required')
+        with self.transaction() as s:
+            task = dict(id=max([t['id'] for t in s['tasks']], default=0) + 1, text=text.strip(),
+                        source=source, status='open', created_at=self.now(), closed_at=None, note=None)
+            s['tasks'].append(task)
+            return task
+
+    def task_close(self, task_id, status, note=''):
+        if status not in ('done', 'dropped'): raise GateError('Task status must be done or dropped')
+        with self.transaction() as s:
+            task = next((t for t in s['tasks'] if t['id'] == task_id), None)
+            if not task: raise GateError('Unknown task')
+            if task['status'] != 'open': raise GateError('Task is already closed')
+            task.update(status=status, note=note, closed_at=self.now())
+            return task
+
+    def tasks(self):
+        with self.transaction() as s:
+            return [t for t in s['tasks'] if t['status'] == 'open']
 
     def snapshot(self):
         with self.transaction() as s:
@@ -194,6 +273,7 @@ class Manager:
 
     def _eligible(self, s, issue):
         if s['paused']: raise GateError('Dispatch is paused')
+        if self._weekend(): raise GateError('Weekend: no new work starts')
         if s['queue'] and not s['approved']: raise GateError('Awaiting agreed priorities for manual queue')
         if self._occupied(s) >= 5: raise GateError('Five slots occupied; wait for a human merge')
         existing = set(s['reservations'])
@@ -209,8 +289,13 @@ class Manager:
                 b = current_board.get(str(n), {})
                 if {'order': b.get('order'), 'priority': b.get('priority')} != s['approved']['board'].get(str(n)):
                     raise GateError('Board priorities/order changed; agree and approve the queue again')
-        elif issue != self._next_auto_issue(s):
-            raise GateError('Issue is not the next autonomous candidate in the board Next column')
+        else:
+            plan = self._today_plan(s)
+            if not plan or plan['status'] != 'approved':
+                raise GateError('Needs today\'s plan approved by Joe ("go")')
+            remaining = [n for n in plan['items'] if str(n) not in existing]
+            if not remaining or issue != remaining[0]:
+                raise GateError('Issue is not next in today\'s approved plan')
         audit = s['audits'].get(str(issue), {})
         current = next((i for i in s['snapshot']['issues'] if i['number'] == issue), None)
         if not current or audit.get('verdict') != 'needed' or audit.get('head') != s['snapshot']['head'] or audit.get('issue_updated_at') != current['updated_at']:
@@ -296,6 +381,14 @@ def main():
     audit.add_argument('verdict'); audit.add_argument('--evidence', required=True); audit.add_argument('--head', required=True)
     queue = sub.add_parser('queue'); queue.add_argument('issues', type=int, nargs='+')
     approve = sub.add_parser('approve-queue'); approve.add_argument('--approval-ref', required=True)
+    sub.add_parser('plan-propose').add_argument('issues', type=int, nargs='+')
+    sub.add_parser('plan-approve').add_argument('--approval-ref', required=True)
+    sub.add_parser('plan-skip')
+    plan_add = sub.add_parser('plan-add'); plan_add.add_argument('issue', type=int); plan_add.add_argument('--anyway', action='store_true')
+    sub.add_parser('tasks')
+    task_add = sub.add_parser('task-add'); task_add.add_argument('text'); task_add.add_argument('--source')
+    for name in ('task-done', 'task-drop'):
+        p = sub.add_parser(name); p.add_argument('task_id', type=int); p.add_argument('--note', default='')
     for name in ('claim', 'check-pr', 'bind'):
         p = sub.add_parser(name); p.add_argument('issue', type=int)
         if name == 'bind': p.add_argument('pr', type=int)
@@ -305,6 +398,14 @@ def main():
         if args.command in ('status', 'snapshot', 'pause', 'resume', 'clear-queue'):
             result = getattr(manager, args.command.replace('-', '_'))()
         elif args.command == 'sync': result = manager.sync(fetch())
+        elif args.command == 'plan-propose': result = manager.plan_propose(args.issues)
+        elif args.command == 'plan-approve': result = manager.plan_approve(args.approval_ref)
+        elif args.command == 'plan-skip': result = manager.plan_skip()
+        elif args.command == 'plan-add': result = manager.plan_add(args.issue, args.anyway)
+        elif args.command == 'tasks': result = manager.tasks()
+        elif args.command == 'task-add': result = manager.task_add(args.text, args.source)
+        elif args.command in ('task-done', 'task-drop'):
+            result = manager.task_close(args.task_id, args.command.split('-')[1].replace('drop', 'dropped'), args.note)
         elif args.command == 'audit': result = manager.audit(args.issue, args.verdict, args.evidence, args.head)
         elif args.command == 'queue': result = manager.queue(args.issues)
         elif args.command == 'approve-queue':

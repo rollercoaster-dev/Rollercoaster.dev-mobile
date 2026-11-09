@@ -1,9 +1,14 @@
 import concurrent.futures
 import tempfile
+from datetime import datetime
+from zoneinfo import ZoneInfo
 import unittest
 from pathlib import Path
 
 from pm import Manager, GateError, linked_issues
+
+MONDAY = datetime(2026, 11, 9, 10, 0, tzinfo=ZoneInfo('Europe/Berlin')).timestamp()
+SATURDAY = datetime(2026, 11, 14, 10, 0, tzinfo=ZoneInfo('Europe/Berlin')).timestamp()
 
 
 def pr(n, state='open', author='joeczar', branch=None, merged=False, draft=False):
@@ -23,7 +28,8 @@ class ManagerTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         self.path = Path(self.tmp.name)
-        self.m = Manager(self.path)
+        self.clock = [MONDAY]
+        self.m = Manager(self.path, now=lambda: self.clock[0])
 
     def ready(self, data):
         self.m.sync(data)
@@ -31,6 +37,10 @@ class ManagerTests(unittest.TestCase):
             self.m.audit(issue['number'], 'needed', 'Current code still lacks acceptance behavior', 'abc')
         self.m.queue([i['number'] for i in data['issues']])
         self.m.approve_queue('User message: approve this exact queue')
+
+    def go(self, *issues):
+        self.m.plan_propose(list(issues))
+        self.m.plan_approve('Telegram update 1: go')
 
     def test_five_prs_block_start_even_if_drafts(self):
         data = snapshot([pr(n, draft=True) for n in range(1, 6)])
@@ -90,6 +100,7 @@ class ManagerTests(unittest.TestCase):
         data = snapshot()
         self.m.sync(data)
         self.assertEqual(self.m.status()['next_auto_issue'], 100)
+        self.go(100)
         with self.assertRaisesRegex(GateError, 'Revalidate selected issue'):
             self.m.claim(100, lambda: data)
         self.m.audit(100, 'needed', 'Inspected current code and acceptance', 'abc')
@@ -108,11 +119,14 @@ class ManagerTests(unittest.TestCase):
         self.assertEqual(self.m.status()['next_auto_issue'], 101)
         self.m.sync(data)
         self.m.audit(102, 'needed', 'Current code lacks acceptance behavior', 'abc')
+        self.go(102)
         self.m.claim(102, lambda: data)
 
     def test_auto_dispatch_allows_independent_workers_up_to_cap(self):
         data = snapshot(issues=range(100, 106))
         self.m.sync(data)
+        self.go(100, 101, 102)
+        for n in (103, 104, 105): self.m.plan_add(n, anyway=True)
         for n in range(100, 105):
             self.m.audit(n, 'needed', f'Issue {n} remains needed', 'abc')
             self.m.claim(n, lambda: data)
@@ -142,6 +156,7 @@ class ManagerTests(unittest.TestCase):
         self.m.clear_queue()
         self.assertEqual(self.m.status()['next_auto_issue'], 100)
         self.m.audit(100, 'needed', 'Current code lacks behavior', 'abc')
+        self.go(100)
         self.m.claim(100, lambda: data)
         self.m.queue([101])
         self.m.clear_queue()
@@ -229,6 +244,62 @@ class ManagerTests(unittest.TestCase):
             except GateError: return False
         with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
             self.assertEqual(sum(pool.map(run, range(2))),1)
+
+
+    def test_auto_dispatch_waits_for_todays_go(self):
+        data = snapshot()
+        self.m.sync(data)
+        self.m.audit(100, 'needed', 'Evidence', 'abc')
+        with self.assertRaisesRegex(GateError, 'plan approved'): self.m.claim(100, lambda: data)
+        self.m.plan_propose([100])
+        with self.assertRaisesRegex(GateError, 'plan approved'): self.m.claim(100, lambda: data)
+        self.m.plan_approve('Telegram update 7: go')
+        self.m.claim(100, lambda: data)
+
+    def test_yesterdays_go_does_not_carry_over(self):
+        data = snapshot()
+        self.m.sync(data)
+        self.m.audit(100, 'needed', 'Evidence', 'abc')
+        self.go(100)
+        self.clock[0] += 86400
+        self.assertIsNone(self.m.status()['plan'])
+        with self.assertRaisesRegex(GateError, 'plan approved'): self.m.claim(100, lambda: data)
+
+    def test_plan_items_run_in_order(self):
+        data = snapshot()
+        self.m.sync(data)
+        for n in (100, 101): self.m.audit(n, 'needed', 'Evidence', 'abc')
+        self.go(101, 100)
+        with self.assertRaisesRegex(GateError, 'not next'): self.m.claim(100, lambda: data)
+        self.m.claim(101, lambda: data)
+        self.m.claim(100, lambda: data)
+
+    def test_skip_blocks_approval(self):
+        self.m.plan_propose([100])
+        self.m.plan_skip()
+        with self.assertRaisesRegex(GateError, 'skipped'): self.m.plan_approve('go')
+
+    def test_plan_is_capped_at_three_unless_overridden(self):
+        with self.assertRaisesRegex(GateError, 'capped'): self.m.plan_propose([100, 101, 102, 103])
+        self.m.plan_propose([100, 101, 102])
+        with self.assertRaisesRegex(GateError, 'full'): self.m.plan_add(103)
+        self.assertEqual(self.m.plan_add(103, anyway=True)['items'], [100, 101, 102, 103])
+
+    def test_weekend_starts_nothing(self):
+        data = snapshot()
+        self.ready(data)
+        self.clock[0] = SATURDAY
+        with self.assertRaisesRegex(GateError, 'Weekend'): self.m.claim(100, lambda: data)
+        with self.assertRaisesRegex(GateError, 'Weekend'): self.m.plan_propose([100])
+        self.assertTrue(self.m.status()['weekend'])
+
+    def test_task_ledger_keeps_promises_until_closed(self):
+        first = self.m.task_add('Look into flaky e2e', source='telegram:5')
+        self.m.task_add('Rebase PR 700')
+        self.assertEqual([t['id'] for t in Manager(self.path).tasks()], [1, 2])
+        self.m.task_close(first['id'], 'done', 'Fixed in #801')
+        self.assertEqual([t['id'] for t in self.m.status()['open_tasks']], [2])
+        with self.assertRaises(GateError): self.m.task_close(first['id'], 'dropped')
 
 
 if __name__ == '__main__': unittest.main()

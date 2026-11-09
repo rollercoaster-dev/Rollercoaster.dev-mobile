@@ -1,9 +1,15 @@
 import json
 import tempfile
+import time
+from datetime import datetime
+from zoneinfo import ZoneInfo
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 import telegram_bridge as tb
+
+BERLIN = ZoneInfo('Europe/Berlin')
+MONDAY_NOON = datetime(2026, 11, 9, 12, 0, tzinfo=BERLIN).timestamp()
 
 
 class FakeHTTP:
@@ -36,10 +42,11 @@ class BridgeTests(unittest.TestCase):
         self.root = Path(self.tmp.name)
         self.http = FakeHTTP()
         self.config = tb.Config('secret', 42, 42)
+        self.clock = [MONDAY_NOON]
         self.bridge = self.make_bridge()
 
     def make_bridge(self):
-        bridge = tb.Bridge(self.root / 'state', self.root, self.config, self.http)
+        bridge = tb.Bridge(self.root / 'state', self.root, self.config, self.http, now=lambda: self.clock[0])
         self.addCleanup(bridge.db.close)
         return bridge
 
@@ -131,8 +138,9 @@ class BridgeTests(unittest.TestCase):
     def test_status_uses_pending_queue_after_completed_prefix(self):
         text = tb.format_status({'occupied': 2, 'queue': [1, 2, 3, 4, 5],
                                  'pending_queue': [4, 5]})
-        self.assertIn('Next queue issues: #4, #5', text)
-        self.assertNotIn('Next queue issues: #1', text)
+        self.assertIn('Queue: #4, #5', text)
+        self.assertNotIn('#1', text)
+        self.assertLessEqual(len(text.splitlines()), tb.MAX_LINES)
 
     def test_failed_commands_stay_out_of_natural_language_inbox(self):
         self.http.updates = [update(1, '/pause'), update(2, 'next please')]
@@ -157,6 +165,79 @@ class BridgeTests(unittest.TestCase):
                 tb.TelegramHTTP(self.config).call('getUpdates', {'timeout':0})
         self.assertNotIn('secret', str(error.exception))
         self.assertEqual(opener.call_count, 3)
+
+
+    def fake_pm(self, body):
+        script = self.root / 'scripts/project_manager/pm.py'
+        script.parent.mkdir(parents=True, exist_ok=True)
+        script.write_text('import json,sys\nfrom pathlib import Path\nargs=sys.argv[3:]\n(Path(sys.argv[2])/"calls").open("a").write(" ".join(args)+"\\n")\n' + body)
+
+    def test_plain_words_ignore_case_punctuation_and_slash(self):
+        for text, word in (('OFF!', 'pause'), ('/on', 'resume'), ('Go.', 'go'), ('stop', 'stop'), ('Skip', 'skip')):
+            self.assertEqual(tb.control_word(text), word)
+        self.assertIsNone(tb.control_word('go fix the login screen please'))
+
+    def test_go_approves_todays_plan_with_traceable_reference(self):
+        self.fake_pm('print(json.dumps({"items":[101,102],"status":"approved"}))\n')
+        self.http.updates = [update(5, 'go')]
+        self.bridge.once()
+        self.assertEqual((self.root / 'state/calls').read_text(), 'plan-approve --approval-ref Telegram update 5: go\n')
+        self.assertIn('#101, #102', self.http.sent[0]['text'])
+
+    def test_gate_refusal_is_answered_not_retried(self):
+        self.fake_pm('print(json.dumps({"error":"No plan for today yet"}))\nsys.exit(1)\n')
+        self.http.updates = [update(5, 'go')]
+        self.bridge.once()
+        self.bridge.once()
+        self.assertEqual([m['text'] for m in self.http.sent], ['No plan for today yet.'])
+        self.assertEqual(self.bridge.db.execute('SELECT count(*) FROM inbox WHERE handled=0').fetchone()[0], 0)
+
+    def test_long_messages_are_refused(self):
+        with self.assertRaises(tb.RefusedError): self.bridge.send('\n'.join(['line'] * 6), 'k')
+        with self.assertRaises(tb.RefusedError): self.bridge.send('x' * 800, 'k')
+        self.bridge.send('\n'.join(['line'] * 5), 'k')
+
+    def test_quiet_hours_and_weekends_refuse_notifications_but_not_replies(self):
+        self.http.updates = [update(1, 'hi')]
+        self.bridge.once()
+        for when in (datetime(2026, 11, 9, 22, 0, tzinfo=BERLIN), datetime(2026, 11, 10, 7, 59, tzinfo=BERLIN),
+                     datetime(2026, 11, 14, 12, 0, tzinfo=BERLIN)):
+            self.clock[0] = when.timestamp()
+            with self.assertRaises(tb.RefusedError): self.bridge.send('ping', 'k')
+        self.bridge.reply(1, 'Answer to your message')
+
+    def test_stop_mutes_notifications_and_any_message_unmutes(self):
+        self.http.updates = [update(1, 'STOP')]
+        self.bridge.once()
+        self.assertIn('Muted', self.http.sent[-1]['text'])
+        with self.assertRaisesRegex(tb.RefusedError, 'muted'): self.bridge.send('ping', 'k')
+        self.http.updates = [update(2, 'ok')]
+        self.bridge.once()
+        self.bridge.send('ping', 'k')
+
+    def test_one_open_question_at_a_time(self):
+        self.bridge.send('Which first?', 'q1', ask=True)
+        with self.assertRaisesRegex(tb.RefusedError, 'already open'): self.bridge.send('And this?', 'q2', ask=True)
+        self.bridge.send('Plain update', 'n1')
+        self.http.updates = [update(1, '#101')]
+        self.bridge.once()
+        self.bridge.send('And this?', 'q2', ask=True)
+
+    def test_free_text_starts_listener_and_falls_back_honestly(self):
+        script = self.root / 'scripts/project_manager/listen.sh'
+        script.parent.mkdir(parents=True, exist_ok=True)
+        script.write_text('#!/bin/sh\necho "$1" > "$(dirname "$0")/heard"\n')
+        script.chmod(0o755)
+        self.http.updates = [update(3, 'what is next?')]
+        self.bridge.once()
+        self.bridge.listener[0].wait(5)
+        self.assertEqual((script.parent / 'heard').read_text().strip(), '3')
+        self.http.updates = []
+        self.bridge.once()
+        self.assertIn("Couldn't answer", self.http.sent[-1]['text'])
+        self.assertEqual([r['update_id'] for r in self.bridge.inbox()], [3])
+        self.bridge.once()
+        self.assertEqual(len(self.http.sent), 1)
 
 
 if __name__ == '__main__': unittest.main()

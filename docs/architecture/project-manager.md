@@ -14,10 +14,13 @@ and release PRs have separate review queues.
 - Telegram: `scripts/project_manager/telegram_bridge.py` (Python stdlib).
 - Credentials: `~/.config/telegram/env`; never copied into a worktree or Git.
 - Linux (current host): systemd user units installed by `install.py --start`:
-  `rollercoaster-pm-telegram.service` (receiver, always on) and
-  `rollercoaster-pm-heartbeat.timer` (09:00 and 21:00 Europe/Berlin, `Persistent=true`
-  so a missed run fires on wake). The heartbeat runs `heartbeat.sh`, a headless
-  `claude -p --permission-mode auto` wakeup. Logs: `~/.local/state/rollercoaster-pm/*.log`.
+  `rollercoaster-pm-telegram.service` (receiver, always on) and three weekday timers
+  (Europe/Berlin) driving `rollercoaster-pm@<mode>.service` → `heartbeat.sh <mode>`:
+  `plan` 09:00 (catches up after sleep), `tick` every 30 min 09:30–17:30, `recap` 18:00.
+  Nothing runs at weekends. Each wakeup is a headless `claude -p --permission-mode auto`;
+  a lock makes overlapping wakeups no-ops. Free-text Telegram messages start `listen.sh`
+  (read-only `claude -p`, `LISTEN.md`) for an instant reply.
+  Logs: `~/.local/state/rollercoaster-pm/{heartbeat,listen,telegram.*}.log`.
 - macOS (legacy): `install.py` writes a user LaunchAgent for the receiver; the heartbeat
   was a Codex automation. Run the manager on one machine only: a Telegram bot allows one reader.
 - Manual run: `$project-manager` in Codex, `/project-manager` in Claude, or `rollercoaster-pm` in a terminal. The terminal command starts an interactive Codex session so any necessary filesystem or network approval can be handled there.
@@ -102,8 +105,14 @@ python3 scripts/project_manager/telegram_bridge.py reply 123456 'Answer to this 
 python3 scripts/project_manager/telegram_bridge.py run
 ```
 
-`/status`, `/pause`, `/resume`, `/help` work immediately. Natural questions such as
-“what is next?” or “why is #123 blocked?” are stored for the manager and acknowledged.
+Plain words work immediately, no slash needed, case and punctuation ignored:
+`go`/`skip` (today's plan), `status`, `tasks`, `stop` (mute 30 min), `off`/`on`
+(pause/resume work), `help`. Outbound rules are enforced in code: max 5 lines,
+one open `--ask` at a time, and notifications refused 21:00–08:00, at weekends
+and while muted (exit 3); replies to Joe are always allowed. Natural questions such as
+“what is next?” or “why is #123 blocked?” get an instant listener reply; work requests
+become tasks in `pm.py tasks`. If the listener can't answer, the message stays in the inbox
+for the next tick and Joe is told so.
 Only the configured chat AND user are accepted; forwarded and bot messages are
 rejected. For private chats the user defaults to the chat ID. Groups require an
 explicit `TELEGRAM_USER_ID`. No message executes arbitrary shell text.
@@ -116,8 +125,8 @@ bot while the bridge is running, because they share Telegram update offsets.
 
 The installer records absolute runtime/interpreter paths in the service definition.
 Linux: `systemctl --user stop|start|status rollercoaster-pm-telegram.service`;
-`systemctl --user list-timers rollercoaster-pm-heartbeat.timer` shows the next wakeup;
-`systemctl --user start rollercoaster-pm-heartbeat.service` runs one now.
+`systemctl --user list-timers 'rollercoaster-pm-*'` shows the next wakeups;
+`systemctl --user start rollercoaster-pm@tick.service` runs one now (`plan`, `tick`, `recap`).
 macOS: `~/Library/LaunchAgents/dev.rollercoaster.project-manager-telegram.plist`.
 Stop with `launchctl bootout gui/$(id -u)/dev.rollercoaster.project-manager-telegram`.
 Restart using `launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/dev.rollercoaster.project-manager-telegram.plist`.

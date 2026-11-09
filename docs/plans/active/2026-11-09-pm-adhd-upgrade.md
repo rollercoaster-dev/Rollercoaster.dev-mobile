@@ -1,6 +1,6 @@
 # Project manager: ADHD-first upgrade
 
-Status: proposed, 2026-11-09. Ideas adapted from Joe's auto-dev (work) agent; code written fresh.
+Status: implemented 2026-11-09 (PR #800). Ideas adapted from Joe's auto-dev (work) agent; code written fresh.
 
 ## Why
 
