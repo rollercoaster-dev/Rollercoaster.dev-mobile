@@ -13,7 +13,13 @@ and release PRs have separate review queues.
 - Guard: `scripts/project_manager/pm.py` (Python 3.9+, SQLite, authenticated `gh`).
 - Telegram: `scripts/project_manager/telegram_bridge.py` (Python stdlib).
 - Credentials: `~/.config/telegram/env`; never copied into a worktree or Git.
-- One Codex heartbeat runs at 09:00 and 21:00 Europe/Berlin; one user LaunchAgent receives Telegram.
+- Linux (current host): systemd user units installed by `install.py --start`:
+  `rollercoaster-pm-telegram.service` (receiver, always on) and
+  `rollercoaster-pm-heartbeat.timer` (09:00 and 21:00 Europe/Berlin, `Persistent=true`
+  so a missed run fires on wake). The heartbeat runs `heartbeat.sh`, a headless
+  `claude -p --permission-mode auto` wakeup. Logs: `~/.local/state/rollercoaster-pm/*.log`.
+- macOS (legacy): `install.py` writes a user LaunchAgent for the receiver; the heartbeat
+  was a Codex automation. Run the manager on one machine only: a Telegram bot allows one reader.
 - Manual run: `$project-manager` in Codex, `/project-manager` in Claude, or `rollercoaster-pm` in a terminal. The terminal command starts an interactive Codex session so any necessary filesystem or network approval can be handled there.
 
 The machine must be awake, the repository mounted, and Codex running for the
@@ -108,8 +114,11 @@ no idempotent send API: a lost response can produce a duplicate on retry. One
 receiver lock prevents competing polls. Do not use `tg-read` or `tg-wait` with this
 bot while the bridge is running, because they share Telegram update offsets.
 
-The installer records absolute runtime/interpreter paths in
-`~/Library/LaunchAgents/dev.rollercoaster.project-manager-telegram.plist`.
+The installer records absolute runtime/interpreter paths in the service definition.
+Linux: `systemctl --user stop|start|status rollercoaster-pm-telegram.service`;
+`systemctl --user list-timers rollercoaster-pm-heartbeat.timer` shows the next wakeup;
+`systemctl --user start rollercoaster-pm-heartbeat.service` runs one now.
+macOS: `~/Library/LaunchAgents/dev.rollercoaster.project-manager-telegram.plist`.
 Stop with `launchctl bootout gui/$(id -u)/dev.rollercoaster.project-manager-telegram`.
 Restart using `launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/dev.rollercoaster.project-manager-telegram.plist`.
 Stopping Telegram is separate from pausing issue dispatch.
