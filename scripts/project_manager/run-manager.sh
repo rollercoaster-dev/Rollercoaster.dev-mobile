@@ -11,4 +11,4 @@ if ! git -C "$repo_root" rev-parse --show-toplevel >/dev/null 2>&1; then
   exit 1
 fi
 exec codex -C "$repo_root" --sandbox workspace-write --ask-for-approval on-request \
-  "Read $HOME/.local/share/rollercoaster-pm/current/.agents/skills/project-manager/SKILL.md and run one full on-demand cycle. Sync GitHub, maintain existing issue PRs, audit the next eligible Next issue against current main, claim it with the installed pm.py, and start an auto-issue coding agent immediately when capacity allows. Dispatch additional independent issues within the five-slot cap. Never merge. Report created PRs or exact blockers."
+  "Read $HOME/.local/share/rollercoaster-pm/current/.agents/skills/project-manager/SKILL.md and run one full on-demand cycle. Sync GitHub, maintain existing issue PRs, audit the next eligible Next issue against current main, claim it with the installed pm.ts (run with bun), and start an auto-issue coding agent immediately when capacity allows. Dispatch additional independent issues within the five-slot cap. Never merge. Report created PRs or exact blockers."

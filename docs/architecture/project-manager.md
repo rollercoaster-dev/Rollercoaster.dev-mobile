@@ -10,10 +10,10 @@ and release PRs have separate review queues.
 - Canonical instructions: `.agents/skills/project-manager/SKILL.md`.
 - Installed runtime: `~/.local/share/rollercoaster-pm/current/`.
 - State: `~/.local/state/rollercoaster-pm/` (private, outside Git worktrees).
-- Guard: `scripts/project_manager/pm.py` (Python 3.9+, SQLite, authenticated `gh`).
-- Telegram: `scripts/project_manager/telegram_bridge.py` (Python stdlib).
+- Guard: `scripts/project_manager/pm.ts` (Bun + TypeScript, `bun:sqlite`, authenticated `gh`).
+- Telegram: `scripts/project_manager/telegram_bridge.ts` (Bun, no npm dependencies).
 - Credentials: `~/.config/telegram/env`; never copied into a worktree or Git.
-- Linux (current host): systemd user units installed by `install.py --start`:
+- Linux (current host): systemd user units installed by `install.ts --start`:
   `rollercoaster-pm-telegram.service` (receiver, always on) and three weekday timers
   (Europe/Berlin) driving `rollercoaster-pm@<mode>.service` → `heartbeat.sh <mode>`:
   `plan` 09:00 (catches up after sleep), `tick` every 30 min 09:30–17:30, `recap` 18:00.
@@ -21,7 +21,7 @@ and release PRs have separate review queues.
   a lock makes overlapping wakeups no-ops. Free-text Telegram messages start `listen.sh`
   (read-only `claude -p`, `LISTEN.md`) for an instant reply.
   Logs: `~/.local/state/rollercoaster-pm/{heartbeat,listen,telegram.*}.log`.
-- macOS (legacy): `install.py` writes a user LaunchAgent for the receiver; the heartbeat
+- macOS (legacy): `install.ts` writes a user LaunchAgent for the receiver; the heartbeat
   was a Codex automation. Run the manager on one machine only: a Telegram bot allows one reader.
 - Manual run: `$project-manager` in Codex, `/project-manager` in Claude, or `rollercoaster-pm` in a terminal. The terminal command starts an interactive Codex session so any necessary filesystem or network approval can be handled there.
 
@@ -36,18 +36,18 @@ Run with the installed interpreter/script; optional `--state-dir PATH` precedes
 commands. Defaults use the shared state directory above.
 
 ```sh
-python3 scripts/project_manager/pm.py sync
-python3 scripts/project_manager/pm.py status
-python3 scripts/project_manager/pm.py snapshot
-python3 scripts/project_manager/pm.py pause
-python3 scripts/project_manager/pm.py resume
-python3 scripts/project_manager/pm.py clear-queue
-python3 scripts/project_manager/pm.py audit 123 needed --head MAIN_SHA --evidence 'Inspected paths/commits and unmet acceptance criteria'
-python3 scripts/project_manager/pm.py queue 123 124
-python3 scripts/project_manager/pm.py approve-queue --approval-ref 'Joe explicitly agreed to 123 then 124 in message ...'
-python3 scripts/project_manager/pm.py claim 123
-python3 scripts/project_manager/pm.py check-pr 123
-python3 scripts/project_manager/pm.py bind 123 700
+bun scripts/project_manager/pm.ts sync
+bun scripts/project_manager/pm.ts status
+bun scripts/project_manager/pm.ts snapshot
+bun scripts/project_manager/pm.ts pause
+bun scripts/project_manager/pm.ts resume
+bun scripts/project_manager/pm.ts clear-queue
+bun scripts/project_manager/pm.ts audit 123 needed --head MAIN_SHA --evidence 'Inspected paths/commits and unmet acceptance criteria'
+bun scripts/project_manager/pm.ts queue 123 124
+bun scripts/project_manager/pm.ts approve-queue --approval-ref 'Joe explicitly agreed to 123 then 124 in message ...'
+bun scripts/project_manager/pm.ts claim 123
+bun scripts/project_manager/pm.ts check-pr 123
+bun scripts/project_manager/pm.ts bind 123 700
 ```
 
 `sync` reads every open issue and PR plus every previously tracked PR, failing
@@ -98,11 +98,11 @@ Only Joe merges.
 ## Telegram
 
 ```sh
-python3 scripts/project_manager/telegram_bridge.py health
-python3 scripts/project_manager/telegram_bridge.py inbox
-python3 scripts/project_manager/telegram_bridge.py send 'Progress message' --key 'issue-123-pr-700'
-python3 scripts/project_manager/telegram_bridge.py reply 123456 'Answer to this specific check-in'
-python3 scripts/project_manager/telegram_bridge.py run
+bun scripts/project_manager/telegram_bridge.ts health
+bun scripts/project_manager/telegram_bridge.ts inbox
+bun scripts/project_manager/telegram_bridge.ts send 'Progress message' --key 'issue-123-pr-700'
+bun scripts/project_manager/telegram_bridge.ts reply 123456 'Answer to this specific check-in'
+bun scripts/project_manager/telegram_bridge.ts run
 ```
 
 Plain words work immediately, no slash needed, case and punctuation ignored:
@@ -111,7 +111,7 @@ Plain words work immediately, no slash needed, case and punctuation ignored:
 one open `--ask` at a time, and notifications refused 21:00–08:00, at weekends
 and while muted (exit 3); replies to Joe are always allowed. Natural questions such as
 “what is next?” or “why is #123 blocked?” get an instant listener reply; work requests
-become tasks in `pm.py tasks`. If the listener can't answer, the message stays in the inbox
+become tasks in `pm.ts tasks`. If the listener can't answer, the message stays in the inbox
 for the next tick and Joe is told so.
 Only the configured chat AND user are accepted; forwarded and bot messages are
 rejected. For private chats the user defaults to the chat ID. Groups require an
@@ -135,7 +135,7 @@ Stopping Telegram is separate from pausing issue dispatch.
 ## Verification
 
 ```sh
-python3 -m unittest discover -s scripts/project_manager -p 'test_*.py'
+bun test scripts/project_manager
 ```
 
 Tests use temporary SQLite databases and fake external HTTP boundaries. They cover

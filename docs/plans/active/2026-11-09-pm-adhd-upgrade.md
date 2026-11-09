@@ -1,6 +1,6 @@
 # Project manager: ADHD-first upgrade
 
-Status: implemented 2026-11-09 (PR #800). Ideas adapted from Joe's auto-dev (work) agent; code written fresh.
+Status: implemented 2026-11-09 (PR #800), ported from Python to Bun/TypeScript the same day. Ideas adapted from Joe's auto-dev (work) agent; code written fresh.
 
 ## Why
 
@@ -47,7 +47,7 @@ work without asking, and sends long multi-paragraph messages.
 
 ## Instant answers (listener)
 
-Word controls are handled in Python, no model call. Any other message: the
+Word controls are handled in the bridge itself, no model call. Any other message: the
 receiver starts a short read-only `claude -p` that reads state, the task
 ledger and `gh`, and sends exactly one reply (≤3 lines). Work requests become
 a task plus an honest ack. It never edits code or posts to GitHub.
@@ -55,7 +55,7 @@ a task plus an honest ack. It never edits code or posts to GitHub.
 ## Build order
 
 1. Bridge: word controls, length cap, quiet hours, mute, one-open-question.
-2. Ledger + daily plan state in `pm.py`; `claim` requires today's approved plan.
+2. Ledger + daily plan state in `pm.ts`; `claim` requires today's approved plan.
 3. Listener: per-message `claude -p` (async; polling continues).
 4. Timers: 09:00 plan, 30-min work ticks, 18:00 recap. Replace 09:00/21:00.
 5. Update `project-manager` SKILL.md and docs.

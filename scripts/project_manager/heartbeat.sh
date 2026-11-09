@@ -30,9 +30,14 @@ case "$mode" in
   *) echo "Unknown mode: $mode" >&2; exit 2 ;;
 esac
 
+history="$(bun "$pm_dir/telegram_bridge.ts" --state-dir "$state" --repo-root "$runtime" history --limit 12 2>/dev/null || true)"
+
+# The prompt goes on stdin: --add-dir is variadic and would swallow a trailing argument.
 cd "$repo_root"
 echo "$(date -Is) $mode start"
 claude -p --permission-mode auto \
-  --add-dir "$runtime" --add-dir "$state" \
-  "$task Read $runtime/.agents/skills/project-manager/SKILL.md first and follow it. Tools: python3 $pm_dir/pm.py --state-dir $state ...; python3 $pm_dir/telegram_bridge.py --state-dir $state --repo-root $runtime ... Never merge. Never switch the checkout at $repo_root; use worktrees."
+  --add-dir "$runtime" --add-dir "$state" <<< "Recent Telegram chat, oldest first (context; short replies like fixed / ok / yes answer the bot's last message):
+$history
+
+$task Read $runtime/.agents/skills/project-manager/SKILL.md first and follow it. Tools: bun $pm_dir/pm.ts --state-dir $state ...; bun $pm_dir/telegram_bridge.ts --state-dir $state --repo-root $runtime ... Never merge. Never switch the checkout at $repo_root; use worktrees."
 echo "$(date -Is) $mode end"
