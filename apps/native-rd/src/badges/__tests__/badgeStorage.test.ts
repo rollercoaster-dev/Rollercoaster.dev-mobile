@@ -159,6 +159,27 @@ describe("readBadgePNG", () => {
     });
   });
 
+  it.each([
+    ["relative appdoc:", "appdoc:badges/abc-123.png"],
+    [
+      "stale iOS container",
+      "file:///var/mobile/Containers/Data/Application/OLD/Documents/badges/abc-123.png",
+    ],
+  ])(
+    "reads a %s badge URI from the current Documents dir",
+    async (_k, stored) => {
+      mockFS.readAsStringAsync.mockResolvedValue(
+        Buffer.from(MINIMAL_PNG).toString("base64"),
+      );
+
+      await readBadgePNG(stored);
+
+      expect(mockFS.readAsStringAsync).toHaveBeenCalledWith(URI, {
+        encoding: "base64",
+      });
+    },
+  );
+
   it("propagates the underlying read error — no silent fallback", async () => {
     mockFS.readAsStringAsync.mockRejectedValue(
       new Error("File does not exist"),
