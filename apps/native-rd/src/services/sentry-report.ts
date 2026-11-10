@@ -85,8 +85,9 @@ export function reportError(error: unknown, ctx: ReportContext): void {
  * include an `Error` instance. Unknown scopes silently no-op — the inverse of
  * the usual default. To enable Sentry for a logger scope, add it here AFTER
  * auditing that the call sites' `Error.message` values are safe (the
- * `beforeSend` filter in `sentry-filters.ts` redacts emails and `/Users/<name>`
- * paths, but anything else in the message text is forwarded).
+ * `beforeSend` filter in `sentry-filters.ts` redacts emails, http(s) URLs,
+ * user-content URIs and local paths, but anything else in the message text is
+ * forwarded).
  *
  * Critical paths instrumented via direct `reportError(...)` calls (e.g.
  * useCreateBadge, useUserKey) deliberately do NOT appear here, to avoid

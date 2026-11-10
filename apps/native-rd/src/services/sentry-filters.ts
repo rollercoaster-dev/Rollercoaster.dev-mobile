@@ -7,8 +7,8 @@
  *
  * What we do here:
  * - `scrubEvent`: remove user identity, request metadata, and arbitrary extras
- * - `scrubEvent`: redact email addresses and `/Users/<name>/` paths from
- *   exception MESSAGE text
+ * - `scrubEvent`: redact email addresses, http(s) URLs, user-content URIs
+ *   and local paths from exception MESSAGE text
  *   (the SDK's default `createReactNativeRewriteFrames` already rewrites
  *   stack-frame filenames more aggressively, to `app:///main.jsbundle`)
  * - `scrubEvent`: reduce request URLs to host-only
@@ -44,6 +44,13 @@ const EMAIL_PATTERN = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi;
 // Redact the whole URI/path token rather than try to keep "safe" parts.
 const URI_SCHEME_PATTERN =
   /\b(?:file|content|asset-library|ph|assets-library):\/\/[^\s'")>]*/gi;
+// User-entered links (link evidence) reach `Error.message` when e.g.
+// `Linking.openURL` rejects with the URL it was given. The link itself is user
+// content — path, query and even the host can identify the person or what
+// they're working on — so redact the whole token. This only touches exception
+// message text: stack-frame filenames, the DSN and breadcrumb/request URLs
+// (reduced to host-only below) are separate fields.
+const HTTP_URL_PATTERN = /\bhttps?:\/\/[^\s'")>]*/gi;
 const SANDBOX_PATH_PATTERN =
   /(?:\/private)?\/var\/mobile\/Containers\/[^\s'")>]*/g;
 const ANDROID_PATH_PATTERN = /\/data\/(?:user|data)\/[^\s'")>]*/g;
@@ -53,6 +60,7 @@ const ANDROID_SHARED_STORAGE_PATH_PATTERN =
 const REDACTED_PATH = "/<redacted>";
 const REDACTED_EMAIL = "[redacted-email]";
 const REDACTED_URI = "<redacted-uri>";
+const REDACTED_URL = "<redacted-url>";
 
 // `event.contexts` is Sentry's container for `device`, `os`, `app`, `runtime`
 // and any custom contexts written via `Sentry.setContext`. The SDK fills the
@@ -94,6 +102,7 @@ function scrubExceptionValue(value: string): string {
   return value
     .replace(EMAIL_PATTERN, REDACTED_EMAIL)
     .replace(URI_SCHEME_PATTERN, REDACTED_URI)
+    .replace(HTTP_URL_PATTERN, REDACTED_URL)
     .replace(SANDBOX_PATH_PATTERN, REDACTED_PATH)
     .replace(ANDROID_PATH_PATTERN, REDACTED_PATH)
     .replace(ANDROID_SHARED_STORAGE_PATH_PATTERN, REDACTED_PATH)

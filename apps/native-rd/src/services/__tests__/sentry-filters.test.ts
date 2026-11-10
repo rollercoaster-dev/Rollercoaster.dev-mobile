@@ -100,6 +100,50 @@ describe("scrubEvent", () => {
     }
   });
 
+  it.each([
+    [
+      "https link with path and query",
+      "Could not open URL 'https://my-portfolio.example/private/essay?draft=1': no app",
+      "Could not open URL '<redacted-url>': no app",
+    ],
+    [
+      "http link at end of message",
+      "Unable to open URL: http://192.168.1.20:8080/notes/therapy",
+      "Unable to open URL: <redacted-url>",
+    ],
+    [
+      "uppercase scheme",
+      "Failed HTTPS://Example.org/Secret",
+      "Failed <redacted-url>",
+    ],
+  ])("redacts http(s) URL: %s", (_label, message, expected) => {
+    const event = makeEvent({
+      exception: { values: [{ type: "Error", value: message }] },
+    });
+    const scrubbed = scrubEvent(event);
+    expect(scrubbed.exception?.values?.[0]?.value).toBe(expected);
+  });
+
+  it("leaves stack-frame filenames untouched when redacting URLs", () => {
+    const event = makeEvent({
+      exception: {
+        values: [
+          {
+            type: "Error",
+            value: "Failed https://example.com/a",
+            stacktrace: {
+              frames: [{ filename: "http://localhost:8081/index.bundle" }],
+            },
+          },
+        ],
+      },
+    });
+    const scrubbed = scrubEvent(event);
+    expect(scrubbed.exception?.values?.[0]?.stacktrace?.frames?.[0]).toEqual({
+      filename: "http://localhost:8081/index.bundle",
+    });
+  });
+
   it("redacts email addresses in exception values", () => {
     const event = makeEvent({
       exception: {
