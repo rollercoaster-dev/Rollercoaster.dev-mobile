@@ -24,8 +24,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
+      - uses: oven-sh/setup-bun@v2
         with:
-          python-version: "3.9"
-      - name: Test guard and Telegram transport without credentials
-        run: python3 -m unittest discover -s scripts/project_manager -p 'test_*.py'
+          bun-version: 1.3.7
+      - name: Test guard, Telegram transport and installer without credentials
+        run: bun test scripts/project_manager

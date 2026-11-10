@@ -263,7 +263,7 @@ this document. When it is enabled, use the job names above (the
 
 ## Project manager automation
 
-`ci-project-manager / Project Manager Tests` runs Python 3.9 standard-library
-unit tests when `scripts/project_manager/**` or its workflow changes. It requires
+`ci-project-manager / Project Manager Tests` runs `bun test scripts/project_manager`
+(Bun 1.3.7, no npm install) when `scripts/project_manager/**` or its workflow changes. It requires
 no GitHub write token, Telegram credential, network service, or native build.
 The guard, durable Telegram transport, and installer tests use temporary state.
