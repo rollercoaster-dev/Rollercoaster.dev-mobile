@@ -161,6 +161,12 @@
     "retry": "Try Again",
     "a11yAlert": "Error: something went wrong"
   },
+  "startupError": {
+    "title": "The app couldn't start",
+    "message": "Your data on this device couldn't be loaded this time. Restarting the app usually helps.",
+    "restart": "Restart app",
+    "a11yAlert": "Error: the app couldn't start"
+  },
   "screenHeader": {
     "a11y": {
       "goBack": "Go back"

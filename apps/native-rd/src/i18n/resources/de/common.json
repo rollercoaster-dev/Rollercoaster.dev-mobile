@@ -179,6 +179,12 @@
     "retry": "Erneut versuchen",
     "a11yAlert": "Fehler: Etwas ist schiefgelaufen"
   },
+  "startupError": {
+    "title": "Die App konnte nicht starten",
+    "message": "Deine Daten auf diesem Gerät konnten diesmal nicht geladen werden. Ein Neustart der App hilft meistens.",
+    "restart": "App neu starten",
+    "a11yAlert": "Fehler: Die App konnte nicht starten"
+  },
   "screenHeader": {
     "a11y": {
       "goBack": "Zurück"
