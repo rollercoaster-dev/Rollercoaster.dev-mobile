@@ -60,6 +60,36 @@
       "deleteBadge": "Badge löschen"
     }
   },
+  "export": {
+    "noImage": {
+      "title": "Kein Bild verfügbar",
+      "message": "Dieses Badge hat noch kein fertiges Bild."
+    },
+    "noCredential": {
+      "title": "Kein Credential",
+      "message": "Dieses Badge hat noch kein Credential."
+    },
+    "sharingUnavailable": {
+      "title": "Teilen nicht verfügbar",
+      "message": "Teilen ist auf diesem Gerät nicht verfügbar."
+    },
+    "unsupportedPlatform": {
+      "title": "Export nicht verfügbar",
+      "message": "Der Badge-Export wird nur auf iOS und Android unterstützt."
+    },
+    "failed": {
+      "title": "Export fehlgeschlagen",
+      "verifiableBadgeMessage": "Beim Exportieren des verifizierbaren Badges ist etwas schiefgelaufen.",
+      "imageMessage": "Beim Exportieren des Badge-Bilds ist etwas schiefgelaufen.",
+      "credentialMessage": "Beim Exportieren des Credentials ist etwas schiefgelaufen.",
+      "cacheUnavailableMessage": "Auf den Cache-Speicher des Geräts kann nicht zugegriffen werden."
+    },
+    "dialogTitle": {
+      "verifiableBadge": "Verifizierbares Badge exportieren",
+      "image": "Badge-Bild speichern",
+      "credential": "Badge-Credential exportieren"
+    }
+  },
   "deleteConfirm": {
     "title": "Badge löschen?",
     "message": "Das Badge wird entfernt. Dein Ziel und die Belege bleiben in der Timeline — nur das Credential-Artefakt wird gelöscht.",
