@@ -423,10 +423,14 @@ describe("EditModeScreen", () => {
 
     // Regression: unmount cleared the 500 ms debounce timer without running
     // it, so a description typed just before leaving was lost.
-    it("flushes a pending description edit when the screen unmounts", () => {
+    it("flushes pending title and description edits when the screen unmounts", () => {
       setupQueries();
       const { unmount } = renderWithProviders(
         <EditModeScreen {...makeRouteProps()} />,
+      );
+      fireEvent.changeText(
+        screen.getByTestId("edit-goal-title-input"),
+        "Retitled right before leaving",
       );
       fireEvent.changeText(
         screen.getByTestId("edit-goal-description-input"),
@@ -436,7 +440,10 @@ describe("EditModeScreen", () => {
 
       unmount();
 
-      expect(mockUpdateGoal).toHaveBeenCalledTimes(1);
+      expect(mockUpdateGoal).toHaveBeenCalledTimes(2);
+      expect(mockUpdateGoal).toHaveBeenCalledWith("goal-1", {
+        title: "Retitled right before leaving",
+      });
       expect(mockUpdateGoal).toHaveBeenCalledWith("goal-1", {
         description: "Typed right before leaving",
       });

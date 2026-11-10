@@ -18,6 +18,7 @@
       "ctaSubcopy": "the keepsake for this win — make it yours",
       "closingNoteSaveFailedTitle": "Couldn't save your closing note",
       "closingNoteSaveFailedMessage": "Your text is still here. You can try again, or continue without the note.",
+      "closingNoteSaveRetryMessage": "Your text is still here. It will be saved again when you continue.",
       "closingNoteKeepEditing": "Keep editing",
       "closingNoteContinueWithout": "Continue without note"
     },

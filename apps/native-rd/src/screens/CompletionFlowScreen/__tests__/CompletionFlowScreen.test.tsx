@@ -702,7 +702,7 @@ describe("CompletionFlowScreen", () => {
 
       expect(alertSpy).toHaveBeenCalledWith(
         t("completion:finish.celebrate.closingNoteSaveFailedTitle"),
-        t("completion:finish.celebrate.closingNoteSaveFailedMessage"),
+        t("completion:finish.celebrate.closingNoteSaveRetryMessage"),
       );
     });
 

@@ -466,11 +466,11 @@ describe("BadgeDetailScreen", () => {
         <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
       );
       expect(screen.getByTestId("badge-share-cta")).toBeOnTheScreen();
-      // The three old page-level export buttons are gone; they live in the
-      // sheet now, behind the one CTA.
-      expect(screen.queryByLabelText("Export Verifiable Badge")).toBeNull();
-      expect(screen.queryByLabelText("Export Credential (JSON)")).toBeNull();
-      expect(screen.queryByLabelText("Save as Image")).toBeNull();
+      // The three export actions live in the sheet, behind the one CTA — none
+      // of their rows render on the page until the sheet opens.
+      expect(screen.queryByTestId("share-row-verifiable")).toBeNull();
+      expect(screen.queryByTestId("share-row-image")).toBeNull();
+      expect(screen.queryByTestId("share-row-credential")).toBeNull();
     });
 
     // The credential row exports `.jwt` for current badges and `.json` for

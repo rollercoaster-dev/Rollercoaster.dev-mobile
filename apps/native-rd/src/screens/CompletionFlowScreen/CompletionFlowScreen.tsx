@@ -237,7 +237,7 @@ function FinishFlowContent({ goalId }: { goalId: string }) {
       if (persistClosingNote(text)) return;
       Alert.alert(
         t("completion:finish.celebrate.closingNoteSaveFailedTitle"),
-        t("completion:finish.celebrate.closingNoteSaveFailedMessage"),
+        t("completion:finish.celebrate.closingNoteSaveRetryMessage"),
       );
     },
     [persistClosingNote, t],

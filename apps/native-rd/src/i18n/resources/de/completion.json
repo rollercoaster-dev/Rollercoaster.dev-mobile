@@ -18,6 +18,7 @@
       "ctaSubcopy": "das Andenken an diesen Erfolg — mach es zu deinem",
       "closingNoteSaveFailedTitle": "Abschlussnotiz konnte nicht gespeichert werden",
       "closingNoteSaveFailedMessage": "Dein Text ist noch da. Versuche es erneut oder mach ohne die Notiz weiter.",
+      "closingNoteSaveRetryMessage": "Dein Text ist noch da. Er wird noch einmal gespeichert, wenn du weitermachst.",
       "closingNoteKeepEditing": "Weiter bearbeiten",
       "closingNoteContinueWithout": "Ohne Notiz weiter"
     },
