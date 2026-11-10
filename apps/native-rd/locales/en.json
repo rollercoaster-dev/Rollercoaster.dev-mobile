@@ -1,9 +1,10 @@
 {
   "ios": {
     "CFBundleDisplayName": "Rollercoaster.dev",
-    "NSCameraUsageDescription": "Allow $(PRODUCT_NAME) to use the camera to take photos as evidence.",
-    "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to record voice memos as evidence for your goals.",
-    "NSPhotoLibraryUsageDescription": "Allow $(PRODUCT_NAME) to access your photos for evidence capture."
+    "NSCameraUsageDescription": "Allow $(PRODUCT_NAME) to use the camera to take photos and record videos as evidence for your goals.",
+    "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to use the microphone to record voice memos and the sound for videos as evidence for your goals.",
+    "NSPhotoLibraryUsageDescription": "Allow $(PRODUCT_NAME) to access your photos for evidence capture.",
+    "NSPhotoLibraryAddUsageDescription": "Allow $(PRODUCT_NAME) to save badge images to your photo library when you choose to."
   },
   "android": {
     "app_name": "Rollercoaster.dev"
