@@ -31,7 +31,7 @@ const localRules = {
     "local/no-shared-component-reimplementation": "warn",
     "local/require-barrel-export": "error",
     "local/no-raw-jsx-strings": "error",
-    "local/no-native-text-import": "warn",
+    "local/no-native-text-import": "error",
   },
 };
 
