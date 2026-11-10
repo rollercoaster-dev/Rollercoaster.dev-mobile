@@ -48,11 +48,12 @@
     "stepDescription": {
       "addPrompt": "＋ Beschreibung",
       "addA11yLabel": "Beschreibung zu \"{{title}}\" hinzufügen",
-      "editA11yLabel": "Beschreibung von \"{{title}}\" bearbeiten: {{description}}",
-      "inputA11yLabel": "Beschreibung von \"{{title}}\"",
+      "editA11yLabel": "Beschreibung zu \"{{title}}\"",
+      "editA11yHint": "Beschreibung bearbeiten",
+      "inputA11yLabel": "Beschreibung zu \"{{title}}\"",
       "placeholder": "Wie du vorgehst, Notizen, Links",
       "clear": "Text löschen",
-      "tooLong": "Eine Beschreibung fasst bis zu {{max}} Zeichen. Diese hat {{length}}."
+      "tooLong": "Eine Beschreibung kann bis zu {{max}} Zeichen enthalten. Diese hat {{length}}."
     }
   },
   "confirmDelete": {

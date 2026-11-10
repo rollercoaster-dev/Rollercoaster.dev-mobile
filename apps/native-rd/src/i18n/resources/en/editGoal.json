@@ -48,7 +48,8 @@
     "stepDescription": {
       "addPrompt": "＋ description",
       "addA11yLabel": "Add a description to \"{{title}}\"",
-      "editA11yLabel": "Edit description of \"{{title}}\": {{description}}",
+      "editA11yLabel": "Description of \"{{title}}\"",
+      "editA11yHint": "Edit the description",
       "inputA11yLabel": "Description of \"{{title}}\"",
       "placeholder": "How to go about it, notes, links",
       "clear": "Clear text",

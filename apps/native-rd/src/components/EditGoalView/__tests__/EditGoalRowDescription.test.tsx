@@ -17,12 +17,28 @@ import {
 } from "../EditGoalView";
 import { EvidenceType } from "../../../db";
 
+// findNodeHandle is a lazy getter on react-native's index, so jest.spyOn can't
+// replace it in place (same workaround as EditGoalRowTiming.test). Every view
+// resolves to one tag; the focus test asserts *whether* focus is requested.
+jest.mock("react-native", () => {
+  const RN = jest.requireActual("react-native");
+  Object.defineProperty(RN, "findNodeHandle", {
+    configurable: true,
+    value: jest.fn(() => 111),
+  });
+  return RN;
+});
+
 jest.mock("react-native-gesture-handler", () => {
   const chainable = () => new Proxy({}, { get: () => chainable });
   return {
     GestureHandlerRootView: ({ children }: { children: React.ReactNode }) =>
       children,
-    GestureDetector: ({ children }: { children: React.ReactNode }) => children,
+    // A marker per draggable shell, so drag gating is observable.
+    GestureDetector: ({ children }: { children: React.ReactNode }) => {
+      const { View } = jest.requireActual("react-native");
+      return <View testID="drag-detector">{children}</View>;
+    },
     Gesture: {
       Pan: chainable,
       LongPress: chainable,
@@ -104,6 +120,11 @@ function renderView(overrides?: Partial<EditGoalViewProps>) {
 }
 
 describe("EditGoalView step description (#803)", () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+    jest.useRealTimers();
+  });
+
   it("adds a multi-line description to a step, keeping its paragraph break", () => {
     const { onStepDescriptionChange } = renderView();
 
@@ -187,7 +208,6 @@ describe("EditGoalView step description (#803)", () => {
     expect(onStepDescriptionChange).not.toHaveBeenCalled();
     expect(announce).toHaveBeenCalledWith(message);
     expect(screen.getByTestId(`${STEP}-s1-input`).props.value).toBe(long);
-    announce.mockRestore();
   });
 
   it("accepts exactly the limit", () => {
@@ -203,12 +223,14 @@ describe("EditGoalView step description (#803)", () => {
   });
 
   it("keeps the editor open with the draft when the host reports a failed write", () => {
-    renderView({ onStepDescriptionChange: jest.fn(() => false) });
+    const failing = jest.fn((_id: string, _d: string | null) => false);
+    renderView({ onStepDescriptionChange: failing });
 
     fireEvent.press(screen.getByTestId(`${STEP}-s1-add`));
     fireEvent.changeText(screen.getByTestId(`${STEP}-s1-input`), "Draft");
     fireEvent.press(screen.getByTestId(`${STEP}-s1-save`));
 
+    expect(failing).toHaveBeenCalledWith("s1", "Draft");
     expect(screen.getByTestId(`${STEP}-s1-input`).props.value).toBe("Draft");
   });
 
@@ -246,6 +268,73 @@ describe("EditGoalView step description (#803)", () => {
     expect(screen.queryByTestId(`${STEP}-s2-input`)).toBeNull();
   });
 
+  it("keeps an over-limit draft open instead of switching to another row", () => {
+    const { onStepDescriptionChange } = renderView();
+    const long = "a".repeat(1001);
+
+    fireEvent.press(screen.getByTestId(`${STEP}-s1-add`));
+    fireEvent.changeText(screen.getByTestId(`${STEP}-s1-input`), long);
+    fireEvent.press(screen.getByTestId(`${SUB}-sub1-add`));
+
+    expect(onStepDescriptionChange).not.toHaveBeenCalled();
+    expect(screen.getByTestId(`${STEP}-s1-input`).props.value).toBe(long);
+    expect(screen.queryByTestId(`${SUB}-sub1-input`)).toBeNull();
+  });
+
+  it("commits an open title rename when a description editor opens", () => {
+    const onStepTitleChange = jest.fn();
+    renderView({ onStepTitleChange });
+
+    fireEvent.press(screen.getByTestId("edit-goal-step-title-s1"));
+    fireEvent.changeText(
+      screen.getByTestId("edit-goal-step-edit-s1"),
+      "Plan the month",
+    );
+    fireEvent.press(screen.getByTestId(`${STEP}-s2-text`));
+
+    expect(onStepTitleChange).toHaveBeenCalledWith("s1", "Plan the month");
+    expect(screen.queryByTestId("edit-goal-step-edit-s1")).toBeNull();
+    expect(screen.getByTestId(`${STEP}-s2-input`)).toBeOnTheScreen();
+  });
+
+  it("saves an open description draft before a title rename starts", () => {
+    const { onStepDescriptionChange } = renderView();
+
+    fireEvent.press(screen.getByTestId(`${STEP}-s1-add`));
+    fireEvent.changeText(screen.getByTestId(`${STEP}-s1-input`), "Notes");
+    fireEvent.press(screen.getByTestId("edit-goal-step-title-s2"));
+
+    expect(onStepDescriptionChange).toHaveBeenCalledWith("s1", "Notes");
+    expect(screen.getByTestId("edit-goal-step-edit-s2")).toBeOnTheScreen();
+  });
+
+  it("turns drag off while a description editor is open", () => {
+    renderView();
+    expect(screen.queryAllByTestId("drag-detector").length).toBeGreaterThan(0);
+
+    fireEvent.press(screen.getByTestId(`${STEP}-s1-add`));
+    expect(screen.queryAllByTestId("drag-detector")).toHaveLength(0);
+
+    fireEvent.press(screen.getByTestId(`${STEP}-s1-cancel`));
+    expect(screen.queryAllByTestId("drag-detector").length).toBeGreaterThan(0);
+  });
+
+  it("hands screen-reader focus back to the row's line when the editor closes", () => {
+    jest.useFakeTimers();
+    const setFocus = jest
+      .spyOn(AccessibilityInfo, "setAccessibilityFocus")
+      .mockImplementation(() => undefined);
+    renderView();
+
+    fireEvent.press(screen.getByTestId(`${STEP}-s1-add`));
+    jest.runOnlyPendingTimers();
+    expect(setFocus).not.toHaveBeenCalled();
+
+    fireEvent.press(screen.getByTestId(`${STEP}-s1-cancel`));
+    jest.runOnlyPendingTimers();
+    expect(setFocus).toHaveBeenCalledTimes(1);
+  });
+
   it("labels the controls for screen readers", () => {
     renderView();
 
@@ -257,8 +346,12 @@ describe("EditGoalView step description (#803)", () => {
     const text = screen.getByTestId(`${STEP}-s2-text`);
     expect(text.props.accessibilityRole).toBe("button");
     expect(text.props.accessibilityLabel).toBe(
-      `Edit description of "Write it down": ${STEPS[1].description}`,
+      'Description of "Write it down"',
     );
+    expect(text.props.accessibilityValue).toEqual({
+      text: STEPS[1].description,
+    });
+    expect(text.props.accessibilityHint).toBe("Edit the description");
 
     fireEvent.press(add);
     expect(

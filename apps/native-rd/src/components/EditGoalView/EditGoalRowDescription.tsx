@@ -21,7 +21,7 @@
  * Without `onStartEditing` (New Goal wizard, Storybook) an existing description
  * renders read-only and no prompt shows.
  */
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import {
   AccessibilityInfo,
   Pressable,
@@ -30,6 +30,7 @@ import {
   View,
 } from "react-native";
 import { useUnistyles } from "react-native-unistyles";
+import { focusAccessibilityRef } from "../../utils/accessibilityFocus";
 import { Button } from "../Button";
 import { styles } from "./EditGoalView.styles";
 
@@ -39,8 +40,10 @@ export interface EditGoalDescriptionCopy {
   addPrompt?: string;
   /** a11y label for the unset prompt. */
   addA11yLabel?: (title: string) => string;
-  /** a11y label for the set-state text (reads the description back). */
-  editA11yLabel?: (title: string, description: string) => string;
+  /** a11y label for the set-state text; the text itself rides accessibilityValue. */
+  editA11yLabel?: (title: string) => string;
+  /** a11y hint on the set-state text. */
+  editA11yHint?: string;
   /** a11y label for the multi-line input. */
   inputA11yLabel?: (title: string) => string;
   placeholder?: string;
@@ -64,6 +67,11 @@ export interface EditGoalRowDescriptionBinding {
   /** Only called with a draft inside the limit. */
   onSave: () => void;
   onCancel: () => void;
+  /**
+   * This row's editor just closed: screen-reader focus goes back to the line
+   * that replaced it rather than being lost with the unmounted input.
+   */
+  focusOnMount?: boolean;
   copy?: EditGoalDescriptionCopy;
 }
 
@@ -79,8 +87,8 @@ export interface EditGoalRowDescriptionProps {
 const DEFAULT_COPY: Required<EditGoalDescriptionCopy> = {
   addPrompt: "＋ description",
   addA11yLabel: (title) => `Add a description to "${title}"`,
-  editA11yLabel: (title, description) =>
-    `Edit description of "${title}": ${description}`,
+  editA11yLabel: (title) => `Description of "${title}"`,
+  editA11yHint: "Edit the description",
   inputA11yLabel: (title) => `Description of "${title}"`,
   placeholder: "How to go about it, notes, links",
   saveLabel: "Save",
@@ -104,6 +112,14 @@ export function EditGoalRowDescription({
   const { theme } = useUnistyles();
   const copy = { ...DEFAULT_COPY, ...stripUndefined(binding?.copy) };
   const text = description ?? "";
+  const lineRef = useRef<View | null>(null);
+  // Held in the list, not here: closing the editor can also swap the row's
+  // drag shell, which remounts this component and would reset local state.
+  const focusLine = Boolean(binding?.focusOnMount && !binding.isEditing);
+  useEffect(() => {
+    if (!focusLine) return;
+    return focusAccessibilityRef(lineRef);
+  }, [focusLine]);
 
   if (!binding) {
     if (!text) return null;
@@ -115,34 +131,27 @@ export function EditGoalRowDescription({
   }
 
   if (!binding.isEditing) {
-    if (!text) {
-      return (
-        <Pressable
-          onPress={binding.onStartEditing}
-          accessibilityRole="button"
-          accessibilityLabel={copy.addA11yLabel(title)}
-          testID={`${testID}-add`}
-          style={({ pressed }) => [
-            styles.descriptionLine,
-            pressed && styles.timingLinePressed,
-          ]}
-        >
-          <RNText style={styles.whenPrompt}>{copy.addPrompt}</RNText>
-        </Pressable>
-      );
-    }
     return (
       <Pressable
+        ref={lineRef}
         onPress={binding.onStartEditing}
         accessibilityRole="button"
-        accessibilityLabel={copy.editA11yLabel(title, text)}
-        testID={`${testID}-text`}
+        accessibilityLabel={
+          text ? copy.editA11yLabel(title) : copy.addA11yLabel(title)
+        }
+        accessibilityValue={text ? { text } : undefined}
+        accessibilityHint={text ? copy.editA11yHint : undefined}
+        testID={text ? `${testID}-text` : `${testID}-add`}
         style={({ pressed }) => [
           styles.descriptionLine,
           pressed && styles.timingLinePressed,
         ]}
       >
-        <RNText style={styles.descriptionText}>{text}</RNText>
+        {text ? (
+          <RNText style={styles.descriptionText}>{text}</RNText>
+        ) : (
+          <RNText style={styles.whenPrompt}>{copy.addPrompt}</RNText>
+        )}
       </Pressable>
     );
   }
@@ -176,11 +185,9 @@ export function EditGoalRowDescription({
         testID={`${testID}-input`}
       />
       {tooLong ? (
-        <RNText
-          style={styles.descriptionTooLong}
-          accessibilityLiveRegion="polite"
-          testID={`${testID}-too-long`}
-        >
+        // No live region: it would read out on every keystroke past the
+        // limit. The refused Save announces it instead, on both platforms.
+        <RNText style={styles.descriptionTooLong} testID={`${testID}-too-long`}>
           {tooLongText}
         </RNText>
       ) : null}

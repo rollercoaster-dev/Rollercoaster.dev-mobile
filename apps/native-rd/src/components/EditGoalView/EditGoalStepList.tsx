@@ -189,6 +189,12 @@ export interface EditGoalStepListProps {
   stepDescriptionCopy?: EditGoalDescriptionCopy;
 }
 
+function hasRow(steps: EditGoalStep[], id: string): boolean {
+  return steps.some(
+    (s) => s.id === id || (s.subSteps ?? []).some((ss) => ss.id === id),
+  );
+}
+
 const defaultStepCountLabel = (count: number) =>
   `${count} ${count === 1 ? "step" : "steps"}`;
 
@@ -260,6 +266,17 @@ export function EditGoalStepList({
     id: string;
     draft: string;
   } | null>(null);
+  // The row whose description editor last closed, so its line takes back
+  // screen-reader focus (#803).
+  const [descriptionFocusId, setDescriptionFocusId] = useState<string | null>(
+    null,
+  );
+  // A row deleted (or synced away) while its editor was open takes the editor
+  // with it, rather than leaving a save aimed at a missing id. Adjusted during
+  // render, React's "store info from a previous render" pattern.
+  if (descriptionEdit && !hasRow(steps, descriptionEdit.id)) {
+    setDescriptionEdit(null);
+  }
   const [screenReaderActive, setScreenReaderActive] = useState(false);
   // Which row-level delete is awaiting confirmation (#460, D1/D2). One modal
   // instance below is driven by this; the rows only signal intent.
@@ -353,6 +370,9 @@ export function EditGoalStepList({
   }
 
   function beginEdit(id: string, title: string) {
+    // An open description draft is saved first; if it can't be, the rename
+    // waits rather than leaving two editors open.
+    if (descriptionEdit && !saveDescription()) return;
     setEditingId(id);
     setEditText(title);
   }
@@ -399,6 +419,7 @@ export function EditGoalStepList({
       if (onStepDescriptionChange(id, next) === false) return false;
     }
     setDescriptionEdit(null);
+    setDescriptionFocusId(id);
     return true;
   }
 
@@ -417,13 +438,18 @@ export function EditGoalStepList({
         // rather than losing what was typed.
         if (descriptionEdit && !saveDescription()) return;
         if (editingId) commitEditing();
+        setDescriptionFocusId(null);
         setDescriptionEdit({ id, draft: currentDescription(id) ?? "" });
       },
       onDraftChange: (draft) => setDescriptionEdit({ id, draft }),
       onSave: () => {
         saveDescription();
       },
-      onCancel: () => setDescriptionEdit(null),
+      onCancel: () => {
+        setDescriptionEdit(null);
+        setDescriptionFocusId(id);
+      },
+      focusOnMount: descriptionFocusId === id,
       copy: stepDescriptionCopy,
     };
   }

@@ -73,6 +73,31 @@ No simulator run in this lane — an iOS device/sim check is needed before merge
 - `updateStep` trims and maps blank to `null` itself; the list still maps blank → `null` so the
   intent is explicit at the call site and tests can pin it.
 
+## Review (round 1: correctness, tests, accessibility subagents)
+
+Fixed:
+
+- a11y (major): focus is lost when the editor closes → the list remembers the row that closed
+  (`descriptionFocusId`) and that row's line takes screen-reader focus back, surviving the drag-shell
+  remount.
+- a11y (major): live region on the over-length message chattered per keystroke (Android) and doubled
+  the Save announcement → live region removed; the refused Save announces on both platforms.
+- a11y (minor): whole description in the button label → label names the row, text moves to
+  `accessibilityValue`, plus a hint.
+- correctness (low): rename + description editor could both be open → starting a rename saves the open
+  draft first (or waits if it can't be saved).
+- correctness (low): editor left open on a deleted / synced-away row → state dropped during render.
+- tests: drag gating, rename interplay, blocked switch over the limit, focus restore, failed-write host
+  call, sub-step description mapping; spies restored in `afterEach`.
+- copy (de): `tooLong` reworded; labels use "zu" consistently.
+
+Accepted / not changed:
+
+- Row remount when `canDrag` flips (same pattern as the title rename; draft lives in the list). Needs
+  the on-device check below to confirm no keyboard flicker.
+- `textMuted` add prompt: same token pairing as the shipped `＋ when?` prompt.
+- i18n `escapeValue` is already `false` (`src/i18n/index.ts`).
+
 ## Follow-ups
 
 - Native verification on iOS (large text + 7 themes) — not possible in this automated lane; flagged in

@@ -618,6 +618,20 @@ describe("EditModeScreen", () => {
       });
     });
 
+    it("shows a sub-step's stored description", () => {
+      setupQueries(
+        GOAL,
+        STEPS_TREE.map((s) =>
+          s.id === "p2c1" ? { ...s, description: "Bring the charger." } : s,
+        ),
+      );
+      renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+
+      expect(
+        screen.getByTestId("edit-goal-substep-description-p2c1-text"),
+      ).toHaveTextContent("Bring the charger.");
+    });
+
     it("clearing stores null", () => {
       setupQueries(GOAL, STEPS_WITH_DESC);
       renderWithProviders(<EditModeScreen {...makeRouteProps()} />);

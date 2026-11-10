@@ -107,11 +107,9 @@ export function buildEditGoalCopy(
       addPrompt: t("editGoal:editor.stepDescription.addPrompt"),
       addA11yLabel: (title) =>
         t("editGoal:editor.stepDescription.addA11yLabel", { title }),
-      editA11yLabel: (title, description) =>
-        t("editGoal:editor.stepDescription.editA11yLabel", {
-          title,
-          description,
-        }),
+      editA11yLabel: (title) =>
+        t("editGoal:editor.stepDescription.editA11yLabel", { title }),
+      editA11yHint: t("editGoal:editor.stepDescription.editA11yHint"),
       inputA11yLabel: (title) =>
         t("editGoal:editor.stepDescription.inputA11yLabel", { title }),
       placeholder: t("editGoal:editor.stepDescription.placeholder"),
