@@ -69,6 +69,15 @@ jest.mock("../../../hooks/useAudioRecorder", () => ({
   }),
 }));
 
+// Recordings are copied out of the recorder's Caches file into Documents.
+const SAVED_AUDIO_URI = "file:///documents/evidence/audio/saved.m4a";
+const mockCopyAudio = jest.fn((_source: string) => SAVED_AUDIO_URI);
+const mockDeleteAudio = jest.fn((_uri: string) => undefined);
+jest.mock("../../../utils/audioStorage", () => ({
+  copyAudioToAppStorage: (source: string) => mockCopyAudio(source),
+  deleteAudio: (uri: string) => mockDeleteAudio(uri),
+}));
+
 // Mock createEvidence
 jest.mock("../../../db", () => ({
   createEvidence: jest.fn(),
@@ -94,6 +103,7 @@ beforeEach(() => {
     value: { id: "evidence_test" },
   });
   mockReset.mockResolvedValue(undefined);
+  mockCopyAudio.mockImplementation(() => SAVED_AUDIO_URI);
   mockStatus = "idle";
   mockDurationMs = 0;
   mockUri = null;
@@ -227,6 +237,47 @@ describe("VoiceMemoScreen", () => {
     }
   });
 
+  it("persists a Documents copy, not the recorder's Caches URI", () => {
+    mockStatus = "recorded";
+    mockUri = "file:///caches/ExpoAudio/recording.m4a";
+    renderScreen();
+    fireEvent.press(screen.getByText(i18n.t("captureVoice:actions.attach")));
+
+    expect(mockCopyAudio).toHaveBeenCalledWith(
+      "file:///caches/ExpoAudio/recording.m4a",
+    );
+    expect(createEvidence).toHaveBeenCalledWith(
+      expect.objectContaining({ uri: SAVED_AUDIO_URI }),
+    );
+    // Temp recording cleaned up; the saved copy kept.
+    expect(mockDeleteAudio.mock.calls).toEqual([
+      ["file:///caches/ExpoAudio/recording.m4a"],
+    ]);
+  });
+
+  it("does not write a row when copying the recording fails", () => {
+    mockStatus = "recorded";
+    mockUri = "file:///recording.m4a";
+    mockCopyAudio.mockImplementationOnce(() => {
+      throw new Error("disk full");
+    });
+    const alert = jest
+      .spyOn(Alert, "alert")
+      .mockImplementation(() => undefined);
+    try {
+      renderScreen();
+      fireEvent.press(screen.getByText(i18n.t("captureVoice:actions.attach")));
+      expect(createEvidence).not.toHaveBeenCalled();
+      expect(mockGoBack).not.toHaveBeenCalled();
+      expect(alert).toHaveBeenCalledWith(
+        i18n.t("captureVoice:errors.saveFailedTitle"),
+        i18n.t("captureVoice:errors.saveFailedMessage"),
+      );
+    } finally {
+      alert.mockRestore();
+    }
+  });
+
   it("retains a recording when the database rejects Attach", () => {
     mockStatus = "recorded";
     mockUri = "file:///recording.m4a";
@@ -251,6 +302,9 @@ describe("VoiceMemoScreen", () => {
         i18n.t("captureVoice:errors.saveFailedTitle"),
         i18n.t("captureVoice:errors.saveFailedMessage"),
       );
+      // The orphaned Documents copy is removed; the recorder file is kept
+      // so the user can retry.
+      expect(mockDeleteAudio.mock.calls).toEqual([[SAVED_AUDIO_URI]]);
     } finally {
       alert.mockRestore();
     }
