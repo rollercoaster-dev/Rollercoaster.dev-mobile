@@ -59,6 +59,21 @@ export type ReportContext =
   | { area: "audio.playback" }
   | { area: "navigation" }
   | { area: "db.write" }
+  // Errors Evolu raises on its error channel (`evolu.subscribeError`). `kind`
+  // is the family of the library's own `EvoluError.type` — never its payload,
+  // which can carry SQL or row values.
+  | {
+      area: "db.evolu";
+      kind:
+        | "sqlite"
+        | "protocol"
+        | "timestamp"
+        | "crypto"
+        | "transferable"
+        | "unknown";
+    }
+  // Startup never produced the user-settings row within StartupGate's bound.
+  | { area: "db.startup"; kind: "timeout" }
   | { area: "settings.density" }
   | { area: "settings.theme" }
   // The cockpit pin is a userSettings write, not a goal write — it belongs with

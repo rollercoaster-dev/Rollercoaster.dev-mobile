@@ -8,6 +8,22 @@ export const styles = StyleSheet.create((theme) => ({
     justifyContent: "center",
     padding: theme.space[6],
   },
+  rootContainer: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+  },
+  rootContent: {
+    flexGrow: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: theme.space[6],
+  },
+  compactContainer: {
+    alignItems: "center",
+    paddingHorizontal: theme.space[4],
+    paddingVertical: theme.space[2],
+    backgroundColor: theme.colors.background,
+  },
   card: {
     alignItems: "center",
     padding: theme.space[6],

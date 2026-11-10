@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { BadgesScreen } from "../screens/BadgesScreen";
 import { BadgeDetailScreen } from "../screens/BadgeDetailScreen";
 import { BadgeDesignerScreen } from "../screens/BadgeDesignerScreen";
+import { screenErrorBoundaryLayout } from "./screenErrorBoundary";
 import type { BadgesStackParamList } from "./types";
 
 const Stack = createNativeStackNavigator<BadgesStackParamList>();
@@ -12,6 +13,7 @@ export function BadgesStack() {
     <Stack.Navigator
       initialRouteName="Badges"
       screenOptions={{ headerShown: false }}
+      screenLayout={screenErrorBoundaryLayout}
     >
       <Stack.Screen name="Badges" component={BadgesScreen} />
       <Stack.Screen name="BadgeDetail" component={BadgeDetailScreen} />

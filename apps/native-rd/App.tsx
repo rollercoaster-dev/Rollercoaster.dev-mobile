@@ -16,6 +16,8 @@ import { navigationTheme } from "./src/navigation/navigationTheme";
 import { EvoluAppProvider } from "./src/db";
 import { TabNavigator } from "./src/navigation";
 import { ToastProvider } from "./src/components/Toast";
+import { ErrorBoundary } from "./src/components/ErrorBoundary";
+import { StartupGate } from "./src/components/StartupGate";
 import { useFonts } from "./src/hooks/useFonts";
 import { useTheme, ThemeProvider, useThemeContext } from "./src/hooks/useTheme";
 import { useThemePersistence } from "./src/hooks/useThemePersistence";
@@ -69,7 +71,8 @@ function ThemedApp() {
 
   let body: React.ReactNode;
   if (isFirstLaunch === null) {
-    // Loading: Evolu hasn't read settings from SQLite yet
+    // Loading: Evolu answered but the first settings row hasn't landed yet.
+    // StartupGate (above) owns the timeout and failure screen for this state.
     body = (
       <View
         testID="app-loading"
@@ -145,8 +148,21 @@ function ThemedApp() {
  *
  * Set EXPO_PUBLIC_STORYBOOK_ENABLED=true to launch Storybook instead of the app.
  * Unistyles handles theming globally via StyleSheet.configure()
+ *
+ * The last-resort ErrorBoundary sits above every provider and above AppRoot's
+ * own hooks, so a throw in fonts, theme, Evolu or the navigator shell shows a
+ * Retry card instead of closing the app. Its fallback needs only the Unistyles
+ * runtime and the i18n singleton, both set up in index.ts before App loads.
  */
 export function App() {
+  return (
+    <ErrorBoundary variant="root">
+      <AppRoot />
+    </ErrorBoundary>
+  );
+}
+
+function AppRoot() {
   const { isReady } = useFonts();
   const themeState = useTheme();
 
@@ -162,7 +178,9 @@ export function App() {
         <EvoluAppProvider>
           <SafeAreaProvider>
             <KeyboardProvider>
-              <ThemedApp />
+              <StartupGate>
+                <ThemedApp />
+              </StartupGate>
             </KeyboardProvider>
           </SafeAreaProvider>
         </EvoluAppProvider>
