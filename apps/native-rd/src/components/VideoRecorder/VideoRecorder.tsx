@@ -236,7 +236,11 @@ export const VideoRecorder = forwardRef<
           <Text variant="headline" style={{ textAlign: "center" }}>
             {t("permissions:videoRecording.title")}
           </Text>
-          <Text variant="body" style={styles.permissionText}>
+          <Text
+            variant="body"
+            style={styles.permissionText}
+            accessibilityLiveRegion="polite"
+          >
             {isBlocked
               ? t("permissions:videoRecording.blockedMessage")
               : t("permissions:videoRecording.message")}
