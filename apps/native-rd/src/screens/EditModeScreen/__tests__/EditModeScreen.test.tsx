@@ -8,6 +8,7 @@ import {
   within,
 } from "../../../__tests__/test-utils";
 import { i18n } from "../../../i18n";
+import { STRING_1000_MAX_LENGTH } from "../../../db/schema";
 import { EditModeScreen } from "../EditModeScreen";
 
 // --- Mocks ---
@@ -418,6 +419,80 @@ describe("EditModeScreen", () => {
       expect(mockUpdateGoal).toHaveBeenCalledWith("goal-1", {
         description: "New description",
       });
+    });
+
+    // Regression: unmount cleared the 500 ms debounce timer without running
+    // it, so a description typed just before leaving was lost.
+    it("flushes a pending description edit when the screen unmounts", () => {
+      setupQueries();
+      const { unmount } = renderWithProviders(
+        <EditModeScreen {...makeRouteProps()} />,
+      );
+      fireEvent.changeText(
+        screen.getByTestId("edit-goal-description-input"),
+        "Typed right before leaving",
+      );
+      expect(mockUpdateGoal).not.toHaveBeenCalled();
+
+      unmount();
+
+      expect(mockUpdateGoal).toHaveBeenCalledTimes(1);
+      expect(mockUpdateGoal).toHaveBeenCalledWith("goal-1", {
+        description: "Typed right before leaving",
+      });
+    });
+
+    it.each([
+      [
+        "Back",
+        () => fireEvent.press(screen.getByLabelText("Go back")),
+        mockGoBack,
+      ],
+      [
+        "Done",
+        () => fireEvent.press(screen.getByTestId("edit-goal-done-button")),
+        mockNavigate,
+      ],
+    ])(
+      "writes pending title and description before %s navigates, once",
+      async (_label, leave, navigateMock) => {
+        setupQueries();
+        renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+        fireEvent.changeText(
+          screen.getByTestId("edit-goal-title-input"),
+          "Late title",
+        );
+        fireEvent.changeText(
+          screen.getByTestId("edit-goal-description-input"),
+          "Late description",
+        );
+
+        leave();
+
+        expect(navigateMock).toHaveBeenCalled();
+        expect(mockUpdateGoal).toHaveBeenCalledWith("goal-1", {
+          title: "Late title",
+        });
+        expect(mockUpdateGoal).toHaveBeenCalledWith("goal-1", {
+          description: "Late description",
+        });
+        // The flushed writes are consumed — the timers can't write again.
+        await act(async () => {
+          jest.advanceTimersByTime(500);
+        });
+        expect(mockUpdateGoal).toHaveBeenCalledTimes(2);
+      },
+    );
+
+    it("caps title and description at the goal columns' capacity", () => {
+      setupQueries();
+      renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+      expect(screen.getByTestId("edit-goal-title-input").props.maxLength).toBe(
+        STRING_1000_MAX_LENGTH,
+      );
+      expect(
+        screen.getByTestId("edit-goal-description-input").props.maxLength,
+      ).toBe(STRING_1000_MAX_LENGTH);
     });
 
     // D4: the editor's add-step flow has no evidence-types input, so no

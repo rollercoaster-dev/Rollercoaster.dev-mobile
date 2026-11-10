@@ -269,6 +269,10 @@ export interface EditGoalViewProps {
    */
   description?: string;
   onDescriptionChange?: (description: string) => void;
+  /** Longest goal title the host can store; caps the title field. */
+  goalTitleMaxLength?: number;
+  /** Longest description the host can store; caps the description field. */
+  descriptionMaxLength?: number;
   steps: EditGoalStep[];
   /** Fired on drop with the full new step order. Not wired to persistence. */
   onReorderSteps: (orderedStepIds: string[]) => void;
@@ -420,6 +424,8 @@ export function EditGoalView({
   onGoalTitleEndEditing,
   description,
   onDescriptionChange,
+  goalTitleMaxLength,
+  descriptionMaxLength,
   steps,
   onReorderSteps,
   onReorderSubSteps,
@@ -657,6 +663,7 @@ export function EditGoalView({
                   placeholder={descriptionPlaceholder}
                   placeholderTextColor={theme.colors.textMuted}
                   multiline
+                  maxLength={descriptionMaxLength}
                   testID="edit-goal-description-input"
                   accessibilityLabel={
                     descriptionPlaceholder ?? descriptionSectionLabel
@@ -675,6 +682,7 @@ export function EditGoalView({
                 // Single-line rename; "done" blurs on submit so the keyboard
                 // never strands the Done button below it (#502).
                 returnKeyType="done"
+                maxLength={goalTitleMaxLength}
                 testID="edit-goal-title-input"
                 accessibilityLabel={goalSectionLabel}
               />
