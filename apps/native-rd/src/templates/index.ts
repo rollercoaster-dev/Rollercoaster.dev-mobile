@@ -7,3 +7,4 @@ export type {
   TemplateStepTiming,
   TemplateSubStep,
 } from "./types";
+export { buildTutorialTemplate, TUTORIAL_TEMPLATE_ID } from "./tutorial";

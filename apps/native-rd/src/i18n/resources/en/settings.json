@@ -22,7 +22,8 @@
   },
   "onboarding": {
     "title": "Onboarding",
-    "replayWelcome": "Replay welcome"
+    "replayWelcome": "Replay welcome",
+    "startTutorial": "Start the tutorial goal"
   },
   "language": {
     "title": "Language (dev)",
@@ -30,7 +31,8 @@
   },
   "errors": {
     "densitySaveFailed": "Couldn't save that density. Please try again.",
-    "themeSaveFailed": "Couldn't save that theme. Please try again."
+    "themeSaveFailed": "Couldn't save that theme. Please try again.",
+    "tutorialStartFailed": "Couldn't set up the tutorial goal. Please try again."
   },
   "about": {
     "title": "About",
