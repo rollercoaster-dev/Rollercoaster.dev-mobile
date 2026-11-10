@@ -22,6 +22,7 @@ import { Logger } from "../shims/rd-logger";
 import { validateEvidenceType } from "../types/evidence";
 import type { EvidenceTypeValue } from "../types/evidence";
 import { resolvePlannedEvidenceTypes } from "../utils/parsePlannedEvidenceTypes";
+import { toStoredFileUri } from "../utils/storedFileUri";
 import { evolu } from "./evolu";
 import {
   GoalId,
@@ -1258,7 +1259,9 @@ export function createEvidence(params: CreateEvidenceParams) {
   }
 
   const parsedType = NonEmptyString1000.orNull(params.type);
-  const parsedUri = NonEmptyString1000.orNull(params.uri);
+  // Files in the app's Documents dir are stored relative so they survive an
+  // iOS container-path change (see utils/storedFileUri).
+  const parsedUri = NonEmptyString1000.orNull(toStoredFileUri(params.uri));
 
   if (!parsedType) {
     logger.error("Evidence type validation failed", {
@@ -1325,16 +1328,36 @@ export function createEvidence(params: CreateEvidenceParams) {
 }
 
 /**
- * Update evidence description and/or metadata
+ * Update evidence uri, description and/or metadata
  * @param id - Evidence ID
- * @param fields - Fields to update (description, metadata)
+ * @param fields - Fields to update (uri, description, metadata). `uri` is
+ *   required on the row, so it can be replaced but never cleared — this is how
+ *   an inline text note (stored in `uri`) is edited in place.
  * @returns Update command
  */
 export function updateEvidence(
   id: EvidenceId,
-  fields: { description?: string | null; metadata?: string | null },
+  fields: {
+    uri?: string;
+    description?: string | null;
+    metadata?: string | null;
+  },
 ) {
   const update: Record<string, unknown> = { id };
+
+  if (fields.uri !== undefined) {
+    const parsed = NonEmptyString1000.orNull(fields.uri);
+    if (!parsed) {
+      logger.error("Evidence URI validation failed during update", {
+        evidenceId: id,
+        uriLength: fields.uri.length,
+      });
+      throw new Error(
+        `Evidence URI must be 1-1000 characters (received ${fields.uri.length})`,
+      );
+    }
+    update.uri = parsed;
+  }
 
   if (fields.description !== undefined) {
     if (fields.description !== null) {
@@ -1523,7 +1546,9 @@ export function createBadge(params: {
   design?: string;
 }) {
   const parsedCredential = NonEmptyString.orNull(params.credential);
-  const parsedImageUri = NonEmptyString1000.orNull(params.imageUri);
+  const parsedImageUri = NonEmptyString1000.orNull(
+    toStoredFileUri(params.imageUri),
+  );
 
   if (!parsedCredential) {
     logger.error("Badge credential validation failed", {
@@ -1591,7 +1616,7 @@ export function updateBadge(
   }
 
   if (fields.imageUri !== undefined) {
-    const parsed = NonEmptyString1000.orNull(fields.imageUri);
+    const parsed = NonEmptyString1000.orNull(toStoredFileUri(fields.imageUri));
     if (!parsed) {
       logger.error("Badge imageUri validation failed during update", {
         badgeId: id,

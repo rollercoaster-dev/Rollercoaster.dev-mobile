@@ -11,6 +11,8 @@ import { CompletionFlowScreen } from "../CompletionFlowScreen";
 import { mapBakeStatus } from "../finishStageCopy";
 import type { BadgeDesign } from "../../../badges/types";
 import { i18n } from "../../../i18n";
+import { Alert } from "react-native";
+import { TEXT_EVIDENCE_MAX_CONTENT_LENGTH } from "../../../db/schema";
 
 // --- Mocks ---
 
@@ -102,7 +104,11 @@ jest.mock("../../../badges/ColorPickerModal", () => ({
 }));
 
 const mockCreateEvidence = jest.fn();
+const mockUpdateEvidence = jest.fn();
+const mockDeleteEvidence = jest.fn();
 jest.mock("../../../db", () => ({
+  updateEvidence: (...args: unknown[]) => mockUpdateEvidence(...args),
+  deleteEvidence: (...args: unknown[]) => mockDeleteEvidence(...args),
   EvidenceType: { photo: "photo", text: "text" },
   TEXT_EVIDENCE_PREFIX: "content:text;",
   goalsQuery: "goalsQuery",
@@ -601,6 +607,127 @@ describe("CompletionFlowScreen", () => {
   });
 
   describe("closing note", () => {
+    const NOTE_ROW = { ok: true, value: { id: "note-1" } };
+    let alertSpy: jest.SpyInstance;
+
+    beforeEach(() => {
+      mockCreateEvidence.mockReturnValue(NOTE_ROW);
+      mockUpdateEvidence.mockReturnValue(NOTE_ROW);
+      mockDeleteEvidence.mockReturnValue(NOTE_ROW);
+      alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
+    });
+
+    afterEach(() => {
+      alertSpy.mockRestore();
+    });
+
+    const openNote = () => {
+      fireEvent.press(screen.getByTestId("finish-celebrate-note-prompt"));
+      return screen.getByTestId("finish-celebrate-note-input");
+    };
+
+    // Regression: tapping the CTA while the field is focused unmounts it
+    // without a JS blur, so a blur-only save dropped the note.
+    it("saves the note when the CTA is pressed without a blur", () => {
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+
+      fireEvent.changeText(openNote(), "Typed, then straight to design.");
+      goToDesign();
+
+      expect(mockCreateEvidence).toHaveBeenCalledTimes(1);
+      expect(mockCreateEvidence).toHaveBeenCalledWith(
+        expect.objectContaining({
+          goalId: "goal-1",
+          uri: "content:text;Typed, then straight to design.",
+        }),
+      );
+      expect(screen.getByTestId("finish-design-stage")).toBeOnTheScreen();
+    });
+
+    it("writes once when blur and the CTA both fire for the same text", () => {
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+
+      const input = openNote();
+      fireEvent.changeText(input, "Same text.");
+      fireEvent(input, "blur");
+      goToDesign();
+
+      expect(mockCreateEvidence).toHaveBeenCalledTimes(1);
+      expect(mockUpdateEvidence).not.toHaveBeenCalled();
+    });
+
+    it("updates the saved row when the note is edited again", () => {
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+
+      const input = openNote();
+      fireEvent.changeText(input, "First draft.");
+      fireEvent(input, "blur");
+      fireEvent.changeText(input, "Second draft.");
+      fireEvent(input, "blur");
+
+      expect(mockCreateEvidence).toHaveBeenCalledTimes(1);
+      expect(mockUpdateEvidence).toHaveBeenCalledWith("note-1", {
+        uri: "content:text;Second draft.",
+      });
+    });
+
+    it("removes the saved row when the note is cleared", () => {
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+
+      const input = openNote();
+      fireEvent.changeText(input, "Never mind.");
+      fireEvent(input, "blur");
+      fireEvent.changeText(input, "  ");
+      goToDesign();
+
+      expect(mockDeleteEvidence).toHaveBeenCalledWith("note-1");
+    });
+
+    it("caps the field at what a text evidence row can store", () => {
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+
+      expect(openNote().props.maxLength).toBe(TEXT_EVIDENCE_MAX_CONTENT_LENGTH);
+    });
+
+    it("tells the user when the note fails to save on blur", () => {
+      mockCreateEvidence.mockReturnValue({
+        ok: false,
+        error: new Error("write failed"),
+      });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+
+      const input = openNote();
+      fireEvent.changeText(input, "Will not stick.");
+      fireEvent(input, "blur");
+
+      expect(alertSpy).toHaveBeenCalledWith(
+        t("completion:finish.celebrate.closingNoteSaveFailedTitle"),
+        t("completion:finish.celebrate.closingNoteSaveRetryMessage"),
+      );
+    });
+
+    it("keeps the user on the note when the CTA save fails, with a way on", () => {
+      mockCreateEvidence.mockImplementation(() => {
+        throw new Error("validation failed");
+      });
+      renderWithProviders(<CompletionFlowScreen {...routeProps} />);
+
+      fireEvent.changeText(openNote(), "Will not stick.");
+      goToDesign();
+
+      expect(screen.getByTestId("finish-celebrate-stage")).toBeOnTheScreen();
+      expect(
+        screen.getByTestId("finish-celebrate-note-input").props.value,
+      ).toBe("Will not stick.");
+      const buttons = alertSpy.mock.calls.at(-1)?.[2] ?? [];
+      expect(buttons.map((b: { text: string }) => b.text)).toEqual([
+        t("completion:finish.celebrate.closingNoteKeepEditing"),
+        t("completion:finish.celebrate.closingNoteContinueWithout"),
+      ]);
+      act(() => buttons[1].onPress());
+      expect(screen.getByTestId("finish-design-stage")).toBeOnTheScreen();
+    });
+
     it("saves a goal-scoped text evidence row on blur", () => {
       renderWithProviders(<CompletionFlowScreen {...routeProps} />);
 

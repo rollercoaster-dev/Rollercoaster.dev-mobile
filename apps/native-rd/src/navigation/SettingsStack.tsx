@@ -4,6 +4,7 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { SettingsScreen } from "../screens/SettingsScreen";
 import { WelcomeScreen } from "../screens/WelcomeScreen";
 import { IntlProbeScreen } from "../dev/IntlProbeScreen";
+import { screenErrorBoundaryLayout } from "./screenErrorBoundary";
 import type { SettingsStackParamList } from "./types";
 
 const Stack = createNativeStackNavigator<SettingsStackParamList>();
@@ -25,6 +26,7 @@ export function SettingsStack() {
     <Stack.Navigator
       initialRouteName="Settings"
       screenOptions={{ headerShown: false }}
+      screenLayout={screenErrorBoundaryLayout}
     >
       <Stack.Screen name="Settings" component={SettingsScreen} />
       {/* presentation: "modal" is a true full-screen native modal on both

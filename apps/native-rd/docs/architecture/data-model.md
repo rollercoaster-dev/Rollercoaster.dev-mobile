@@ -67,11 +67,13 @@ Proof of work. Attached to a goal or a step.
 | goal_id     | string        | Nullable — set if attached to a goal                             |
 | step_id     | string        | Nullable — set if attached to a step                             |
 | type        | enum          | `photo` \| `text` \| `voice_memo` \| `video` \| `link` \| `file` |
-| uri         | string        | Local file path or URL                                           |
+| uri         | string        | Stored file reference (see below), URL, or `content:text;` note  |
 | description | string        | Optional caption                                                 |
 | created_at  | timestamp     |                                                                  |
 
 Exactly one of `goal_id` or `step_id` is set. Evidence lives at both levels because sometimes proof is per-step (Tomás photographing each circuit) and sometimes it's for the whole goal (Lina's before/after of the section).
+
+**Stored file references.** Photo, video, voice-memo and file evidence live under `Documents/evidence/{photos,videos,audio,files}/`; baked badge PNGs under `Documents/badges/`. New rows store these as `appdoc:<path relative to Documents>` because the absolute iOS path embeds a data-container UUID that changes on restore/migration. Rows written by v0.1.19 and earlier hold absolute `file://` URIs; they are not rewritten. Every reader goes through `resolveStoredFileUri` (`src/utils/storedFileUri.ts`), which rebases both forms onto the current container at read time; writers go through `toStoredFileUri` inside `createEvidence` / `createBadge` / `updateBadge`. Voice memos from v0.1.19 and earlier point into `Library/Caches/ExpoAudio/`, which iOS may purge; a missing one renders the missing-file card.
 
 ### Badge
 
@@ -82,7 +84,7 @@ An OB3 Verifiable Credential, earned on goal completion.
 | id         | string (ULID) | Primary key                         |
 | goal_id    | string        | Foreign key → Goal                  |
 | credential | JSON          | Full OB3 Verifiable Credential      |
-| image_uri  | string        | Baked badge image (local file path) |
+| image_uri  | string        | Baked badge image (stored file ref) |
 | created_at | timestamp     |                                     |
 
 The `credential` field contains the complete OB3 JSON — issuer (self), recipient (self), achievement, evidence references, and cryptographic signature. This is the portable artifact. Everything else in this database is local convenience.

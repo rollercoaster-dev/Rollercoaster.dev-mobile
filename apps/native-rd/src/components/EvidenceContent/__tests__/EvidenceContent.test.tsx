@@ -3,6 +3,11 @@ import { renderWithProviders, screen } from "../../../__tests__/test-utils";
 import { EvidenceContent } from "../index";
 import type { Evidence } from "../../EvidenceThumbnail";
 
+const mockStoredFileExists = jest.fn((_uri: string) => true);
+jest.mock("../../../utils/storedFileUri", () => ({
+  storedFileExists: (uri: string) => mockStoredFileExists(uri),
+}));
+
 function ev(over: Partial<Evidence> & Pick<Evidence, "id" | "type">): Evidence {
   return { title: "Sample evidence", ...over };
 }
@@ -63,6 +68,40 @@ describe("EvidenceContent", () => {
     expect(screen.getByText("Missing audio")).toBeOnTheScreen();
     // FileContent renders an Open button.
     expect(screen.getByLabelText("Open")).toBeOnTheScreen();
+  });
+
+  it("falls back to FileContent when the voice_memo file is missing", () => {
+    mockStoredFileExists.mockReturnValue(false);
+    renderWithProviders(
+      <EvidenceContent
+        evidence={ev({
+          id: "4b",
+          type: "voice_memo",
+          uri: "file:///caches/ExpoAudio/purged.m4a",
+          title: "Old memo",
+        })}
+      />,
+    );
+    expect(mockStoredFileExists).toHaveBeenCalledWith(
+      "file:///caches/ExpoAudio/purged.m4a",
+    );
+    expect(screen.getByText("Old memo")).toBeOnTheScreen();
+    expect(screen.getByLabelText("Open")).toBeOnTheScreen();
+  });
+
+  it("renders the audio player when the voice_memo file exists", () => {
+    mockStoredFileExists.mockReturnValue(true);
+    renderWithProviders(
+      <EvidenceContent
+        evidence={ev({
+          id: "4c",
+          type: "voice_memo",
+          uri: "file:///documents/evidence/audio/memo.m4a",
+          title: "Kept memo",
+        })}
+      />,
+    );
+    expect(screen.getByLabelText("Audio player")).toBeOnTheScreen();
   });
 
   it("renders LinkContent with URL for link evidence", () => {

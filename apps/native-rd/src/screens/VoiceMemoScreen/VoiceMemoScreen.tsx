@@ -21,6 +21,7 @@ import { useUnsavedExitGuard } from "../../hooks/useUnsavedExitGuard";
 import { createEvidence, EvidenceType } from "../../db";
 import type { GoalId, StepId } from "../../db";
 import { reportError } from "../../services/sentry-report";
+import { copyAudioToAppStorage, deleteAudio } from "../../utils/audioStorage";
 import { Logger } from "../../shims/rd-logger";
 import type { CaptureVoiceMemoScreenProps } from "../../navigation/types";
 import { styles } from "./VoiceMemoScreen.styles";
@@ -83,25 +84,32 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
     if (!uri || saving) return;
 
     setSaving(true);
+    // The recorder writes into Caches (purgeable, not backed up) — persist a
+    // copy in Documents and store that instead of the recorder's URI.
+    let savedUri: string | null = null;
     try {
       const metadata = JSON.stringify({
         durationMs,
         format: "m4a",
       });
 
+      savedUri = copyAudioToAppStorage(uri);
       const result = createEvidence({
         ...(stepId
           ? { stepId: stepId as StepId }
           : { goalId: goalId as GoalId }),
         type: EvidenceType.voice_memo,
-        uri,
+        uri: savedUri,
         description: caption.trim() || undefined,
         metadata,
       });
       if (!result.ok) throw result.error;
 
+      deleteAudio(uri);
       exitAfterSave(() => navigation.goBack());
     } catch (err) {
+      // Never leave a copy behind that no evidence row points at.
+      if (savedUri) deleteAudio(savedUri);
       logger.error("Failed to save voice memo", { error: err });
       reportError(err, { area: "evidence.capture", kind: "voice_memo" });
       Alert.alert(

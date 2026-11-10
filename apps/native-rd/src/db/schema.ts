@@ -70,6 +70,23 @@ export const EvidenceType = {
 /** URI prefix for inline text evidence (text content stored in the URI field) */
 export const TEXT_EVIDENCE_PREFIX = "content:text;";
 
+/**
+ * Maximum length (UTF-16 code units, i.e. JS `string.length`) of every
+ * `NonEmptyString1000` column. Mirrors Evolu's `maxLength(1000)` brand so UI
+ * inputs can cap themselves at what the column will actually accept; a schema
+ * test pins this against the real validator.
+ */
+export const STRING_1000_MAX_LENGTH = 1000;
+
+/**
+ * Longest note body a text evidence row can hold. Text notes live in the
+ * `uri` column behind {@link TEXT_EVIDENCE_PREFIX}, so the prefix eats into the
+ * column's capacity — a UI that allowed the full 1000 characters produced
+ * notes that `createEvidence` then rejected.
+ */
+export const TEXT_EVIDENCE_MAX_CONTENT_LENGTH =
+  STRING_1000_MAX_LENGTH - TEXT_EVIDENCE_PREFIX.length;
+
 /** Badge ULID identifier */
 export const BadgeId = id("Badge");
 export type BadgeId = typeof BadgeId.Type;

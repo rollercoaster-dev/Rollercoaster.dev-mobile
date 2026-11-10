@@ -10,6 +10,8 @@ import { Input } from "../../components/Input";
 import { ScreenSubHeader } from "../../components/ScreenHeader";
 import { createEvidence, EvidenceType } from "../../db";
 import type { GoalId, StepId } from "../../db";
+// Leaf import: a pure value, and the `../../db` barrel is stubbed in tests.
+import { STRING_1000_MAX_LENGTH } from "../../db/schema";
 import { reportError } from "../../services/sentry-report";
 import { useEvidenceStartBreadcrumb } from "../../hooks/useEvidenceStartBreadcrumb";
 import { useUnsavedExitGuard } from "../../hooks/useUnsavedExitGuard";
@@ -121,6 +123,9 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
               // caption (Input exposes no ref), so the key blurs and dismisses.
               returnKeyType="done"
               textContentType="URL"
+              // The URL is stored verbatim (trimmed) in the evidence `uri`
+              // column; anything longer could never be saved.
+              maxLength={STRING_1000_MAX_LENGTH}
               testID="capture-link-url"
             />
 
@@ -129,7 +134,7 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
               placeholder={t("captureLink:captionInput.placeholder")}
               value={caption}
               onChangeText={setCaption}
-              maxLength={1000}
+              maxLength={STRING_1000_MAX_LENGTH}
               returnKeyType="done"
               testID="capture-link-caption"
             />

@@ -1,6 +1,8 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { FocusPillTabBar } from "./FocusPillTabBar";
+import { ErrorBoundary } from "../components/ErrorBoundary";
+import { screenErrorBoundaryLayout } from "./screenErrorBoundary";
 import { GoalsStack } from "./GoalsStack";
 import { BadgesStack } from "./BadgesStack";
 import { SettingsStack } from "./SettingsStack";
@@ -20,7 +22,14 @@ export function TabNavigator() {
         },
         tabBarBackground: () => null,
       }}
-      tabBar={(props) => <FocusPillTabBar {...props} />}
+      // The tab bar sits outside every screen's boundary; a compact fallback
+      // keeps the screen above it usable if the bar itself throws.
+      tabBar={(props) => (
+        <ErrorBoundary variant="compact">
+          <FocusPillTabBar {...props} />
+        </ErrorBoundary>
+      )}
+      screenLayout={screenErrorBoundaryLayout}
     >
       <Tab.Screen name="GoalsTab" component={GoalsStack} />
       <Tab.Screen name="BadgesTab" component={BadgesStack} />

@@ -11,8 +11,14 @@ import {
   deleteEvidence,
   canCompleteGoal,
 } from "../queries";
+import { evolu } from "../evolu";
 import type { GoalId, StepId, EvidenceId } from "../schema";
 
+/** Payload of the last mocked `evolu.<op>` call (see __tests__/setup.ts). */
+function lastWritten(op: "insert" | "update"): Record<string, unknown> {
+  const calls = (evolu[op] as jest.Mock).mock.calls;
+  return calls[calls.length - 1][1] as Record<string, unknown>;
+}
 const mockGoalId = "goal_test_123" as GoalId;
 const mockStepId = "step_test_456" as StepId;
 const mockEvidenceId = "evidence_test_789" as EvidenceId;
@@ -118,6 +124,9 @@ describe("Evidence CRUD Operations", () => {
   });
 
   test.each([
+    ["valid uri", { uri: "content:text;Edited note" }, false],
+    ["empty uri", { uri: "" }, true],
+    [">1000 char uri", { uri: "a".repeat(1001) }, true],
     ["null description", { description: null }, false],
     ["empty description", { description: "" }, true],
     [">1000 char description", { description: "a".repeat(1001) }, true],
@@ -135,6 +144,18 @@ describe("Evidence CRUD Operations", () => {
     } else {
       expect(() => updateEvidence(mockEvidenceId, fields)).not.toThrow();
     }
+  });
+
+  // The completion flow edits a saved closing note in place through this
+  // field; the row must actually receive the new uri, not just validate it.
+  test("updateEvidence writes the replacement uri", () => {
+    const result = updateEvidence(mockEvidenceId, {
+      uri: "content:text;Edited note",
+    });
+    expect(result).toEqual({
+      ok: true,
+      value: { id: mockEvidenceId, uri: "content:text;Edited note" },
+    });
   });
 
   test("deleteEvidence should succeed", () => {
@@ -156,6 +177,26 @@ describe("Evidence CRUD Operations", () => {
 
     test("only null-type evidence → false (consistent with canCompleteStep)", () => {
       expect(canCompleteGoal([{ type: null }])).toBe(false);
+    });
+  });
+
+  describe("createEvidence - stored file URI form", () => {
+    test.each([
+      [
+        "app Documents file",
+        "file:///documents/evidence/photos/a.jpg",
+        "appdoc:evidence/photos/a.jpg",
+      ],
+      [
+        "stale iOS container file",
+        "file:///var/mobile/Containers/Data/Application/OLD/Documents/evidence/files/f.pdf",
+        "appdoc:evidence/files/f.pdf",
+      ],
+      ["text note", "content:text;hello", "content:text;hello"],
+      ["link", "https://example.com/x", "https://example.com/x"],
+    ])("stores a %s as %s", (_label, uri, stored) => {
+      createEvidence({ goalId: mockGoalId, type: "photo", uri });
+      expect(lastWritten("insert").uri).toBe(stored);
     });
   });
 });

@@ -6,7 +6,8 @@
  * bottom sheet that writes the trade-off into each of the three export paths:
  *   1. Share verifiable badge  — RECOMMENDED, the provable PNG
  *   2. Save as image           — plain picture, may drop the credential
- *   3. Export credential (JSON)— for verifiers & wallets
+ *   3. Export credential file — for verifiers & wallets (.jwt; .json for
+ *      badges signed before #598)
  *
  * Pure, prop-driven, and i18n-free (#412, D6): all copy arrives as string props with
  * English defaults; #380 threads t() output through when it wires the screen.
@@ -58,7 +59,7 @@ export interface BadgeShareSheetProps {
   /** Loading flag shared by the verifiable-badge AND save-as-image rows — the
    *  hook (`useBadgeExport`) sets one flag for both PNG paths. */
   isExportingImage: boolean;
-  /** Loading flag for the credential (JSON) row. */
+  /** Loading flag for the credential-file row. */
   isExportingJSON: boolean;
   /**
    * Layout for the CTA only (margins/spacing) — the sheet's own overlay is
@@ -113,7 +114,7 @@ export function BadgeShareSheet({
   verifiableDetail = "A PNG carrying the OB 3.0 credential — provable forever.",
   saveImageLabel = "Save as image",
   saveImageDetail = "Plain picture — may drop the credential.",
-  exportCredentialLabel = "Export credential (JSON)",
+  exportCredentialLabel = "Export credential file",
   exportCredentialDetail = "For verifiers & wallets.",
 }: BadgeShareSheetProps) {
   const { theme } = useUnistyles();

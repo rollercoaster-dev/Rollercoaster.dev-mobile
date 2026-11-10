@@ -12,6 +12,7 @@
 import { Buffer } from "buffer";
 import * as FileSystem from "expo-file-system/legacy";
 
+import { resolveStoredFileUri } from "../utils/storedFileUri";
 import { slugifyBadgeName } from "./badgeFilename";
 
 const BADGES_SUBDIR = "badges";
@@ -92,7 +93,8 @@ export async function saveBadgePNG(
  * to fall back to another bake source. No silent placeholder fallback.
  */
 export async function readBadgePNG(uri: string): Promise<Buffer> {
-  const base64 = await FileSystem.readAsStringAsync(uri, {
+  // Accepts the stored form (relative or stale-container absolute) too.
+  const base64 = await FileSystem.readAsStringAsync(resolveStoredFileUri(uri), {
     encoding: FileSystem.EncodingType.Base64,
   });
   return Buffer.from(base64, "base64");

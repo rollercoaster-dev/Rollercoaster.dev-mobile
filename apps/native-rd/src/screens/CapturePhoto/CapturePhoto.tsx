@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Alert, ActivityIndicator } from "react-native";
+import { View, Alert, ActivityIndicator, Linking } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
 import { useTranslation } from "react-i18next";
@@ -23,7 +23,7 @@ const PICKER_OPTIONS: ImagePicker.ImagePickerOptions = {
 
 export function CapturePhoto({ route }: CapturePhotoScreenProps) {
   const navigation = useNavigation();
-  const { t } = useTranslation(["capturePhoto", "permissions"]);
+  const { t } = useTranslation(["capturePhoto", "permissions", "common"]);
   const { goalId, stepId } = route.params;
   const [busy, setBusy] = useState(false);
 
@@ -72,10 +72,28 @@ export function CapturePhoto({ route }: CapturePhotoScreenProps) {
     try {
       const permission = await ImagePicker.requestCameraPermissionsAsync();
       if (!permission.granted) {
-        Alert.alert(
-          t("permissions:camera.title"),
-          t("permissions:camera.message"),
-        );
+        if (permission.canAskAgain) {
+          Alert.alert(
+            t("permissions:camera.title"),
+            t("permissions:camera.message"),
+          );
+        } else {
+          // The OS will not prompt again (always the case on iOS after a
+          // denial), so the only way forward is the app's page in Settings.
+          Alert.alert(
+            t("permissions:camera.title"),
+            t("permissions:camera.blockedMessage"),
+            [
+              { text: t("common:actions.cancel"), style: "cancel" },
+              {
+                text: t("permissions:camera.openSettingsCta"),
+                onPress: () => {
+                  void Linking.openSettings();
+                },
+              },
+            ],
+          );
+        }
         return;
       }
       const result = await ImagePicker.launchCameraAsync(PICKER_OPTIONS);
@@ -92,15 +110,9 @@ export function CapturePhoto({ route }: CapturePhotoScreenProps) {
     if (busy) return;
     setBusy(true);
     try {
-      const permission =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!permission.granted) {
-        Alert.alert(
-          t("permissions:photoLibrary.title"),
-          t("permissions:photoLibrary.message"),
-        );
-        return;
-      }
+      // No media-library permission request: with allowsEditing off, iOS 14+
+      // uses PHPickerViewController and Android the system photo picker; both
+      // run out of process and need no read permission (expo-image-picker 56).
       const result = await ImagePicker.launchImageLibraryAsync(PICKER_OPTIONS);
       if (!result.canceled) {
         savePhoto(result, "library");

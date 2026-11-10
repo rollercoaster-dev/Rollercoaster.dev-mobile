@@ -1,5 +1,6 @@
 import { renderHook, act } from "@testing-library/react-native";
 import { Alert, Platform } from "react-native";
+import { i18n } from "../../i18n";
 
 import * as Sharing from "expo-sharing";
 import * as FileSystem from "expo-file-system/legacy";
@@ -81,7 +82,7 @@ describe("useBadgeExport", () => {
         {
           UTI: "public.png",
           mimeType: "image/png",
-          dialogTitle: "Export Verifiable Badge",
+          dialogTitle: i18n.t("badgeDetail:export.dialogTitle.verifiableBadge"),
         },
       );
       // SAF must not be touched on iOS.
@@ -151,7 +152,7 @@ describe("useBadgeExport", () => {
       });
 
       expect(Alert.alert).toHaveBeenCalledWith(
-        "No image available",
+        i18n.t("badgeDetail:export.noImage.title"),
         expect.any(String),
       );
       expect(Sharing.shareAsync).not.toHaveBeenCalled();
@@ -165,7 +166,7 @@ describe("useBadgeExport", () => {
       });
 
       expect(Alert.alert).toHaveBeenCalledWith(
-        "No image available",
+        i18n.t("badgeDetail:export.noImage.title"),
         expect.any(String),
       );
     });
@@ -180,7 +181,7 @@ describe("useBadgeExport", () => {
       });
 
       expect(Alert.alert).toHaveBeenCalledWith(
-        "Sharing unavailable",
+        i18n.t("badgeDetail:export.sharingUnavailable.title"),
         expect.any(String),
       );
     });
@@ -197,7 +198,7 @@ describe("useBadgeExport", () => {
       });
 
       expect(Alert.alert).toHaveBeenCalledWith(
-        "Export failed",
+        i18n.t("badgeDetail:export.failed.title"),
         expect.any(String),
       );
       expect(result.current.isExportingImage).toBe(false);
@@ -227,7 +228,7 @@ describe("useBadgeExport", () => {
       });
 
       expect(Alert.alert).toHaveBeenCalledWith(
-        "Export unavailable",
+        i18n.t("badgeDetail:export.unsupportedPlatform.title"),
         expect.stringContaining("iOS and Android"),
       );
       expect(Sharing.shareAsync).not.toHaveBeenCalled();
@@ -250,7 +251,7 @@ describe("useBadgeExport", () => {
         {
           UTI: "public.png",
           mimeType: "image/png",
-          dialogTitle: "Save Badge Image",
+          dialogTitle: i18n.t("badgeDetail:export.dialogTitle.image"),
         },
       );
     });
@@ -263,7 +264,7 @@ describe("useBadgeExport", () => {
       });
 
       expect(Alert.alert).toHaveBeenCalledWith(
-        "No image available",
+        i18n.t("badgeDetail:export.noImage.title"),
         expect.any(String),
       );
       expect(Sharing.shareAsync).not.toHaveBeenCalled();
@@ -277,7 +278,7 @@ describe("useBadgeExport", () => {
       });
 
       expect(Alert.alert).toHaveBeenCalledWith(
-        "No image available",
+        i18n.t("badgeDetail:export.noImage.title"),
         expect.any(String),
       );
     });
@@ -291,7 +292,7 @@ describe("useBadgeExport", () => {
       });
 
       expect(Alert.alert).toHaveBeenCalledWith(
-        "Sharing unavailable",
+        i18n.t("badgeDetail:export.sharingUnavailable.title"),
         expect.any(String),
       );
     });
@@ -307,7 +308,7 @@ describe("useBadgeExport", () => {
       });
 
       expect(Alert.alert).toHaveBeenCalledWith(
-        "Export failed",
+        i18n.t("badgeDetail:export.failed.title"),
         expect.any(String),
       );
       expect(result.current.isExportingImage).toBe(false);
@@ -373,7 +374,7 @@ describe("useBadgeExport", () => {
 
       expect(FileSystem.deleteAsync).toHaveBeenCalled();
       expect(Alert.alert).toHaveBeenCalledWith(
-        "Export failed",
+        i18n.t("badgeDetail:export.failed.title"),
         expect.any(String),
       );
     });
@@ -386,7 +387,7 @@ describe("useBadgeExport", () => {
       });
 
       expect(Alert.alert).toHaveBeenCalledWith(
-        "No credential",
+        i18n.t("badgeDetail:export.noCredential.title"),
         expect.any(String),
       );
       expect(FileSystem.writeAsStringAsync).not.toHaveBeenCalled();
@@ -401,7 +402,7 @@ describe("useBadgeExport", () => {
       });
 
       expect(Alert.alert).toHaveBeenCalledWith(
-        "Sharing unavailable",
+        i18n.t("badgeDetail:export.sharingUnavailable.title"),
         expect.any(String),
       );
       expect(FileSystem.writeAsStringAsync).not.toHaveBeenCalled();
@@ -422,8 +423,8 @@ describe("useBadgeExport", () => {
       });
 
       expect(Alert.alert).toHaveBeenCalledWith(
-        "Export failed",
-        "Cannot access the device cache directory.",
+        i18n.t("badgeDetail:export.failed.title"),
+        i18n.t("badgeDetail:export.failed.cacheUnavailableMessage"),
       );
       expect(FileSystem.writeAsStringAsync).not.toHaveBeenCalled();
 
@@ -431,6 +432,47 @@ describe("useBadgeExport", () => {
         value: original,
         writable: true,
       });
+    });
+  });
+
+  // In en, i18n.t returns the same English a hardcoded literal would, so only
+  // the pseudo locale proves the alerts and dialog titles go through t().
+  describe("pseudo locale", () => {
+    afterEach(async () => {
+      if (i18n.language !== "en") await i18n.changeLanguage("en");
+    });
+
+    it("localizes the missing-credential alert", async () => {
+      await i18n.changeLanguage("pseudo");
+      const { result } = renderHook(() => useBadgeExport());
+
+      await act(async () => {
+        await result.current.exportJSON(null, "Test");
+      });
+
+      const [title, message] = (Alert.alert as jest.Mock).mock.calls[0];
+      expect(title.startsWith("[")).toBe(true);
+      expect(title).toBe(i18n.t("badgeDetail:export.noCredential.title"));
+      expect(message).toBe(i18n.t("badgeDetail:export.noCredential.message"));
+    });
+
+    it("localizes the share-sheet dialog titles", async () => {
+      await i18n.changeLanguage("pseudo");
+      const { result } = renderHook(() => useBadgeExport());
+
+      await act(async () => {
+        await result.current.exportImage("file:///badges/badge.png");
+        await result.current.exportJSON("{}", "Test");
+      });
+
+      const titles = (Sharing.shareAsync as jest.Mock).mock.calls.map(
+        (call) => call[1].dialogTitle,
+      );
+      expect(titles).toEqual([
+        i18n.t("badgeDetail:export.dialogTitle.image"),
+        i18n.t("badgeDetail:export.dialogTitle.credential"),
+      ]);
+      expect(titles.every((title: string) => title.startsWith("["))).toBe(true);
     });
   });
 });

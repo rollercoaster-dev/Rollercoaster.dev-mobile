@@ -12,6 +12,7 @@ import {
 } from "../types/evidence";
 import type { Evidence } from "../components/EvidenceThumbnail";
 import { Logger } from "../shims/rd-logger";
+import { resolveStoredFileUri } from "../utils/storedFileUri";
 
 const logger = new Logger("useAllEvidenceForGoal");
 
@@ -47,7 +48,7 @@ export function useAllEvidenceForGoal(goalId: GoalId): ViewerEvidence[] {
           id: row.id,
           title: row.description ?? row.type ?? "Evidence",
           type: normalizeEvidenceType(row.type, row.id),
-          uri: row.uri ?? undefined,
+          uri: resolveRowUri(row.uri),
           metadata: row.metadata ?? undefined,
           source: "step",
           stepId: row.stepId,
@@ -65,7 +66,7 @@ export function useAllEvidenceForGoal(goalId: GoalId): ViewerEvidence[] {
       id: row.id,
       title: row.description ?? row.type ?? "Evidence",
       type: normalizeEvidenceType(row.type, row.id),
-      uri: row.uri ?? undefined,
+      uri: resolveRowUri(row.uri),
       metadata: row.metadata ?? undefined,
       source: "goal",
       stepId: null,
@@ -74,6 +75,14 @@ export function useAllEvidenceForGoal(goalId: GoalId): ViewerEvidence[] {
 
     return [...stepItems.map((s) => s.item), ...goalItems];
   }, [stepEvidenceRows, goalEvidenceRows]);
+}
+
+/**
+ * Stored file URIs are relative (`appdoc:`) or carry an absolute path from a
+ * possibly stale iOS container; resolve them against the current one.
+ */
+function resolveRowUri(uri: string | null): string | undefined {
+  return uri ? resolveStoredFileUri(uri) : undefined;
 }
 
 /**

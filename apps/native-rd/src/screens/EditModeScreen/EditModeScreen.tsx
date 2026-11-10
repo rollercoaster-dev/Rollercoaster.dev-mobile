@@ -46,6 +46,8 @@ import {
   reorderSubSteps,
 } from "../../db";
 import type { GoalId, StepId } from "../../db";
+// Leaf import: a pure value, and the `../../db` barrel is stubbed in tests.
+import { STRING_1000_MAX_LENGTH } from "../../db/schema";
 import type { StepTimingValue } from "../../components/StepTimingEditor";
 import { reportError } from "../../services/sentry-report";
 import { runEvoluMutation } from "../../utils/evoluMutation";
@@ -91,6 +93,10 @@ function EditContent({ goalId }: { goalId: string }) {
 
   const titleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const descTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // The write each debounce timer will run, kept so leaving the screen inside
+  // the debounce window can run it now instead of dropping it with the timer.
+  const pendingTitleWrite = useRef<(() => void) | null>(null);
+  const pendingDescWrite = useRef<(() => void) | null>(null);
 
   // Drag auto-scroll (unchanged from the StepList era) — but the ScrollView it
   // measures now lives inside EditGoalView (#493/D8), so the metrics arrive via
@@ -138,12 +144,14 @@ function EditContent({ goalId }: { goalId: string }) {
     [],
   );
 
-  useEffect(() => {
-    return () => {
-      if (titleTimer.current) clearTimeout(titleTimer.current);
-      if (descTimer.current) clearTimeout(descTimer.current);
-    };
+  // Runs any debounced write that hasn't fired yet. Back/Done inside the 500 ms
+  // window used to clear the timers on unmount and lose the last keystrokes.
+  const flushPendingEdits = useCallback(() => {
+    pendingTitleWrite.current?.();
+    pendingDescWrite.current?.();
   }, []);
+
+  useEffect(() => flushPendingEdits, [flushPendingEdits]);
 
   const writeTitle = useCallback(
     (trimmed: string) => {
@@ -172,8 +180,10 @@ function EditContent({ goalId }: { goalId: string }) {
   const debouncedUpdateTitle = useCallback(
     (newTitle: string) => {
       if (titleTimer.current) clearTimeout(titleTimer.current);
-      titleTimer.current = setTimeout(() => {
+      const write = () => {
+        if (titleTimer.current) clearTimeout(titleTimer.current);
         titleTimer.current = null;
+        pendingTitleWrite.current = null;
         const trimmed = newTitle.trim();
         // An empty field surviving the debounce is not a submission (#562) —
         // the user cleared the title and is about to retype it. Skip the write
@@ -183,7 +193,9 @@ function EditContent({ goalId }: { goalId: string }) {
         // text.
         if (!trimmed) return;
         writeTitle(trimmed);
-      }, DEBOUNCE_MS);
+      };
+      pendingTitleWrite.current = write;
+      titleTimer.current = setTimeout(write, DEBOUNCE_MS);
     },
     [writeTitle],
   );
@@ -191,7 +203,10 @@ function EditContent({ goalId }: { goalId: string }) {
   const debouncedUpdateDescription = useCallback(
     (newDesc: string) => {
       if (descTimer.current) clearTimeout(descTimer.current);
-      descTimer.current = setTimeout(() => {
+      const write = () => {
+        if (descTimer.current) clearTimeout(descTimer.current);
+        descTimer.current = null;
+        pendingDescWrite.current = null;
         const value = newDesc.trim() || null;
         runEvoluMutation(
           () => updateGoal(goalId as GoalId, { description: value }),
@@ -207,7 +222,9 @@ function EditContent({ goalId }: { goalId: string }) {
             );
           },
         );
-      }, DEBOUNCE_MS);
+      };
+      pendingDescWrite.current = write;
+      descTimer.current = setTimeout(write, DEBOUNCE_MS);
     },
     [goalId, t],
   );
@@ -246,12 +263,13 @@ function EditContent({ goalId }: { goalId: string }) {
   // stored title, the same "empty rename is a no-op" contract the step rows
   // keep in EditGoalStepList.commitEditing. No modal — the old title simply
   // comes back, and the DB row was never touched. A non-empty title with a
-  // write still pending is flushed right here: Done/back inside the debounce
-  // window unmounts the screen, and the unmount cleanup drops the timer.
+  // write still pending is flushed right here rather than waiting out the
+  // debounce (the unmount flush is the backstop for paths with no end-editing).
   function handleTitleEndEditing() {
-    const pending = titleTimer.current !== null;
+    const pending = pendingTitleWrite.current !== null;
     if (titleTimer.current) clearTimeout(titleTimer.current);
     titleTimer.current = null;
+    pendingTitleWrite.current = null;
     const trimmed = title.trim();
     if (!trimmed) {
       setTitle(goal?.title ?? "");
@@ -583,6 +601,8 @@ function EditContent({ goalId }: { goalId: string }) {
         onGoalTitleEndEditing={handleTitleEndEditing}
         description={description}
         onDescriptionChange={handleDescriptionChange}
+        goalTitleMaxLength={STRING_1000_MAX_LENGTH}
+        descriptionMaxLength={STRING_1000_MAX_LENGTH}
         steps={steps}
         onReorderSteps={handleReorderSteps}
         onReorderSubSteps={handleReorderSubSteps}
@@ -604,8 +624,14 @@ function EditContent({ goalId }: { goalId: string }) {
         onDeleteStep={handleDeleteStep}
         onDeleteSubStep={handleDeleteStep}
         onOverflowPress={() => setOverflowOpen(true)}
-        onBack={() => navigation.goBack()}
-        onDone={() => navigation.navigate("FocusMode", { goalId })}
+        onBack={() => {
+          flushPendingEdits();
+          navigation.goBack();
+        }}
+        onDone={() => {
+          flushPendingEdits();
+          navigation.navigate("FocusMode", { goalId });
+        }}
         dragScrollController={dragScrollController}
         scrollInstrumentation={scrollInstrumentation}
         onEditTiming={setExpandedTimingId}

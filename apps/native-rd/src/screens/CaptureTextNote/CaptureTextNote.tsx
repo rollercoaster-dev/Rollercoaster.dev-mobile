@@ -20,6 +20,12 @@ import { ScrollAtLargeType } from "../../components/ScrollAtLargeType";
 import { useTypeScale } from "../../hooks/useTypeScale";
 import { createEvidence, EvidenceType, TEXT_EVIDENCE_PREFIX } from "../../db";
 import type { GoalId, StepId } from "../../db";
+// Leaf import: the capacity constants are pure values, and the `../../db`
+// barrel is stubbed wholesale in tests.
+import {
+  STRING_1000_MAX_LENGTH,
+  TEXT_EVIDENCE_MAX_CONTENT_LENGTH,
+} from "../../db/schema";
 import { reportError } from "../../services/sentry-report";
 import { useEvidenceStartBreadcrumb } from "../../hooks/useEvidenceStartBreadcrumb";
 import { useUnsavedExitGuard } from "../../hooks/useUnsavedExitGuard";
@@ -27,11 +33,14 @@ import { useTabScreenContentInset } from "../../navigation/useTabScreenContentIn
 import type { CaptureTextNoteScreenProps } from "../../navigation/types";
 import { styles } from "./CaptureTextNote.styles";
 
-/** Maximum characters for note content (NonEmptyString1000 constraint) */
-const MAX_CONTENT_LENGTH = 1000;
+/**
+ * Maximum characters for note content: the evidence `uri` column's capacity
+ * minus the `content:text;` prefix the note is stored behind.
+ */
+const MAX_CONTENT_LENGTH = TEXT_EVIDENCE_MAX_CONTENT_LENGTH;
 
 /** Character count threshold to show warning color */
-const WARNING_THRESHOLD = 900;
+const WARNING_THRESHOLD = MAX_CONTENT_LENGTH - 100;
 
 export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
   const navigation = useNavigation();
@@ -162,7 +171,7 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
               placeholder={t("captureText:caption.placeholder")}
               value={caption}
               onChangeText={setCaption}
-              maxLength={1000}
+              maxLength={STRING_1000_MAX_LENGTH}
               returnKeyType="done"
               testID="capture-text-caption"
             />

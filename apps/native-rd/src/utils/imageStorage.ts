@@ -1,4 +1,5 @@
 import { File, Directory, Paths } from "expo-file-system";
+import { resolveStoredFileUri } from "./storedFileUri";
 
 const PHOTOS_SUBDIR = "evidence/photos";
 
@@ -30,7 +31,7 @@ export function saveImageToAppStorage(sourceUri: string): string {
 }
 
 export function deleteImage(uri: string): void {
-  const file = new File(uri);
+  const file = new File(resolveStoredFileUri(uri));
   if (file.exists) {
     file.delete();
   }

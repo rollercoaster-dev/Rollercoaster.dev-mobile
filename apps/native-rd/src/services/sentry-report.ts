@@ -59,6 +59,21 @@ export type ReportContext =
   | { area: "audio.playback" }
   | { area: "navigation" }
   | { area: "db.write" }
+  // Errors Evolu raises on its error channel (`evolu.subscribeError`). `kind`
+  // is the family of the library's own `EvoluError.type` — never its payload,
+  // which can carry SQL or row values.
+  | {
+      area: "db.evolu";
+      kind:
+        | "sqlite"
+        | "protocol"
+        | "timestamp"
+        | "crypto"
+        | "transferable"
+        | "unknown";
+    }
+  // Startup never produced the user-settings row within StartupGate's bound.
+  | { area: "db.startup"; kind: "timeout" }
   | { area: "settings.density" }
   | { area: "settings.theme" }
   // The cockpit pin is a userSettings write, not a goal write — it belongs with
@@ -85,8 +100,9 @@ export function reportError(error: unknown, ctx: ReportContext): void {
  * include an `Error` instance. Unknown scopes silently no-op — the inverse of
  * the usual default. To enable Sentry for a logger scope, add it here AFTER
  * auditing that the call sites' `Error.message` values are safe (the
- * `beforeSend` filter in `sentry-filters.ts` redacts emails and `/Users/<name>`
- * paths, but anything else in the message text is forwarded).
+ * `beforeSend` filter in `sentry-filters.ts` redacts emails, http(s) URLs,
+ * user-content URIs and local paths, but anything else in the message text is
+ * forwarded).
  *
  * Critical paths instrumented via direct `reportError(...)` calls (e.g.
  * useCreateBadge, useUserKey) deliberately do NOT appear here, to avoid

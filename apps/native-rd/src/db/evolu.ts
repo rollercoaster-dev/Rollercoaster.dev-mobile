@@ -9,6 +9,11 @@ import { Schema } from "./schema";
 
 export const evolu = createEvolu(evoluReactNativeDeps)(Schema, {
   name: SimpleName.orThrow("rollercoaster-dev"),
+  // Local-only. Omitting `transports` makes Evolu fall back to its default
+  // relay (wss://free.evoluhq.com) and sync every install off the device,
+  // which the privacy policy and Welcome copy promise never happens. Sync
+  // stays disabled until it ships as an explicit opt-in (ADR-0003).
+  transports: [],
 });
 
 export const useAppEvolu = createUseEvolu(evolu);

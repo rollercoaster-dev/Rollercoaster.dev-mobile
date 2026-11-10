@@ -1,4 +1,5 @@
 import { File, Directory, Paths } from "expo-file-system";
+import { resolveStoredFileUri } from "./storedFileUri";
 
 const FILES_SUBDIR = "evidence/files";
 
@@ -96,7 +97,7 @@ export function saveFileToAppStorage(
  * @param uri - The file URI to delete
  */
 export function deleteFile(uri: string): void {
-  const file = new File(uri);
+  const file = new File(resolveStoredFileUri(uri));
   if (file.exists) {
     file.delete();
   }
