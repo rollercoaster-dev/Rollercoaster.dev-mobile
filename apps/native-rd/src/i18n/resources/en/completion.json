@@ -15,7 +15,11 @@
       "closingNoteA11yLabel": "Closing note",
       "closingNoteA11yHint": "Optional. Write a few words about finishing this goal.",
       "ctaLabel": "Design your badge →",
-      "ctaSubcopy": "the keepsake for this win — make it yours"
+      "ctaSubcopy": "the keepsake for this win — make it yours",
+      "closingNoteSaveFailedTitle": "Couldn't save your closing note",
+      "closingNoteSaveFailedMessage": "Your text is still here. You can try again, or continue without the note.",
+      "closingNoteKeepEditing": "Keep editing",
+      "closingNoteContinueWithout": "Continue without note"
     },
     "design": {
       "headerTitle": "Make your badge",

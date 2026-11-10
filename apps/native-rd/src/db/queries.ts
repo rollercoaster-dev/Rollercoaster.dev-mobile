@@ -1325,16 +1325,36 @@ export function createEvidence(params: CreateEvidenceParams) {
 }
 
 /**
- * Update evidence description and/or metadata
+ * Update evidence uri, description and/or metadata
  * @param id - Evidence ID
- * @param fields - Fields to update (description, metadata)
+ * @param fields - Fields to update (uri, description, metadata). `uri` is
+ *   required on the row, so it can be replaced but never cleared — this is how
+ *   an inline text note (stored in `uri`) is edited in place.
  * @returns Update command
  */
 export function updateEvidence(
   id: EvidenceId,
-  fields: { description?: string | null; metadata?: string | null },
+  fields: {
+    uri?: string;
+    description?: string | null;
+    metadata?: string | null;
+  },
 ) {
   const update: Record<string, unknown> = { id };
+
+  if (fields.uri !== undefined) {
+    const parsed = NonEmptyString1000.orNull(fields.uri);
+    if (!parsed) {
+      logger.error("Evidence URI validation failed during update", {
+        evidenceId: id,
+        uriLength: fields.uri.length,
+      });
+      throw new Error(
+        `Evidence URI must be 1-1000 characters (received ${fields.uri.length})`,
+      );
+    }
+    update.uri = parsed;
+  }
 
   if (fields.description !== undefined) {
     if (fields.description !== null) {

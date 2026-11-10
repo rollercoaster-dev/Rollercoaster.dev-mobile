@@ -1,5 +1,5 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, Alert, View } from "react-native";
 import type { Buffer } from "buffer";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -30,10 +30,14 @@ import {
   stepEvidenceByGoalQuery,
   badgeByGoalQuery,
   createEvidence,
+  updateEvidence,
+  deleteEvidence,
   EvidenceType,
   TEXT_EVIDENCE_PREFIX,
 } from "../../db";
-import type { GoalId } from "../../db";
+import type { EvidenceId, GoalId } from "../../db";
+// Leaf import: a pure value, and the `../../db` barrel is stubbed in tests.
+import { TEXT_EVIDENCE_MAX_CONTENT_LENGTH } from "../../db/schema";
 // Imported from the leaf module, not the `../../db` barrel: the gate is a pure
 // predicate over row shapes, and reaching it through the barrel would tie it to
 // the Evolu runtime for every consumer (and every test that stubs the barrel).
@@ -185,29 +189,83 @@ function FinishFlowContent({ goalId }: { goalId: string }) {
     return () => clearTimeout(timer);
   }, [stage, displayStatus]);
 
-  // The closing note saves on blur, which can fire repeatedly for the same
-  // text. Remembering what was written keeps a re-blur from appending a
-  // duplicate evidence row.
-  const savedNoteRef = useRef<string | null>(null);
-  const handleSaveClosingNote = useCallback(
-    (text: string) => {
+  // The closing note is one goal-scoped text evidence row. It is written on
+  // blur and again when the user proceeds — tapping the CTA while the field
+  // is focused unmounts it without a JS blur event, so blur alone lost the
+  // note. Remembering the written row makes both paths idempotent: the same
+  // text is a no-op, an edit updates the row in place, and clearing the note
+  // removes it, so there is never more than one closing note.
+  const savedNoteRef = useRef<{ id: EvidenceId; text: string } | null>(null);
+  const persistClosingNote = useCallback(
+    (text: string): boolean => {
       const trimmed = text.trim();
-      if (!trimmed || savedNoteRef.current === trimmed) return;
+      const saved = savedNoteRef.current;
+      if ((saved?.text ?? "") === trimmed) return true;
       try {
-        createEvidence({
-          goalId: goalId as GoalId,
-          type: EvidenceType.text,
-          uri: `${TEXT_EVIDENCE_PREFIX}${trimmed}`,
-          description: undefined,
-        });
-        savedNoteRef.current = trimmed;
+        if (saved && !trimmed) {
+          const result = deleteEvidence(saved.id);
+          if (!result.ok) throw result.error;
+          savedNoteRef.current = null;
+        } else if (saved) {
+          const result = updateEvidence(saved.id, {
+            uri: `${TEXT_EVIDENCE_PREFIX}${trimmed}`,
+          });
+          if (!result.ok) throw result.error;
+          savedNoteRef.current = { id: saved.id, text: trimmed };
+        } else {
+          const result = createEvidence({
+            goalId: goalId as GoalId,
+            type: EvidenceType.text,
+            uri: `${TEXT_EVIDENCE_PREFIX}${trimmed}`,
+            description: undefined,
+          });
+          if (!result.ok) throw result.error;
+          savedNoteRef.current = { id: result.value.id, text: trimmed };
+        }
+        return true;
       } catch (error) {
         logger.error("Failed to save closing note", { goalId, error });
         reportError(error, { area: "completion.flow" });
+        return false;
       }
     },
     [goalId],
   );
+
+  const handleSaveClosingNote = useCallback(
+    (text: string) => {
+      if (persistClosingNote(text)) return;
+      Alert.alert(
+        t("completion:finish.celebrate.closingNoteSaveFailedTitle"),
+        t("completion:finish.celebrate.closingNoteSaveFailedMessage"),
+      );
+    },
+    [persistClosingNote, t],
+  );
+
+  // Proceeding is the save point that always runs. If the write fails the
+  // user stays on the note with their text intact, and can either keep
+  // editing or move on without it — never a silent drop, never a lockout.
+  const handleDesignBadge = useCallback(() => {
+    if (persistClosingNote(closingNote)) {
+      setStage("design");
+      return;
+    }
+    Alert.alert(
+      t("completion:finish.celebrate.closingNoteSaveFailedTitle"),
+      t("completion:finish.celebrate.closingNoteSaveFailedMessage"),
+      [
+        {
+          text: t("completion:finish.celebrate.closingNoteKeepEditing"),
+          style: "cancel",
+        },
+        {
+          text: t("completion:finish.celebrate.closingNoteContinueWithout"),
+          onPress: () => setStage("design"),
+        },
+      ],
+    );
+  }, [closingNote, persistClosingNote, t]);
 
   // Capture resolves *before* the stage flips: leaving the design stage
   // unmounts the preview Svg, and an unmounted view mid-toDataURL is exactly
@@ -307,7 +365,8 @@ function FinishFlowContent({ goalId }: { goalId: string }) {
         closingNoteValue={closingNote}
         onClosingNoteChange={setClosingNote}
         onSaveClosingNote={handleSaveClosingNote}
-        onDesignBadge={() => setStage("design")}
+        closingNoteMaxLength={TEXT_EVIDENCE_MAX_CONTENT_LENGTH}
+        onDesignBadge={handleDesignBadge}
       />
     );
   }

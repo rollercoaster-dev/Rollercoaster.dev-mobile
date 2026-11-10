@@ -15,7 +15,11 @@
       "closingNoteA11yLabel": "Abschlussnotiz",
       "closingNoteA11yHint": "Optional. Schreib ein paar Worte zum Abschluss dieses Ziels.",
       "ctaLabel": "Badge gestalten →",
-      "ctaSubcopy": "das Andenken an diesen Erfolg — mach es zu deinem"
+      "ctaSubcopy": "das Andenken an diesen Erfolg — mach es zu deinem",
+      "closingNoteSaveFailedTitle": "Abschlussnotiz konnte nicht gespeichert werden",
+      "closingNoteSaveFailedMessage": "Dein Text ist noch da. Versuche es erneut oder mach ohne die Notiz weiter.",
+      "closingNoteKeepEditing": "Weiter bearbeiten",
+      "closingNoteContinueWithout": "Ohne Notiz weiter"
     },
     "design": {
       "headerTitle": "Gestalte dein Badge",

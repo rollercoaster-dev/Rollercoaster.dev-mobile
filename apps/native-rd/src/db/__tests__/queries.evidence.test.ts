@@ -118,6 +118,9 @@ describe("Evidence CRUD Operations", () => {
   });
 
   test.each([
+    ["valid uri", { uri: "content:text;Edited note" }, false],
+    ["empty uri", { uri: "" }, true],
+    [">1000 char uri", { uri: "a".repeat(1001) }, true],
     ["null description", { description: null }, false],
     ["empty description", { description: "" }, true],
     [">1000 char description", { description: "a".repeat(1001) }, true],
