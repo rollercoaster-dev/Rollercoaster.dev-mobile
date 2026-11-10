@@ -2,6 +2,7 @@ import React from "react";
 import { EvidenceType, TEXT_EVIDENCE_PREFIX } from "../../db";
 import type { Evidence } from "../EvidenceThumbnail";
 import { tryParseJSON } from "../../utils/evidenceViewers";
+import { storedFileExists } from "../../utils/storedFileUri";
 import { PhotoContent } from "./PhotoContent";
 import { TextContent } from "./TextContent";
 import { VideoContent } from "./VideoContent";
@@ -33,7 +34,9 @@ export function EvidenceContent({ evidence }: EvidenceContentProps) {
       );
     }
     case EvidenceType.voice_memo: {
-      if (!evidence.uri) {
+      // Memos saved by builds up to v0.1.19 point into Caches, which iOS may
+      // have purged — show the missing-file card rather than a dead player.
+      if (!evidence.uri || !storedFileExists(evidence.uri)) {
         return (
           <FileContent
             uri=""

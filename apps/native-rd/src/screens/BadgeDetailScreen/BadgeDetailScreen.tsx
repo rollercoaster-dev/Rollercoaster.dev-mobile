@@ -29,6 +29,7 @@ import { ConfirmDeleteModal } from "../../components/ConfirmDeleteModal";
 import { badgeWithGoalQuery, deleteBadge } from "../../db";
 import type { BadgeId } from "../../db";
 import { PLACEHOLDER_IMAGE_URI } from "../../hooks/useCreateBadge";
+import { resolveStoredFileUri } from "../../utils/storedFileUri";
 // Deep import, not the barrel: `badges/index` pulls in credentialBuilder ->
 // openbadges-core, which is ESM and unloadable in this screen's Jest runtime.
 import { parseStoredCredential } from "../../badges/vcJwt";
@@ -283,7 +284,10 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
     );
   }
 
-  const imageUri = badge.imageUri as string | null;
+  // Resolve against the current app container — the stored value may be
+  // relative or carry a stale iOS container path (utils/storedFileUri).
+  const storedImageUri = badge.imageUri as string | null;
+  const imageUri = storedImageUri ? resolveStoredFileUri(storedImageUri) : null;
   const hasRealImage = Boolean(imageUri && imageUri !== PLACEHOLDER_IMAGE_URI);
   // Nullable because badgeWithGoalQuery LEFT-JOINs on `goal.isDeleted IS
   // NULL`: soft-deleted goals surface as a null join, masking goalId even

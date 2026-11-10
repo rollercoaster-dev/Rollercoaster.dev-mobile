@@ -20,6 +20,8 @@ const fileConstructorCalls: { args: unknown[] }[] = [];
 
 jest.mock("expo-file-system", () => {
   return {
+    // Shared with expo-file-system/legacy (jest.config) — read by storedFileUri.
+    documentDirectory: "file:///data/documents/",
     Paths: {
       get document() {
         return { uri: "file:///data/documents/" };
@@ -167,5 +169,22 @@ describe("deleteVideo", () => {
     deleteVideo("file:///data/evidence/videos/abc.mp4");
 
     expect(mockFileDelete).not.toHaveBeenCalled();
+  });
+});
+
+describe("deleteVideo with a stored URI", () => {
+  it.each([
+    ["relative appdoc:", "appdoc:evidence/videos/v.mov"],
+    [
+      "stale iOS container",
+      "file:///var/mobile/Containers/Data/Application/OLD/Documents/evidence/videos/v.mov",
+    ],
+  ])("deletes the %s file in the current Documents dir", (_kind, stored) => {
+    const { File } = jest.requireMock("expo-file-system");
+    deleteVideo(stored);
+    expect(File).toHaveBeenLastCalledWith(
+      "file:///data/documents/evidence/videos/v.mov",
+    );
+    expect(mockFileDelete).toHaveBeenCalledTimes(1);
   });
 });

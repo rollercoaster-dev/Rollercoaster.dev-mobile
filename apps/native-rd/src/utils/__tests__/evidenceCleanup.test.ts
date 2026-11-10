@@ -4,6 +4,8 @@ const mockFileExists = jest.fn(() => true);
 const mockFileDelete = jest.fn();
 
 jest.mock("expo-file-system", () => ({
+  // Shared with expo-file-system/legacy (jest.config) — read by storedFileUri.
+  documentDirectory: "file:///data/documents/",
   File: jest.fn().mockImplementation(() => ({
     get exists() {
       return mockFileExists();
@@ -73,5 +75,27 @@ describe("deleteEvidenceFile", () => {
       throw new Error("Permission denied");
     });
     expect(() => deleteEvidenceFile("/photo.jpg", "photo")).not.toThrow();
+  });
+});
+
+describe("deleteEvidenceFile with a stored URI", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockFileExists.mockReturnValue(true);
+  });
+
+  it.each([
+    ["relative appdoc:", "appdoc:evidence/audio/r.m4a"],
+    [
+      "stale iOS container",
+      "file:///var/mobile/Containers/Data/Application/OLD/Documents/evidence/audio/r.m4a",
+    ],
+  ])("deletes the %s file in the current Documents dir", (_kind, stored) => {
+    const { File } = jest.requireMock("expo-file-system");
+    deleteEvidenceFile(stored, "voice_memo");
+    expect(File).toHaveBeenLastCalledWith(
+      "file:///data/documents/evidence/audio/r.m4a",
+    );
+    expect(mockFileDelete).toHaveBeenCalledTimes(1);
   });
 });

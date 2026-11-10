@@ -1,4 +1,5 @@
 import { File, Directory, Paths } from "expo-file-system";
+import { resolveStoredFileUri } from "./storedFileUri";
 
 const VIDEOS_SUBDIR = "evidence/videos";
 
@@ -54,7 +55,7 @@ export function copyVideoToAppStorage(sourceUri: string): string {
 }
 
 export function deleteVideo(uri: string): void {
-  const file = new File(uri);
+  const file = new File(resolveStoredFileUri(uri));
   if (file.exists) {
     file.delete();
   }

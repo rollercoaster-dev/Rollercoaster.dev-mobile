@@ -1,5 +1,8 @@
 import { renderHook } from "@testing-library/react-native";
 
+import { useAllEvidenceForGoal } from "../useAllEvidenceForGoal";
+import type { GoalId } from "../../db";
+
 const mockUseQuery = jest.fn();
 jest.mock("@evolu/react", () => {
   const actual = jest.requireActual("@evolu/react");
@@ -24,9 +27,6 @@ jest.mock("../../db", () => ({
     file: "file",
   },
 }));
-
-import { useAllEvidenceForGoal } from "../useAllEvidenceForGoal";
-import type { GoalId } from "../../db";
 
 const goalId = "goal-1" as unknown as GoalId;
 
@@ -180,5 +180,35 @@ describe("useAllEvidenceForGoal", () => {
     });
     const { result } = renderHook(() => useAllEvidenceForGoal(goalId));
     expect(result.current[0]?.title).toBe("photo");
+  });
+
+  it("resolves stored file URIs against the current Documents dir", () => {
+    // Global expo-file-system mock: documentDirectory = file:///documents/
+    setupQueries({
+      stepEvidence: [
+        {
+          id: "ev-step",
+          stepId: "step-a",
+          stepOrdinal: 0,
+          stepTitle: "Step A",
+          type: "photo",
+          uri: "appdoc:evidence/photos/a.jpg",
+        },
+      ],
+      goalEvidence: [
+        {
+          id: "ev-old",
+          type: "video",
+          uri: "file:///var/mobile/Containers/Data/Application/OLD/Documents/evidence/videos/v.mov",
+        },
+        { id: "ev-text", type: "text", uri: "content:text;note" },
+      ],
+    });
+    const { result } = renderHook(() => useAllEvidenceForGoal(goalId));
+    expect(result.current.map((e) => e.uri)).toEqual([
+      "file:///documents/evidence/photos/a.jpg",
+      "file:///documents/evidence/videos/v.mov",
+      "content:text;note",
+    ]);
   });
 });

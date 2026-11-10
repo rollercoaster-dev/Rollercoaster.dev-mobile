@@ -16,6 +16,8 @@ const mockFileUri = "file:///data/documents/evidence/files/test.pdf";
 
 jest.mock("expo-file-system", () => {
   return {
+    // Shared with expo-file-system/legacy (jest.config) — read by storedFileUri.
+    documentDirectory: "file:///data/documents/",
     Paths: {
       get document() {
         return { uri: "file:///data/documents/" };
@@ -147,5 +149,22 @@ describe("deleteFile", () => {
     deleteFile("file:///data/evidence/files/abc.pdf");
 
     expect(mockFileDelete).not.toHaveBeenCalled();
+  });
+});
+
+describe("deleteFile with a stored URI", () => {
+  it.each([
+    ["relative appdoc:", "appdoc:evidence/files/f.pdf"],
+    [
+      "stale iOS container",
+      "file:///var/mobile/Containers/Data/Application/OLD/Documents/evidence/files/f.pdf",
+    ],
+  ])("deletes the %s file in the current Documents dir", (_kind, stored) => {
+    const { File } = jest.requireMock("expo-file-system");
+    deleteFile(stored);
+    expect(File).toHaveBeenLastCalledWith(
+      "file:///data/documents/evidence/files/f.pdf",
+    );
+    expect(mockFileDelete).toHaveBeenCalledTimes(1);
   });
 });

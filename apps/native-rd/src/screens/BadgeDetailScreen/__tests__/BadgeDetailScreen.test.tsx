@@ -522,6 +522,23 @@ describe("BadgeDetailScreen", () => {
       expect(fn()).toHaveBeenCalledWith(...args);
     });
 
+    it("hands export the stored image resolved against the current Documents dir", () => {
+      // Global expo-file-system mock: documentDirectory = file:///documents/
+      mockUseQuery.mockReturnValue([
+        makeRow({ imageUri: "appdoc:badges/badge.png" }),
+      ]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      openSheet();
+      fireEvent.press(screen.getByTestId("share-row-image"));
+
+      expect(mockExportImage).toHaveBeenCalledWith(
+        "file:///documents/badges/badge.png",
+      );
+    });
+
     it.each([
       {
         name: "placeholder image",
