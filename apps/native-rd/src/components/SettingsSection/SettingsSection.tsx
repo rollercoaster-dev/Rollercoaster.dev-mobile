@@ -1,5 +1,6 @@
 import React from "react";
-import { View, Text } from "react-native";
+import { View } from "react-native";
+import { Text } from "../Text";
 import { styles } from "./SettingsSection.styles";
 
 export interface SettingsSectionProps {
@@ -35,7 +36,9 @@ export function SettingsSection({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{title}</Text>
+      <Text variant="caption" chrome style={styles.title}>
+        {title}
+      </Text>
       <View
         testID={rowsTestID}
         style={styles.rows}

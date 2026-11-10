@@ -1,8 +1,9 @@
 import React, { useCallback } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Pressable, TextInput, View } from "react-native";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { useTranslation } from "react-i18next";
 
+import { Text } from "../components/Text";
 import { selectorStyles } from "./selectorStyles";
 import { BadgeCenterMode } from "./types";
 
@@ -74,6 +75,7 @@ export function CenterModeSelector({
               ]}
             >
               <Text
+                variant="metadata"
                 style={[
                   styles.optionText,
                   {

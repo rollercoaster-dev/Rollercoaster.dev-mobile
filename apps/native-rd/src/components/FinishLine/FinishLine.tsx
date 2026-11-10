@@ -1,8 +1,9 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { BadgeRenderer } from "../../badges/BadgeRenderer";
 import type { BadgeDesign } from "../../badges/types";
+import { Text } from "../Text";
 import { TimelineNode } from "../TimelineNode";
 import { TimelineEvidenceCard } from "../TimelineEvidenceCard";
 import type { EvidenceItemData } from "../../types/evidence";
@@ -93,12 +94,18 @@ export function FinishLine({
             />
           ) : (
             <View style={styles.badgeFallback}>
-              <Text style={styles.badgeFallbackText}>{letter}</Text>
+              <Text variant="body" chrome style={styles.badgeFallbackText}>
+                {letter}
+              </Text>
             </View>
           )}
           <View style={styles.ctaTextColumn}>
-            <Text style={styles.ctaTitle}>{ctaTitle}</Text>
-            <Text style={styles.ctaSubtitle}>{ctaSubtitle}</Text>
+            <Text variant="title" style={styles.ctaTitle}>
+              {ctaTitle}
+            </Text>
+            <Text variant="metadata" style={styles.ctaSubtitle}>
+              {ctaSubtitle}
+            </Text>
           </View>
         </Pressable>
         {goalEvidence.length > 0 ? (

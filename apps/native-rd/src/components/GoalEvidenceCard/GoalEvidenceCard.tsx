@@ -1,5 +1,5 @@
 import React, { memo, useMemo } from "react";
-import { View, Text as RNText, Pressable } from "react-native";
+import { View, Pressable } from "react-native";
 import * as Haptics from "expo-haptics";
 import { useTranslation } from "react-i18next";
 import { useUnistyles } from "react-native-unistyles";
@@ -89,9 +89,9 @@ export const GoalEvidenceCard = memo(function GoalEvidenceCard({
       <Card fill>
         <View style={styles.container}>
           <View style={styles.metaRow}>
-            <RNText style={styles.metaLabel}>
+            <Text variant="caption" chrome style={styles.metaLabel}>
               {t("common:goalCard.metaLabel")}
-            </RNText>
+            </Text>
             {onMarkComplete && (
               <StatusBadge
                 variant="active"
@@ -147,7 +147,9 @@ export const GoalEvidenceCard = memo(function GoalEvidenceCard({
                 count: evidenceCount,
               })}
             >
-              <RNText style={styles.evidenceText}>{evidenceLabel}</RNText>
+              <Text variant="caption" chrome style={styles.evidenceText}>
+                {evidenceLabel}
+              </Text>
             </Pressable>
             <Animated.View
               style={[styles.evidenceFlash, flashStyle]}
@@ -176,9 +178,9 @@ export const GoalEvidenceCard = memo(function GoalEvidenceCard({
                     the tap navigates to CompletionFlow rather than toggling a
                     persistent checked state, so we never render a checkmark. */}
                 <View style={styles.markCompleteBox} />
-                <RNText style={styles.markCompleteLabel}>
+                <Text variant="body" style={styles.markCompleteLabel}>
                   {t("common:goalCard.markComplete")}
-                </RNText>
+                </Text>
               </Pressable>
             </View>
           )}

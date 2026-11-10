@@ -1,7 +1,6 @@
 import React from "react";
 import {
   Pressable,
-  Text,
   ActivityIndicator,
   type GestureResponderEvent,
 } from "react-native";
@@ -13,6 +12,7 @@ import {
   type ButtonSize,
   type ButtonSurface,
 } from "./Button.styles";
+import { Text } from "../Text";
 import { useThemeScale } from "../../hooks/useTypeScale";
 import { capForRole } from "../../utils/typeScale";
 
@@ -109,6 +109,7 @@ export function Button({
     typeof icon === "string"
       ? icon.length > 0 && (
           <Text
+            variant="body"
             style={[styles.icon(size), labelStyle]}
             maxFontSizeMultiplier={labelCap}
             accessibilityElementsHidden
@@ -143,6 +144,7 @@ export function Button({
         <>
           {iconRun}
           <Text
+            variant="body"
             style={[styles.label(size), labelStyle]}
             maxFontSizeMultiplier={labelCap}
           >

@@ -1,11 +1,12 @@
 import React from "react";
-import { View, Pressable, Text as RNText } from "react-native";
+import { View, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { EVIDENCE_OPTIONS, type EvidenceTypeValue } from "../../types/evidence";
 import { EvidenceType } from "../../db";
 import { evidenceLabel } from "../../i18n/labels";
 import { AnimatedSheet, sheetStyles } from "../AnimatedSheet";
+import { Text } from "../Text";
 import { useTypeScale } from "../../hooks/useTypeScale";
 import { styles } from "./EvidenceTypePicker.styles";
 
@@ -109,8 +110,12 @@ export function EvidenceTypePicker(props: EvidenceTypePickerProps) {
                 accessibilityRole="text"
                 accessibilityLabel={optLabel}
               >
-                <RNText style={styles.compactChipIcon}>{opt.icon}</RNText>
-                <RNText style={styles.compactChipLabel}>{optLabel}</RNText>
+                <Text variant="caption" chrome style={styles.compactChipIcon}>
+                  {opt.icon}
+                </Text>
+                <Text variant="caption" chrome style={styles.compactChipLabel}>
+                  {optLabel}
+                </Text>
               </View>
             );
           },
@@ -121,7 +126,11 @@ export function EvidenceTypePicker(props: EvidenceTypePickerProps) {
 
   return (
     <View style={styles.container}>
-      {label ? <RNText style={styles.label}>{label}</RNText> : null}
+      {label ? (
+        <Text variant="caption" chrome style={styles.label}>
+          {label}
+        </Text>
+      ) : null}
       <View
         style={styles.chipsContainer}
         accessible
@@ -146,15 +155,18 @@ export function EvidenceTypePicker(props: EvidenceTypePickerProps) {
                   : t("common:a11y.selectEvidenceType", { label: optLabel })
               }
             >
-              <RNText style={styles.chipIcon}>{opt.icon}</RNText>
-              <RNText
+              <Text variant="body" style={styles.chipIcon}>
+                {opt.icon}
+              </Text>
+              <Text
+                variant="metadata"
                 style={[
                   styles.chipLabel,
                   isSelected && styles.chipLabelSelected,
                 ]}
               >
                 {optLabel}
-              </RNText>
+              </Text>
             </Pressable>
           );
         })}
@@ -251,12 +263,15 @@ function CaptureGrid({ selectedType, onSelectType }: CaptureGridProps) {
             accessibilityState={{ checked: isSelected }}
             accessibilityLabel={optLabel}
           >
-            <RNText style={styles.cellIcon}>{opt.icon}</RNText>
-            <RNText
+            <Text variant="headline" style={styles.cellIcon}>
+              {opt.icon}
+            </Text>
+            <Text
+              variant="metadata"
               style={[styles.cellLabel, isSelected && styles.cellLabelSelected]}
             >
               {optLabel}
-            </RNText>
+            </Text>
           </Pressable>
         );
       })}
@@ -315,9 +330,13 @@ export function CaptureSheetBody({
     <View style={sheetStyles.sheet(insets.bottom)}>
       <View style={sheetStyles.handle} />
       <View style={sheetStyles.sheetHeader}>
-        <RNText style={sheetStyles.sheetTitle} accessibilityRole="header">
+        <Text
+          variant="title"
+          style={sheetStyles.sheetTitle}
+          accessibilityRole="header"
+        >
           {headerTitle ?? t("common:evidenceTypePicker.addEvidence")}
-        </RNText>
+        </Text>
         <Pressable
           style={sheetStyles.closeButton}
           onPress={onClose}
@@ -325,15 +344,17 @@ export function CaptureSheetBody({
           accessibilityLabel={t("common:actions.close")}
           hitSlop={8}
         >
-          <RNText style={sheetStyles.closeIcon}>{"✕"}</RNText>
+          <Text variant="title" style={sheetStyles.closeIcon}>
+            {"✕"}
+          </Text>
         </Pressable>
       </View>
       {activeStepTitle ? (
-        <RNText style={sheetStyles.subLine}>
+        <Text variant="metadata" style={sheetStyles.subLine}>
           {t("common:evidenceTypePicker.savingToActiveStep", {
             title: activeStepTitle,
           })}
-        </RNText>
+        </Text>
       ) : null}
       <CaptureGrid selectedType={selectedType} onSelectType={onSelectType} />
     </View>

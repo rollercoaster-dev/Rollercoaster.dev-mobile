@@ -1,7 +1,8 @@
 import React from "react";
-import { View, Text, Pressable } from "react-native";
+import { View, Pressable } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useTypeScale } from "../../hooks/useTypeScale";
+import { Text } from "../Text";
 import { styles } from "./FocusParkedState.styles";
 
 export interface FocusParkedRow {
@@ -36,10 +37,14 @@ export function FocusParkedState({ rows }: FocusParkedStateProps) {
   const { t } = useTranslation(["common", "focusMode"]);
   return (
     <View style={styles.container}>
-      <Text style={styles.heading} accessibilityRole="header">
+      <Text
+        variant="headline"
+        style={styles.heading}
+        accessibilityRole="header"
+      >
         {t("focusMode:parked.heading")}
       </Text>
-      <Text style={styles.body}>
+      <Text variant="metadata" style={styles.body}>
         {t("focusMode:parked.body", { count: rows.length })}
       </Text>
       <View style={styles.rows}>
@@ -73,16 +78,19 @@ function ParkedRow({ row }: { row: FocusParkedRow }) {
       testID={`focus-parked-row-${row.id}`}
     >
       <View style={styles.pill}>
-        <Text style={styles.pillText}>
+        <Text variant="caption" chrome style={styles.pillText}>
           {t("common:stepCard.status.paused")}
         </Text>
       </View>
       <Text
+        variant="metadata"
         style={[styles.rowTitle, isAccessibilitySize && styles.rowTitleStacked]}
       >
         {row.title}
       </Text>
-      <Text style={styles.resume}>{t("focusMode:parked.resumeCta")}</Text>
+      <Text variant="caption" style={styles.resume}>
+        {t("focusMode:parked.resumeCta")}
+      </Text>
     </Pressable>
   );
 }

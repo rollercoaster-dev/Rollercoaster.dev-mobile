@@ -1,6 +1,7 @@
 import React from "react";
-import { Pressable, View, Text } from "react-native";
+import { Pressable, View } from "react-native";
 import * as Haptics from "expo-haptics";
+import { Text } from "../Text";
 import { styles } from "./Checkbox.styles";
 
 export interface CheckboxProps {
@@ -43,7 +44,11 @@ export function Checkbox({
             disabled && styles.boxDisabled,
           ]}
         >
-          {checked && <Text style={styles.checkmark}>✓</Text>}
+          {checked && (
+            <Text variant="metadata" chrome style={styles.checkmark}>
+              ✓
+            </Text>
+          )}
         </View>
       </Pressable>
       <Pressable
@@ -52,7 +57,10 @@ export function Checkbox({
         accessibilityLabel={onLabelPress ? `Edit ${label}` : label}
         accessibilityHint={onLabelPress ? "Tap to edit step title" : undefined}
       >
-        <Text style={[styles.label, checked && styles.labelChecked]}>
+        <Text
+          variant="body"
+          style={[styles.label, checked && styles.labelChecked]}
+        >
           {label}
         </Text>
       </Pressable>

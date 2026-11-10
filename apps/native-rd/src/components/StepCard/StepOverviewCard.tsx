@@ -1,5 +1,6 @@
 import React, { memo } from "react";
-import { View, Text, ScrollView, Pressable } from "react-native";
+import { View, ScrollView, Pressable } from "react-native";
+import { Text } from "../Text";
 import { useTranslation } from "react-i18next";
 import { Checkbox } from "../Checkbox";
 import { type QuickEvidenceType } from "../../types/evidence";
@@ -95,6 +96,7 @@ function StepOverviewCardComponent({
         contentContainerStyle={styles.cardBodyContent}
       >
         <Text
+          variant="headline"
           style={styles.title}
           numberOfLines={2}
           accessible
@@ -105,7 +107,12 @@ function StepOverviewCardComponent({
 
         {/* Parts list rendered as a vertical timeline spine — node-on-connector,
             ✓ for done, the active part ringed. Mirrors the prototype spineList. */}
-        <Text style={styles.evidenceRailLabel} accessibilityRole="text">
+        <Text
+          variant="caption"
+          chrome
+          style={styles.evidenceRailLabel}
+          accessibilityRole="text"
+        >
           {t("focusMode:overview.partsHeading")}
         </Text>
         <View style={styles.overviewSpine}>
@@ -140,6 +147,8 @@ function StepOverviewCardComponent({
                   >
                     {done && (
                       <Text
+                        variant="caption"
+                        chrome
                         style={styles.spineNodeCheck}
                         accessibilityElementsHidden
                       >
@@ -153,6 +162,7 @@ function StepOverviewCardComponent({
                   style={[styles.spineCell, isActive && styles.spineCellActive]}
                 >
                   <Text
+                    variant="metadata"
                     style={[
                       styles.spineCellText,
                       isActive && styles.spineCellActiveText,
@@ -166,7 +176,11 @@ function StepOverviewCardComponent({
                       style={styles.spineEvidenceBadge}
                       accessibilityElementsHidden
                     >
-                      <Text style={styles.spineEvidenceBadgeText}>
+                      <Text
+                        variant="caption"
+                        chrome
+                        style={styles.spineEvidenceBadgeText}
+                      >
                         {part.evidenceCount}
                       </Text>
                     </View>
@@ -188,11 +202,17 @@ function StepOverviewCardComponent({
           })}
           testID="overview-evidence-rollup"
         >
-          <Text style={styles.overviewRollupLabel}>
+          <Text variant="label" style={styles.overviewRollupLabel}>
             {t("focusMode:overview.evidenceRollupLabel")}
           </Text>
           <View style={styles.overviewRollupBadge}>
-            <Text style={styles.overviewRollupBadgeText}>{totalEvidence}</Text>
+            <Text
+              variant="caption"
+              chrome
+              style={styles.overviewRollupBadgeText}
+            >
+              {totalEvidence}
+            </Text>
           </View>
         </View>
       </ScrollView>
@@ -214,6 +234,7 @@ function StepOverviewCardComponent({
           </View>
         ) : (
           <Text
+            variant="metadata"
             style={styles.addEvidencePromptText}
             accessibilityRole="text"
             testID="overview-parts-pending-prompt"

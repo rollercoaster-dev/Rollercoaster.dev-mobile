@@ -1,6 +1,7 @@
 import React from "react";
-import { View, Text } from "react-native";
+import { View } from "react-native";
 import { useTranslation } from "react-i18next";
+import { Text } from "../Text";
 import { styles } from "./TimelineStep.styles";
 
 /**
@@ -58,8 +59,16 @@ export function MetadataBand({
 
   return (
     <View style={styles.metadataBand}>
-      {cLine ? <Text style={styles.metadataText}>{cLine}</Text> : null}
-      {bLine ? <Text style={styles.metadataText}>{bLine}</Text> : null}
+      {cLine ? (
+        <Text variant="caption" style={styles.metadataText}>
+          {cLine}
+        </Text>
+      ) : null}
+      {bLine ? (
+        <Text variant="caption" style={styles.metadataText}>
+          {bLine}
+        </Text>
+      ) : null}
     </View>
   );
 }

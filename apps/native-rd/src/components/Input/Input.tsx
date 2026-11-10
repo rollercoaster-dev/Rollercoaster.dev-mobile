@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { View, TextInput, Text, type TextInputProps } from "react-native";
+import { View, TextInput, type TextInputProps } from "react-native";
 import { useUnistyles } from "react-native-unistyles";
 import { styles } from "./Input.styles";
+import { Text } from "../Text";
 import { useThemeScale } from "../../hooks/useTypeScale";
 import { capFor } from "../../utils/typeScale";
 
@@ -28,10 +29,7 @@ export function Input({
   return (
     <View style={styles.container}>
       {label && (
-        <Text
-          style={styles.label}
-          maxFontSizeMultiplier={capFor("label", false, themeScale)}
-        >
+        <Text variant="label" style={styles.label}>
           {label}
         </Text>
       )}
@@ -57,10 +55,7 @@ export function Input({
         {...rest}
       />
       {error && (
-        <Text
-          style={styles.error}
-          maxFontSizeMultiplier={capFor("caption", false, themeScale)}
-        >
+        <Text variant="caption" style={styles.error}>
           {error}
         </Text>
       )}

@@ -1,6 +1,7 @@
 import React from "react";
-import { View, Text, Pressable } from "react-native";
+import { View, Pressable } from "react-native";
 import { useTranslation } from "react-i18next";
+import { Text } from "../Text";
 import { styles } from "./FocusProgressStrip.styles";
 
 export interface FocusProgressStripProps {
@@ -53,13 +54,18 @@ export function FocusProgressStrip({
   const content = (
     <>
       <View style={styles.topRow}>
-        <Text style={styles.doneCount} numberOfLines={1}>
+        <Text
+          variant="caption"
+          chrome
+          style={styles.doneCount}
+          numberOfLines={1}
+        >
           {t("focusMode:progressStrip.doneCount", {
             done,
             total,
           })}
         </Text>
-        <Text style={styles.seeAll}>
+        <Text variant="caption" style={styles.seeAll}>
           {t("focusMode:progressStrip.seeAllSteps")}
         </Text>
       </View>

@@ -25,6 +25,9 @@ export const styles = StyleSheet.create((theme) => ({
   },
   icon: {
     fontSize: 32,
+    // Pinned near the glyph's natural height so the fixed-size card keeps its
+    // rhythm; the taskTitle variant would add 42.
+    lineHeight: 38,
   },
   name: (fgKey: keyof Evidence) => ({
     fontSize: theme.size.sm,

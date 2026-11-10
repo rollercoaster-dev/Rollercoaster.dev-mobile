@@ -64,8 +64,11 @@ export const styles = StyleSheet.create((theme) => ({
     backgroundColor: stepStateNodeBg(theme, "paused"),
     borderColor: theme.colors.border,
   },
+  // A single glyph centered in a fixed circle: no tracking (it would push the
+  // glyph off-center).
   nodeText: {
     fontSize: theme.size.sm,
+    letterSpacing: 0,
     fontWeight: theme.fontWeight.bold,
     color: theme.colors.text,
   },
@@ -86,6 +89,8 @@ export const styles = StyleSheet.create((theme) => ({
   },
   goalText: {
     fontSize: theme.size.lg,
+    // The label variant's line height is sized for 14pt; give the 18pt star room.
+    lineHeight: Math.round(theme.size.lg * 1.3),
     color: goalNodeFg(theme, false),
   },
   goalTextCelebrate: {

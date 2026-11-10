@@ -3,7 +3,6 @@ import {
   Animated,
   type LayoutChangeEvent,
   Pressable,
-  Text as RNText,
   View,
 } from "react-native";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
@@ -16,8 +15,8 @@ import { shadowStyle } from "../styles/shadows";
 import { borderWidth } from "../themes/tokens";
 import { useAnimationPref } from "../hooks/useAnimationPref";
 import { useTypeScale } from "../hooks/useTypeScale";
-import { capForRole } from "../utils/typeScale";
 import { useSheetBackgroundA11yProps } from "../components/AnimatedSheet";
+import { Text } from "../components/Text";
 import type { RootTabParamList } from "./types";
 
 type RouteName = keyof RootTabParamList;
@@ -61,8 +60,7 @@ export function FocusPillTabBar({ state, navigation }: BottomTabBarProps) {
   const { t } = useTranslation();
   // At accessibility sizes no label fits a third of the pill, so the knob goes
   // icon-only; the slot's accessibilityLabel still names the tab (#746).
-  const { isAccessibilitySize, themeScale } = useTypeScale();
-  const labelCap = capForRole("chrome", themeScale);
+  const { isAccessibilitySize } = useTypeScale();
   // Rendered by the navigator outside every screen, so a screen's sheet can't
   // isolate it; hide it from assistive tech while any sheet is open (#686).
   const sheetA11yProps = useSheetBackgroundA11yProps();
@@ -195,14 +193,15 @@ export function FocusPillTabBar({ state, navigation }: BottomTabBarProps) {
               >
                 <TabIcon name={activeSlot.name} color={activeKnob.fg} />
                 {isAccessibilitySize ? null : (
-                  <RNText
+                  <Text
+                    variant="label"
+                    chrome
                     testID="tab-slide-knob-label"
                     numberOfLines={1}
-                    maxFontSizeMultiplier={labelCap}
                     style={[styles.label, { color: activeKnob.fg }]}
                   >
                     {tabLabels[activeSlot.name]}
-                  </RNText>
+                  </Text>
                 )}
               </Animated.View>
             ) : null}

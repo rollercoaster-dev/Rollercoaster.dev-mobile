@@ -7,7 +7,7 @@
  */
 
 import React, { useCallback, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import type { IconWeight } from "phosphor-react-native";
 
@@ -16,6 +16,7 @@ import { iconNameToLabel } from "./iconIndex";
 import { IconPickerModal } from "./IconPickerModal";
 import type { BadgeIconWeight } from "./types";
 import { shadowStyle } from "../styles/shadows";
+import { Text } from "../components/Text";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -94,12 +95,14 @@ export function IconPicker({
         </View>
         <View style={styles.triggerTextContainer}>
           <Text
+            variant="body"
             style={[styles.triggerLabel, { color: theme.colors.text }]}
             numberOfLines={1}
           >
             {label}
           </Text>
           <Text
+            variant="caption"
             style={[styles.triggerHint, { color: theme.colors.textSecondary }]}
           >
             Tap to change icon

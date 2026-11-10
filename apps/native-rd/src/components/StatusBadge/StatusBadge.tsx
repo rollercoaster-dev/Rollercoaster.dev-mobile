@@ -1,5 +1,6 @@
 import React from "react";
-import { View, Text } from "react-native";
+import { View } from "react-native";
+import { Text } from "../Text";
 import { useTranslation } from "react-i18next";
 import { styles, type StatusBadgeVariant } from "./StatusBadge.styles";
 
@@ -37,7 +38,13 @@ export function StatusBadge({ variant, label }: StatusBadgeProps) {
       })}
       accessibilityRole="text"
     >
-      <Text style={[styles.text, variantTextMap[variant]]}>{displayLabel}</Text>
+      <Text
+        variant="caption"
+        chrome
+        style={[styles.text, variantTextMap[variant]]}
+      >
+        {displayLabel}
+      </Text>
     </View>
   );
 }

@@ -1,9 +1,10 @@
 import React from "react";
-import { View, Text } from "react-native";
+import { View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { Card } from "../Card";
 import { ProgressBar } from "../ProgressBar";
 import { StatusBadge, type StatusBadgeVariant } from "../StatusBadge";
+import { Text } from "../Text";
 import { styles } from "./GoalCard.styles";
 
 export interface GoalCardGoal {
@@ -59,6 +60,7 @@ export function GoalCard({ goal, onPress, onLongPress }: GoalCardProps) {
     >
       <View style={styles.header}>
         <Text
+          variant="title"
           style={styles.title}
           numberOfLines={2}
           accessible
@@ -70,6 +72,7 @@ export function GoalCard({ goal, onPress, onLongPress }: GoalCardProps) {
       </View>
       {nextStep && (
         <Text
+          variant="headline"
           style={styles.nextStep}
           numberOfLines={2}
           testID="goal-card-next-step"
@@ -79,6 +82,7 @@ export function GoalCard({ goal, onPress, onLongPress }: GoalCardProps) {
       )}
       {nextStep && nextStepContext && (
         <Text
+          variant="caption"
           style={styles.nextStepContext}
           numberOfLines={1}
           testID="goal-card-next-step-context"
@@ -91,7 +95,7 @@ export function GoalCard({ goal, onPress, onLongPress }: GoalCardProps) {
           <View style={styles.progressBar}>
             <ProgressBar progress={progress} />
           </View>
-          <Text style={styles.progressLabel}>
+          <Text variant="caption" chrome style={styles.progressLabel}>
             {t("goals:card.progressLabel", {
               completed: goal.stepsCompleted,
               total: goal.stepsTotal,

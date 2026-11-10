@@ -1,8 +1,7 @@
 import React from "react";
-import { View, Pressable, ScrollView, Text as RNText } from "react-native";
+import { View, Pressable, ScrollView, type Text as RNText } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useThemeScale } from "../../hooks/useTypeScale";
-import { capForRole } from "../../utils/typeScale";
+import { Text } from "../Text";
 import { sheetStyles } from "./AnimatedSheet.styles";
 
 export interface SheetSurfaceProps {
@@ -58,7 +57,6 @@ export function SheetSurface({
   children,
 }: SheetSurfaceProps) {
   const insets = useSafeAreaInsets();
-  const themeScale = useThemeScale();
 
   return (
     <View
@@ -67,14 +65,14 @@ export function SheetSurface({
     >
       <View style={sheetStyles.handle} />
       <View style={sheetStyles.sheetHeader}>
-        <RNText
+        <Text
           ref={titleRef}
+          variant="title"
           style={sheetStyles.sheetTitle}
           accessibilityRole="header"
-          maxFontSizeMultiplier={capForRole("title", themeScale)}
         >
           {title}
-        </RNText>
+        </Text>
         <Pressable
           style={sheetStyles.closeButton}
           onPress={onClose}
@@ -83,12 +81,9 @@ export function SheetSurface({
           hitSlop={8}
           testID={closeTestID}
         >
-          <RNText
-            style={sheetStyles.closeIcon}
-            maxFontSizeMultiplier={capForRole("chrome", themeScale)}
-          >
+          <Text variant="title" chrome style={sheetStyles.closeIcon}>
             {"✕"}
-          </RNText>
+          </Text>
         </Pressable>
       </View>
       {/* Handle and header stay fixed; everything below scrolls once the
@@ -101,7 +96,9 @@ export function SheetSurface({
         bounces={false}
       >
         {subLine ? (
-          <RNText style={sheetStyles.subLine}>{subLine}</RNText>
+          <Text variant="mono" style={sheetStyles.subLine}>
+            {subLine}
+          </Text>
         ) : null}
         {children}
       </ScrollView>

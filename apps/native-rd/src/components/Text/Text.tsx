@@ -20,6 +20,8 @@ export interface TextProps extends RNTextProps {
   variant?: TextVariant;
   /** Chrome text (tab labels, pills, counters, overlines) stops growing at 1.3x. */
   chrome?: boolean;
+  /** React 19 passes `ref` as a prop; it reaches the host text via `...rest`. */
+  ref?: React.Ref<RNText>;
   children: React.ReactNode;
 }
 

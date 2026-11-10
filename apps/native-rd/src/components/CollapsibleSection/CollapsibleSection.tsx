@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Pressable, View, Text } from "react-native";
+import { Pressable, View } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -7,6 +7,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useAnimationPref } from "../../hooks/useAnimationPref";
 import { getTimingConfig } from "../../utils/animation";
+import { Text } from "../Text";
 import { styles } from "./CollapsibleSection.styles";
 
 export interface CollapsibleSectionProps {
@@ -112,16 +113,20 @@ export function CollapsibleSection({
           pressed && styles.headerPressed,
         ]}
       >
-        <Text style={styles.title}>{title}</Text>
+        <Text variant="label" chrome style={styles.title}>
+          {title}
+        </Text>
         <View style={styles.headerRight}>
           {typeof summary === "string" ? (
-            <Text style={styles.summary} numberOfLines={1}>
+            <Text variant="caption" style={styles.summary} numberOfLines={1}>
               {summary}
             </Text>
           ) : (
             summary
           )}
-          <Text style={styles.chevron}>{expanded ? "▾" : "▸"}</Text>
+          <Text variant="body" chrome style={styles.chevron}>
+            {expanded ? "▾" : "▸"}
+          </Text>
         </View>
       </Pressable>
       <Animated.View

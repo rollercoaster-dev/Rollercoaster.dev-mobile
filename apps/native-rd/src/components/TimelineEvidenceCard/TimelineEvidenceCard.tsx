@@ -1,10 +1,11 @@
 import React from "react";
-import { Pressable, Text } from "react-native";
+import { Pressable } from "react-native";
 import type { EvidenceItemData } from "../../types/evidence";
 import {
   EVIDENCE_TYPE_ICONS,
   EVIDENCE_TYPE_LABELS,
 } from "../../constants/evidenceIcons";
+import { Text } from "../Text";
 import { styles } from "./TimelineEvidenceCard.styles";
 
 export interface TimelineEvidenceCardProps {
@@ -39,10 +40,10 @@ export function TimelineEvidenceCard({
       onPress={() => onPress(evidence.id)}
       {...cardA11y}
     >
-      <Text style={styles.icon}>
+      <Text variant="metadata" style={styles.icon}>
         {EVIDENCE_TYPE_ICONS[evidence.type] ?? "\u{1F4C4}"}
       </Text>
-      <Text style={styles.label} numberOfLines={1}>
+      <Text variant="caption" style={styles.label} numberOfLines={1}>
         {evidence.label}
       </Text>
     </Pressable>

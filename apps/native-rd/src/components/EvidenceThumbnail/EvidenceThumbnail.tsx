@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { Pressable, View, Text, Image } from "react-native";
+import { Pressable, View, Image } from "react-native";
 import { EvidenceType, TEXT_EVIDENCE_PREFIX } from "../../db";
 import { formatDuration } from "../../utils/format";
+import { Text } from "../Text";
 import { openLinkInBrowser } from "../../utils/evidenceViewers";
 import { styles } from "./EvidenceThumbnail.styles";
 
@@ -64,7 +65,7 @@ function PreviewContent({ evidence }: { evidence: Evidence }) {
     if (textContent) {
       return (
         <View style={styles.textPreview}>
-          <Text style={styles.textSnippet} numberOfLines={3}>
+          <Text variant="caption" style={styles.textSnippet} numberOfLines={3}>
             {textContent}
           </Text>
         </View>
@@ -77,9 +78,13 @@ function PreviewContent({ evidence }: { evidence: Evidence }) {
     const durationMs = meta?.durationMs as number | undefined;
     return (
       <View style={styles.preview}>
-        <Text style={styles.previewIcon}>{typeIcons.voice_memo}</Text>
+        <Text variant="headline" style={styles.previewIcon}>
+          {typeIcons.voice_memo}
+        </Text>
         {durationMs ? (
-          <Text style={styles.durationBadge}>{formatDuration(durationMs)}</Text>
+          <Text variant="caption" chrome style={styles.durationBadge}>
+            {formatDuration(durationMs)}
+          </Text>
         ) : null}
       </View>
     );
@@ -87,7 +92,9 @@ function PreviewContent({ evidence }: { evidence: Evidence }) {
 
   return (
     <View style={styles.preview}>
-      <Text style={styles.previewIcon}>{typeIcons[evidence.type]}</Text>
+      <Text variant="headline" style={styles.previewIcon}>
+        {typeIcons[evidence.type]}
+      </Text>
     </View>
   );
 }
@@ -139,15 +146,17 @@ export function EvidenceThumbnail({
       <View style={styles.container}>
         <PreviewContent evidence={evidence} />
         <View style={styles.info}>
-          <Text style={styles.title} numberOfLines={1}>
+          <Text variant="caption" style={styles.title} numberOfLines={1}>
             {evidence.title}
           </Text>
           {isLink ? (
-            <Text style={styles.linkUrl} numberOfLines={1}>
+            <Text variant="caption" style={styles.linkUrl} numberOfLines={1}>
               {evidence.uri}
             </Text>
           ) : (
-            <Text style={styles.type}>{evidence.type}</Text>
+            <Text variant="caption" chrome style={styles.type}>
+              {evidence.type}
+            </Text>
           )}
         </View>
       </View>

@@ -18,9 +18,10 @@
  * (set / unset / completed-with-nothing) exist once.
  */
 import React, { useEffect, useRef } from "react";
-import { View, Text as RNText, Pressable } from "react-native";
+import { View, Pressable } from "react-native";
 import { useUnistyles } from "react-native-unistyles";
 import { focusAccessibilityRef } from "../../utils/accessibilityFocus";
+import { Text } from "../Text";
 import { TimingMarkIcon } from "../TimingMarkIcon";
 import { styles } from "./EditGoalView.styles";
 import type { EditGoalChipTone, EditGoalDateDepChip } from "./EditGoalView";
@@ -99,14 +100,19 @@ export function EditGoalTimingLine({
           tone={chip.tone}
           testID={`${testID}-mark-${chip.tone}`}
         />
-        <RNText style={[styles.truthText, { color: chipColor[chip.tone] }]}>
+        <Text
+          variant="metadata"
+          style={[styles.truthText, { color: chipColor[chip.tone] }]}
+        >
           {chip.text}
-        </RNText>
+        </Text>
       </View>
     ))
   ) : (
     // One affordance, not two: the unset state is a single quiet prompt.
-    <RNText style={styles.whenPrompt}>{whenPromptLabel}</RNText>
+    <Text variant="metadata" style={styles.whenPrompt}>
+      {whenPromptLabel}
+    </Text>
   );
 
   if (!onEditTiming) {

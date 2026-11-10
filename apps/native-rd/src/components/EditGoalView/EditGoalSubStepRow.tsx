@@ -10,7 +10,6 @@
 import React from "react";
 import {
   View,
-  Text as RNText,
   TextInput,
   Pressable,
   type GestureResponderEvent,
@@ -29,6 +28,7 @@ import type { AnimationPref } from "../../hooks/useAnimationPref";
 import { getTimingConfig } from "../../utils/animation";
 import { useTypeScale } from "../../hooks/useTypeScale";
 import { EvidenceTypePicker } from "../EvidenceTypePicker";
+import { Text } from "../Text";
 import { styles } from "./EditGoalView.styles";
 import type { EditGoalSubStep, EditGoalTimingCopy } from "./EditGoalView";
 import type { StepTimingValue } from "../StepTimingEditor";
@@ -175,13 +175,14 @@ export function EditGoalSubStepRow({
   const noAnimation = animationPref === "none";
 
   const marker = (
-    <RNText
+    <Text
+      variant="body"
       style={styles.subStepMarker}
       accessibilityElementsHidden
       importantForAccessibility="no"
     >
       {"≡"}
-    </RNText>
+    </Text>
   );
 
   function resetDragState() {
@@ -283,7 +284,9 @@ export function EditGoalSubStepRow({
           accessibilityHint={tapToEditHint}
           testID={`edit-goal-substep-title-${subStep.id}`}
         >
-          <RNText style={styles.subStepTitleText}>{subStep.title}</RNText>
+          <Text variant="metadata" style={styles.subStepTitleText}>
+            {subStep.title}
+          </Text>
         </Pressable>
       </View>
       <View
@@ -313,7 +316,9 @@ export function EditGoalSubStepRow({
           hitSlop={8}
           testID={`edit-goal-substep-delete-${subStep.id}`}
         >
-          <RNText style={styles.subStepDeleteGlyph}>{"×"}</RNText>
+          <Text variant="title" style={styles.subStepDeleteGlyph}>
+            {"×"}
+          </Text>
         </Pressable>
       </View>
     </>

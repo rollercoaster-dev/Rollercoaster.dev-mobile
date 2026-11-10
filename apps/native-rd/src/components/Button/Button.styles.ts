@@ -95,11 +95,14 @@ export const styles = StyleSheet.create((theme) => ({
     borderWidth: 0,
     shadowOpacity: 0,
   },
-  // Leading emoji icon. Deliberately omits fontFamily so the glyph renders in
-  // the system emoji font on its own, rather than being pulled into the body
-  // font's run — the mixed-run case that drops trailing label glyphs on Android.
+  // Leading emoji icon, in its own run so the glyph is never mixed into the
+  // label's run — the mixed-run case that drops trailing label glyphs on
+  // Android. Shared Text gives the run the body font; emoji still fall back to
+  // the system emoji font. Line height matches the label so the row keeps its
+  // height instead of taking body's 1.6.
   icon: (size: ButtonSize = "md") => ({
     fontSize: theme.size[sizeMap[size].fontSize],
+    lineHeight: theme.size[sizeMap[size].fontSize] * 1.3,
   }),
   label: (size: ButtonSize = "md") => ({
     fontSize: theme.size[sizeMap[size].fontSize],

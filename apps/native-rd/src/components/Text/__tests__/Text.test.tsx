@@ -1,4 +1,5 @@
 import React from "react";
+import type { Text as RNText } from "react-native";
 import { renderWithProviders, screen } from "../../../__tests__/test-utils";
 import { Text, type TextVariant } from "../Text";
 import { composeTheme } from "../../../themes/compose";
@@ -32,6 +33,14 @@ describe("Text", () => {
       </Text>,
     );
     expect(screen.getByTestId("my-text")).toBeOnTheScreen();
+  });
+
+  // AnimatedSheet moves screen-reader focus to its title through this ref.
+  it("forwards ref to the host text", () => {
+    const ref = React.createRef<RNText>();
+    renderWithProviders(<Text ref={ref}>Focus me</Text>);
+    // Without forwarding, React 19 leaves a function component ref null.
+    expect(ref.current).not.toBeNull();
   });
 
   it("allows style override without throwing", () => {

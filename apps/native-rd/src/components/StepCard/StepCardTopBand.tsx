@@ -1,5 +1,6 @@
 import React from "react";
-import { View, Text } from "react-native";
+import { View } from "react-native";
+import { Text } from "../Text";
 import { useTranslation } from "react-i18next";
 import { StatusBadge } from "../StatusBadge";
 import { statusToVariant, type StepCardStatus } from "./StepCard.shared";
@@ -53,6 +54,8 @@ export function StepCardTopBand({
         testID="step-card-parent-band"
       >
         <Text
+          variant="metadata"
+          chrome
           style={styles.topBandChildText}
           numberOfLines={1}
           accessibilityRole="text"
@@ -75,6 +78,8 @@ export function StepCardTopBand({
   return (
     <View style={styles.topBand} testID="step-card-top-band">
       <Text
+        variant="caption"
+        chrome
         style={styles.topBandText}
         numberOfLines={1}
         accessibilityRole="text"
