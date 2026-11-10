@@ -1,6 +1,7 @@
 import { File } from "expo-file-system";
 import { Logger } from "../shims/rd-logger";
 import { EvidenceType } from "../db";
+import { resolveStoredFileUri } from "./storedFileUri";
 
 const logger = new Logger("evidenceCleanup");
 
@@ -28,7 +29,7 @@ export function deleteEvidenceFile(
   }
 
   try {
-    const file = new File(uri);
+    const file = new File(resolveStoredFileUri(uri));
     if (file.exists) {
       file.delete();
     }

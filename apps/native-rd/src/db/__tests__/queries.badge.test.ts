@@ -5,8 +5,14 @@
  */
 
 import { createBadge, updateBadge, deleteBadge } from "../queries";
+import { evolu } from "../evolu";
 import type { GoalId, BadgeId } from "../schema";
 
+/** Payload of the last mocked `evolu.<op>` call (see __tests__/setup.ts). */
+function lastWritten(op: "insert" | "update"): Record<string, unknown> {
+  const calls = (evolu[op] as jest.Mock).mock.calls;
+  return calls[calls.length - 1][1] as Record<string, unknown>;
+}
 const mockGoalId = "goal_test_123" as GoalId;
 const mockBadgeId = "badge_test_456" as BadgeId;
 
@@ -137,5 +143,30 @@ describe("Badge CRUD Operations", () => {
     } else {
       expect(() => updateBadge(mockBadgeId, fields)).not.toThrow();
     }
+  });
+
+  test("createBadge stores a Documents badge PNG relative to Documents", () => {
+    createBadge({
+      goalId: mockGoalId,
+      credential: '{"test": true}',
+      imageUri: "file:///documents/badges/my-badge.png",
+    });
+    expect(lastWritten("insert").imageUri).toBe("appdoc:badges/my-badge.png");
+  });
+
+  test("updateBadge stores a re-baked PNG relative to Documents", () => {
+    updateBadge(mockBadgeId, {
+      imageUri: "file:///documents/badges/rebaked.png",
+    });
+    expect(lastWritten("update").imageUri).toBe("appdoc:badges/rebaked.png");
+  });
+
+  test("createBadge keeps the pending placeholder verbatim", () => {
+    createBadge({
+      goalId: mockGoalId,
+      credential: '{"test": true}',
+      imageUri: "pending:baked-image",
+    });
+    expect(lastWritten("insert").imageUri).toBe("pending:baked-image");
   });
 });
