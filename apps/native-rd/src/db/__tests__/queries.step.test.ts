@@ -322,6 +322,63 @@ describe("Step CRUD Operations", () => {
     expect(() => uncompleteStep(mockStepId)).not.toThrow();
   });
 
+  describe("step description (#593)", () => {
+    const insertMock = evolu.insert as jest.Mock;
+    const updateMock = evolu.update as jest.Mock;
+    const parentId = "step_parent" as StepId;
+
+    beforeEach(() => {
+      insertMock.mockClear();
+      updateMock.mockClear();
+    });
+
+    const written = (mock: jest.Mock) => mock.mock.calls.at(-1)![1].description;
+
+    test.each([
+      ["text", "Fold three sheets in half", "Fold three sheets in half"],
+      ["padded text", "  Fold them  ", "Fold them"],
+      ["blank", "   ", null],
+      ["omitted", undefined, null],
+    ])("createStep and createSubStep store %s", (_label, input, stored) => {
+      createStep(mockGoalId, "Make a journal", 0, null, input);
+      expect(written(insertMock)).toBe(stored);
+
+      createSubStep(mockGoalId, parentId, "Fold", 0, null, input);
+      expect(written(insertMock)).toBe(stored);
+    });
+
+    test.each([
+      ["sets text", "Use any paper", "Use any paper"],
+      ["clears on null", null, null],
+      ["clears on blank", "  ", null],
+    ])("updateStep %s", (_label, input, stored) => {
+      updateStep(mockStepId, { description: input });
+      expect(updateMock).toHaveBeenCalledWith("step", {
+        id: mockStepId,
+        description: stored,
+      });
+    });
+
+    test("updateStep leaves the description alone when it is not passed", () => {
+      updateStep(mockStepId, { title: "Renamed" });
+      expect(updateMock).toHaveBeenCalledWith("step", {
+        id: mockStepId,
+        title: "Renamed",
+      });
+    });
+
+    test("an over-length description is refused, not dropped", () => {
+      const tooLong = "a".repeat(1001);
+      const message = "Step description must be 1-1000 characters";
+      expect(() => createStep(mockGoalId, "T", 0, null, tooLong)).toThrow(
+        message,
+      );
+      expect(() => updateStep(mockStepId, { description: tooLong })).toThrow(
+        message,
+      );
+    });
+  });
+
   describe("pauseStep / resumeStep (#417)", () => {
     const updateMock = evolu.update as jest.Mock;
 

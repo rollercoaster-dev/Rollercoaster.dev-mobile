@@ -268,6 +268,7 @@ function step(
   id: string,
   overrides: Partial<{
     title: string;
+    description: string | null;
     status: string;
     ordinal: number;
     parentStepId: string | null;
@@ -1338,6 +1339,20 @@ describe("FocusModeScreen", () => {
       expect(screen.getByLabelText("Go back")).toBeOnTheScreen();
       expect(setFocus).not.toHaveBeenCalledWith(TRIGGER_TAG);
     });
+  });
+
+  it("shows the current step's description on the card (#593)", () => {
+    setupQueries({
+      steps: [
+        step("step-1", {
+          title: "Make a journal",
+          description: "Fold three sheets in half",
+        }),
+      ],
+    });
+    renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+    expect(screen.getByText("Fold three sheets in half")).toBeOnTheScreen();
   });
 
   describe("dependency + due-date band (#454)", () => {

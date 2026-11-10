@@ -11,6 +11,7 @@ import {
   uncompleteGoal,
   deleteGoal,
 } from "../queries";
+import { evolu } from "../evolu";
 import type { GoalId } from "../schema";
 
 const mockGoalId = "goal_test_123" as GoalId;
@@ -31,6 +32,28 @@ describe("Goal CRUD Operations", () => {
     } else {
       expect(() => createGoal(title)).not.toThrow();
     }
+  });
+
+  test("createGoal records the template a goal is seeded from", () => {
+    const insertMock = evolu.insert as jest.Mock;
+    insertMock.mockClear();
+
+    createGoal("Seeded", { templateId: "find-your-footing" });
+    createGoal("Hand-built");
+
+    expect(insertMock.mock.calls.map(([, row]) => row.templateId)).toEqual([
+      "find-your-footing",
+      null,
+    ]);
+  });
+
+  test.each([
+    ["empty", ""],
+    ["over 1000 chars", "a".repeat(1001)],
+  ])("createGoal rejects an %s templateId", (_label, templateId) => {
+    expect(() => createGoal("Seeded", { templateId })).toThrow(
+      "Goal templateId must be 1-1000 characters",
+    );
   });
 
   test.each([

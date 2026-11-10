@@ -101,6 +101,11 @@ export const Schema = {
     color: nullOr(NonEmptyString1000), // Hex color code
     sortOrder: nullOr(Int), // Custom ordering
     design: nullOr(NonEmptyString), // BadgeDesign JSON — pre-bake source of truth; mirrors badge.design
+    // Provenance: id of the code-defined template this goal was seeded from
+    // (#593), null for a goal the user built by hand. Additive column: Evolu
+    // reads existing rows as null, so no migration is needed. Free text, not a
+    // branded id — templates are static code (`src/templates/`), not DB rows.
+    templateId: nullOr(NonEmptyString1000),
   },
 
   /**
@@ -117,6 +122,9 @@ export const Schema = {
     // capped at one level — a step with a non-null parentStepId is a leaf.
     parentStepId: nullOr(StepId),
     title: NonEmptyString1000,
+    // Optional longer text under the title: how to do the step, in the
+    // author's words (#593). Additive column, same pattern as parentStepId.
+    description: nullOr(NonEmptyString1000),
     ordinal: nullOr(Int), // Sibling-scoped ordering: top-level steps within the goal, sub-steps within their parent
     status: NonEmptyString1000, // 'pending' | 'paused' | 'completed'
     completedAt: nullOr(DateIso),

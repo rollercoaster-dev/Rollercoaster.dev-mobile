@@ -137,6 +137,7 @@ function CardShell({
  */
 function InProgressView({
   title,
+  description,
   plannedEvidenceTypes,
   capturedEvidence,
   onPause,
@@ -179,6 +180,14 @@ function InProgressView({
       body={
         <>
           <StepTitlePreview title={title} />
+          {description ? (
+            <Text
+              style={styles.description}
+              testID="focus-current-task-description"
+            >
+              {description}
+            </Text>
+          ) : null}
           <MetadataBand
             afterStep={afterStep}
             waitingOn={waitingOn}
