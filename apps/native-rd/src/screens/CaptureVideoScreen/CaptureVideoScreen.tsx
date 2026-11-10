@@ -40,7 +40,7 @@ type SaveArgs =
 
 export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
   const navigation = useNavigation();
-  const { t } = useTranslation(["captureVideo", "permissions"]);
+  const { t } = useTranslation(["captureVideo"]);
   const { goalId, stepId } = route.params;
   const recorderRef = useRef<VideoRecorderHandle>(null);
   const tabInset = useTabScreenContentInset();
@@ -125,15 +125,9 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
     if (isPickerBusy) return;
     setIsPickerBusy(true);
     try {
-      const permission =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!permission.granted) {
-        Alert.alert(
-          t("permissions:videoLibrary.title"),
-          t("permissions:videoLibrary.message"),
-        );
-        return;
-      }
+      // No media-library permission request: with allowsEditing off, iOS 14+
+      // uses PHPickerViewController and Android the system photo picker; both
+      // run out of process and need no read permission (expo-image-picker 56).
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ["videos"],
         allowsEditing: false,
@@ -148,7 +142,7 @@ export function CaptureVideoScreen({ route }: CaptureVideoScreenProps) {
     } finally {
       setIsPickerBusy(false);
     }
-  }, [isPickerBusy, t]);
+  }, [isPickerBusy]);
 
   const handleGoBack = useCallback(() => {
     if (mode === "recorder") {

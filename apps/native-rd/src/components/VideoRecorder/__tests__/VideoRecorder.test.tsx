@@ -1,5 +1,6 @@
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react-native";
+import { Linking } from "react-native";
+import { render, screen, fireEvent, act } from "@testing-library/react-native";
 
 import { useCameraPermissions, useMicrophonePermissions } from "expo-camera";
 
@@ -50,6 +51,10 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
+afterEach(() => {
+  jest.restoreAllMocks();
+});
+
 describe("VideoRecorder", () => {
   it("renders the camera viewfinder and start-record button when permissions are granted", () => {
     render(<VideoRecorder onRecorded={jest.fn()} onCancel={jest.fn()} />);
@@ -69,14 +74,95 @@ describe("VideoRecorder", () => {
 
   it("renders the permission prompt when camera permission is not granted", () => {
     (useCameraPermissions as jest.Mock).mockReturnValueOnce([
-      { granted: false },
+      { granted: false, canAskAgain: true },
       jest.fn(),
     ]);
 
     render(<VideoRecorder onRecorded={jest.fn()} onCancel={jest.fn()} />);
 
-    expect(screen.getByText(i18n.t("permissions:camera.title"))).toBeTruthy();
+    expect(
+      screen.getByText(i18n.t("permissions:videoRecording.title")),
+    ).toBeTruthy();
     expect(screen.queryByTestId("camera-view")).toBeNull();
+  });
+
+  describe("permission denied", () => {
+    it("re-requests only the missing permission while the OS can still prompt", async () => {
+      const requestCamera = jest.fn().mockResolvedValue({ granted: true });
+      const requestMic = jest.fn();
+      (useCameraPermissions as jest.Mock).mockReturnValueOnce([
+        { granted: false, canAskAgain: true },
+        requestCamera,
+      ]);
+      (useMicrophonePermissions as jest.Mock).mockReturnValueOnce([
+        { granted: true, canAskAgain: true },
+        requestMic,
+      ]);
+      const openSettings = jest
+        .spyOn(Linking, "openSettings")
+        .mockResolvedValue(undefined);
+
+      render(<VideoRecorder onRecorded={jest.fn()} onCancel={jest.fn()} />);
+
+      expect(
+        screen.getByText(i18n.t("permissions:videoRecording.message")),
+      ).toBeTruthy();
+      await act(async () => {
+        fireEvent.press(
+          screen.getByText(i18n.t("permissions:videoRecording.requestCta")),
+        );
+      });
+      expect(requestCamera).toHaveBeenCalledTimes(1);
+      expect(requestMic).not.toHaveBeenCalled();
+      expect(openSettings).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      [
+        "camera",
+        { granted: false, canAskAgain: false },
+        { granted: true, canAskAgain: true },
+      ],
+      [
+        "microphone",
+        { granted: true, canAskAgain: true },
+        { granted: false, canAskAgain: false },
+      ],
+    ])(
+      "offers Open Settings instead of a re-request when %s is permanently denied",
+      (_label, camera, mic) => {
+        const requestCamera = jest.fn();
+        const requestMic = jest.fn();
+        (useCameraPermissions as jest.Mock).mockReturnValueOnce([
+          camera,
+          requestCamera,
+        ]);
+        (useMicrophonePermissions as jest.Mock).mockReturnValueOnce([
+          mic,
+          requestMic,
+        ]);
+        const openSettings = jest
+          .spyOn(Linking, "openSettings")
+          .mockResolvedValue(undefined);
+
+        render(<VideoRecorder onRecorded={jest.fn()} onCancel={jest.fn()} />);
+
+        expect(
+          screen.getByText(i18n.t("permissions:videoRecording.blockedMessage")),
+        ).toBeTruthy();
+        expect(
+          screen.queryByText(i18n.t("permissions:videoRecording.requestCta")),
+        ).toBeNull();
+        fireEvent.press(
+          screen.getByText(
+            i18n.t("permissions:videoRecording.openSettingsCta"),
+          ),
+        );
+        expect(openSettings).toHaveBeenCalledTimes(1);
+        expect(requestCamera).not.toHaveBeenCalled();
+        expect(requestMic).not.toHaveBeenCalled();
+      },
+    );
   });
 
   it("renders the loading placeholder before permissions resolve", () => {

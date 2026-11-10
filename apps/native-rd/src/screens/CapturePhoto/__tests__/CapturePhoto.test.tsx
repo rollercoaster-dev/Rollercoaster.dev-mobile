@@ -1,5 +1,5 @@
 import React from "react";
-import { Alert } from "react-native";
+import { Alert, Linking } from "react-native";
 import {
   renderWithProviders,
   screen,
@@ -25,15 +25,14 @@ jest.mock("@react-navigation/native", () => {
 const mockLaunchCameraAsync = jest.fn();
 const mockLaunchImageLibraryAsync = jest.fn();
 const mockRequestCameraPermissionsAsync = jest.fn();
-const mockRequestMediaLibraryPermissionsAsync = jest.fn();
 
+// No requestMediaLibraryPermissionsAsync on purpose: the system picker needs no
+// photo-library permission, so re-adding that call would throw here.
 jest.mock("expo-image-picker", () => ({
   launchCameraAsync: (...args: unknown[]) => mockLaunchCameraAsync(...args),
   launchImageLibraryAsync: (...args: unknown[]) =>
     mockLaunchImageLibraryAsync(...args),
   requestCameraPermissionsAsync: () => mockRequestCameraPermissionsAsync(),
-  requestMediaLibraryPermissionsAsync: () =>
-    mockRequestMediaLibraryPermissionsAsync(),
 }));
 
 const mockSaveImageToAppStorage = jest.fn();
@@ -64,7 +63,6 @@ function renderScreen(params?: { goalId: string; stepId?: string }) {
 beforeEach(() => {
   jest.clearAllMocks();
   mockRequestCameraPermissionsAsync.mockResolvedValue({ granted: true });
-  mockRequestMediaLibraryPermissionsAsync.mockResolvedValue({ granted: true });
   mockSaveImageToAppStorage.mockReturnValue("file:///saved/photo.jpg");
 });
 
@@ -105,7 +103,6 @@ describe("CapturePhoto", () => {
     );
 
     await waitFor(() => {
-      expect(mockRequestMediaLibraryPermissionsAsync).toHaveBeenCalled();
       expect(mockLaunchImageLibraryAsync).toHaveBeenCalled();
     });
   });
@@ -189,28 +186,65 @@ describe("CapturePhoto", () => {
     expect(mockGoBack).not.toHaveBeenCalled();
   });
 
-  it("does not launch camera when permission denied", async () => {
+  it("explains and does not launch camera when denied but the OS can ask again", async () => {
     const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
-    mockRequestCameraPermissionsAsync.mockResolvedValue({ granted: false });
+    const openSettings = jest
+      .spyOn(Linking, "openSettings")
+      .mockResolvedValue(undefined);
+    mockRequestCameraPermissionsAsync.mockResolvedValue({
+      granted: false,
+      canAskAgain: true,
+    });
     renderScreen();
 
     fireEvent.press(screen.getByText(i18n.t("capturePhoto:actions.takePhoto")));
 
     await waitFor(() => {
-      expect(mockRequestCameraPermissionsAsync).toHaveBeenCalled();
+      expect(alertSpy).toHaveBeenCalledWith(
+        i18n.t("permissions:camera.title"),
+        i18n.t("permissions:camera.message"),
+      );
     });
     expect(mockLaunchCameraAsync).not.toHaveBeenCalled();
-    expect(alertSpy).toHaveBeenCalledWith(
-      i18n.t("permissions:camera.title"),
-      i18n.t("permissions:camera.message"),
-    );
+    expect(openSettings).not.toHaveBeenCalled();
   });
 
-  it("does not launch library when permission denied", async () => {
+  it("offers Open Settings when camera is permanently denied", async () => {
     const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
-    mockRequestMediaLibraryPermissionsAsync.mockResolvedValue({
+    const openSettings = jest
+      .spyOn(Linking, "openSettings")
+      .mockResolvedValue(undefined);
+    mockRequestCameraPermissionsAsync.mockResolvedValue({
       granted: false,
+      canAskAgain: false,
     });
+    renderScreen();
+
+    fireEvent.press(screen.getByText(i18n.t("capturePhoto:actions.takePhoto")));
+
+    await waitFor(() => {
+      expect(alertSpy).toHaveBeenCalledWith(
+        i18n.t("permissions:camera.title"),
+        i18n.t("permissions:camera.blockedMessage"),
+        expect.any(Array),
+      );
+    });
+    expect(mockLaunchCameraAsync).not.toHaveBeenCalled();
+
+    const buttons = alertSpy.mock.calls[0][2] as {
+      text: string;
+      onPress?: () => void;
+    }[];
+    expect(buttons.map((b) => b.text)).toEqual([
+      i18n.t("common:actions.cancel"),
+      i18n.t("permissions:camera.openSettingsCta"),
+    ]);
+    buttons[1].onPress?.();
+    expect(openSettings).toHaveBeenCalledTimes(1);
+  });
+
+  it("opens the system photo picker without a photo-library permission request", async () => {
+    mockLaunchImageLibraryAsync.mockResolvedValue({ canceled: true });
     renderScreen();
 
     fireEvent.press(
@@ -218,13 +252,13 @@ describe("CapturePhoto", () => {
     );
 
     await waitFor(() => {
-      expect(mockRequestMediaLibraryPermissionsAsync).toHaveBeenCalled();
+      expect(mockLaunchImageLibraryAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          mediaTypes: ["images"],
+          allowsEditing: false,
+        }),
+      );
     });
-    expect(mockLaunchImageLibraryAsync).not.toHaveBeenCalled();
-    expect(alertSpy).toHaveBeenCalledWith(
-      i18n.t("permissions:photoLibrary.title"),
-      i18n.t("permissions:photoLibrary.message"),
-    );
   });
 
   it("shows alert and does not navigate when save fails", async () => {
