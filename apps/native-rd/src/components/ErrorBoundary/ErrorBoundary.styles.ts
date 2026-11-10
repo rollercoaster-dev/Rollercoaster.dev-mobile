@@ -10,10 +10,13 @@ export const styles = StyleSheet.create((theme) => ({
   },
   rootContainer: {
     flex: 1,
+    backgroundColor: theme.colors.background,
+  },
+  rootContent: {
+    flexGrow: 1,
     alignItems: "center",
     justifyContent: "center",
     padding: theme.space[6],
-    backgroundColor: theme.colors.background,
   },
   compactContainer: {
     alignItems: "center",

@@ -1,5 +1,5 @@
 import React, { Component, type ReactNode } from "react";
-import { View } from "react-native";
+import { ScrollView, View } from "react-native";
 import { Text } from "../Text";
 import { Button } from "../Button";
 import { reportError } from "../../services/sentry-report";
@@ -59,34 +59,52 @@ export class ErrorBoundary extends Component<
         return fallback(error, this.handleReset);
       }
 
+      const card = (
+        <View style={styles.card}>
+          <Text variant="title" style={styles.title}>
+            {i18n.t("common:errorBoundary.title")}
+          </Text>
+          <Text variant="body" style={styles.message}>
+            {i18n.t("common:errorBoundary.message")}
+          </Text>
+          <View style={styles.action}>
+            <Button
+              label={i18n.t("common:errorBoundary.retry")}
+              onPress={this.handleReset}
+              variant="secondary"
+            />
+          </View>
+        </View>
+      );
+
+      const a11y = {
+        testID: `error-boundary-fallback-${variant}`,
+        accessibilityRole: "alert" as const,
+        accessibilityLabel: i18n.t("common:errorBoundary.a11yAlert"),
+      };
+
+      // The root fallback owns the whole screen, so it scrolls: at large type
+      // the card can outgrow the viewport and Retry must stay reachable.
+      if (variant === "root") {
+        return (
+          <ScrollView
+            {...a11y}
+            style={styles.rootContainer}
+            contentContainerStyle={styles.rootContent}
+          >
+            {card}
+          </ScrollView>
+        );
+      }
+
       return (
         <View
-          testID={`error-boundary-fallback-${variant}`}
+          {...a11y}
           style={
-            variant === "root"
-              ? styles.rootContainer
-              : variant === "compact"
-                ? styles.compactContainer
-                : styles.container
+            variant === "compact" ? styles.compactContainer : styles.container
           }
-          accessibilityRole="alert"
-          accessibilityLabel={i18n.t("common:errorBoundary.a11yAlert")}
         >
-          <View style={styles.card}>
-            <Text variant="title" style={styles.title}>
-              {i18n.t("common:errorBoundary.title")}
-            </Text>
-            <Text variant="body" style={styles.message}>
-              {i18n.t("common:errorBoundary.message")}
-            </Text>
-            <View style={styles.action}>
-              <Button
-                label={i18n.t("common:errorBoundary.retry")}
-                onPress={this.handleReset}
-                variant="secondary"
-              />
-            </View>
-          </View>
+          {card}
         </View>
       );
     }

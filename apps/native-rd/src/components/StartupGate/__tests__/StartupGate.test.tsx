@@ -1,5 +1,5 @@
 import React from "react";
-import { Text } from "react-native";
+import { AccessibilityInfo, Text } from "react-native";
 import { act, fireEvent, render, screen } from "@testing-library/react-native";
 import { i18n } from "../../../i18n";
 import { reportError } from "../../../services/sentry-report";
@@ -115,6 +115,52 @@ describe("StartupGate", () => {
       </StartupGate>,
     );
     expect(screen.queryByTestId("startup-failure")).toBeNull();
+    expect(screen.getByText("app content")).toBeTruthy();
+  });
+
+  it("announces the failure screen to screen readers when it appears", () => {
+    const announce = jest
+      .spyOn(AccessibilityInfo, "announceForAccessibility")
+      .mockImplementation(() => {});
+    // RN's jest setup already mocks this; drop calls from earlier tests.
+    announce.mockClear();
+    const { source, emit } = createErrorSource();
+    renderGate(source);
+    expect(announce).not.toHaveBeenCalled();
+
+    emit(sqliteError);
+    expect(announce).toHaveBeenCalledWith(
+      i18n.t("common:startupError.a11yAlert"),
+    );
+    announce.mockRestore();
+  });
+
+  test.each([{ type: "ProtocolSyncError" }, { type: "TimestampDriftError" }])(
+    "reports but does not block startup on a sync-layer error (%j)",
+    (syncError) => {
+      const { source, emit } = createErrorSource();
+      renderGate(source);
+      emit(syncError);
+      expect(reportError).toHaveBeenCalledTimes(1);
+      expect(screen.queryByTestId("startup-failure")).toBeNull();
+    },
+  );
+
+  it("reports each Evolu error kind once per session", () => {
+    mockSettings.isLoading = false;
+    const { source, emit } = createErrorSource();
+    renderGate(source);
+    emit({ type: "ProtocolSyncError" });
+    emit({ type: "ProtocolSyncError" });
+    emit({ type: "ProtocolWriteError" });
+    expect(reportError).toHaveBeenCalledTimes(1);
+
+    emit(sqliteError);
+    expect(reportError).toHaveBeenCalledTimes(2);
+    expect(reportError).toHaveBeenLastCalledWith(expect.any(Error), {
+      area: "db.evolu",
+      kind: "sqlite",
+    });
   });
 
   it("shows the failure screen at once when Evolu errors during startup", () => {

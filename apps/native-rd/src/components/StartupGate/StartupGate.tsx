@@ -6,7 +6,7 @@ import React, {
   useState,
   type ReactNode,
 } from "react";
-import { View } from "react-native";
+import { AccessibilityInfo, ScrollView, View } from "react-native";
 import { reloadAppAsync } from "expo";
 import { useTranslation } from "react-i18next";
 import { Text } from "../Text";
@@ -52,6 +52,19 @@ export function evoluErrorKind(error: unknown): EvoluErrorKind {
   if (type.startsWith("Timestamp")) return "timestamp";
   return "unknown";
 }
+
+/**
+ * Kinds that mean local data could not be opened or read, so startup cannot
+ * finish. Protocol and timestamp errors come from the sync/CRDT layer: they
+ * are reported but never block a local-first launch — the timeout still
+ * catches a launch that genuinely stalls.
+ */
+const BLOCKING_KINDS: ReadonlySet<EvoluErrorKind> = new Set([
+  "sqlite",
+  "transferable",
+  "crypto",
+  "unknown",
+]);
 
 /** Renders nothing; reports once the user-settings row exists. */
 function SettingsReadyProbe({ onReady }: { onReady: () => void }) {
@@ -103,19 +116,28 @@ export function StartupGate({
   }, []);
 
   useEffect(() => {
-    let lastReported: unknown = null;
+    let lastSeen: unknown = null;
+    // One report per kind per app session: a recurring failure (e.g. a sync
+    // error retried while offline) yields a fresh error object every time and
+    // would otherwise flood Sentry.
+    const reportedKinds = new Set<EvoluErrorKind>();
     const check = () => {
       const error = errorSource.getError();
-      if (error == null || error === lastReported) return;
-      lastReported = error;
+      if (error == null || error === lastSeen) return;
+      lastSeen = error;
       const kind = evoluErrorKind(error);
-      // A synthetic Error carries the closed kind only — the Evolu payload
-      // never leaves the device.
-      reportError(new Error(`Evolu error: ${kind}`), {
-        area: "db.evolu",
-        kind,
-      });
-      if (!isReadyRef.current) setHasEvoluError(true);
+      if (!reportedKinds.has(kind)) {
+        reportedKinds.add(kind);
+        // A synthetic Error carries the closed kind only — the Evolu payload
+        // never leaves the device.
+        reportError(new Error(`Evolu error: ${kind}`), {
+          area: "db.evolu",
+          kind,
+        });
+      }
+      if (!isReadyRef.current && BLOCKING_KINDS.has(kind)) {
+        setHasEvoluError(true);
+      }
     };
     check();
     return errorSource.subscribeError(check);
@@ -144,6 +166,17 @@ export function StartupGate({
 
   const showFailure = !isReady && (hasEvoluError || hasTimedOut);
 
+  // The screen behind is blank, so a screen-reader user would otherwise hear
+  // nothing when the failure appears: announce it (iOS ignores an alert role
+  // on a newly mounted view; Android also gets the live region below).
+  useEffect(() => {
+    if (showFailure) {
+      AccessibilityInfo.announceForAccessibility(
+        t("common:startupError.a11yAlert"),
+      );
+    }
+  }, [showFailure, t]);
+
   // The fallback shares ThemedApp's `app-loading` testID on purpose: both are
   // the bare pre-app view E2E's boot barrier asserts away, and the Suspense
   // fallback replaces the children, so the two never render together.
@@ -154,11 +187,13 @@ export function StartupGate({
         {children}
       </Suspense>
       {showFailure ? (
-        <View
+        <ScrollView
           testID="startup-failure"
           style={styles.failure}
+          contentContainerStyle={styles.failureContent}
           accessibilityRole="alert"
           accessibilityLabel={t("common:startupError.a11yAlert")}
+          accessibilityLiveRegion="assertive"
         >
           <View style={styles.card}>
             <Text variant="title" style={styles.title}>
@@ -175,7 +210,7 @@ export function StartupGate({
               />
             </View>
           </View>
-        </View>
+        </ScrollView>
       ) : null}
     </>
   );

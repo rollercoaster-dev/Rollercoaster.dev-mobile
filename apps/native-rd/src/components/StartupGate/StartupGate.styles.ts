@@ -6,12 +6,16 @@ export const styles = StyleSheet.create((theme) => ({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
+  // Scrolls so the Restart button stays reachable at large type.
   failure: {
     ...StyleSheet.absoluteFillObject,
+    backgroundColor: theme.colors.background,
+  },
+  failureContent: {
+    flexGrow: 1,
     alignItems: "center",
     justifyContent: "center",
     padding: theme.space[6],
-    backgroundColor: theme.colors.background,
   },
   card: {
     alignItems: "center",
@@ -29,6 +33,8 @@ export const styles = StyleSheet.create((theme) => ({
   message: {
     color: theme.colors.textSecondary,
     textAlign: "center",
+    fontSize: theme.size.sm,
+    lineHeight: theme.lineHeight.sm,
   },
   action: {
     marginTop: theme.space[2],
