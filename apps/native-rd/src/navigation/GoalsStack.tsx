@@ -5,7 +5,6 @@ import { GoalsScreen } from "../screens/GoalsScreen";
 import { FocusModeScreen } from "../screens/FocusModeScreen";
 import { NewGoalScreen } from "../screens/NewGoalScreen";
 import { CapturePhoto } from "../screens/CapturePhoto";
-import { CapturePlaceholder } from "../screens/CapturePlaceholder";
 import { CaptureVideoScreen } from "../screens/CaptureVideoScreen";
 import { VoiceMemoScreen } from "../screens/VoiceMemoScreen";
 import { CaptureFile } from "../screens/CaptureFile";
@@ -16,6 +15,7 @@ import { CompletionFlowScreen } from "../screens/CompletionFlowScreen";
 import { TimelineJourneyScreen } from "../screens/TimelineJourneyScreen";
 import { BadgeDesignerScreen } from "../screens/BadgeDesignerScreen";
 import { EvidenceViewerScreen } from "../screens/EvidenceViewerScreen";
+import { screenErrorBoundaryLayout } from "./screenErrorBoundary";
 import type { GoalsStackParamList } from "./types";
 
 const Stack = createNativeStackNavigator<GoalsStackParamList>();
@@ -25,6 +25,7 @@ export function GoalsStack() {
     <Stack.Navigator
       initialRouteName="Goals"
       screenOptions={{ headerShown: false }}
+      screenLayout={screenErrorBoundaryLayout}
     >
       <Stack.Screen name="Goals" component={GoalsScreen} />
       <Stack.Screen name="FocusMode" component={FocusModeScreen} />

@@ -6,9 +6,24 @@ import { reportError } from "../../services/sentry-report";
 import { i18n } from "../../i18n";
 import { styles } from "./ErrorBoundary.styles";
 
+/**
+ * Where the boundary sits, which decides how the default fallback lays out:
+ * - `screen` (default): fills its parent, transparent — the screen behind it
+ *   already paints the background.
+ * - `root`: the last-resort boundary above every provider. Paints its own
+ *   background because nothing behind it does. The fallback reads only the
+ *   Unistyles runtime (configured at module load in `unistyles.ts`, not by a
+ *   React provider) and the `i18n` singleton (initialised in `index.ts`), so
+ *   it still renders when `ThemeProvider`, Evolu or navigation is what threw.
+ * - `compact`: sized to its content, for chrome slots such as the tab bar
+ *   where a full-height card would push the screen content away.
+ */
+export type ErrorBoundaryVariant = "screen" | "root" | "compact";
+
 interface ErrorBoundaryProps {
   children: ReactNode;
   fallback?: (error: Error, reset: () => void) => ReactNode;
+  variant?: ErrorBoundaryVariant;
 }
 
 interface ErrorBoundaryState {
@@ -37,7 +52,7 @@ export class ErrorBoundary extends Component<
 
   render() {
     const { hasError, error } = this.state;
-    const { children, fallback } = this.props;
+    const { children, fallback, variant = "screen" } = this.props;
 
     if (hasError && error) {
       if (fallback) {
@@ -46,7 +61,14 @@ export class ErrorBoundary extends Component<
 
       return (
         <View
-          style={styles.container}
+          testID={`error-boundary-fallback-${variant}`}
+          style={
+            variant === "root"
+              ? styles.rootContainer
+              : variant === "compact"
+                ? styles.compactContainer
+                : styles.container
+          }
           accessibilityRole="alert"
           accessibilityLabel={i18n.t("common:errorBoundary.a11yAlert")}
         >
