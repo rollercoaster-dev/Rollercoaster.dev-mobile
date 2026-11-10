@@ -3,12 +3,8 @@ name: DCO
 on:
   pull_request:
     branches: [main]
-    paths:
-      - "apps/native-rd/**"
-      - "packages/openbadges-core/**"
-      - "packages/design-tokens/**"
-      - ".github/workflows/**"
-      - "LICENSING.md"
+  # No paths filter: "Verify Signed-off-by" is a required check, so it must
+  # report on every PR or GitHub blocks the merge waiting for it.
 
 permissions:
   contents: read
