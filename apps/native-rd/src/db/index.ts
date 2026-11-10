@@ -6,6 +6,8 @@ export {
   EvidenceId,
   EvidenceType,
   TEXT_EVIDENCE_PREFIX,
+  STRING_1000_MAX_LENGTH,
+  TEXT_EVIDENCE_MAX_CONTENT_LENGTH,
   BadgeId,
   UserSettingsId,
   Schema,
