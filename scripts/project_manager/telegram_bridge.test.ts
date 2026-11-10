@@ -223,6 +223,17 @@ describe("Bridge", () => {
     expect(text).not.toContain("PRIVATE BODY");
   });
 
+  test("status names an older plan by its date, not as today's", () => {
+    const text = tb.formatStatus({
+      occupied: 0,
+      plan: null,
+      last_plan: { date: "2026-11-09", items: [776, 765], status: "proposed" },
+    });
+    expect(text).toContain(
+      "Plan: none today. Last (2026-11-09): #776 #765, go starts it",
+    );
+  });
+
   test("status uses pending queue after completed prefix", () => {
     const text = tb.formatStatus({
       occupied: 2,

@@ -377,6 +377,51 @@ describe("Manager", () => {
     gate(() => m.claim(100, () => data), "plan approved");
   });
 
+  test("a fresh go picks up the last plan when none is dated today", () => {
+    const data = snapshot();
+    m.sync(data);
+    m.audit(100, "needed", "Evidence", "abc");
+    m.planPropose([100, 101]);
+    clock[0] += 86400;
+    expect(m.status().last_plan).toMatchObject({ items: [100, 101] });
+    const plan = m.planApprove("Telegram update 9: go");
+    expect(plan).toMatchObject({
+      date: m.status().today,
+      items: [100, 101],
+      status: "approved",
+      ref: "Telegram update 9: go",
+    });
+    expect(m.status().last_plan).toBeNull();
+    m.claim(100, () => data);
+  });
+
+  test("a carried plan drops issues that closed and skips stay skipped", () => {
+    m.sync(snapshot());
+    m.planPropose([100, 101]);
+    clock[0] += 86400;
+    m.sync(snapshot({ issues: [101] }));
+    expect(m.planApprove("go").items).toEqual([101]);
+    m.planSkip();
+    clock[0] += 86400;
+    gate(() => m.planApprove("go"), "No plan");
+  });
+
+  test("status lists PRs without the API payload", () => {
+    m.sync(snapshot({ prs: [pr(100)] }));
+    expect(m.status().prs).toEqual([
+      {
+        number: 100,
+        title: undefined,
+        html_url: "https://github.com/x/y/pull/100",
+        state: "open",
+        draft: false,
+        merged_at: null,
+        branch: "codex/issue-100",
+        issues: [100],
+      },
+    ]);
+  });
+
   test("plan items run in order", () => {
     const data = snapshot();
     m.sync(data);
