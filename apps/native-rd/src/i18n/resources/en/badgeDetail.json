@@ -51,7 +51,7 @@
       "detail": "Plain picture — may drop the credential."
     },
     "exportCredential": {
-      "label": "Export credential (JSON)",
+      "label": "Export credential file",
       "detail": "For verifiers & wallets."
     },
     "overflow": {

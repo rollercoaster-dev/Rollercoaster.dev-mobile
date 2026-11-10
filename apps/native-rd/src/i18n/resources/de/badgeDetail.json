@@ -51,7 +51,7 @@
       "detail": "Einfaches Bild — kann das Credential verlieren."
     },
     "exportCredential": {
-      "label": "Credential exportieren (JSON)",
+      "label": "Credential-Datei exportieren",
       "detail": "Für Prüfer & Wallets."
     },
     "overflow": {
