@@ -68,6 +68,7 @@ import type {
 } from "../StepTimingEditor";
 import type { DragScrollController } from "../StepList/dragAutoScroll";
 import { EditGoalStepList } from "./EditGoalStepList";
+import type { EditGoalDescriptionCopy } from "./EditGoalRowDescription";
 import Animated from "react-native-reanimated";
 import { PILL_LIFT } from "../../navigation/FocusPillTabBar";
 import { useKeyboardFooterPadding } from "../../utils/keyboard";
@@ -220,6 +221,8 @@ export interface EditGoalSubStep {
   isCompleted?: boolean;
   /** Pre-resolved in-row timing editor data (#576). Absent → read-only line. */
   timing?: EditGoalTiming;
+  /** Optional how-to text under the title (#803). Null/absent → none. */
+  description?: string | null;
 }
 
 export interface EditGoalStep {
@@ -243,6 +246,8 @@ export interface EditGoalStep {
   isCompleted?: boolean;
   /** Pre-resolved in-row timing editor data (#576). Absent → read-only line. */
   timing?: EditGoalTiming;
+  /** Optional how-to text under the title (#803). Null/absent → none. */
+  description?: string | null;
   /**
    * Optional one-level sub-steps (D12). Absent/empty → the row shows a
    * "break into sub-steps" prompt; non-empty → an indented block of
@@ -416,6 +421,19 @@ export interface EditGoalViewProps {
    * no row can expand and every timing line stays read-only.
    */
   timingHost?: EditGoalTimingHost;
+  // --- Step description (#803) ---
+  /**
+   * Writes a step's or sub-step's description; `null` clears it. Return
+   * `false` on a failed write to keep the editor open. Omitted → descriptions
+   * are read-only and no add prompt shows.
+   */
+  onStepDescriptionChange?: (
+    id: string,
+    description: string | null,
+  ) => boolean | void;
+  /** Longest step description the host can store. */
+  stepDescriptionMaxLength?: number;
+  stepDescriptionCopy?: EditGoalDescriptionCopy;
 }
 
 export function EditGoalView({
@@ -485,6 +503,9 @@ export function EditGoalView({
   editTimingUnsetA11yLabel,
   editTimingSetA11yLabel,
   timingHost,
+  onStepDescriptionChange,
+  stepDescriptionMaxLength,
+  stepDescriptionCopy,
 }: EditGoalViewProps) {
   const { theme } = useUnistyles();
   // The Done footer's tab-bar clearance (PILL_LIFT) tracks the keyboard: with
@@ -739,6 +760,9 @@ export function EditGoalView({
               editTimingUnsetA11yLabel={editTimingUnsetA11yLabel}
               editTimingSetA11yLabel={editTimingSetA11yLabel}
               timingHost={timingHost}
+              onStepDescriptionChange={onStepDescriptionChange}
+              stepDescriptionMaxLength={stepDescriptionMaxLength}
+              stepDescriptionCopy={stepDescriptionCopy}
             />
           </ScrollView>
 

@@ -44,6 +44,15 @@
       "legend": "badges mark days your other steps sit on",
       "marksA11ySuffix_one": "{{count}} other step here",
       "marksA11ySuffix_other": "{{count}} other steps here"
+    },
+    "stepDescription": {
+      "addPrompt": "＋ description",
+      "addA11yLabel": "Add a description to \"{{title}}\"",
+      "editA11yLabel": "Edit description of \"{{title}}\": {{description}}",
+      "inputA11yLabel": "Description of \"{{title}}\"",
+      "placeholder": "How to go about it, notes, links",
+      "clear": "Clear text",
+      "tooLong": "A description holds up to {{max}} characters. This one has {{length}}."
     }
   },
   "confirmDelete": {

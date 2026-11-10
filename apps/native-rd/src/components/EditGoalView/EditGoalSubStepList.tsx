@@ -18,6 +18,7 @@ import type { SharedValue } from "react-native-reanimated";
 import { EditGoalSubStepRow } from "./EditGoalSubStepRow";
 import type { EditGoalSubStep, EditGoalTimingHost } from "./EditGoalView";
 import { bindRowTiming } from "./EditGoalRowTiming";
+import type { EditGoalRowDescriptionBinding } from "./EditGoalRowDescription";
 import type { RowGeometry } from "./useEditGoalHierarchyDrag";
 
 export interface EditGoalSubStepListProps {
@@ -61,6 +62,10 @@ export interface EditGoalSubStepListProps {
   editTimingSetA11yLabel?: (subStepTitle: string, lines: string[]) => string;
   /** In-row timing editor wiring (#576), id-bound per sub-row here. */
   timingHost?: EditGoalTimingHost;
+  /** Description slot wiring for one sub-row (#803). Absent → read-only. */
+  bindDescription?: (
+    subStepId: string,
+  ) => EditGoalRowDescriptionBinding | undefined;
 }
 
 export function EditGoalSubStepList({
@@ -91,6 +96,7 @@ export function EditGoalSubStepList({
   editTimingUnsetA11yLabel,
   editTimingSetA11yLabel,
   timingHost,
+  bindDescription,
 }: EditGoalSubStepListProps) {
   return (
     <>
@@ -129,6 +135,7 @@ export function EditGoalSubStepList({
             editTimingUnsetA11yLabel={editTimingUnsetA11yLabel}
             editTimingSetA11yLabel={editTimingSetA11yLabel}
             {...bindRowTiming(timingHost, sub.id)}
+            descriptionBinding={bindDescription?.(sub.id)}
           />
         </View>
       ))}

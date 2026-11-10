@@ -50,6 +50,10 @@ import { styles } from "./EditGoalView.styles";
 import type { EditGoalStep, EditGoalTimingCopy } from "./EditGoalView";
 import type { StepTimingValue } from "../StepTimingEditor";
 import { EditGoalRowTiming } from "./EditGoalRowTiming";
+import {
+  EditGoalRowDescription,
+  type EditGoalRowDescriptionBinding,
+} from "./EditGoalRowDescription";
 import { HierarchyActionRow } from "./HierarchyActionRow";
 import type { RowGeometry } from "./useEditGoalHierarchyDragTypes";
 import { useRowGeometryRegistration } from "./useRowGeometryRegistration";
@@ -150,6 +154,8 @@ export interface EditGoalStepRowProps {
   timingNow?: Date;
   timingLocale?: string;
   timingCopy?: EditGoalTimingCopy;
+  /** Description slot wiring (#803), id-bound by the list. Absent → read-only. */
+  descriptionBinding?: EditGoalRowDescriptionBinding;
 }
 
 export function EditGoalStepRow({
@@ -205,6 +211,7 @@ export function EditGoalStepRow({
   timingNow,
   timingLocale,
   timingCopy,
+  descriptionBinding,
 }: EditGoalStepRowProps) {
   const { theme } = useUnistyles();
   // At accessibility sizes the fixed-width controls squeeze the title to one
@@ -365,6 +372,12 @@ export function EditGoalStepRow({
           </Pressable>
         </View>
       </View>
+      <EditGoalRowDescription
+        title={step.title}
+        description={step.description}
+        binding={descriptionBinding}
+        testID={`edit-goal-step-description-${step.id}`}
+      />
       {/* One pressable timing target, in the same slot the chip row occupied
           (D12) — a quick tap never reaches the card's manual-activation Pan or
           its 400ms LongPress, the same way this row's other Pressables already

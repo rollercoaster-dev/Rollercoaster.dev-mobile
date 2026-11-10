@@ -576,6 +576,120 @@ describe("EditModeScreen", () => {
     });
   });
 
+  describe("step description (#803)", () => {
+    const DESC = "edit-goal-step-description";
+    const STEPS_WITH_DESC = [
+      { ...STEPS[0], description: "Start with chapter one.\n\nThen skim." },
+      ...STEPS.slice(1),
+    ];
+
+    it("shows a stored description and writes an edit through updateStep, line breaks intact", () => {
+      setupQueries(GOAL, STEPS_WITH_DESC);
+      renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+
+      fireEvent.press(screen.getByTestId(`${DESC}-step-1-text`));
+      const input = screen.getByTestId(`${DESC}-step-1-input`);
+      expect(input.props.value).toBe("Start with chapter one.\n\nThen skim.");
+      fireEvent.changeText(input, "Chapter one.\n\nChapter two.");
+      fireEvent.press(screen.getByTestId(`${DESC}-step-1-save`));
+
+      expect(mockUpdateStep).toHaveBeenCalledWith("step-1", {
+        description: "Chapter one.\n\nChapter two.",
+      });
+    });
+
+    it("adds a description to a sub-step", () => {
+      setupQueries(GOAL, STEPS_TREE);
+      renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+
+      fireEvent.press(
+        screen.getByTestId("edit-goal-substep-description-p1c1-add"),
+      );
+      fireEvent.changeText(
+        screen.getByTestId("edit-goal-substep-description-p1c1-input"),
+        "Ten minutes.",
+      );
+      fireEvent.press(
+        screen.getByTestId("edit-goal-substep-description-p1c1-save"),
+      );
+
+      expect(mockUpdateStep).toHaveBeenCalledWith("p1c1", {
+        description: "Ten minutes.",
+      });
+    });
+
+    it("clearing stores null", () => {
+      setupQueries(GOAL, STEPS_WITH_DESC);
+      renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+
+      fireEvent.press(screen.getByTestId(`${DESC}-step-1-text`));
+      fireEvent.press(screen.getByTestId(`${DESC}-step-1-clear`));
+      fireEvent.press(screen.getByTestId(`${DESC}-step-1-save`));
+
+      expect(mockUpdateStep).toHaveBeenCalledWith("step-1", {
+        description: null,
+      });
+    });
+
+    it("refuses over-length text in the editGoal copy without writing", () => {
+      setupQueries();
+      renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+      const tooLong = "x".repeat(STRING_1000_MAX_LENGTH + 1);
+
+      fireEvent.press(screen.getByTestId(`${DESC}-step-1-add`));
+      fireEvent.changeText(screen.getByTestId(`${DESC}-step-1-input`), tooLong);
+      fireEvent.press(screen.getByTestId(`${DESC}-step-1-save`));
+
+      expect(mockUpdateStep).not.toHaveBeenCalled();
+      expect(screen.getByTestId(`${DESC}-step-1-too-long`)).toHaveTextContent(
+        i18n.t("editGoal:editor.stepDescription.tooLong", {
+          max: STRING_1000_MAX_LENGTH,
+          length: STRING_1000_MAX_LENGTH + 1,
+        }),
+      );
+      expect(screen.getByTestId(`${DESC}-step-1-input`).props.value).toBe(
+        tooLong,
+      );
+    });
+
+    it("alerts and keeps the draft open when the write fails", () => {
+      setupQueries();
+      mockUpdateStep.mockReturnValueOnce({
+        ok: false,
+        error: { type: "WriteFailed" },
+      });
+      const alertSpy = jest.spyOn(Alert, "alert");
+      renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+
+      fireEvent.press(screen.getByTestId(`${DESC}-step-1-add`));
+      fireEvent.changeText(screen.getByTestId(`${DESC}-step-1-input`), "Kept");
+      fireEvent.press(screen.getByTestId(`${DESC}-step-1-save`));
+
+      expect(alertSpy).toHaveBeenCalledWith(
+        i18n.t("editGoal:errors.alertErrorTitle"),
+        i18n.t("editGoal:errors.updateStepMessage"),
+      );
+      expect(screen.getByTestId(`${DESC}-step-1-input`).props.value).toBe(
+        "Kept",
+      );
+    });
+
+    it("renders the add prompt from editGoal copy under pseudo", async () => {
+      setupQueries();
+      await act(() => i18n.changeLanguage("pseudo"));
+      try {
+        renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+        const pseudo = i18n.t("editGoal:editor.stepDescription.addPrompt");
+        expect(pseudo.startsWith("[")).toBe(true);
+        expect(screen.getByTestId(`${DESC}-step-1-add`)).toHaveTextContent(
+          pseudo,
+        );
+      } finally {
+        await act(() => i18n.changeLanguage("en"));
+      }
+    });
+  });
+
   describe("step deletion", () => {
     it("calls deleteStep only after the confirm modal is confirmed", () => {
       setupQueries();
