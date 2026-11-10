@@ -31,6 +31,7 @@ Implementation plans and vision documents. Active plans are in progress; complet
 | [2026-06-15-platform-flow-prototype.md](./2026-06-15-platform-flow-prototype.md)                                                                                                                          | Horizontal spike: import → earn → share → validate, incl. minimal web verifier             | 2026-06-15    |
 | [2026-06-16-expo-sdk-55-to-56-upgrade.md](./2026-06-16-expo-sdk-55-to-56-upgrade.md)                                                                                                                      | Bump native-rd to Expo SDK 56; only real code change is FS copySync/moveSync               | 2026-06-16    |
 | [2026-09-24-ui-consistency-review.md](./2026-09-24-ui-consistency-review.md)                                                                                                                              | UI consistency, accessibility and native usability review; follow-ups tracked in epic #683 | 2026-09-24    |
+| [2026-11-10-tutorial-goal-journal.md](./2026-11-10-tutorial-goal-journal.md) ([#593](https://github.com/rollercoaster-dev/Rollercoaster.dev-mobile/issues/593))                                           | Tutorial goal that teaches the app alongside a paper goal journal                          | 2026-11-10    |
 
 ## Reference
 
