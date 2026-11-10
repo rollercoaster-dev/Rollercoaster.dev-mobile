@@ -121,6 +121,9 @@ function renderView(overrides?: Partial<EditGoalViewProps>) {
 
 describe("EditGoalView step description (#803)", () => {
   afterEach(() => {
+    // Clear as well as restore: a spy on AccessibilityInfo survives
+    // restoreAllMocks here, and its call count would leak into the next test.
+    jest.clearAllMocks();
     jest.restoreAllMocks();
     jest.useRealTimers();
   });
@@ -333,6 +336,27 @@ describe("EditGoalView step description (#803)", () => {
     fireEvent.press(screen.getByTestId(`${STEP}-s1-cancel`));
     jest.runOnlyPendingTimers();
     expect(setFocus).toHaveBeenCalledTimes(1);
+
+    // One-shot: a later rename remounts every row (drag turns off), and the
+    // closed line must not pull focus away from the rename input.
+    fireEvent.press(screen.getByTestId("edit-goal-step-title-s2"));
+    jest.runOnlyPendingTimers();
+    expect(setFocus).toHaveBeenCalledTimes(1);
+  });
+
+  it("leaves focus alone when a draft is saved on the way to another editor", () => {
+    jest.useFakeTimers();
+    const setFocus = jest
+      .spyOn(AccessibilityInfo, "setAccessibilityFocus")
+      .mockImplementation(() => undefined);
+    renderView();
+
+    fireEvent.press(screen.getByTestId(`${STEP}-s1-add`));
+    fireEvent.changeText(screen.getByTestId(`${STEP}-s1-input`), "Notes");
+    fireEvent.press(screen.getByTestId("edit-goal-step-title-s2"));
+    jest.runOnlyPendingTimers();
+
+    expect(setFocus).not.toHaveBeenCalled();
   });
 
   it("labels the controls for screen readers", () => {

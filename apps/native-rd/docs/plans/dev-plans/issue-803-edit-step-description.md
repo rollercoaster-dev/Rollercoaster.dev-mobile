@@ -91,6 +91,14 @@ Fixed:
   call, sub-step description mapping; spies restored in `afterEach`.
 - copy (de): `tooLong` reworded; labels use "zu" consistently.
 
+Round 2 (correctness re-review of the round-1 commit):
+
+- medium: the focus-restore id stayed set, so a later rename (which remounts rows) pulled focus back to
+  the closed description line → cleared when a rename or another description editor starts; a draft
+  saved on the way to another editor no longer requests focus at all. Both pinned by tests.
+- low, accepted: switching rows while the open draft is over the limit does nothing; the over-limit
+  message is already on screen in the open editor.
+
 Accepted / not changed:
 
 - Row remount when `canDrag` flips (same pattern as the title rename; draft lives in the list). Needs

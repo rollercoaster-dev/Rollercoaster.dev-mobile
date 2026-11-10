@@ -372,7 +372,10 @@ export function EditGoalStepList({
   function beginEdit(id: string, title: string) {
     // An open description draft is saved first; if it can't be, the rename
     // waits rather than leaving two editors open.
-    if (descriptionEdit && !saveDescription()) return;
+    if (descriptionEdit && !saveDescription(false)) return;
+    // Rows remount when a rename turns drag off; a still-set id would pull
+    // focus back to the closed description line, away from the rename input.
+    setDescriptionFocusId(null);
     setEditingId(id);
     setEditText(title);
   }
@@ -406,7 +409,7 @@ export function EditGoalStepList({
    * open, draft intact — when the draft is over the limit or the host reports
    * a failed write.
    */
-  function saveDescription(): boolean {
+  function saveDescription(restoreFocus = true): boolean {
     if (!descriptionEdit || !onStepDescriptionChange) return false;
     const { id, draft } = descriptionEdit;
     // The row refuses over-length before calling; this guard keeps the list
@@ -419,7 +422,9 @@ export function EditGoalStepList({
       if (onStepDescriptionChange(id, next) === false) return false;
     }
     setDescriptionEdit(null);
-    setDescriptionFocusId(id);
+    // Only when the user closed this editor; a save on the way to another
+    // editor leaves focus with that one.
+    if (restoreFocus) setDescriptionFocusId(id);
     return true;
   }
 
@@ -436,7 +441,7 @@ export function EditGoalStepList({
         // One description editor at a time. Moving to another row saves the
         // open draft first; if that can't be saved, the open one stays put
         // rather than losing what was typed.
-        if (descriptionEdit && !saveDescription()) return;
+        if (descriptionEdit && !saveDescription(false)) return;
         if (editingId) commitEditing();
         setDescriptionFocusId(null);
         setDescriptionEdit({ id, draft: currentDescription(id) ?? "" });
