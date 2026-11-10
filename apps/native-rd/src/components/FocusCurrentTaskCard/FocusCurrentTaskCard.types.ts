@@ -30,6 +30,11 @@ interface FocusCardBase {
 export interface FocusInProgressCardProps extends FocusCardBase {
   status: "in-progress";
   /**
+   * Optional longer text under the title: how to do the step. Shown only while
+   * the step is being worked on; the paused and completed cards stay short.
+   */
+  description?: string;
+  /**
    * Planned evidence **type keys** (e.g. `["photo", "text"]`). Each drives an
    * icon + short label in the planned-evidence box, and each must be captured
    * before "Mark complete" is revealed. Unknown values are normalized to `file`

@@ -22,7 +22,8 @@
   },
   "onboarding": {
     "title": "Einstieg",
-    "replayWelcome": "Begrüßung nochmal ansehen"
+    "replayWelcome": "Begrüßung nochmal ansehen",
+    "startTutorial": "Tutorial-Ziel starten"
   },
   "language": {
     "title": "Sprache (dev)",
@@ -30,7 +31,8 @@
   },
   "errors": {
     "densitySaveFailed": "Dichte konnte nicht gespeichert werden. Versuch es nochmal.",
-    "themeSaveFailed": "Theme konnte nicht gespeichert werden. Versuch es nochmal."
+    "themeSaveFailed": "Theme konnte nicht gespeichert werden. Versuch es nochmal.",
+    "tutorialStartFailed": "Tutorial-Ziel konnte nicht angelegt werden. Versuch es nochmal."
   },
   "about": {
     "title": "Über",

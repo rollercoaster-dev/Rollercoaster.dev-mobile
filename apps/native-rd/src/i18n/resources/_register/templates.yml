@@ -1,0 +1,23 @@
+# templates — the titles and how-to text a goal template seeds into a new goal.
+# The tutorial ("Find your footing") teaches the app alongside a paper journal.
+# These strings become the user's own goal and step text, editable afterwards.
+
+speaker: app, plain and warm
+audience: first-run neurodivergent adult
+formality: informal
+banned_phrasings:
+  - Großartig!
+  - Super!
+  - Fantastisch!
+  - Du schaffst das!
+  - Streak
+  - du musst
+  - besonders
+  - leidet an
+notes:
+  - Journal always means a physical paper notebook, never an app feature. Translate as "Notizbuch" or "Journal"; never "Tagebuch", which reads as a private diary.
+  - The journal is freeform. Never prescribe a layout or imply there is a right way to write in it ("any way you like" stays open in German too).
+  - A photo is offered, never asked for. Keep "welcome" soft ("gern auch ein Foto"), never "bitte" or "erforderlich".
+  - Set aside is the app's word for pausing a step. Match the focusMode register's wording for it; never "abbrechen" or "aufgeben".
+  - Step titles are short imperatives addressed to the user ("du"). Descriptions are two to four plain sentences.
+  - Paragraph breaks (\n\n) inside descriptions are deliberate; keep them.

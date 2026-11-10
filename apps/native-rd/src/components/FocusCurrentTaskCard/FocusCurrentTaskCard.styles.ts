@@ -40,6 +40,11 @@ export const styles = StyleSheet.create((theme) => {
       ...theme.textStyles.taskTitle,
       color: theme.colors.text,
     },
+    // How-to text under the title: body role, full-strength ink for reading.
+    description: {
+      ...theme.textStyles.body,
+      color: theme.colors.text,
+    },
     heading: {
       ...theme.textStyles.taskTitle,
       color: theme.colors.text,

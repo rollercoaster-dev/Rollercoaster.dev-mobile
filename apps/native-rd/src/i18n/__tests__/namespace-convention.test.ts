@@ -27,6 +27,7 @@ import enTimelineJourney from "../resources/en/timelineJourney.json";
 import enCompletion from "../resources/en/completion.json";
 import enBadgeDetail from "../resources/en/badgeDetail.json";
 import enEvidenceViewer from "../resources/en/evidenceViewer.json";
+import enTemplates from "../resources/en/templates.json";
 
 const EN_BUNDLES: Record<Namespace, Record<string, unknown>> = {
   common: enCommon,
@@ -49,6 +50,7 @@ const EN_BUNDLES: Record<Namespace, Record<string, unknown>> = {
   completion: enCompletion,
   badgeDetail: enBadgeDetail,
   evidenceViewer: enEvidenceViewer,
+  templates: enTemplates,
 };
 
 // Enforces the "always explicit" rule from docs/i18n.md: every t() call site

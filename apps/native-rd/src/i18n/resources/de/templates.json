@@ -1,0 +1,44 @@
+{
+  "tutorial": {
+    "title": "Finde deinen Halt",
+    "description": "Lerne die App kennen und fang ein Notizbuch an, das du auch ohne sie führen kannst.",
+    "steps": {
+      "journal": {
+        "title": "Besorge oder mache dir ein Notizbuch",
+        "description": "Jedes Notizbuch funktioniert. Kein Notizbuch? Falte ein paar Blätter Papier in der Mitte. Heft sie zusammen oder mach zwei Löcher und binde sie mit Schnur zu. Lose Blätter gehen auch.\n\nSchreib dann eine Notiz, was du benutzt. Gern auch ein Foto."
+      },
+      "want": {
+        "title": "Nenne eine Sache, die du wirklich willst",
+        "description": "Etwas, das dir wichtig ist, in deinen eigenen Worten. Tippe es als Notiz ein. Schreib dann dasselbe auf die erste Seite deines Notizbuches."
+      },
+      "threeSteps": {
+        "title": "Zerlege es in drei Schritte, die du dir vorstellen kannst",
+        "description": "Schreib in dein Notizbuch unter die Sache, die du willst, drei Schritte, die du dir vorstellen kannst. Klein ist okay. Tippe sie dann als Notiz ein."
+      },
+      "why": {
+        "title": "Sag laut, warum",
+        "description": "Nimm etwa 30 Sekunden auf, warum du das willst. Es bleibt auf deinem Handy. Schreib dann eine Zeile warum in dein Notizbuch.\n\nKeine Lust zu sprechen? Tippe auf das Beweis-Feld, um zu ändern, was dieser Schritt verlangt."
+      },
+      "setAside": {
+        "title": "Stell diesen Schritt beiseite, dann nimm ihn wieder auf",
+        "description": "Stell diesen Schritt beiseite. Die App geht weiter und nichts geht verloren. Finde ihn wieder unter Alle Schritte und nimm ihn wieder auf. Stoppen ist nicht scheitern.\n\nMarkiere in deinem Notizbuch einen deiner drei Schritte als beiseitegestellt, wie es dir passt. Füg dann hier eine Notiz hinzu."
+      },
+      "fiveMinutes": {
+        "title": "Fünf Minuten an deinem ersten Schritt",
+        "description": "Nimm den ersten deiner drei Schritte und verbringe fünf Minuten damit. Schreib danach auf, was passiert ist, in dein Notizbuch. Füg es dann hier als Notiz hinzu."
+      },
+      "yours": {
+        "title": "Mach es zu deinem",
+        "description": "Öffne Einstellungen und probiere die Designs, bis die App für deine Augen richtig aussieht. Schreib deinen Namen oder ein Zeichen auf den Umschlag deines Notizbuches. Notiere dann, welches Design du gewählt hast."
+      },
+      "paperOnly": {
+        "title": "Eine Sitzung nur auf Papier",
+        "description": "Wenn du das nächste Mal an deiner Sache arbeitest, lass die App zu und verfolge es in deinem Notizbuch. Komm danach zurück und füg eine Notiz hinzu. Ein Foto der Seite ist gern gesehen.\n\nÖffne dann Alle Schritte, um deine Zeitleiste anzuschauen."
+      },
+      "finish": {
+        "title": "Schreib das Datum und fertig",
+        "description": "Schreib heute's Datum in dein Notizbuch und füg hier eine letzte Notiz hinzu. Dann gestalte dein Abzeichen. Es sagt, dass du ein Ziel-Notizbuch führen kannst.\n\nDanach blätter um und fang dein echtes Ziel an."
+      }
+    }
+  }
+}

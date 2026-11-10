@@ -41,6 +41,7 @@ const PILL_STATES: [FocusCardStatus, string][] = [
 interface TestOverrides {
   status?: FocusCardStatus;
   title?: string;
+  description?: string;
   plannedEvidenceTypes?: readonly string[];
   capturedEvidence?: readonly FocusCapturedEvidenceItem[];
   onPause?: () => void;
@@ -140,6 +141,20 @@ describe("FocusCurrentTaskCard", () => {
     } else {
       expect(screen.getByText("Reset the kitchen")).toBeTruthy();
     }
+  });
+
+  describe("step description", () => {
+    it("shows the how-to text under the title while in progress", () => {
+      renderCard({ description: "Fold three sheets in half" });
+      expect(
+        screen.getByTestId("focus-current-task-description"),
+      ).toHaveTextContent("Fold three sheets in half");
+    });
+
+    it("renders no description block for a step without one", () => {
+      renderCard();
+      expect(screen.queryByTestId("focus-current-task-description")).toBeNull();
+    });
   });
 
   describe("state pill (color + word, never color alone)", () => {

@@ -103,10 +103,12 @@ export const stepsForActiveGoalsQuery = evolu.createQuery((db) =>
 /**
  * Create a new goal with given title
  * @param title - Goal title (trimmed and validated)
+ * @param options.templateId - Id of the template the goal is seeded from
+ *   (#593). Omit for a hand-built goal; the column then stays null.
  * @returns Insert command
  * @throws Error if validation fails
  */
-export function createGoal(title: string) {
+export function createGoal(title: string, options?: { templateId?: string }) {
   breadcrumb({ category: "goal", message: "create" });
   const parsedTitle = NonEmptyString1000.orNull(title.trim());
   if (!parsedTitle) {
@@ -119,10 +121,24 @@ export function createGoal(title: string) {
     );
   }
 
+  let parsedTemplateId = null;
+  if (options?.templateId !== undefined) {
+    parsedTemplateId = NonEmptyString1000.orNull(options.templateId);
+    if (!parsedTemplateId) {
+      logger.error("Goal templateId validation failed", {
+        templateIdLength: options.templateId.length,
+      });
+      throw new Error(
+        `Goal templateId must be 1-1000 characters (received ${options.templateId.length} characters)`,
+      );
+    }
+  }
+
   try {
     return evolu.insert("goal", {
       title: parsedTitle,
       status: GoalStatus.active,
+      templateId: parsedTemplateId,
     });
   } catch (error) {
     logger.error("Failed to insert goal", { title: parsedTitle, error });
@@ -305,6 +321,32 @@ function serializePlannedTypes(
 }
 
 /**
+ * Normalize an optional step description for a write.
+ *
+ * Returns undefined to leave the field untouched, null to clear it, or the
+ * validated text. Blank clears rather than throwing (optional field, unlike
+ * title); over-length throws rather than silently dropping what was typed.
+ */
+function parseStepDescription(
+  description: string | null | undefined,
+): ReturnType<typeof NonEmptyString1000.orNull> | null | undefined {
+  if (description === undefined) return undefined;
+  if (description === null) return null;
+  const trimmed = description.trim();
+  if (trimmed === "") return null;
+  const parsed = NonEmptyString1000.orNull(trimmed);
+  if (!parsed) {
+    logger.error("Step description validation failed", {
+      descriptionLength: trimmed.length,
+    });
+    throw new Error(
+      `Step description must be 1-1000 characters (received ${trimmed.length} characters)`,
+    );
+  }
+  return parsed;
+}
+
+/**
  * Check if a step has sufficient evidence to be completed.
  *
  * At least one evidence item must match a planned type. An *unset* plan
@@ -435,6 +477,8 @@ export interface GroupedStep {
   goalId: GoalId | null;
   parentStepId: StepId | null;
   title: string | null;
+  // Optional so fixtures and callers that predate the column still fit.
+  description?: string | null;
   ordinal: number | null;
   status: string | null;
   completedAt: string | null;
@@ -743,6 +787,8 @@ function assertNever(value: never): never {
  * @param goalId - Goal ID
  * @param title - Step title (trimmed and validated)
  * @param ordinal - Optional ordinal for ordering (defaults to null)
+ * @param plannedEvidenceTypes - Optional evidence requirement
+ * @param description - Optional longer text shown under the title
  * @returns Insert command
  * @throws Error if validation fails
  */
@@ -751,6 +797,7 @@ export function createStep(
   title: string,
   ordinal?: number,
   plannedEvidenceTypes?: readonly string[] | null,
+  description?: string | null,
 ) {
   breadcrumb({ category: "step", message: "create" });
   const parsedTitle = NonEmptyString1000.orNull(title.trim());
@@ -765,11 +812,13 @@ export function createStep(
   }
 
   const serializedTypes = serializePlannedTypes(plannedEvidenceTypes);
+  const parsedDescription = parseStepDescription(description) ?? null;
 
   try {
     return evolu.insert("step", {
       goalId,
       title: parsedTitle,
+      description: parsedDescription,
       status: StepStatus.pending,
       ordinal: ordinal !== undefined ? Int.orNull(ordinal) : null,
       plannedEvidenceTypes:
@@ -798,6 +847,7 @@ export function createStep(
  * @param title - Sub-step title (trimmed and validated)
  * @param ordinal - Optional sibling ordinal (defaults to null)
  * @param plannedEvidenceTypes - Optional evidence requirement
+ * @param description - Optional longer text shown under the title
  * @returns Insert command
  * @throws Error if validation fails
  */
@@ -807,6 +857,7 @@ export function createSubStep(
   title: string,
   ordinal?: number,
   plannedEvidenceTypes?: readonly string[] | null,
+  description?: string | null,
 ) {
   breadcrumb({ category: "step", message: "create" });
   const parsedTitle = NonEmptyString1000.orNull(title.trim());
@@ -822,12 +873,14 @@ export function createSubStep(
   }
 
   const serializedTypes = serializePlannedTypes(plannedEvidenceTypes);
+  const parsedDescription = parseStepDescription(description) ?? null;
 
   try {
     return evolu.insert("step", {
       goalId,
       parentStepId,
       title: parsedTitle,
+      description: parsedDescription,
       status: StepStatus.pending,
       ordinal: ordinal !== undefined ? Int.orNull(ordinal) : null,
       plannedEvidenceTypes:
@@ -855,6 +908,8 @@ export function updateStep(
   id: StepId,
   fields: {
     title?: string;
+    // undefined = "don't touch"; null or blank = "clear".
+    description?: string | null;
     ordinal?: number | null;
     plannedEvidenceTypes?: readonly string[] | null;
     parentStepId?: StepId | null;
@@ -882,6 +937,11 @@ export function updateStep(
       );
     }
     update.title = parsed;
+  }
+
+  const parsedDescription = parseStepDescription(fields.description);
+  if (parsedDescription !== undefined) {
+    update.description = parsedDescription;
   }
 
   if (fields.ordinal !== undefined) {

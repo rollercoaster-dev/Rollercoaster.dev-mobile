@@ -83,6 +83,19 @@ jest.mock("@sentry/react-native", () => ({
 const mockSetTheme = jest.fn();
 const mockSetDensity = jest.fn();
 const mockNavigate = jest.fn();
+const mockTabNavigate = jest.fn();
+const mockInsertTemplate = jest.fn();
+
+const mockReportError = jest.fn();
+jest.mock("../../../services/sentry-report", () => ({
+  ...jest.requireActual("../../../services/sentry-report"),
+  reportError: (...args: unknown[]) => mockReportError(...args),
+}));
+
+jest.mock("../../../templates", () => ({
+  ...jest.requireActual("../../../templates"),
+  insertTemplate: (...args: unknown[]) => mockInsertTemplate(...args),
+}));
 
 jest.mock("@react-navigation/native", () => {
   const actual = jest.requireActual("@react-navigation/native");
@@ -90,6 +103,7 @@ jest.mock("@react-navigation/native", () => {
     ...actual,
     useNavigation: () => ({
       navigate: mockNavigate,
+      getParent: () => ({ navigate: mockTabNavigate }),
       goBack: jest.fn(),
       setOptions: jest.fn(),
       addListener: jest.fn(() => jest.fn()),
@@ -242,6 +256,51 @@ describe("SettingsScreen", () => {
       screen.getByText(i18n.t("settings:onboarding.replayWelcome")),
     );
     expect(mockNavigate).toHaveBeenCalledWith("Welcome");
+  });
+
+  describe("Start the tutorial goal (#593)", () => {
+    const startTutorial = () =>
+      fireEvent.press(
+        screen.getByText(i18n.t("settings:onboarding.startTutorial")),
+      );
+
+    beforeEach(() => {
+      mockInsertTemplate.mockReset();
+      mockTabNavigate.mockClear();
+    });
+
+    it("seeds the tutorial template and opens the new goal in Focus Mode", () => {
+      mockInsertTemplate.mockReturnValue({ ok: true, goalId: "goal-tutorial" });
+      renderWithProviders(<SettingsScreen />);
+      startTutorial();
+
+      expect(mockInsertTemplate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: "find-your-footing",
+          title: i18n.t("templates:tutorial.title"),
+        }),
+      );
+      expect(mockTabNavigate).toHaveBeenCalledWith("GoalsTab", {
+        screen: "FocusMode",
+        params: { goalId: "goal-tutorial" },
+        initial: false,
+      });
+    });
+
+    it("says so and stays put when the goal could not be created", () => {
+      mockInsertTemplate.mockReturnValue({ ok: false, error: new Error("x") });
+      renderWithProviders(<SettingsScreen />);
+      startTutorial();
+
+      expect(
+        screen.getByText(i18n.t("settings:errors.tutorialStartFailed")),
+      ).toBeOnTheScreen();
+      expect(mockTabNavigate).not.toHaveBeenCalled();
+      expect(mockReportError).toHaveBeenCalledWith(expect.any(Error), {
+        area: "goal.mutate",
+        kind: "create",
+      });
+    });
   });
 
   it("renders the About section", () => {

@@ -631,6 +631,7 @@ function FocusContent({
               <FocusCurrentTaskCard
                 status="in-progress"
                 title={currentStepTitle}
+                description={currentStep.description ?? undefined}
                 plannedEvidenceTypes={plannedEvidenceTypes}
                 capturedEvidence={capturedEvidence}
                 onChangeEvidencePlan={(event) => {
