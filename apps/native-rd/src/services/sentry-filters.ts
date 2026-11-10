@@ -160,6 +160,12 @@ export function scrubEvent(event: ErrorEvent): ErrorEvent {
     }
   }
 
+  // `captureMessage` and some SDK paths put free text in the top-level
+  // `message` instead of an exception value; scrub it the same way.
+  if (typeof event.message === "string") {
+    event.message = scrubExceptionValue(event.message);
+  }
+
   if (event.exception?.values) {
     for (const exc of event.exception.values) {
       if (exc.value) {

@@ -124,6 +124,16 @@ describe("scrubEvent", () => {
     expect(scrubbed.exception?.values?.[0]?.value).toBe(expected);
   });
 
+  it("redacts URLs and emails in the top-level event message", () => {
+    const event = makeEvent({
+      message: "Could not open https://example.com/private?x=1 for a@b.co",
+    });
+    const scrubbed = scrubEvent(event);
+    expect(scrubbed.message).toBe(
+      "Could not open <redacted-url> for [redacted-email]",
+    );
+  });
+
   it("leaves stack-frame filenames untouched when redacting URLs", () => {
     const event = makeEvent({
       exception: {
