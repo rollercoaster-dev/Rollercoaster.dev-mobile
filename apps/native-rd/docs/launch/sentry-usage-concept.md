@@ -62,6 +62,7 @@ type ReportContext =
   | { area: "badge.storage"; kind?: "read" | "write" | "delete" }
   | { area: "key.generate" }
   | { area: "key.verify" }
+  | { area: "key.deviceOnly" }
   | {
       area: "evidence.capture";
       kind: "photo" | "video" | "audio" | "file" | "link" | "text";

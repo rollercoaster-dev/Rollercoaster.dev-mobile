@@ -113,6 +113,21 @@ export function useUserKey(): UserKeyState {
           return;
         }
 
+        // Keys stored by builds before #765 can travel in device backups.
+        // Move this one to device-only storage; the key itself is unchanged.
+        // A failed move must not block signing, so it is reported and retried
+        // on the next launch.
+        try {
+          await keyProvider.ensureDeviceOnly(verifyingKeyId);
+        } catch (moveErr) {
+          logger.error("Failed to move key to device-only storage", {
+            keyId: verifyingKeyId,
+            error: moveErr,
+          });
+          reportError(moveErr, { area: "key.deviceOnly" });
+        }
+        if (pendingKeyId.current !== verifyingKeyId) return;
+
         verifiedKeyId.current = verifyingKeyId;
         setVerified(true);
       } catch (err) {
