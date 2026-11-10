@@ -1,6 +1,5 @@
 import React from "react";
 import { render, screen, fireEvent, act } from "@testing-library/react-native";
-import { Alert } from "react-native";
 
 import { i18n } from "../../../i18n";
 import { CaptureVideoScreen } from "../CaptureVideoScreen";
@@ -57,12 +56,11 @@ jest.mock("expo-video", () => {
   };
 });
 
-const mockRequestMediaLibraryPermissionsAsync = jest.fn();
 const mockLaunchImageLibraryAsync = jest.fn();
 
+// No requestMediaLibraryPermissionsAsync on purpose: the system picker needs no
+// photo-library permission, so re-adding that call would throw here.
 jest.mock("expo-image-picker", () => ({
-  requestMediaLibraryPermissionsAsync: (...args: unknown[]) =>
-    mockRequestMediaLibraryPermissionsAsync(...args),
   launchImageLibraryAsync: (...args: unknown[]) =>
     mockLaunchImageLibraryAsync(...args),
 }));
@@ -156,7 +154,7 @@ describe("CaptureVideoScreen — chooser mode", () => {
 describe("CaptureVideoScreen — recorder mode", () => {
   it("shows permission request when camera permission not granted", () => {
     (useCameraPermissions as jest.Mock).mockReturnValueOnce([
-      { granted: false },
+      { granted: false, canAskAgain: true },
       jest.fn(),
     ]);
 
@@ -170,15 +168,17 @@ describe("CaptureVideoScreen — recorder mode", () => {
     fireEvent.press(
       screen.getByText(i18n.t("captureVideo:actions.recordVideo")),
     );
-    expect(screen.getByText(i18n.t("permissions:camera.title"))).toBeTruthy();
     expect(
-      screen.getByText(i18n.t("permissions:camera.settingsCta")),
+      screen.getByText(i18n.t("permissions:videoRecording.title")),
+    ).toBeTruthy();
+    expect(
+      screen.getByText(i18n.t("permissions:videoRecording.requestCta")),
     ).toBeTruthy();
   });
 
   it("shows permission request when mic permission not granted", () => {
     (useMicrophonePermissions as jest.Mock).mockReturnValueOnce([
-      { granted: false },
+      { granted: false, canAskAgain: true },
       jest.fn(),
     ]);
 
@@ -192,7 +192,9 @@ describe("CaptureVideoScreen — recorder mode", () => {
     fireEvent.press(
       screen.getByText(i18n.t("captureVideo:actions.recordVideo")),
     );
-    expect(screen.getByText(i18n.t("permissions:camera.title"))).toBeTruthy();
+    expect(
+      screen.getByText(i18n.t("permissions:videoRecording.title")),
+    ).toBeTruthy();
   });
 
   it("shows timer at 00:00 initially in recorder", () => {
@@ -316,11 +318,8 @@ describe("CaptureVideoScreen — recorder mode", () => {
 });
 
 describe("CaptureVideoScreen — library upload", () => {
-  it("denies access when library permission is not granted", async () => {
-    const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
-    mockRequestMediaLibraryPermissionsAsync.mockResolvedValueOnce({
-      granted: false,
-    });
+  it("opens the system picker without a photo-library permission request", async () => {
+    mockLaunchImageLibraryAsync.mockResolvedValueOnce({ canceled: true });
 
     render(
       <CaptureVideoScreen
@@ -335,19 +334,12 @@ describe("CaptureVideoScreen — library upload", () => {
       );
     });
 
-    expect(alertSpy).toHaveBeenCalledWith(
-      i18n.t("permissions:videoLibrary.title"),
-      expect.any(String),
+    expect(mockLaunchImageLibraryAsync).toHaveBeenCalledWith(
+      expect.objectContaining({ mediaTypes: ["videos"], allowsEditing: false }),
     );
-    expect(mockLaunchImageLibraryAsync).not.toHaveBeenCalled();
-    expect(mockCreateEvidence).not.toHaveBeenCalled();
-    alertSpy.mockRestore();
   });
 
   it("returns to chooser when user cancels the picker", async () => {
-    mockRequestMediaLibraryPermissionsAsync.mockResolvedValueOnce({
-      granted: true,
-    });
     mockLaunchImageLibraryAsync.mockResolvedValueOnce({ canceled: true });
 
     render(
@@ -369,9 +361,6 @@ describe("CaptureVideoScreen — library upload", () => {
   });
 
   it("saves picked video with library source metadata", async () => {
-    mockRequestMediaLibraryPermissionsAsync.mockResolvedValueOnce({
-      granted: true,
-    });
     mockLaunchImageLibraryAsync.mockResolvedValueOnce({
       canceled: false,
       assets: [{ uri: "file:///library/clip.mov", duration: 12500 }],
@@ -418,9 +407,6 @@ describe("CaptureVideoScreen — library upload", () => {
   });
 
   it("returns to chooser when retake is pressed in library preview", async () => {
-    mockRequestMediaLibraryPermissionsAsync.mockResolvedValueOnce({
-      granted: true,
-    });
     mockLaunchImageLibraryAsync.mockResolvedValueOnce({
       canceled: false,
       assets: [{ uri: "file:///library/clip.mov", duration: 5000 }],

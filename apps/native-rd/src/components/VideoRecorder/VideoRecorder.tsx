@@ -6,7 +6,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { View, Pressable, Alert } from "react-native";
+import { View, Pressable, Alert, Linking } from "react-native";
 import {
   CameraView,
   useCameraPermissions,
@@ -144,9 +144,18 @@ export const VideoRecorder = forwardRef<
   }, [recordedUri, isSaving, elapsed, facing, onRecorded]);
 
   const handleRequestPermissions = useCallback(async () => {
-    await requestCameraPermission();
-    await requestMicPermission();
-  }, [requestCameraPermission, requestMicPermission]);
+    if (!cameraPermission?.granted) await requestCameraPermission();
+    if (!micPermission?.granted) await requestMicPermission();
+  }, [
+    cameraPermission,
+    micPermission,
+    requestCameraPermission,
+    requestMicPermission,
+  ]);
+
+  const handleOpenSettings = useCallback(() => {
+    void Linking.openSettings();
+  }, []);
 
   useImperativeHandle(
     ref,
@@ -215,20 +224,40 @@ export const VideoRecorder = forwardRef<
   }
 
   if (!hasPermissions) {
+    // Once a permission is denied and the OS will not prompt again (always the
+    // case on iOS after a denial), re-requesting is a silent no-op. Only the
+    // app's page in Settings can change it.
+    const isBlocked =
+      (!cameraPermission.granted && !cameraPermission.canAskAgain) ||
+      (!micPermission.granted && !micPermission.canAskAgain);
     return (
       <View style={styles.permissionContainer}>
         <Card>
           <Text variant="headline" style={{ textAlign: "center" }}>
-            {t("permissions:camera.title")}
+            {t("permissions:videoRecording.title")}
           </Text>
-          <Text variant="body" style={styles.permissionText}>
-            {t("permissions:camera.message")}
+          <Text
+            variant="body"
+            style={styles.permissionText}
+            accessibilityLiveRegion="polite"
+          >
+            {isBlocked
+              ? t("permissions:videoRecording.blockedMessage")
+              : t("permissions:videoRecording.message")}
           </Text>
-          <Button
-            label={t("permissions:camera.settingsCta")}
-            variant="primary"
-            onPress={handleRequestPermissions}
-          />
+          {isBlocked ? (
+            <Button
+              label={t("permissions:videoRecording.openSettingsCta")}
+              variant="primary"
+              onPress={handleOpenSettings}
+            />
+          ) : (
+            <Button
+              label={t("permissions:videoRecording.requestCta")}
+              variant="primary"
+              onPress={handleRequestPermissions}
+            />
+          )}
         </Card>
       </View>
     );

@@ -14,7 +14,10 @@
         "dark": "./assets/icon-dark.png"
       },
       "infoPlist": {
-        "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to record voice memos as evidence for your goals.",
+        "NSCameraUsageDescription": "Allow $(PRODUCT_NAME) to use the camera to take photos and record videos as evidence for your goals.",
+        "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to use the microphone to record voice memos and the sound for videos as evidence for your goals.",
+        "NSPhotoLibraryUsageDescription": "Allow $(PRODUCT_NAME) to access your photos for evidence capture.",
+        "NSPhotoLibraryAddUsageDescription": "Allow $(PRODUCT_NAME) to save badge images to your photo library when you choose to.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
@@ -46,24 +49,11 @@
       "expo-sqlite",
       "expo-secure-store",
       "expo-video",
-      [
-        "expo-audio",
-        {
-          "microphonePermission": "Allow $(PRODUCT_NAME) to record voice memos as evidence for your goals."
-        }
-      ],
-      [
-        "expo-image-picker",
-        {
-          "photosPermission": "Allow $(PRODUCT_NAME) to access your photos for evidence capture.",
-          "cameraPermission": "Allow $(PRODUCT_NAME) to use the camera to take photos as evidence."
-        }
-      ],
+      "expo-audio",
+      "expo-image-picker",
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow $(PRODUCT_NAME) to record video as evidence for your goals.",
-          "microphonePermission": "Allow $(PRODUCT_NAME) to record audio when capturing video evidence.",
           "recordAudioAndroid": true
         }
       ],

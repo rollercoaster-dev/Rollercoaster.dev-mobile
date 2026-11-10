@@ -2,21 +2,19 @@
   "camera": {
     "title": "Kamerazugriff erforderlich",
     "message": "Zum Fotografieren oder Filmen braucht die App Zugriff auf deine Kamera.",
-    "settingsCta": "Zugriff gewähren"
+    "blockedMessage": "Der Kamerazugriff ist für diese App ausgeschaltet. Du kannst ihn in den Geräteeinstellungen einschalten.",
+    "openSettingsCta": "Einstellungen öffnen"
+  },
+  "videoRecording": {
+    "title": "Kamera und Mikrofon erforderlich",
+    "message": "Für Videoaufnahmen braucht die App Zugriff auf Kamera und Mikrofon.",
+    "blockedMessage": "Kamera- oder Mikrofonzugriff ist für diese App ausgeschaltet. Du kannst ihn in den Geräteeinstellungen einschalten.",
+    "requestCta": "Zugriff gewähren",
+    "openSettingsCta": "Einstellungen öffnen"
   },
   "microphone": {
     "title": "Mikrofon erforderlich",
     "message": "Sprachmemos brauchen Mikrofon-Zugriff. Du kannst das in den Geräteeinstellungen aktivieren.",
-    "settingsCta": "Einstellungen öffnen"
-  },
-  "photoLibrary": {
-    "title": "Fotomediathek erforderlich",
-    "message": "Aktiviere Fotomediathek-Zugriff in den Geräteeinstellungen, um Fotos auszuwählen.",
-    "settingsCta": "Einstellungen öffnen"
-  },
-  "videoLibrary": {
-    "title": "Fotomediathek erforderlich",
-    "message": "Aktiviere Fotomediathek-Zugriff in den Geräteeinstellungen, um Videos auszuwählen.",
     "settingsCta": "Einstellungen öffnen"
   },
   "location": {
