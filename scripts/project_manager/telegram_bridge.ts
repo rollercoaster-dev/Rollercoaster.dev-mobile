@@ -243,6 +243,8 @@ export function formatStatus(data: Json): string {
       skipped: "skipped",
     };
     today = `Plan: ${plan.items.map((n: number) => "#" + n).join(" ")} (${labels[plan.status] ?? plan.status})`;
+  } else if (data.last_plan && data.last_plan.status !== "skipped") {
+    today = `Plan: none today. Last (${data.last_plan.date}): ${data.last_plan.items.map((n: number) => "#" + n).join(" ")}, go starts it`;
   } else {
     today = "Plan: none yet";
   }

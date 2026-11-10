@@ -106,7 +106,7 @@ bun scripts/project_manager/telegram_bridge.ts run
 ```
 
 Plain words work immediately, no slash needed, case and punctuation ignored:
-`go`/`skip` (today's plan), `status`, `tasks`, `stop` (mute 30 min), `off`/`on`
+`go`/`skip` (today's plan; with none dated today, `go` picks up the last unskipped plan), `status`, `tasks`, `stop` (mute 30 min), `off`/`on`
 (pause/resume work), `help`. Outbound rules are enforced in code: max 5 lines,
 one open `--ask` at a time, and notifications refused 21:00–08:00, at weekends
 and while muted (exit 3); replies to Joe are always allowed. Natural questions such as

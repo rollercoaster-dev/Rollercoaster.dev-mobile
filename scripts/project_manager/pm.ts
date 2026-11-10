@@ -60,6 +60,20 @@ export function linkedIssues(pr: Json): Set<number> {
 }
 
 /** Berlin calendar date (YYYY-MM-DD) and weekday (0 = Monday) for a Unix timestamp in seconds. */
+/** What status shows of a PR: enough to name and link it, never the API dump. */
+function prSummary(pr: Json): Json {
+  return {
+    number: pr.number,
+    title: pr.title,
+    html_url: pr.html_url,
+    state: pr.state,
+    draft: pr.draft,
+    merged_at: pr.merged_at,
+    branch: (pr.head || {}).ref,
+    issues: [...linkedIssues(pr)],
+  };
+}
+
 export function berlin(seconds: number): {
   date: string;
   weekday: number;
@@ -292,14 +306,20 @@ export class Manager {
         limit: 5,
         next_auto_issue:
           s.snapshot && s.queue.length === 0 ? this.nextAutoIssue(s) : null,
-        prs: Object.values(s.prs),
+        prs: Object.values<Json>(s.prs).map(prSummary),
         reservations: s.reservations,
         queue: s.queue,
         audits: s.audits,
         unaudited: this.unaudited(s),
         issue_count: ((s.snapshot || {}).issues || []).length,
         synced_at: s.synced_at,
+        today: this.today(),
         plan: this.todayPlan(s),
+        // An older plan is not today's: it starts nothing until a new go.
+        last_plan:
+          s.plan && !this.todayPlan(s)
+            ? { date: s.plan.date, items: s.plan.items, status: s.plan.status }
+            : null,
         weekend: this.weekend(),
         open_tasks: s.tasks.filter((t: Json) => t.status === "open"),
       };
@@ -355,11 +375,35 @@ export class Manager {
     });
   }
 
+  /**
+   * A fresh "go" with no plan dated today picks up the last plan Joe saw.
+   * Only the go carries it: an old approval never authorizes work by itself.
+   */
+  private carryOver(s: Json): Json {
+    const old = s.plan;
+    if (!old || old.status === "skipped" || this.weekend()) return null;
+    const snapshot = s.snapshot;
+    const open = snapshot
+      ? new Set<number>(snapshot.issues.map((i: Json) => i.number))
+      : null;
+    const items = old.items.filter((n: number) => !open || open.has(n));
+    if (items.length === 0) return null;
+    s.plan = {
+      date: this.today(),
+      items,
+      status: "proposed",
+      ref: null,
+      at: this.now(),
+      carried_from: old.date,
+    };
+    return s.plan;
+  }
+
   planApprove(reference: string): Json {
     if (!reference.trim())
       throw new GateError("Explicit user approval reference required");
     return this.transaction((s) => {
-      const plan = this.todayPlan(s);
+      const plan = this.todayPlan(s) ?? this.carryOver(s);
       if (!plan) throw new GateError("No plan for today yet");
       if (plan.status === "skipped") throw new GateError("Today was skipped");
       Object.assign(plan, {
