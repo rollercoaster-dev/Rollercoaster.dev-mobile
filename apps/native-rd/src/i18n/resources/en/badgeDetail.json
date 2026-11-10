@@ -51,13 +51,43 @@
       "detail": "Plain picture — may drop the credential."
     },
     "exportCredential": {
-      "label": "Export credential (JSON)",
+      "label": "Export credential file",
       "detail": "For verifiers & wallets."
     },
     "overflow": {
       "shareBadge": "Share badge",
       "exportCredential": "Export credential",
       "deleteBadge": "Delete badge"
+    }
+  },
+  "export": {
+    "noImage": {
+      "title": "No image available",
+      "message": "This badge does not have a baked image yet."
+    },
+    "noCredential": {
+      "title": "No credential",
+      "message": "This badge does not have a credential yet."
+    },
+    "sharingUnavailable": {
+      "title": "Sharing unavailable",
+      "message": "Sharing is not available on this device."
+    },
+    "unsupportedPlatform": {
+      "title": "Export unavailable",
+      "message": "Badge export is only supported on iOS and Android."
+    },
+    "failed": {
+      "title": "Export failed",
+      "verifiableBadgeMessage": "Something went wrong exporting the verifiable badge.",
+      "imageMessage": "Something went wrong exporting the badge image.",
+      "credentialMessage": "Something went wrong exporting the credential.",
+      "cacheUnavailableMessage": "Cannot access the device cache directory."
+    },
+    "dialogTitle": {
+      "verifiableBadge": "Export Verifiable Badge",
+      "image": "Save Badge Image",
+      "credential": "Export Badge Credential"
     }
   },
   "deleteConfirm": {

@@ -124,6 +124,9 @@ describe("Evidence CRUD Operations", () => {
   });
 
   test.each([
+    ["valid uri", { uri: "content:text;Edited note" }, false],
+    ["empty uri", { uri: "" }, true],
+    [">1000 char uri", { uri: "a".repeat(1001) }, true],
     ["null description", { description: null }, false],
     ["empty description", { description: "" }, true],
     [">1000 char description", { description: "a".repeat(1001) }, true],
@@ -141,6 +144,18 @@ describe("Evidence CRUD Operations", () => {
     } else {
       expect(() => updateEvidence(mockEvidenceId, fields)).not.toThrow();
     }
+  });
+
+  // The completion flow edits a saved closing note in place through this
+  // field; the row must actually receive the new uri, not just validate it.
+  test("updateEvidence writes the replacement uri", () => {
+    const result = updateEvidence(mockEvidenceId, {
+      uri: "content:text;Edited note",
+    });
+    expect(result).toEqual({
+      ok: true,
+      value: { id: mockEvidenceId, uri: "content:text;Edited note" },
+    });
   });
 
   test("deleteEvidence should succeed", () => {

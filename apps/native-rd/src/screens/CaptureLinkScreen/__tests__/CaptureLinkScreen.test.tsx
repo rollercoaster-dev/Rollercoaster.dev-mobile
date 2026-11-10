@@ -11,6 +11,7 @@ import {
 import { i18n } from "../../../i18n";
 import { CaptureLinkScreen } from "../CaptureLinkScreen";
 import { createEvidence, EvidenceType } from "../../../db";
+import { STRING_1000_MAX_LENGTH } from "../../../db/schema";
 
 // Mock navigation
 const mockGoBack = jest.fn();
@@ -117,6 +118,17 @@ describe("CaptureLinkScreen", () => {
 
     expect(screen.getByTestId("capture-link-url").props.returnKeyType).toBe(
       "done",
+    );
+  });
+
+  // The URL is stored verbatim in the 1000-character evidence `uri` column.
+  // Uncapped, a longer paste passed validation and then failed to save with
+  // a generic error.
+  it("caps the URL input at what the uri column can store", () => {
+    renderScreen();
+
+    expect(screen.getByTestId("capture-link-url").props.maxLength).toBe(
+      STRING_1000_MAX_LENGTH,
     );
   });
 

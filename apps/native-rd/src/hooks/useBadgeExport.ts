@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { Alert, Platform } from "react-native";
+import { useTranslation } from "react-i18next";
 import * as Sharing from "expo-sharing";
 import * as FileSystem from "expo-file-system/legacy";
 import { PLACEHOLDER_IMAGE_URI } from "./useCreateBadge";
@@ -17,6 +18,7 @@ function isShareCancellation(error: unknown): boolean {
 }
 
 export function useBadgeExport() {
+  const { t } = useTranslation(["badgeDetail"]);
   const [isExportingImage, setIsExportingImage] = useState(false);
   const [isExportingJSON, setIsExportingJSON] = useState(false);
 
@@ -37,8 +39,8 @@ export function useBadgeExport() {
     async (imageUri: string | null, badgeName?: string) => {
       if (!imageUri || imageUri === PLACEHOLDER_IMAGE_URI) {
         Alert.alert(
-          "No image available",
-          "This badge does not have a baked image yet.",
+          t("badgeDetail:export.noImage.title"),
+          t("badgeDetail:export.noImage.message"),
         );
         return;
       }
@@ -74,15 +76,15 @@ export function useBadgeExport() {
           const canShare = await Sharing.isAvailableAsync();
           if (!canShare) {
             Alert.alert(
-              "Sharing unavailable",
-              "Sharing is not available on this device.",
+              t("badgeDetail:export.sharingUnavailable.title"),
+              t("badgeDetail:export.sharingUnavailable.message"),
             );
             return;
           }
           await Sharing.shareAsync(imageUri, {
             UTI: "public.png",
             mimeType: "image/png",
-            dialogTitle: "Export Verifiable Badge",
+            dialogTitle: t("badgeDetail:export.dialogTitle.verifiableBadge"),
           });
           return;
         }
@@ -93,8 +95,8 @@ export function useBadgeExport() {
           os: Platform.OS,
         });
         Alert.alert(
-          "Export unavailable",
-          "Badge export is only supported on iOS and Android.",
+          t("badgeDetail:export.unsupportedPlatform.title"),
+          t("badgeDetail:export.unsupportedPlatform.message"),
         );
       } catch (error) {
         if (isShareCancellation(error)) return;
@@ -103,61 +105,64 @@ export function useBadgeExport() {
           error,
         });
         Alert.alert(
-          "Export failed",
-          "Something went wrong exporting the verifiable badge.",
+          t("badgeDetail:export.failed.title"),
+          t("badgeDetail:export.failed.verifiableBadgeMessage"),
         );
       } finally {
         setIsExportingImage(false);
       }
     },
-    [],
+    [t],
   );
 
-  const exportImage = useCallback(async (imageUri: string | null) => {
-    if (!imageUri || imageUri === PLACEHOLDER_IMAGE_URI) {
-      Alert.alert(
-        "No image available",
-        "This badge does not have a baked image yet.",
-      );
-      return;
-    }
-
-    setIsExportingImage(true);
-    try {
-      const canShare = await Sharing.isAvailableAsync();
-      if (!canShare) {
+  const exportImage = useCallback(
+    async (imageUri: string | null) => {
+      if (!imageUri || imageUri === PLACEHOLDER_IMAGE_URI) {
         Alert.alert(
-          "Sharing unavailable",
-          "Sharing is not available on this device.",
+          t("badgeDetail:export.noImage.title"),
+          t("badgeDetail:export.noImage.message"),
         );
         return;
       }
-      await Sharing.shareAsync(imageUri, {
-        UTI: "public.png",
-        mimeType: "image/png",
-        dialogTitle: "Save Badge Image",
-      });
-    } catch (error) {
-      if (isShareCancellation(error)) return;
-      console.error("[useBadgeExport] Failed to export image", {
-        imageUri,
-        error,
-      });
-      Alert.alert(
-        "Export failed",
-        "Something went wrong exporting the badge image.",
-      );
-    } finally {
-      setIsExportingImage(false);
-    }
-  }, []);
+
+      setIsExportingImage(true);
+      try {
+        const canShare = await Sharing.isAvailableAsync();
+        if (!canShare) {
+          Alert.alert(
+            t("badgeDetail:export.sharingUnavailable.title"),
+            t("badgeDetail:export.sharingUnavailable.message"),
+          );
+          return;
+        }
+        await Sharing.shareAsync(imageUri, {
+          UTI: "public.png",
+          mimeType: "image/png",
+          dialogTitle: t("badgeDetail:export.dialogTitle.image"),
+        });
+      } catch (error) {
+        if (isShareCancellation(error)) return;
+        console.error("[useBadgeExport] Failed to export image", {
+          imageUri,
+          error,
+        });
+        Alert.alert(
+          t("badgeDetail:export.failed.title"),
+          t("badgeDetail:export.failed.imageMessage"),
+        );
+      } finally {
+        setIsExportingImage(false);
+      }
+    },
+    [t],
+  );
 
   const exportJSON = useCallback(
     async (credential: string | null, goalTitle: string) => {
       if (!credential) {
         Alert.alert(
-          "No credential",
-          "This badge does not have a credential yet.",
+          t("badgeDetail:export.noCredential.title"),
+          t("badgeDetail:export.noCredential.message"),
         );
         return;
       }
@@ -165,8 +170,8 @@ export function useBadgeExport() {
       const cacheDir = FileSystem.cacheDirectory;
       if (!cacheDir) {
         Alert.alert(
-          "Export failed",
-          "Cannot access the device cache directory.",
+          t("badgeDetail:export.failed.title"),
+          t("badgeDetail:export.failed.cacheUnavailableMessage"),
         );
         return;
       }
@@ -189,8 +194,8 @@ export function useBadgeExport() {
         const canShare = await Sharing.isAvailableAsync();
         if (!canShare) {
           Alert.alert(
-            "Sharing unavailable",
-            "Sharing is not available on this device.",
+            t("badgeDetail:export.sharingUnavailable.title"),
+            t("badgeDetail:export.sharingUnavailable.message"),
           );
           return;
         }
@@ -202,7 +207,7 @@ export function useBadgeExport() {
         await Sharing.shareAsync(tempUri, {
           UTI: uti,
           mimeType,
-          dialogTitle: "Export Badge Credential",
+          dialogTitle: t("badgeDetail:export.dialogTitle.credential"),
         });
       } catch (error) {
         console.error("[useBadgeExport] Failed to export credential", {
@@ -210,8 +215,8 @@ export function useBadgeExport() {
           error,
         });
         Alert.alert(
-          "Export failed",
-          "Something went wrong exporting the credential.",
+          t("badgeDetail:export.failed.title"),
+          t("badgeDetail:export.failed.credentialMessage"),
         );
       } finally {
         await FileSystem.deleteAsync(tempUri, { idempotent: true }).catch(
@@ -225,7 +230,7 @@ export function useBadgeExport() {
         setIsExportingJSON(false);
       }
     },
-    [],
+    [t],
   );
 
   return {

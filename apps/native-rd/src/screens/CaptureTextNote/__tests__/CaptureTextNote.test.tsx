@@ -9,8 +9,12 @@ import {
   within,
 } from "../../../__tests__/test-utils";
 import { mockFontScale } from "../../../__tests__/fontScale";
+import { NonEmptyString1000 } from "@evolu/common";
 import { i18n } from "../../../i18n";
+import { TEXT_EVIDENCE_MAX_CONTENT_LENGTH } from "../../../db/schema";
 import { CaptureTextNote } from "../CaptureTextNote";
+
+const MAX = TEXT_EVIDENCE_MAX_CONTENT_LENGTH;
 
 const mockGoBack = jest.fn();
 
@@ -90,7 +94,7 @@ describe("CaptureTextNote", () => {
     renderWithProviders(
       <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
     );
-    expect(screen.getByText("0/1000")).toBeOnTheScreen();
+    expect(screen.getByText(`0/${MAX}`)).toBeOnTheScreen();
   });
 
   it("has go back button with accessibility label", () => {
@@ -193,7 +197,7 @@ describe("CaptureTextNote", () => {
       screen.getByLabelText(i18n.t("captureText:input.label")),
       "Hello",
     );
-    expect(screen.getByText("5/1000")).toBeOnTheScreen();
+    expect(screen.getByText(`5/${MAX}`)).toBeOnTheScreen();
   });
 
   it("saves evidence with goal attachment when no stepId", () => {
@@ -287,6 +291,40 @@ describe("CaptureTextNote", () => {
     );
   });
 
+  // Regression: the counter allowed 1000 characters, but the note is stored
+  // behind the 13-character `content:text;` prefix in a 1000-character column,
+  // so a 988–1000 character note showed a valid count and then failed to save.
+  it("saves a note at the maximum length the counter allows", () => {
+    renderWithProviders(
+      <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
+    );
+    fireEvent.changeText(
+      screen.getByTestId("capture-text-body"),
+      "a".repeat(MAX),
+    );
+    expect(screen.getByText(`${MAX}/${MAX}`)).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId("capture-text-save"));
+
+    expect(createEvidence).toHaveBeenCalledTimes(1);
+    const { uri } = createEvidence.mock.calls[0][0];
+    // The column validator the real createEvidence runs on the uri.
+    expect(NonEmptyString1000.orNull(uri)).not.toBeNull();
+  });
+
+  it("blocks Save one character past the storable maximum", () => {
+    renderWithProviders(
+      <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
+    );
+    fireEvent.changeText(
+      screen.getByTestId("capture-text-body"),
+      "a".repeat(MAX + 1),
+    );
+    expect(
+      screen.getByTestId("capture-text-save").props.accessibilityState
+        ?.disabled,
+    ).toBe(true);
+  });
+
   it("trims content before saving", () => {
     renderWithProviders(
       <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
@@ -313,7 +351,7 @@ describe("CaptureTextNote", () => {
       "   ",
     );
     // Character counter should show 0 (trimmed)
-    expect(screen.getByText("0/1000")).toBeOnTheScreen();
+    expect(screen.getByText(`0/${MAX}`)).toBeOnTheScreen();
     expect(createEvidence).not.toHaveBeenCalled();
   });
 
@@ -327,7 +365,7 @@ describe("CaptureTextNote", () => {
     );
     expect(
       screen.getByLabelText(
-        i18n.t("captureText:charCount.a11y", { count: 5, max: 1000 }),
+        i18n.t("captureText:charCount.a11y", { count: 5, max: MAX }),
       ),
     ).toBeOnTheScreen();
   });
@@ -369,7 +407,7 @@ describe("CaptureTextNote", () => {
       );
       const pseudo = i18n.t("captureText:charCount.a11y", {
         count: 5,
-        max: 1000,
+        max: MAX,
       });
       expect(pseudo.startsWith("[")).toBe(true);
       expect(screen.getByLabelText(pseudo)).toBeOnTheScreen();

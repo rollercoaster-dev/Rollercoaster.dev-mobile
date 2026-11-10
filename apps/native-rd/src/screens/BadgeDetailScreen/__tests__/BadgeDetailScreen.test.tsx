@@ -5,7 +5,9 @@ import {
   screen,
   fireEvent,
   act,
+  within,
 } from "../../../__tests__/test-utils";
+import { i18n } from "../../../i18n";
 import { TopInsetColorProvider } from "../../../navigation/TopInsetColor";
 import { BadgeDetailScreen } from "../BadgeDetailScreen";
 import type { BadgeDetailScreenProps } from "../../../navigation/types";
@@ -464,11 +466,32 @@ describe("BadgeDetailScreen", () => {
         <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
       );
       expect(screen.getByTestId("badge-share-cta")).toBeOnTheScreen();
-      // The three old page-level export buttons are gone; they live in the
-      // sheet now, behind the one CTA.
-      expect(screen.queryByLabelText("Export Verifiable Badge")).toBeNull();
-      expect(screen.queryByLabelText("Export Credential (JSON)")).toBeNull();
-      expect(screen.queryByLabelText("Save as Image")).toBeNull();
+      // The three export actions live in the sheet, behind the one CTA — none
+      // of their rows render on the page until the sheet opens.
+      expect(screen.queryByTestId("share-row-verifiable")).toBeNull();
+      expect(screen.queryByTestId("share-row-image")).toBeNull();
+      expect(screen.queryByTestId("share-row-credential")).toBeNull();
+    });
+
+    // The credential row exports `.jwt` for current badges and `.json` for
+    // pre-#598 ones, so its label names neither. Under pseudo the row must
+    // show the translated key, not the component's English default.
+    it("labels the credential row with its translated copy", async () => {
+      mockUseQuery.mockReturnValue([makeRow()]);
+      await i18n.changeLanguage("pseudo");
+      try {
+        renderWithProviders(
+          <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+        );
+        openSheet();
+        const label = i18n.t("badgeDetail:share.exportCredential.label");
+        expect(label.startsWith("[")).toBe(true);
+        expect(
+          within(screen.getByTestId("share-row-credential")).getByText(label),
+        ).toBeOnTheScreen();
+      } finally {
+        await i18n.changeLanguage("en");
+      }
     });
 
     it("opens the sheet, titled after the goal, when the CTA is pressed", () => {

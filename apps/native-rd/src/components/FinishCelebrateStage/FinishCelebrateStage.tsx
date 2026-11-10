@@ -22,8 +22,14 @@ export interface FinishCelebrateStageProps {
    * Optional "done editing" trigger — fires with the current text when the
    * note field blurs. The open/closed toggle itself is internal state (D8);
    * only the resulting text and this save signal are outward callbacks.
+   *
+   * Blur is not a reliable save point on its own: tapping the CTA while the
+   * field is focused unmounts it without a JS blur, so callers must also save
+   * from `onDesignBadge`.
    */
   onSaveClosingNote?: (text: string) => void;
+  /** Longest note the caller can store; caps the field. */
+  closingNoteMaxLength?: number;
   /** Closed-state prompt label ("Add a closing note"). */
   closingNotePromptLabel?: string;
   /** Muted suffix rendered after the prompt ("optional"). */
@@ -63,6 +69,7 @@ export function FinishCelebrateStage({
   closingNoteValue,
   onClosingNoteChange,
   onSaveClosingNote,
+  closingNoteMaxLength,
   closingNotePromptLabel = "Add a closing note",
   closingNoteOptionalLabel = "optional",
   closingNotePlaceholder = "What did finishing this feel like?",
@@ -107,6 +114,7 @@ export function FinishCelebrateStage({
               placeholderTextColor={theme.colors.textMuted}
               multiline
               autoFocus
+              maxLength={closingNoteMaxLength}
               accessibilityLabel={closingNoteAccessibilityLabel}
               accessibilityHint={closingNoteAccessibilityHint}
               testID="finish-celebrate-note-input"
