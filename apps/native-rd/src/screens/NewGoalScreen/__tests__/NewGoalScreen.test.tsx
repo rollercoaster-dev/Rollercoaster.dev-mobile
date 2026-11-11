@@ -117,7 +117,10 @@ const ROW_1 = "step-1";
  * the bundle — so the whole function is widened once here rather than casting at
  * every call site.
  */
-const t = i18n.t as (key: string, options?: Record<string, unknown>) => string;
+const t = i18n.t as unknown as (
+  key: string,
+  options?: Record<string, unknown>,
+) => string;
 
 function typeTitleAndAdvance() {
   fireEvent.changeText(screen.getByTestId("new-goal-title-input"), GOAL_TITLE);
