@@ -202,7 +202,12 @@ StandardError=append:${join(state, "heartbeat.log")}
   // the only bot reader: never start the old receiver and timers next to it.
   if (start && existsSync(join(units, "rollercoaster-pm-ad-listen.service"))) {
     run(["systemctl", "--user", "daemon-reload"]);
-    run(["systemctl", "--user", "restart", "rollercoaster-pm-ad-listen.service"]);
+    run([
+      "systemctl",
+      "--user",
+      "restart",
+      "rollercoaster-pm-ad-listen.service",
+    ]);
   } else if (start) {
     run(["systemctl", "--user", "daemon-reload"]);
     run(["systemctl", "--user", "enable", RECEIVER_UNIT, ...timers]);
