@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # Dependabot queue
 
-Runs with Joe's merge authority. This is the sibling of the portable `dependabot-review` skill (`.agents/skills/dependabot-review`), which only approves/comments for the project-manager automation. This skill is self-contained.
+Runs with Joe's merge authority. This is the sibling of the portable `dependabot-review` skill (`.agents/skills/dependabot-review`), which only approves/comments for the external project-manager automation. This skill is self-contained.
 
 Repo: `rollercoaster-dev/Rollercoaster.dev-mobile`. CI commands and which workflows apply to which paths: `docs/architecture/ci-contract.md`.
 
