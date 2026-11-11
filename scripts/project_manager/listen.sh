@@ -12,7 +12,7 @@ repo_root="${ROLLERCOASTER_REPO:-$HOME/Code/Rollercoaster.dev/Rollercoaster.dev-
 history="$(bun "$pm_dir/telegram_bridge.ts" --state-dir "$state" --repo-root "$runtime" history --limit 12 2>/dev/null || true)"
 status="$(bun "$pm_dir/pm.ts" --state-dir "$state" status 2>/dev/null || echo 'unavailable: run pm.ts status yourself')"
 cd "$repo_root"
-exec timeout 300 claude -p --permission-mode auto --model sonnet \
+exec timeout 300 claude -p --permission-mode auto --model opus \
   --disallowedTools "Edit,Write,NotebookEdit" \
   --add-dir "$runtime" --add-dir "$state" <<< "Recent Telegram chat, oldest first (this is the context; read it before anything else):
 $history
