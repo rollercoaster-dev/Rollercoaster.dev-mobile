@@ -1,0 +1,6 @@
+#!/bin/bash
+# The tick says what it is working on. Shown as NOW in the pinned status
+# message (bin/pin) instead of a Telegram message: progress without a ping.
+#   now "#14673 review threads"
+. "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/_env"
+printf '%s\n' "${1:?now: text missing}" | head -1 | cut -c1-70 >"$S/logs/now.txt"

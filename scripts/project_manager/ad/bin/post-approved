@@ -1,0 +1,41 @@
+#!/bin/bash
+# Deterministic approval gate. Reads Joe's answer to an ask from messages.jsonl
+# (never from the agent's word) and only then acts.
+#
+#   post-approved --check ASK_ID     print Joe's answer; exit 0 if he answered, 2 if not
+#
+# Joe's answer = his message that replies to ASK_ID, else his first unthreaded
+# message after ASK_ID, provided the agent asked nothing else in between.
+# pm port: check-only. pm never posts reviews or comments on Joe's behalf.
+# Exit: 0 answered, 2 no answer yet, 3 not approved, 4 refused, 1 error.
+set -euo pipefail
+. "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/_env"
+LOG="${AD_MESSAGES:-$S/messages.jsonl}"
+
+check=false dry=false ask=""
+for a in "$@"; do
+  case $a in --check) check=true ;; --dry) dry=true ;; *) ask=$a ;; esac
+done
+[[ $ask =~ ^[0-9]+$ ]] || { echo "usage: post-approved --check ASK_ID" >&2; exit 64; }
+
+q=$(jq -c --argjson id "$ask" 'select(.from=="agent" and .id==$id)' "$LOG" | tail -1)
+[[ -n $q ]] || { echo "no agent message $ask in the log" >&2; exit 4; }
+[[ $(jq -r .ask <<<"$q") == true ]] || { echo "message $ask is not a question" >&2; exit 4; }
+
+answer=$(jq -sc --argjson id "$ask" '
+  (map(select(.from=="joe" and .reply_to==$id)) | first) //
+  (map(select(.from=="joe" and .reply_to==null and .id>$id)) | first)
+' "$LOG")
+# An unthreaded answer only counts if no other question came in between.
+if [[ $answer != null ]]; then
+  aid=$(jq -r .id <<<"$answer")
+  if [[ $(jq -r .reply_to <<<"$answer") != "$ask" ]]; then
+    between=$(jq -c --argjson a "$ask" --argjson b "$aid" \
+      'select(.from=="agent" and .ask==true and .id>$a and .id<$b)' "$LOG" | wc -l | tr -d ' ')
+    (( between == 0 )) || answer=null
+  fi
+fi
+[[ $answer != null ]] || { echo "no answer from Joe to $ask yet" >&2; exit 2; }
+text=$(jq -r .text <<<"$answer")
+
+echo "$text"

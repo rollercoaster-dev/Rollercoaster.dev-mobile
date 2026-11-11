@@ -1,0 +1,77 @@
+#!/bin/bash
+# The only way auto-dev sends Telegram. Sends, then appends the message to
+# messages.jsonl (the single source of truth, see CONCEPT.md).
+#
+#   say [--ask] [--long] [--topic T] [--reply-to N] [--by tick|listener] [--action JSON] "text"
+#
+# --long     the morning brief / `brief` only: up to 15 lines instead of 5
+# Refuses (exit 4) while Joe has muted the bot (STOP → control.json muted_until),
+# unless AD_SAY_FORCE=1 (bin/listen's own control acks). Callers keep the item
+# and retry later; nothing is queued here.
+# Refuses (exit 5) a second listener reply to the same Joe message.
+# --ask      Joe is expected to answer (makes it an open question until he does)
+# --action   what an approval of this ask allows, for bin/post-approved, e.g.
+#            '{"type":"review","pr":14358,"file":"reviews/14358.json"}'
+#            The payload file's sha256 is stored, so it can't change after Joe saw it.
+# Joe's style rule: at most 5 lines. Longer text is refused (exit 3).
+# Prints the Telegram message id.
+set -euo pipefail
+. "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/_env"
+LOG="${AD_MESSAGES:-$S/messages.jsonl}"
+TGSEND=tg-send
+MAX_LINES=5
+CTRL=${AD_CTRL:-$S/control.json}
+
+ask=false topic="" rto="" by="${AD_BY:-tick}" action="null"
+while (( $# > 1 )); do
+  case $1 in
+    --ask)      ask=true; shift ;;
+    --long)     MAX_LINES=15; shift ;;
+    --topic)    topic=$2; shift 2 ;;
+    --reply-to) rto=$2; shift 2 ;;
+    --by)       by=$2; shift 2 ;;
+    --action)   action=$2; shift 2 ;;
+    *)          echo "say: unknown option $1" >&2; exit 64 ;;
+  esac
+done
+text=${1:?say: text missing}
+
+if [[ -z ${AD_SAY_FORCE:-} ]]; then
+  mu=$(jq -r '.muted_until // 0' "$CTRL" 2>/dev/null || echo 0)
+  if (( mu > $(date +%s) )); then
+    echo "say: muted by Joe until $(date -d "@$mu" +%H:%M). Not sent; try again later." >&2; exit 4
+  fi
+fi
+if [[ $by == listener && -n $rto ]] &&
+   jq -e --argjson r "$rto" 'select(.from=="agent" and .by=="listener" and .reply_to==$r)' "$LOG" >/dev/null 2>&1; then
+  echo "say: already replied to $rto. One reply per message." >&2; exit 5
+fi
+
+lines=$(printf '%s\n' "$text" | wc -l | tr -d ' ')
+if (( lines > MAX_LINES )); then
+  echo "say: $lines lines, max $MAX_LINES. Less is more: cut it." >&2; exit 3
+fi
+
+# Pin the payload Joe is approving.
+if [[ $action != null ]]; then
+  jq -e . >/dev/null <<<"$action" || { echo "say: --action is not JSON" >&2; exit 64; }
+  f=$(jq -r '.file // empty' <<<"$action")
+  if [[ -n $f ]]; then
+    [[ -f $S/$f ]] || { echo "say: action file $S/$f missing" >&2; exit 66; }
+    sha=$(sha256sum "$S/$f" | cut -d' ' -f1)
+    action=$(jq -c --arg s "$sha" '. + {sha256: $s}' <<<"$action")
+  fi
+fi
+
+if [[ -n ${AD_SAY_DRY:-} ]]; then id=$(( $(date +%s) )); else
+  id=$("$TGSEND" -p -i "$text")
+fi
+
+jq -cn --argjson id "$id" --arg ts "$(date +%FT%T%z)" --arg by "$by" \
+  --arg rto "$rto" --argjson ask "$ask" --arg topic "$topic" --arg text "$text" \
+  --argjson action "$action" \
+  '{id:$id, ts:$ts, from:"agent", by:$by,
+    reply_to:(if $rto=="" then null else ($rto|tonumber) end),
+    ask:$ask, topic:(if $topic=="" then null else $topic end),
+    action:$action, text:$text}' >>"$LOG"
+echo "$id"

@@ -1,0 +1,19 @@
+# Sourced by every ad/bin script. Ported from auto-dev (hailmary): AD was one
+# dir for code + state; here code is the installed runtime, state is $S.
+AD="${PM_AD:-$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/.." && pwd)}"
+S="${PM_AD_STATE:-$HOME/.local/state/rollercoaster-pm/ad}"
+PMS="$HOME/.local/state/rollercoaster-pm"   # pm.ts state (slots, plan, audits)
+RUNTIME="$(cd "$AD/../../.." && pwd)"
+PM="bun $RUNTIME/scripts/project_manager/pm.ts --state-dir $PMS"
+REPO="${ROLLERCOASTER_REPO:-$HOME/Code/Rollercoaster.dev/Rollercoaster.dev-mobile}"
+GH_REPO=rollercoaster-dev/Rollercoaster.dev-mobile
+export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:/usr/local/bin:/usr/bin:/bin:$PATH"
+# The PM bot, not tg-send's default (auto-dev's) bot. tg-recv keeps its own
+# offset under $S/tg so it never eats the other bot's updates.
+if [[ -f $HOME/.config/telegram/env ]]; then
+  set -a; . "$HOME/.config/telegram/env"; set +a
+fi
+export XDG_STATE_HOME="$S/xdg"
+mkdir -p "$S/logs" "$S/attachments" "$XDG_STATE_HOME"
+[[ -f $S/control.json ]] || echo '{"paused":false,"mode":"live","muted_until":0}' >"$S/control.json"
+touch "$S/messages.jsonl" "$S/tasks.jsonl"

@@ -1,0 +1,23 @@
+#!/bin/bash
+# Ask for a tick, so the caller (listener) returns immediately.
+# Prints what really happens, so nobody promises a tick that won't run:
+#   paused   → exit 3, nothing started (open tasks run after ON)
+#   started  → a tick is running now (seen in the process table)
+#   queued   → a tick is already running, or the start wasn't seen yet;
+#              the listener's watchdog starts one within a minute of it being free
+#
+# Ticks are only ever started by systemd (schedule or kickstart): it runs one
+# instance at a time and forgets dead ones on reboot. No lock, no waiter.
+# logs/want-tick = "someone asked for a tick"; bin/tick removes it when it starts.
+. "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/_env"
+if [ "$(jq -r '.paused' "$S/control.json" 2>/dev/null)" = true ]; then
+  echo "paused"; exit 3
+fi
+touch "$S/logs/want-tick"
+if [ "$("$AD/bin/status" --state)" = running ]; then echo "queued"; exit 0; fi
+systemctl --user start --no-block rollercoaster-pm-ad-tick.service >/dev/null 2>&1
+for _ in 1 2 3 4; do
+  sleep 1
+  if [ "$("$AD/bin/status" --state)" = running ]; then echo "started"; exit 0; fi
+done
+echo "queued"

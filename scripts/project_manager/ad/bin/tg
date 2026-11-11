@@ -1,0 +1,38 @@
+#!/bin/bash
+# The Telegram calls tg-send doesn't have: edit, pin, react. Same bot, same
+# chat, same credentials file. None of them notifies Joe's phone.
+#
+#   tg edit ID "text"     replace a message's text (plain)
+#   tg pin ID             pin it, silently
+#   tg react ID EMOJI     put a reaction on a message (instant receipt)
+#   tg file FILE_ID DEST   download an attachment Joe sent (file id from
+#                         tg-recv --json) to DEST.<ext>; prints the path
+#
+# Exit 0 ok, 1 Telegram refused (reason on stderr). Never prints the token.
+set -euo pipefail
+CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/tg-send/config"
+cfg() { sed -n "s/^[[:space:]]*$1[[:space:]]*=[[:space:]]*//p" "$CONFIG" | tail -1 | tr -d '\r"'"'"; }
+TOKEN=${TELEGRAM_BOT_TOKEN:-$(cfg TELEGRAM_BOT_TOKEN)}
+CHAT=${TELEGRAM_CHAT_ID:-$(cfg TELEGRAM_CHAT_ID)}
+[[ -n $TOKEN && -n $CHAT ]] || { echo "tg: no credentials (tg-send --setup)" >&2; exit 1; }
+api() { local m=$1; shift; curl -sS --max-time 20 -X POST "https://api.telegram.org/bot${TOKEN}/$m" "$@"; }
+
+cmd=${1:-}; id=${2:?tg: message id missing}
+case $cmd in
+  file)
+    dest=${3:?tg: destination missing}
+    out=$(api getFile --data-urlencode "file_id=$id")
+    fp=$(jq -r '.result.file_path // empty' <<<"$out")
+    [[ -n $fp ]] || { echo "tg file: $(jq -r '.description // "unknown error"' <<<"$out" 2>/dev/null)" >&2; exit 1; }
+    ext=${fp##*/}; [[ $ext == *.* ]] && ext=${ext##*.} || ext=bin
+    mkdir -p "$(dirname "$dest")"
+    curl -sSf --max-time 120 -o "$dest.$ext" "https://api.telegram.org/file/bot${TOKEN}/$fp" 2>/dev/null \
+      || { rm -f "$dest.$ext"; echo "tg file: download failed" >&2; exit 1; }
+    echo "$dest.$ext"; exit 0 ;;
+  edit)  out=$(api editMessageText --data-urlencode "chat_id=$CHAT" --data-urlencode "message_id=$id" --data-urlencode "text=${3:?tg: text missing}") ;;
+  pin)   out=$(api pinChatMessage --data-urlencode "chat_id=$CHAT" --data-urlencode "message_id=$id" --data-urlencode "disable_notification=true") ;;
+  react) out=$(api setMessageReaction --data-urlencode "chat_id=$CHAT" --data-urlencode "message_id=$id" \
+           --data-urlencode "reaction=$(jq -cn --arg e "${3:?tg: emoji missing}" '[{type:"emoji", emoji:$e}]')") ;;
+  *) echo "tg: edit | pin | react | file" >&2; exit 64 ;;
+esac
+jq -e '.ok == true' >/dev/null 2>&1 <<<"$out" || { echo "tg $cmd: $(jq -r '.description // "unknown error"' <<<"$out" 2>/dev/null)" >&2; exit 1; }

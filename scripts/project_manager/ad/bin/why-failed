@@ -1,0 +1,17 @@
+#!/bin/bash
+# Turn the tail of a failed claude run's log into one plain sentence for Telegram.
+#   why-failed LOGFILE
+t=$(tail -40 "$1" 2>/dev/null)
+case $t in
+  *"OAuth session expired"*|*"Failed to authenticate"*|*"Invalid API key"*|*"/login"*)
+    echo "Claude login expired. Run /login in a terminal claude, then send: on" ;;
+  *"usage limit"*|*"rate limit"*|*"Rate limit"*|*"429"*)
+    echo "Hit Claude usage limit. Will retry next tick." ;;
+  *"Could not resolve host"*|*"ENOTFOUND"*|*"ECONNRESET"*|*"timed out"*)
+    echo "Network down. Will retry next tick." ;;
+  *"Operation not permitted"*)
+    echo "Permission denied on disk. Check the runtime install." ;;
+  *)
+    line=$(grep -v '^===' <<<"$t" | grep -v '^[[:space:]]*$' | tail -1 | cut -c1-200)
+    echo "Failed: ${line:-no output}" ;;
+esac

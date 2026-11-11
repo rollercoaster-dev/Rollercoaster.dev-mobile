@@ -1,0 +1,37 @@
+#!/bin/bash
+# The one answer to "is a tick running?". Read from the process table, never
+# from a lock, a log or a guess. Tick, tick-bg, listener and watchdog all ask here.
+#
+#   status           one line for Telegram
+#   status --state   running | idle | dead
+#                    dead = a tick started, never finished, and its process is gone
+#
+# bin/tick writes logs/run.json at start ({pid, started}) and at exit ({ended, rc}).
+. "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/_env"
+RUN="${AD_RUN:-$S/logs/run.json}"
+pid=$(jq -r '.pid // empty' "$RUN" 2>/dev/null)
+started=$(jq -r '.started // empty' "$RUN" 2>/dev/null)
+ended=$(jq -r '.ended // empty' "$RUN" 2>/dev/null)
+rc=$(jq -r '.rc // 0' "$RUN" 2>/dev/null)
+
+state=idle
+if [[ -n $pid && -z $ended ]]; then
+  # PIDs get reused after a reboot: the process must also be a tick.
+  if [[ $(ps -p "$pid" -o command= 2>/dev/null) == *ad/bin/tick* ]]; then state=running; else state=dead; fi
+fi
+if [[ ${1:-} == --state ]]; then echo "$state"; exit 0; fi
+
+hm() { date -d "@$1" +%H:%M; }
+off=""; [[ $(jq -r '.paused' "$S/control.json" 2>/dev/null) == true ]] && off="OFF. "
+next=""; [[ -e $S/logs/want-tick ]] && next=" Next tick queued."
+case $state in
+  running) echo "${off}Tick running since $(hm "$started") ($(( ($(date +%s) - started) / 60 )) min).$next" ;;
+  dead)
+    boot=$(date -d "$(uptime -s)" +%s)
+    if (( boot > started )); then why="machine rebooted $(hm "$boot")"; else why="process was killed"; fi
+    echo "${off}No tick running. The $(hm "$started") tick died ($why).$next" ;;
+  *)
+    if [[ -n $ended ]]; then last="Last one finished $(hm "$ended") ($([[ $rc == 0 ]] && echo ok || echo "failed, exit $rc"))."
+    else last="None has run yet."; fi
+    echo "${off}No tick running. $last$next" ;;
+esac

@@ -1,0 +1,89 @@
+#!/bin/bash
+# The one place Joe looks: a pinned Telegram message, edited in place (no
+# notification), built only from facts — bin/status, the ask log, the ledger.
+#
+#   🟢 Tick running since 09:00 (5 min).
+#   NOW: #14673 review threads
+#   WAITING ON YOU (1)
+#   • plan:2026-11-11 · go / skip · 09:06
+#   OPEN PRS (2)
+#   • #817 pm listen on opus · https://github.com/…/pull/817
+#   TASKS (1)
+#   • T4 …
+#
+#   pin            update the pinned message if its text changed (create + pin if none)
+#   pin --print    print the text, call nothing
+# Called by bin/listen every loop. Not part of the conversation: not in messages.jsonl.
+set -uo pipefail
+. "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/_env"
+MSGS="$S/messages.jsonl"; STORE="$S/logs/pin.json"
+NL=$'\n'
+
+state=$("$AD/bin/status" --state)
+case $state in running) dot="🟢" ;; dead) dot="🔴" ;; *) dot="⚪" ;; esac
+[[ $(jq -r '.paused' "$S/control.json" 2>/dev/null) == true ]] && dot="⏸"
+text="$dot $("$AD/bin/status")"
+[[ $(jq -r '.mode' "$S/control.json" 2>/dev/null) == live ]] || text="$text Dry-run."
+
+if [[ $state == running && -s $S/logs/now.txt ]]; then
+  text="$text${NL}NOW: $(head -1 "$S/logs/now.txt")"
+elif [[ $state == idle && $dot == "⚪" ]]; then
+  # Schedule: weekdays 09:00–18:00, every 30 min (systemd timer), Europe/Berlin.
+  h=$((10#$(TZ=Europe/Berlin date +%H))); m=$((10#$(TZ=Europe/Berlin date +%M))); d=$(TZ=Europe/Berlin date +%u)
+  if (( m < 30 )); then nh=$h nm=30; else nh=$((h + 1)) nm=0; fi
+  if (( d <= 5 && nh >= 9 && (nh < 18 || (nh == 18 && nm == 0)) )); then
+    text="$text Next $(printf '%02d:%02d' "$nh" "$nm")."
+  fi
+fi
+
+# An unanswered ask is moot once its PR is merged or closed, or after 7 days.
+# gh is asked at most every 30 min per ask; a moot verdict is final.
+MOOT="$S/logs/asks-moot"; CHK="$S/logs/askcheck"; mkdir -p "$CHK"; touch "$MOOT"
+moot() {
+  local id=$1 ts topic pr st
+  grep -qx "$id" "$MOOT" && return 0
+  ts=$(jq -r --argjson id "$id" 'select(.from=="agent" and .id==$id) | .ts[0:10]' "$MSGS" | tail -1)
+  [[ $ts == "$(date +%F)" ]] && return 1
+  if [[ $ts < $(date -d "-7 days" +%F) ]]; then echo "$id" >>"$MOOT"; return 0; fi
+  topic=$(jq -r --argjson id "$id" 'select(.from=="agent" and .id==$id) | .topic // ""' "$MSGS" | tail -1)
+  [[ $topic =~ ^(pr|review):([0-9]+)$ ]] || return 1
+  pr=${BASH_REMATCH[2]}
+  [[ -n $(find "$CHK/$id" -mmin -30 2>/dev/null) ]] && return 1
+  touch "$CHK/$id"
+  st=$(gh pr view "$pr" -R "$GH_REPO" --json state -q .state 2>/dev/null)
+  if [[ $st == MERGED || $st == CLOSED ]]; then echo "$id" >>"$MOOT"; return 0; fi
+  return 1
+}
+
+# Open asks: the same rule the approval gate uses (post-approved --check, exit 2).
+asks=""; n=0
+for id in $(jq -r 'select(.from=="agent" and .ask==true) | .id' "$MSGS" 2>/dev/null | tail -30); do
+  "$AD/bin/post-approved" --check "$id" >/dev/null 2>&1; [[ $? == 2 ]] || continue
+  moot "$id" && continue
+  line=$(jq -r --argjson id "$id" --arg today "$(date +%F)" 'select(.from=="agent" and .id==$id)
+    | "• \(.topic // "question") · \(.text | split("\n") | map(select(test("^https?://")|not)) | last | .[0:60]) · \(if .ts[0:10] == $today then .ts[11:16] else .ts[5:10] end)"' "$MSGS" | tail -1)
+  asks="$asks${NL}$line"; n=$((n + 1))
+done
+(( n )) && text="$text${NL}WAITING ON YOU ($n)$asks"
+
+t=$("$AD/bin/task" count 2>/dev/null || echo 0)
+if (( t )); then
+  text="$text${NL}TASKS ($t)${NL}$("$AD/bin/task" list | head -5 | sed -E 's/^(T[0-9]+) \([^)]*\) /• \1 /' | cut -c1-80)"
+fi
+
+# Every open PR, pm's own included, until it merges (pm task 9). From pm.ts
+# state (synced by each tick), no GitHub call here.
+prs=$($PM status 2>/dev/null | jq -r '[.prs[]? | select(.state=="open")] | length as $n
+  | if $n > 0 then "OPEN PRS (\($n))", (.[] | "• #\(.number) \(.title[0:40]) · \(.html_url)") else empty end')
+[[ -n $prs ]] && text="$text${NL}$prs"
+
+if [[ ${1:-} == --print ]]; then printf '%s\n' "$text"; exit 0; fi
+
+[[ $text == "$(jq -r '.text // empty' "$STORE" 2>/dev/null)" ]] && exit 0
+id=$(jq -r '.id // empty' "$STORE" 2>/dev/null)
+if [[ -z $id ]] || ! "$AD/bin/tg" edit "$id" "$text" 2>/dev/null; then
+  # First run, or the message is gone: send a new one (silent) and pin it.
+  id=$(tg-send -p -s -i "$text") || exit 1
+  "$AD/bin/tg" pin "$id" || echo "pin: could not pin $id" >&2
+fi
+jq -n --argjson id "$id" --arg text "$text" '{id:$id, text:$text}' >"$STORE"

@@ -1,0 +1,44 @@
+#!/bin/bash
+# The task ledger: every promise made to Joe gets a line here, so it can't
+# vanish between listener and tick. Append-only events in tasks.jsonl.
+#
+#   task add --from <msg id> [--by listener|tick] "one concrete line"   → prints id
+#   task done <id> "what was done"
+#   task drop <id> "why"
+#   task list            open tasks, oldest first (empty output = none)
+#   task count           number of open tasks
+set -euo pipefail
+. "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/_env"
+L="${AD_TASKS:-$S/tasks.jsonl}"
+touch "$L"
+now() { date +%FT%T%z; }
+open_json() {
+  jq -sc 'reduce .[] as $e ({}; if $e.ev=="add" then .[($e.id|tostring)]=$e
+          else del(.[($e.id|tostring)]) end) | [.[]] | sort_by(.id)' "$L"
+}
+cmd=${1:-list}; shift || true
+case $cmd in
+  add)
+    from="" by="${AD_BY:-tick}"
+    while (( $# > 1 )); do
+      case $1 in --from) from=$2; shift 2 ;; --by) by=$2; shift 2 ;; *) echo "task: unknown option $1" >&2; exit 64 ;; esac
+    done
+    text=${1:?task: text missing}
+    [[ -n $from ]] || { echo "task: --from <msg id> required" >&2; exit 64; }
+    # mkdir lock: listener and tick may add at the same moment.
+    until mkdir "$L.lock" 2>/dev/null; do sleep 0.2; done
+    trap 'rmdir "$L.lock"' EXIT
+    id=$(( $(jq -s '[.[]|select(.ev=="add")|.id]|max // 0' "$L") + 1 ))
+    jq -cn --argjson id "$id" --arg ts "$(now)" --argjson from "$from" --arg by "$by" --arg t "$text" \
+      '{id:$id, ts:$ts, ev:"add", from_msg:$from, by:$by, text:$t}' >>"$L"
+    echo "$id" ;;
+  done|drop)
+    id=${1:?task: id missing}; note=${2:-}
+    open_json | jq -e --argjson id "$id" 'any(.[]; .id==$id)' >/dev/null \
+      || { echo "task: $id is not open" >&2; exit 1; }
+    jq -cn --argjson id "$id" --arg ts "$(now)" --arg ev "$cmd" --arg by "${AD_BY:-tick}" --arg n "$note" \
+      '{id:$id, ts:$ts, ev:$ev, by:$by, note:$n}' >>"$L" ;;
+  list)  open_json | jq -r '.[] | "T\(.id) (msg \(.from_msg), \(.ts[5:16]|sub("T";" "))) \(.text)"' ;;
+  count) open_json | jq 'length' ;;
+  *) echo "task: add | done | drop | list | count" >&2; exit 64 ;;
+esac

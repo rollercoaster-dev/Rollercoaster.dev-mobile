@@ -1,0 +1,61 @@
+#!/bin/bash
+# Port of auto-dev's bin/install-listener for systemd: moves Telegram and the
+# ticks onto the ported scripts. Replaces the old receiver
+# (telegram_bridge.ts run) and the plan/tick/recap timers: one bot reader only.
+#   install-units            install + switch over
+#   install-units --revert   back to the old receiver and timers
+set -euo pipefail
+. "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/_env"
+U="$HOME/.config/systemd/user"; mkdir -p "$U"
+OLD=(rollercoaster-pm-telegram.service rollercoaster-pm-plan.timer rollercoaster-pm-tick.timer rollercoaster-pm-recap.timer)
+NEW=(rollercoaster-pm-ad-listen.service rollercoaster-pm-ad-tick.timer)
+# Units point at the installed runtime's `current` link, so a reinstall needs no edit.
+BIN="$HOME/.local/share/rollercoaster-pm/current/scripts/project_manager/ad/bin"
+if [[ ${1:-} == --revert ]]; then
+  systemctl --user disable --now "${NEW[@]}" || true
+  systemctl --user enable --now "${OLD[@]}"
+  echo "reverted to the old receiver and timers"; exit 0
+fi
+cat >"$U/rollercoaster-pm-ad-listen.service" <<UNIT
+[Unit]
+Description=Rollercoaster.dev pm Telegram listener (auto-dev port)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=$BIN/listen
+Restart=always
+RestartSec=15
+Environment=PATH=$PATH
+
+[Install]
+WantedBy=default.target
+UNIT
+cat >"$U/rollercoaster-pm-ad-tick.service" <<UNIT
+[Unit]
+Description=Rollercoaster.dev pm tick (auto-dev port)
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=$BIN/tick
+TimeoutStartSec=4h
+Environment=PATH=$PATH
+UNIT
+cat >"$U/rollercoaster-pm-ad-tick.timer" <<UNIT
+[Unit]
+Description=Rollercoaster.dev pm ticks, weekdays 09:00-18:00 every 30 min (Europe/Berlin)
+
+[Timer]
+OnCalendar=Mon..Fri *-*-* 09..17:00,30:00 Europe/Berlin
+OnCalendar=Mon..Fri *-*-* 18:00:00 Europe/Berlin
+Unit=rollercoaster-pm-ad-tick.service
+
+[Install]
+WantedBy=timers.target
+UNIT
+systemctl --user daemon-reload
+systemctl --user disable --now "${OLD[@]}" 2>/dev/null || true
+systemctl --user enable --now "${NEW[@]}"
+sleep 5
+systemctl --user is-active rollercoaster-pm-ad-listen.service && echo "listener running under systemd"

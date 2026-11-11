@@ -1,0 +1,192 @@
+#!/bin/bash
+# pm Telegram listener (ported from auto-dev). Runs forever under systemd
+# (rollercoaster-pm-ad-listen.service, Restart=always).
+# The only process that reads Telegram: tg-recv allows one reader per bot.
+# Every message from Joe is appended to messages.jsonl first, in bash, so it
+# can never get lost. Control words are handled here (instant, no tokens);
+# anything else queues a short, read-only Claude run (LISTEN.md).
+#
+# Claude runs go in the background, one at a time, so Telegram keeps being
+# read while one runs: a STOP is acted on at once, not after the run.
+# Every message waiting when a run starts goes into that ONE run, which sends
+# ONE reply (to the newest). Never one run per message (pm task 11).
+#
+# Control words (case/punctuation-insensitive, whole message):
+#   stop / shh / quiet  mute: kill the running reply, no Telegram for 30 min.
+#                       Ticks keep working. Any normal message unmutes.
+#   off / pause         no ticks until "on" (requests still get queued as tasks)
+#   on / resume         ticks on, unmute, start a tick
+#   live / dry-run      mode
+#   tick / run          start a tick now
+#   status / hello / ? / are you working   → status + what waits on Joe (bin/pin text)
+#                       mode, open tasks, and whether a tick really runs (bin/status)
+#   go / skip           approve / skip today's plan (pm.ts plan-approve / plan-skip)
+set -u
+. "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/_env"
+TG="$HOME/.local/bin"
+CTRL="$S/control.json"
+MSGS="$S/messages.jsonl"
+MUTE_MIN=30
+
+log() { echo "$(date '+%F %T') $*" >>"$S/logs/listen-$(date +%F).log"; }
+ctrl_set() { jq "$1" "$CTRL" >"$CTRL.tmp" && mv "$CTRL.tmp" "$CTRL"; }
+# Control acks: Joe just spoke to us, so they go out even while muted.
+ack() { AD_SAY_FORCE=1 AD_BY=listener "$AD/bin/say" --reply-to "$1" "$2" >/dev/null || log "ack failed: $2"; }
+ackl() { AD_SAY_FORCE=1 AD_BY=listener "$AD/bin/say" --long --reply-to "$1" "$2" >/dev/null || log "ack failed: $2"; }
+# What is open and what waits on Joe: the pinned status text (bin/pin), facts
+# only, no LLM. A ping or ON gets this, never a bare status line (Joe, tg 1036).
+picture() {
+  local p; p=$("$AD/bin/pin" --print 2>/dev/null | tail -n +2 | head -12)
+  [[ -n $p ]] && printf '%s' "$p" || printf 'Nothing waits on you. No open tasks.'
+}
+tick_now() { # reply what really happens
+  case $("$AD/bin/tick-bg") in
+    started) echo "Tick starting." ;;
+    queued)  echo "Queued: starts as soon as the running tick ends." ;;
+    *)       echo "Paused: no tick. Say ON to resume." ;;
+  esac
+}
+
+# Read-only: answers questions, queues tasks, starts ticks. Never writes files, git or GitHub.
+DENIED=(
+  "Edit" "Write" "NotebookEdit" "Bash(*tg-recv*)" "Bash(*tg-send*)" "Bash(git:*)"
+  "Bash(gh pr create:*)" "Bash(gh pr edit:*)" "Bash(gh pr ready:*)" "Bash(gh pr merge:*)"
+  "Bash(gh pr comment:*)" "Bash(gh pr review:*)" "Bash(gh issue:*)" "Bash(gh api:*)"
+  "Bash(*pm.ts*claim*)" "Bash(*pm.ts*bind*)" "Bash(*pm.ts*plan-approve*)"
+  "mcp__claude_ai_GitHub__*"
+)
+
+queue=()      # ids of Joe messages waiting for a claude run
+run_pid=""    # background claude run, if any
+running() { [[ -n $run_pid ]] && kill -0 "$run_pid" 2>/dev/null; }
+kill_run() {
+  running || return 0
+  pkill -TERM -P "$run_pid" 2>/dev/null; kill -TERM "$run_pid" 2>/dev/null
+  log "killed reply run $run_pid"; run_pid=""
+}
+start_run() { # all waiting ids; ONE run, ONE reply to the newest
+  local ids="$*" mid=${!#} run="$S/logs/listen-last-run.log"
+  (
+    # The prompt goes on stdin: --add-dir/--disallowedTools are variadic.
+    cd "$REPO" && AD_BY=listener claude -p --model opus --permission-mode auto \
+      --add-dir "$AD" --add-dir "$S" --add-dir "$PMS" --add-dir "$RUNTIME" \
+      --disallowedTools "${DENIED[@]}" >"$run" 2>&1 <<<"Joe sent Telegram message(s) $ids, all already logged in $MSGS. Answer them together in ONE reply: say --reply-to $mid. Follow $AD/LISTEN.md. AD=$AD S=$S PM=\"$PM\"."
+    rc=$?
+    cat "$run" >>"$S/logs/listen-$(date +%F).log"
+    # 143 = killed by STOP: stay quiet.
+    (( rc == 0 || rc == 143 )) || AD_BY=listener "$AD/bin/say" --reply-to "$mid" "❌ Couldn't answer. $("$AD/bin/why-failed" "$run")" >/dev/null
+  ) &
+  run_pid=$!
+}
+
+# Watchdog: the only place besides tick-bg that starts ticks, always through
+# systemd. A dead tick (reboot, kill) is restarted and Joe is told once; he
+# never has to repair anything. Twice a day, then it stops and says so.
+RUN="$S/logs/run.json"; WANT="$S/logs/want-tick"; DEATHS="$S/logs/deaths"
+last_kick=0
+watchdog() {
+  [ "$(jq -r '.paused' "$CTRL" 2>/dev/null)" = true ] && return
+  case $("$AD/bin/status" --state) in
+    running) return ;;
+    dead)
+      if [ "$(jq -r '.noticed // false' "$RUN")" != true ]; then
+        line=$("$AD/bin/status")
+        jq '.noticed=true' "$RUN" >"$RUN.tmp" && mv "$RUN.tmp" "$RUN"
+        date +%F >>"$DEATHS"
+        if (( $(grep -c "^$(date +%F)$" "$DEATHS") <= 2 )); then
+          touch "$WANT"; tail="Restarting it."
+        else
+          tail="Third time today: not restarting. Send TICK to try again."
+        fi
+        log "watchdog: $line $tail"
+        AD_BY=listener "$AD/bin/say" "⚠️ $line $tail" >/dev/null || log "watchdog: say failed"
+      fi ;;
+  esac
+  # At most one start per 5 min, so a tick that can't start doesn't loop.
+  if [ -e "$WANT" ] && (( $(date +%s) - last_kick >= 300 )); then
+    last_kick=$(date +%s)
+    if systemctl --user start --no-block rollercoaster-pm-ad-tick.service 2>>"$S/logs/listen-$(date +%F).log"; then
+      log "watchdog: tick started"
+    else
+      log "watchdog: kickstart failed"
+    fi
+  fi
+}
+
+log "listener started"
+while :; do
+  date '+%F %T' >"$S/logs/listen.heartbeat"
+  watchdog
+  # Pinned status message: edited in place when something changed, no ping.
+  "$AD/bin/pin" 2>>"$S/logs/listen-$(date +%F).log" || log "pin failed"
+  # Next queued message, once the previous run is done.
+  if ! running && (( ${#queue[@]} )); then
+    start_run "${queue[@]}"; queue=()
+  fi
+  # Short polls while work is pending, so the queue moves.
+  wait_s=50; if running || (( ${#queue[@]} )); then wait_s=5; elif [ -e "$WANT" ] || [ "$("$AD/bin/status" --state)" = running ]; then wait_s=15; fi
+  out=$("$TG/tg-recv" --wait "$wait_s" --json 2>>"$S/logs/listen-$(date +%F).log")
+  rc=$?
+  if [ $rc -eq 1 ]; then sleep 30; continue; fi   # API error: back off
+  [ -n "$out" ] || continue
+  while IFS= read -r m; do
+    id=$(jq -r .message_id <<<"$m"); rto=$(jq -r '.reply_to // "none"' <<<"$m")
+    text=$(jq -r '.text // ""' <<<"$m")
+    # A photo or file Joe sent: saved to attachments/, its path goes in the log
+    # line so Claude can Read it. The caption, if any, is the text.
+    fid=$(jq -r '.photo // .document.file_id // ""' <<<"$m"); file=""; ferr=""
+    if [[ -n $fid ]]; then
+      file=$("$AD/bin/tg" file "$fid" "$S/attachments/$id" 2>>"$S/logs/listen-$(date +%F).log") \
+        || { file=""; ferr="attachment could not be downloaded"; log "msg $id: attachment download failed"; }
+    fi
+    # Service updates (a pin notice, a sticker) have no text and no file: not a message from Joe.
+    if [[ -z ${text//[[:space:]]/} && -z $fid ]]; then log "skipped update $id without text"; continue; fi
+    # Source of truth first: Joe's message, verbatim.
+    jq -c --arg ts "$(date -d "@$(jq -r .date <<<"$m")" +%FT%T%z)" --arg file "$file" --arg ferr "$ferr" \
+      '{id: .message_id, ts: $ts, from: "joe", reply_to: .reply_to, text: .text}
+       + (if $file != "" then {files: [$file]} else {} end)
+       + (if $ferr != "" then {file_error: $ferr} else {} end)' <<<"$m" >>"$MSGS"
+    log "msg $id (reply_to $rto): $text${file:+ [file $file]}"
+    # "OFF!", " Off. " → off
+    word=$(printf '%s' "$text" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z-]//g')
+    # A bare "?" / "??" is a ping.
+    [[ -z $word && -z $fid && $text == *\?* ]] && word=ping
+    case "$word" in
+      stop|shh|quiet|ruhe)
+        kill_run; queue=()
+        ctrl_set ".muted_until=$(( $(date +%s) + MUTE_MIN * 60 ))"
+        ack "$id" "Quiet for $MUTE_MIN min. Work goes on. Write anything to talk again; OFF stops work." ;;
+      off|pause)
+        ctrl_set '.paused=true'
+        ack "$id" "OFF: no ticks until ON. Requests still get queued as tasks." ;;
+      on|resume)
+        ctrl_set '.paused=false | .muted_until=0'
+        ackl "$id" "ON ($(jq -r .mode "$CTRL")). $(tick_now)
+$(picture)" ;;
+      live)
+        ctrl_set '.mode="live" | .paused=false'; ack "$id" "LIVE. $(tick_now)" ;;
+      dry-run|dryrun|dry)
+        ctrl_set '.mode="dry-run"'; ack "$id" "Dry-run. Plans + research only." ;;
+      tick|run)
+        ack "$id" "$(tick_now)" ;;
+      status|hello|hi|hey|ping|alive|working|areyouthere|areyouworking|areyoureallyworking|stillworking)
+        # Facts from code, no LLM: this question must never get a guess.
+        ackl "$id" "$("$AD/bin/status") $(jq -r '"\(.mode)\(if (.muted_until//0) > now then ", muted" else "" end)"' "$CTRL").
+$(picture)" ;;
+      go|skip)
+        # The plan gate lives in pm.ts; the answer is its own, never a guess.
+        if [[ $word == go ]]; then out=$($PM plan-approve --approval-ref "telegram:$id" 2>&1)
+        else out=$($PM plan-skip 2>&1); fi
+        if jq -e '.error' >/dev/null 2>&1 <<<"$out"; then msg="$(jq -r .error <<<"$out")."
+        elif [[ $word == go ]]; then msg="Go: $(jq -r '[.items[]? | "#\(.)"] | join(", ")' <<<"$out"). $(tick_now)"
+        else msg="Skipped today. Nothing starts."; fi
+        ack "$id" "$msg" ;;
+      *)
+        # Instant receipt, before any LLM runs: he sees it arrived.
+        "$AD/bin/tg" react "$id" "👀" 2>>"$S/logs/listen-$(date +%F).log" || true
+        # Joe is talking again: lift a STOP mute.
+        ctrl_set '.muted_until=0'
+        queue+=("$id") ;;
+    esac
+  done <<<"$out"
+done

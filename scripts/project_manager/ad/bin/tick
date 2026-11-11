@@ -1,0 +1,75 @@
+#!/bin/bash
+# One pm tick, started by systemd (rollercoaster-pm-ad-tick.timer, or
+# tick-bg / the listener's watchdog). Ported from auto-dev's bin/tick.
+# Logs to $S/logs/.
+set -u
+. "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/_env"
+LOG="$S/logs/$(date +%Y-%m-%d).log"
+# Messages sent from here are the tick's, whoever started it (see bin/tick-bg).
+export AD_BY=tick
+
+# Weekdays only, Europe/Berlin (SKILL.md). A tick Joe asks for (want-tick) runs anyway.
+if [ "$(TZ=Europe/Berlin date +%u)" -ge 6 ] && [ ! -e "$S/logs/want-tick" ]; then exit 0; fi
+
+# One tick at a time. systemd already runs one instance of this unit; this
+# guard is for a tick started by hand. No lock: bin/status asks the process
+# table, so a tick killed by a reboot can't block the next one.
+RUN="$S/logs/run.json"
+if [ "$("$AD/bin/status" --state)" = running ]; then
+  echo "$(date '+%F %T') skipped: previous tick still running" >>"$LOG"; exit 0
+fi
+
+date '+%F %T' >"$S/logs/tick.heartbeat"
+
+# control.json is written only by bin/listen (Telegram: live/dry-run/off/on).
+MODE=$(jq -r '.mode // "live"' "$S/control.json" 2>/dev/null)
+if [ "$(jq -r '.paused' "$S/control.json" 2>/dev/null)" = true ]; then
+  echo "$(date '+%F %T') paused, tick skipped" >>"$LOG"; exit 0
+fi
+
+# run.json: who is running since when; the EXIT trap records the end. A tick
+# that dies without the trap (reboot, SIGKILL) shows as "dead" in bin/status
+# and the listener's watchdog restarts it.
+TICK_RC=0
+jq -n --argjson pid $$ --argjson started "$(date +%s)" --arg mode "$MODE" \
+  '{pid:$pid, started:$started, mode:$mode}' >"$RUN"
+trap 'jq --argjson e "$(date +%s)" --argjson rc "$TICK_RC" ". + {ended:\$e, rc:\$rc}" "$RUN" >"$RUN.tmp" && mv "$RUN.tmp" "$RUN"' EXIT
+# Requests made before now are covered by this tick; later ones set it again.
+rm -f "$S/logs/want-tick" "$S/logs/now.txt"
+
+# GitHub state for this tick, fetched once here in bash (pm.ts sync).
+$PM sync >/dev/null 2>>"$LOG" || echo "$(date '+%F %T') pm sync failed: no fresh GitHub data" >>"$LOG"
+
+# Which section of SKILL.md this tick runs: plan before 10:00 if none today,
+# recap once at/after 18:00, else work.
+H=$((10#$(TZ=Europe/Berlin date +%H)))
+SECTION="Work tick"
+if [ "$($PM status 2>/dev/null | jq -r '.plan.date // empty')" != "$(TZ=Europe/Berlin date +%F)" ] && (( H < 10 )); then
+  SECTION="Morning plan"
+elif (( H >= 18 )) && [ "$(cat "$S/logs/recap-date" 2>/dev/null)" != "$(date +%F)" ]; then
+  SECTION="Evening recap"; date +%F >"$S/logs/recap-date"
+fi
+
+# Never, in any mode. Deterministic, checked before the auto-mode classifier.
+DENIED=(
+  "Edit($S/messages.jsonl)" "Edit($S/tasks.jsonl)" "Edit($S/control.json)"
+  "Edit($AD/**)" "Edit($S/logs/**)"
+  "Bash(*>*tasks.jsonl*)" "Bash(*>*messages.jsonl*)" "Bash(*tee*messages.jsonl*)" "Bash(*sed -i*messages.jsonl*)"
+  "Bash(*tg-send*)" "Bash(*tg-recv*)"
+  "Bash(gh pr merge:*)" "Bash(gh api *merge*)" "Bash(gh pr review --approve*)"
+  "Bash(*push*--force*)" "Bash(*push* -f*)" "Bash(*push*+*)"
+  "Bash(*push*origin main)" "Bash(*push*origin main *)" "Bash(*push*:main)" "Bash(*push*:main *)"
+  "Bash(*push*:refs/heads/main*)" "Bash(*reset --hard*)"
+  "mcp__claude_ai_GitHub__merge_pull_request"
+)
+
+{
+  echo "=== $(date '+%F %T') tick ($MODE, $SECTION) ==="
+  cd "$REPO" && claude -p --permission-mode auto --add-dir "$AD" --add-dir "$S" --add-dir "$PMS" --add-dir "$RUNTIME" \
+    --disallowedTools "${DENIED[@]}" <<<"Run one pm tick in $MODE mode, section '$SECTION': follow $AD/TICK.md exactly. AD=$AD S=$S RUNTIME=$RUNTIME REPO=$REPO PM=\"$PM\"."
+  rc=$?; TICK_RC=$rc
+  echo "=== exit $rc ==="
+  if [ $rc -ne 0 ]; then
+    "$AD/bin/say" "❌ Tick failed. $("$AD/bin/why-failed" "$LOG")"
+  fi
+} >>"$LOG" 2>&1

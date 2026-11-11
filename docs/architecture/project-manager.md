@@ -132,6 +132,28 @@ Stop with `launchctl bootout gui/$(id -u)/dev.rollercoaster.project-manager-tele
 Restart using `launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/dev.rollercoaster.project-manager-telegram.plist`.
 Stopping Telegram is separate from pausing issue dispatch.
 
+## auto-dev port (`scripts/project_manager/ad/`)
+
+A straight copy of auto-dev's tick / listen / status flow (bash, `tg-send` /
+`tg-recv`), adapted to Linux, systemd and this repo. It replaces the
+`telegram_bridge.ts` receiver and the plan/tick/recap timers; `pm.ts` stays the
+slot, plan and audit guard.
+
+- `bin/listen`: the only bot reader. Control words in bash (stop, off, on,
+  tick, status, go, skip); anything else → ONE read-only Claude run that
+  answers every waiting message in one reply (`LISTEN.md`). Watchdog restarts
+  a dead tick. Updates the pinned status message.
+- `bin/tick`: one tick (`TICK.md` → SKILL.md section by time of day).
+- `bin/status`: is a tick running, from the process table. `bin/pin`: pinned
+  status with open asks, open tasks and every open PR until it merges.
+- `bin/say` (only sender, ≤5 lines, one reply per message), `bin/task`
+  (promise ledger), `bin/now`, `bin/tg`, `bin/post-approved --check`.
+- State: `~/.local/state/rollercoaster-pm/ad/` (`messages.jsonl`, `tasks.jsonl`,
+  `control.json`, `logs/`). Credentials: `~/.config/telegram/env` (the PM bot).
+
+Switch over after install: `ad/bin/install-units` (back: `--revert`). Once
+switched, `install.ts` restarts only the new listener.
+
 ## Verification
 
 ```sh
