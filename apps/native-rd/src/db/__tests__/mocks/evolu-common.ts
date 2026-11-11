@@ -35,6 +35,12 @@ export const Int = {
     if (typeof n !== "number" || !Number.isInteger(n)) return null;
     return n;
   },
+  orThrow: (n: number) => {
+    if (typeof n !== "number" || !Number.isInteger(n)) {
+      throw new Error(`Int.orThrow: not an integer: ${String(n)}`);
+    }
+    return n;
+  },
 };
 
 /** Evolu's `Result` constructors — same shape as the real `Result.js`. */

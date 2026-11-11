@@ -8,6 +8,17 @@
     "body": "A goal is anything you want to finish with evidence. Start small — one step counts.",
     "cta": "New goal"
   },
+  "tutorialOffer": {
+    "title": "New here? Try the tutorial goal",
+    "body": "A short practice goal that walks you through the app alongside a paper journal. You can also start it later in Settings.",
+    "start": "Start the tutorial",
+    "dismiss": "No thanks",
+    "dismissHint": "Hides this card. The tutorial stays available in Settings.",
+    "startFailed": {
+      "title": "Couldn't set up the tutorial goal",
+      "message": "Something went wrong. Please try again."
+    }
+  },
   "actions": {
     "newGoal": "New goal"
   },

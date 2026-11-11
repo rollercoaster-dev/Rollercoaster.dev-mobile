@@ -9,6 +9,8 @@ import { ErrorBoundary } from "../../components/ErrorBoundary";
 import { ScreenHeader } from "../../components/ScreenHeader";
 import { Text } from "../../components/Text";
 import { ConfirmDeleteModal } from "../../components/ConfirmDeleteModal";
+import { TutorialOfferCard } from "../../components/TutorialOfferCard";
+import { useTutorialOffer } from "../../hooks/useTutorialOffer";
 import { reportError } from "../../services/sentry-report";
 import { runEvoluMutation } from "../../utils/evoluMutation";
 import { Logger } from "../../shims/rd-logger";
@@ -102,6 +104,9 @@ function GoalsCockpitContainer({
   // so this container only ever reads.
   const settings = useQuery(userSettingsQuery)[0] ?? null;
   const [deleteTarget, setDeleteTarget] = useState<GoalRow | null>(null);
+  const tutorialOffer = useTutorialOffer(settings, (goalId) =>
+    navigation.navigate("FocusMode", { goalId }),
+  );
 
   // Evolu's join surfaces goalId as nullable despite the schema; warn and
   // skip if it ever happens so a regression here doesn't silently drop a
@@ -215,6 +220,12 @@ function GoalsCockpitContainer({
         }
       />
       <ScrollView contentContainerStyle={[styles.listContent, contentInset]}>
+        {tutorialOffer.isOffered ? (
+          <TutorialOfferCard
+            onStart={tutorialOffer.start}
+            onDismiss={tutorialOffer.dismiss}
+          />
+        ) : null}
         <GoalsCockpit
           hero={hero}
           keepWarm={keepWarm}
