@@ -395,6 +395,101 @@ describe("Bridge", () => {
     ]);
   });
 
+  test("pin sends one silent pinned message, then edits it only when text changes", async () => {
+    const calls: [string, any][] = [];
+    http.call = async (method: string, payload: any) => {
+      calls.push([method, payload]);
+      return { message_id: 77 };
+    };
+    expect(await bridge.pin("⚪ Idle.")).toBe(true);
+    expect(calls.map((c) => c[0])).toEqual(["sendMessage", "pinChatMessage"]);
+    expect(calls[0][1].disable_notification).toBe(true);
+    expect(calls[1][1]).toMatchObject({
+      message_id: 77,
+      disable_notification: true,
+    });
+    expect(await bridge.pin("⚪ Idle.")).toBe(false);
+    await bridge.pin("🟢 Work tick running.");
+    expect(calls.map((c) => c[0])).toEqual([
+      "sendMessage",
+      "pinChatMessage",
+      "editMessageText",
+    ]);
+    expect(calls[2][1]).toMatchObject({
+      message_id: 77,
+      text: "🟢 Work tick running.",
+    });
+  });
+
+  test("pin re-creates the message when the old one can't be edited", async () => {
+    const calls: string[] = [];
+    let next = 5;
+    http.call = async (method: string) => {
+      calls.push(method);
+      if (method === "editMessageText") throw new tb.BridgeError("gone");
+      return { message_id: next++ };
+    };
+    await bridge.pin("a");
+    await bridge.pin("b");
+    expect(calls).toEqual([
+      "sendMessage",
+      "pinChatMessage",
+      "editMessageText",
+      "sendMessage",
+      "pinChatMessage",
+    ]);
+  });
+
+  test("pinned status shows the open question until Joe answers", async () => {
+    fakePm(
+      `console.log(JSON.stringify({ paused: false, plan: null, prs: [], open_tasks: [] }));`,
+    );
+    bridge.send("Merge order? 814 first or 815?", "q", true);
+    expect(bridge.pinStatus()).toContain(
+      "WAITING ON YOU: Merge order? 814 first or 815?",
+    );
+    http.updates = [update(1, "814 first")];
+    await bridge.once();
+    expect(bridge.pinStatus()).not.toContain("WAITING ON YOU");
+  });
+
+  test("pinned status reads run.json: running with current step, then failed", () => {
+    fakePm(
+      `console.log(JSON.stringify({ paused: false, plan: null, prs: [], open_tasks: [] }));`,
+    );
+    const state = join(root, "state");
+    writeFileSync(
+      join(state, "run.json"),
+      JSON.stringify({
+        mode: "tick",
+        started_at: MONDAY_NOON - 600,
+        pid: process.pid,
+      }),
+    );
+    writeFileSync(
+      join(state, "now.json"),
+      JSON.stringify({
+        text: "building #814 on Android",
+        at: MONDAY_NOON - 60,
+      }),
+    );
+    expect(bridge.pinStatus()).toBe(
+      "🟢 Work tick running since 11:50 (10 min).\nNOW: building #814 on Android",
+    );
+    writeFileSync(
+      join(state, "run.json"),
+      JSON.stringify({
+        mode: "tick",
+        started_at: MONDAY_NOON - 600,
+        ended_at: MONDAY_NOON - 590,
+        exit: 1,
+      }),
+    );
+    expect(bridge.pinStatus()).toBe(
+      "🔴 Work tick failed at 11:50. Next run 12:30.",
+    );
+  });
+
   test("python-era telegram database keeps offset and inbox", async () => {
     bridge.db.run("UPDATE metadata SET value='35057421' WHERE key='offset'");
     bridge.db.run(
@@ -404,5 +499,86 @@ describe("Bridge", () => {
     const reopened = makeBridge();
     expect(reopened.offset()).toBe(35057421);
     expect(reopened.inbox().map((r: any) => r.text)).toEqual(["old"]);
+  });
+});
+
+describe("pinText", () => {
+  const base = { paused: false, plan: null, prs: [], open_tasks: [] };
+
+  test("idle shows the next scheduled run", () => {
+    expect(
+      tb.pinText({
+        now: MONDAY_NOON,
+        status: base,
+        run: null,
+        running: false,
+        step: null,
+        ask: null,
+      }),
+    ).toBe("⚪ Idle. Next run 12:30.");
+  });
+
+  test("a run whose process vanished without an end record reads as died", () => {
+    const run = { mode: "tick", started_at: MONDAY_NOON - 1800, pid: 1 };
+    expect(
+      tb.pinText({
+        now: MONDAY_NOON,
+        status: base,
+        run,
+        running: false,
+        step: null,
+        ask: null,
+      }),
+    ).toBe("🔴 Work tick from 11:30 died. Next run 12:30.");
+  });
+
+  test("a step from an earlier run is not shown", () => {
+    const run = { mode: "tick", started_at: MONDAY_NOON - 60, pid: 1 };
+    const text = tb.pinText({
+      now: MONDAY_NOON,
+      status: base,
+      run,
+      running: true,
+      step: { text: "old", at: MONDAY_NOON - 3600 },
+      ask: null,
+    });
+    expect(text).toBe("🟢 Work tick running since 11:59 (1 min).");
+  });
+
+  test("paused, plan, PR links and tasks", () => {
+    const status = {
+      paused: true,
+      plan: { items: [814, 815], status: "approved" },
+      prs: [
+        {
+          number: 814,
+          state: "open",
+          html_url: "https://github.com/o/r/pull/814",
+        },
+        { number: 800, state: "closed" },
+      ],
+      open_tasks: [{ id: 8, text: "Port the pinned status" }],
+    };
+    expect(
+      tb.pinText({
+        now: MONDAY_NOON,
+        status,
+        run: null,
+        running: false,
+        step: null,
+        ask: null,
+      }),
+    ).toBe(
+      "⏸ Off: no new work until you say on.\nPlan: #814 #815 (go given)\nPRs (1): https://github.com/o/r/pull/814\nTasks (1): 8. Port the pinned status",
+    );
+  });
+
+  test("nextRun follows the weekday 09:00-18:00 schedule", () => {
+    expect(tb.nextRun(at(2026, 11, 9, 7))).toBe("09:00");
+    expect(tb.nextRun(at(2026, 11, 9, 9, 10))).toBe("09:30");
+    expect(tb.nextRun(at(2026, 11, 9, 17, 45))).toBe("18:00");
+    expect(tb.nextRun(at(2026, 11, 9, 19))).toBe("tomorrow 09:00");
+    expect(tb.nextRun(at(2026, 11, 13, 19))).toBe("Mon 09:00");
+    expect(tb.nextRun(at(2026, 11, 14, 12))).toBe("Mon 09:00");
   });
 });

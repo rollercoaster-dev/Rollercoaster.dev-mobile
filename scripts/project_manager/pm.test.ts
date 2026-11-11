@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { mkdtempSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { GateError, linkedIssues, Manager } from "./pm";
+import { GateError, linkedIssues, Manager, setNow } from "./pm";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const MONDAY = Date.UTC(2026, 10, 9, 9, 0) / 1000; // 10:00 Berlin
@@ -483,5 +483,24 @@ describe("Manager", () => {
     expect(status.paused).toBe(true);
     expect(status.plan).toBeNull();
     expect(status.open_tasks).toEqual([]);
+  });
+});
+
+describe("setNow", () => {
+  test("writes one trimmed line and clears on empty text", () => {
+    const dir = mkdtempSync(join(tmpdir(), "pm-now-"));
+    try {
+      expect(setNow(dir, "  building #814\n on Android  ", 100)).toEqual({
+        now: "building #814 on Android",
+      });
+      expect(JSON.parse(readFileSync(join(dir, "now.json"), "utf8"))).toEqual({
+        text: "building #814 on Android",
+        at: 100,
+      });
+      setNow(dir, "");
+      expect(existsSync(join(dir, "now.json"))).toBe(false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

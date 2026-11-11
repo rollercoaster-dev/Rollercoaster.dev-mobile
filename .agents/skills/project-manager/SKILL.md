@@ -32,6 +32,8 @@ Scheduled runs, **Mon–Fri only, Europe/Berlin**: morning plan 09:00, work tick
 
 ## Work tick (every 30 min)
 
+Joe watches a pinned Telegram status. At each step, set its `NOW:` line: `pm.ts now "<what, with #N>"` (e.g. `building #814 on the Android emulator`, `fixing review threads on #815`). One line, plain facts; set it again when the step changes. It clears itself when the wakeup ends. This replaces "still working" messages.
+
 1. Steps 1–3 of "Each wakeup".
 2. **Open tasks first** (`pm.ts tasks`): do each that needs no new issue slot (answers, investigations, PR fixes), then `pm.ts task-done N --note "<link>"`. Tell Joe in one line only if he asked for it.
 3. Then maintain open PRs, then claim the next item of **today's approved plan** (`claim` refuses without today's go). One worker at a time.

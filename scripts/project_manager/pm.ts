@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** Persistent admission control for the Rollercoaster issue queue. Never merges. */
 import { Database } from "bun:sqlite";
-import { chmodSync, mkdirSync } from "node:fs";
+import { chmodSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 
@@ -770,6 +770,27 @@ export function fetchSnapshot(
   };
 }
 
+/**
+ * What the running wakeup is doing right now, one line. The pinned Telegram
+ * status shows it while a wakeup runs; heartbeat.sh clears it at the end.
+ */
+export function setNow(
+  directory: string,
+  text: string,
+  at: number = nowSeconds(),
+): Json {
+  const dir = resolve(directory.replace(/^~(?=\/|$)/, homedir()));
+  mkdirSync(dir, { recursive: true, mode: 0o700 });
+  const path = join(dir, "now.json");
+  const line = text.replace(/\s+/g, " ").trim().slice(0, 120);
+  if (!line) {
+    rmSync(path, { force: true });
+    return { now: null };
+  }
+  writeFileSync(path, JSON.stringify({ text: line, at }), { mode: 0o600 });
+  return { now: line };
+}
+
 // --- CLI ---------------------------------------------------------------
 
 const USAGE = `usage: pm.ts [--state-dir DIR] COMMAND
@@ -777,7 +798,7 @@ commands: status snapshot sync pause resume clear-queue
   audit ISSUE VERDICT --evidence TEXT --head SHA | queue ISSUE... | approve-queue --approval-ref TEXT
   plan-propose ISSUE... | plan-approve --approval-ref TEXT | plan-skip | plan-add ISSUE [--anyway]
   tasks | task-add TEXT [--source S] | task-done ID [--note T] | task-drop ID [--note T]
-  claim ISSUE | check-pr ISSUE | bind ISSUE PR`;
+  claim ISSUE | check-pr ISSUE | bind ISSUE PR | now TEXT (empty clears)`;
 
 class UsageError extends Error {}
 
@@ -911,6 +932,9 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         break;
       case "bind":
         result = manager.bind(issueArg!, int(positional[1]), fetch);
+        break;
+      case "now":
+        result = setNow(stateDir, positional.join(" "));
         break;
       default:
         throw new UsageError(`unknown command ${command}`);

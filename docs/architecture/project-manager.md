@@ -103,7 +103,17 @@ bun scripts/project_manager/telegram_bridge.ts inbox
 bun scripts/project_manager/telegram_bridge.ts send 'Progress message' --key 'issue-123-pr-700'
 bun scripts/project_manager/telegram_bridge.ts reply 123456 'Answer to this specific check-in'
 bun scripts/project_manager/telegram_bridge.ts run
+bun scripts/project_manager/telegram_bridge.ts pin --print
+bun scripts/project_manager/pm.ts now 'building #814 on the Android emulator'
 ```
+
+**Pinned live status.** The receiver keeps one pinned Telegram message current
+(checked every 30 s, edited only when its text changes, so it never notifies):
+🟢 running since / 🔴 failed or died / ⚪ idle with the next run / ⏸ off, then
+`NOW:` (the running wakeup's `pm.ts now` line), the open question, today's plan,
+open PR links and open tasks. It reads local state only: `run.json` (written by
+`heartbeat.sh` at start and end, with exit code), `now.json`, and `pm.ts status`.
+A failed wakeup (e.g. spend limit) shows as 🔴 until the next one starts.
 
 Plain words work immediately, no slash needed, case and punctuation ignored:
 `go`/`skip` (today's plan; with none dated today, `go` picks up the last unskipped plan), `status`, `tasks`, `stop` (mute 30 min), `off`/`on`

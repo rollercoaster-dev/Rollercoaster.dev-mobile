@@ -277,6 +277,143 @@ export function formatStatus(data: Json): string {
   ].join("\n");
 }
 
+// --- Pinned live status ------------------------------------------------
+
+/** Berlin wall clock: weekday 0=Mon, minutes since midnight. */
+function berlinClock(seconds: number): { weekday: number; minutes: number } {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Europe/Berlin",
+      weekday: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+    })
+      .formatToParts(new Date(seconds * 1000))
+      .map((p) => [p.type, p.value]),
+  );
+  return {
+    weekday: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].indexOf(
+      parts.weekday,
+    ),
+    minutes: Number(parts.hour) * 60 + Number(parts.minute),
+  };
+}
+
+const hhmm = (minutes: number) =>
+  `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
+
+export const clockTime = (seconds: number) =>
+  hhmm(berlinClock(seconds).minutes);
+
+/** Next scheduled wakeup (install.ts timers): weekdays 09:00 to 18:00, every 30 min. */
+export function nextRun(seconds: number): string {
+  const { weekday, minutes } = berlinClock(seconds);
+  if (weekday < 5 && minutes < 18 * 60) {
+    const next = Math.max(9 * 60, (Math.floor(minutes / 30) + 1) * 30);
+    return hhmm(next);
+  }
+  return weekday >= 4 ? "Mon 09:00" : "tomorrow 09:00";
+}
+
+export interface RunState {
+  mode: string;
+  started_at: number;
+  pid?: number;
+  ended_at?: number;
+  exit?: number;
+}
+
+/**
+ * The one message Joe looks at, built only from facts: heartbeat run state,
+ * the current step, the open question, plan, PRs and tasks. Edited in place,
+ * so it never notifies.
+ */
+export function pinText(input: {
+  now: number;
+  status: Json;
+  run: RunState | null;
+  running: boolean;
+  step: { text: string; at: number } | null;
+  ask: string | null;
+}): string {
+  const { now, status, run, running, step, ask } = input;
+  const label = (mode: string) =>
+    ({ plan: "Morning plan", recap: "Recap" })[mode] ?? "Work tick";
+  let head: string;
+  if (running && run) {
+    const mins = Math.max(0, Math.floor((now - run.started_at) / 60));
+    head = `🟢 ${label(run.mode)} running since ${clockTime(run.started_at)} (${mins} min).`;
+  } else if (
+    run &&
+    run.exit !== undefined &&
+    run.exit !== 0 &&
+    run.ended_at !== undefined &&
+    now - run.ended_at < 12 * 3600
+  ) {
+    head = `🔴 ${label(run.mode)} failed at ${clockTime(run.ended_at)}. Next run ${nextRun(now)}.`;
+  } else if (run && !running && run.ended_at === undefined) {
+    head = `🔴 ${label(run.mode)} from ${clockTime(run.started_at)} died. Next run ${nextRun(now)}.`;
+  } else {
+    head = `⚪ Idle. Next run ${nextRun(now)}.`;
+  }
+  if (status.paused) head = "⏸ Off: no new work until you say on.";
+  const lines = [head];
+  if (running && run && step && step.at >= run.started_at)
+    lines.push(`NOW: ${step.text}`);
+  if (ask) lines.push(`WAITING ON YOU: ${ask.split("\n")[0].slice(0, 80)}`);
+  const plan = status.plan;
+  if (plan?.items?.length) {
+    const labels: Record<string, string> = {
+      approved: "go given",
+      proposed: "waiting for your go",
+      skipped: "skipped",
+    };
+    lines.push(
+      `Plan: ${plan.items.map((n: number) => "#" + n).join(" ")} (${labels[plan.status] ?? plan.status})`,
+    );
+  }
+  const prs = (status.prs || []).filter(
+    (p: Json) => String(p.state || "").toLowerCase() === "open",
+  );
+  if (prs.length)
+    lines.push(
+      `PRs (${prs.length}): ` +
+        prs
+          .slice(0, 4)
+          .map((p: Json) => p.html_url || "#" + p.number)
+          .join(" "),
+    );
+  const tasks = status.open_tasks || [];
+  if (tasks.length)
+    lines.push(
+      `Tasks (${tasks.length}): ` +
+        tasks
+          .slice(0, 2)
+          .map((t: Json) => `${t.id}. ${String(t.text).slice(0, 60)}`)
+          .join(" · "),
+    );
+  return lines.join("\n");
+}
+
+function readJson(path: string): Json {
+  try {
+    return JSON.parse(readFileSync(path, "utf8"));
+  } catch {
+    return null;
+  }
+}
+
+function alive(pid: number | undefined): boolean {
+  if (!pid || !Number.isInteger(pid)) return false;
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (e) {
+    return (e as NodeJS.ErrnoException).code === "EPERM";
+  }
+}
+
 interface Listener {
   proc: ChildProcess;
   uid: number;
@@ -436,11 +573,13 @@ export class Bridge {
       );
     this.tx(() => {
       this.enqueue(text, "notification:" + (key ?? crypto.randomUUID()));
-      if (ask)
+      if (ask) {
         this.db.run(
           "INSERT OR REPLACE INTO metadata VALUES ('open_ask_date', ?)",
           [now.date],
         );
+        this.record("open_ask_text", text);
+      }
     });
   }
 
@@ -495,6 +634,68 @@ export class Bridge {
       )
         throw e;
     }
+  }
+
+  /** Text for the pinned status, from local state only (no GitHub calls). */
+  pinStatus(): string {
+    const result = this.pm("status");
+    if (result.exitCode !== 0) throw new BridgeError("pm status failed");
+    const status = JSON.parse(result.stdout);
+    const run = readJson(join(this.stateDir, "run.json")) as RunState | null;
+    const today = berlin(this.now()).date;
+    return pinText({
+      now: this.now(),
+      status,
+      run,
+      running: !!run && run.ended_at === undefined && alive(run.pid),
+      step: readJson(join(this.stateDir, "now.json")),
+      ask:
+        this.meta("open_ask_date") === today
+          ? this.meta("open_ask_text")
+          : null,
+    });
+  }
+
+  /**
+   * Keep one pinned message current: edit it when the text changed (silent),
+   * or send a silent message and pin it when there is none yet.
+   */
+  async pin(text: string = this.pinStatus()): Promise<boolean> {
+    if (text === this.meta("pin_text")) return false;
+    const id = Number(this.meta("pin_id", "0"));
+    if (id) {
+      try {
+        await this.http.call("editMessageText", {
+          chat_id: this.config.chatId,
+          message_id: id,
+          text,
+          link_preview_options: { is_disabled: true },
+        });
+        this.record("pin_text", text);
+        return true;
+      } catch (e) {
+        if (!(e instanceof BridgeError)) throw e;
+        // Gone or not editable: fall through and pin a fresh one.
+      }
+    }
+    const sent = (await this.http.call("sendMessage", {
+      chat_id: this.config.chatId,
+      text,
+      disable_notification: true,
+      link_preview_options: { is_disabled: true },
+    })) as Json;
+    this.tx(() => {
+      this.record("pin_id", sent.message_id);
+      this.record("pin_text", text);
+    });
+    await this.http
+      .call("pinChatMessage", {
+        chat_id: this.config.chatId,
+        message_id: sent.message_id,
+        disable_notification: true,
+      })
+      .catch(() => this.record("last_error", "Could not pin the status."));
+    return true;
   }
 
   private authorized(message: Json): boolean {
@@ -703,7 +904,9 @@ export class Bridge {
           ).changes;
           if (inserted) {
             // Any message from Joe answers the open question; anything but stop unmutes.
-            this.db.run("DELETE FROM metadata WHERE key='open_ask_date'");
+            this.db.run(
+              "DELETE FROM metadata WHERE key IN ('open_ask_date','open_ask_text')",
+            );
             if (command !== "stop")
               this.db.run("DELETE FROM metadata WHERE key='muted_until'");
           }
@@ -722,7 +925,7 @@ export class Bridge {
 // --- CLI ---------------------------------------------------------------
 
 const USAGE = `usage: telegram_bridge.ts [--state-dir DIR] [--repo-root DIR] [--env-file FILE] COMMAND
-commands: run | once | inbox | health | history [--limit N] | send TEXT [--key K] [--ask] | reply UPDATE_ID TEXT`;
+commands: run | once | inbox | health | history [--limit N] | pin [--print] | send TEXT [--key K] [--ask] | reply UPDATE_ID TEXT`;
 
 export async function main(
   argv: string[] = process.argv.slice(2),
@@ -734,9 +937,11 @@ export async function main(
   };
   const positional: string[] = [];
   let ask = false;
+  let print = false;
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     if (arg === "--ask") ask = true;
+    else if (arg === "--print") print = true;
     else if (
       ["--state-dir", "--repo-root", "--env-file", "--key", "--limit"].includes(
         arg,
@@ -751,7 +956,7 @@ export async function main(
   }
   const [command, ...rest] = positional;
   const valid =
-    (["run", "once", "inbox", "health", "history"].includes(command) &&
+    (["run", "once", "inbox", "health", "history", "pin"].includes(command) &&
       rest.length === 0) ||
     (command === "send" && rest.length === 1) ||
     (command === "reply" && rest.length === 2 && /^-?\d+$/.test(rest[0]));
@@ -771,6 +976,7 @@ export async function main(
     if (command === "run" || command === "once") {
       await withLock(b.stateDir, async () => {
         if (command === "once") return b.once();
+        let pinnedAt = 0;
         for (;;) {
           try {
             await b.once(25);
@@ -779,6 +985,13 @@ export async function main(
               "Telegram polling failed; retrying with durable state retained.",
             );
             await Bun.sleep(5000);
+          }
+          // The pinned status, refreshed at most every 30 s; never blocks polling.
+          if (Date.now() - pinnedAt >= 30_000) {
+            pinnedAt = Date.now();
+            await b.pin().catch(() => {
+              console.error("Pinned status update failed; retrying later.");
+            });
           }
         }
       });
@@ -789,6 +1002,9 @@ export async function main(
         ? Number(options.limit)
         : 12;
       console.log(b.history(limit).join("\n"));
+    } else if (command === "pin") {
+      if (print) console.log(b.pinStatus());
+      else console.log(JSON.stringify({ updated: await b.pin() }));
     } else if (command === "health") {
       console.log(JSON.stringify(b.health()));
     } else {
