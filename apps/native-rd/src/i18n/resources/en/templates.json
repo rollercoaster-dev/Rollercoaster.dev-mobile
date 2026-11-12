@@ -17,11 +17,11 @@
       },
       "why": {
         "title": "Say why, out loud",
-        "description": "Record about 30 seconds on why you want this. It stays on your phone. Then write one line of why in your journal.\n\nRather not record? Tap the evidence box to change what this step asks for."
+        "description": "Record about 30 seconds on why you want this. It stays on your phone. Then write one line of why in your journal.\n\nRather not record? Tap “change” in the evidence box below to pick another kind of evidence."
       },
       "setAside": {
         "title": "Set this step aside, then pick it back up",
-        "description": "Set this step aside. The app moves on and nothing is lost. Find it again under See all steps and pick it back up. Stopping isn’t failing.\n\nIn your journal, mark one of your three steps as set aside, any way you like. Then add a note here."
+        "description": "Tap “Set this step aside” below, under the evidence box. The app moves on to your next step and nothing is lost. Stopping isn’t failing.\n\nTo come back, tap “See all steps ›” and choose the step marked “Set aside”. Then tap “Pick this back up”.\n\nIn your journal, mark one of your three steps as set aside, any way you like. Then add a note here."
       },
       "fiveMinutes": {
         "title": "Do five minutes on your first step",
@@ -29,15 +29,15 @@
       },
       "yours": {
         "title": "Make it yours",
-        "description": "Open Settings and try the themes until the app looks right for your eyes. Put your name or a mark on your journal’s cover. Then note which theme you picked."
+        "description": "Open the Settings tab and try each option under Theme until the app looks right for your eyes. Put your name or a mark on your journal’s cover. Then note which theme you picked."
       },
       "paperOnly": {
         "title": "One session on paper only",
-        "description": "Next time you work on your thing, leave the app shut and track it in your journal. Afterwards, come back and add a note about it. A photo of the page is welcome.\n\nThen open See all steps to look at your timeline."
+        "description": "Next time you work on your thing, leave the app shut and track it in your journal. Afterwards, come back and add a note about it. A photo of the page is welcome.\n\nThen tap “See all steps ›” to look at your timeline."
       },
       "finish": {
         "title": "Write the date and finish",
-        "description": "Write today’s date in your journal and add a last note here. Then design your badge. It says you can keep a goal journal.\n\nAfter that, turn the page and start your real goal."
+        "description": "Write today’s date in your journal and add a last note here. Then tap “Design your badge”. It says you can keep a goal journal.\n\nAfter that, turn the page and start your real goal."
       }
     }
   }

@@ -17,11 +17,11 @@
       },
       "why": {
         "title": "Sag laut, warum",
-        "description": "Nimm etwa 30 Sekunden auf, warum du das willst. Es bleibt auf deinem Handy. Schreib dann eine Zeile warum in dein Notizbuch.\n\nKeine Lust zu sprechen? Tippe auf das Beweis-Feld, um zu ändern, was dieser Schritt verlangt."
+        "description": "Nimm etwa 30 Sekunden auf, warum du das willst. Es bleibt auf deinem Handy. Schreib dann eine Zeile warum in dein Notizbuch.\n\nKeine Lust zu sprechen? Tippe unten im Beweis-Feld auf „ändern“, um eine andere Art von Beweis zu wählen."
       },
       "setAside": {
-        "title": "Stell diesen Schritt beiseite, dann nimm ihn wieder auf",
-        "description": "Stell diesen Schritt beiseite. Die App geht weiter und nichts geht verloren. Finde ihn wieder unter Alle Schritte und nimm ihn wieder auf. Stoppen ist nicht scheitern.\n\nMarkiere in deinem Notizbuch einen deiner drei Schritte als beiseitegestellt, wie es dir passt. Füg dann hier eine Notiz hinzu."
+        "title": "Leg diesen Schritt beiseite, dann nimm ihn wieder auf",
+        "description": "Tippe unten, unter dem Beweis-Feld, auf „Diesen Schritt beiseitelegen“. Die App geht zu deinem nächsten Schritt weiter und nichts geht verloren. Stoppen ist nicht scheitern.\n\nUm zurückzukommen, tippe auf „Alle Schritte ansehen ›“ und wähle den Schritt mit „Zur Seite gelegt“. Tippe dann auf „Wieder aufnehmen“.\n\nMarkiere in deinem Notizbuch einen deiner drei Schritte als beiseitegelegt, wie es dir passt. Füg dann hier eine Notiz hinzu."
       },
       "fiveMinutes": {
         "title": "Fünf Minuten an deinem ersten Schritt",
@@ -29,15 +29,15 @@
       },
       "yours": {
         "title": "Mach es zu deinem",
-        "description": "Öffne Einstellungen und probiere die Designs, bis die App für deine Augen richtig aussieht. Schreib deinen Namen oder ein Zeichen auf den Umschlag deines Notizbuches. Notiere dann, welches Design du gewählt hast."
+        "description": "Öffne den Tab Einstellungen und probiere jede Option unter Thema, bis die App für deine Augen richtig aussieht. Schreib deinen Namen oder ein Zeichen auf den Umschlag deines Notizbuches. Notiere dann, welches Thema du gewählt hast."
       },
       "paperOnly": {
         "title": "Eine Sitzung nur auf Papier",
-        "description": "Wenn du das nächste Mal an deiner Sache arbeitest, lass die App zu und verfolge es in deinem Notizbuch. Komm danach zurück und füg eine Notiz hinzu. Ein Foto der Seite ist gern gesehen.\n\nÖffne dann Alle Schritte, um deine Zeitleiste anzuschauen."
+        "description": "Wenn du das nächste Mal an deiner Sache arbeitest, lass die App zu und verfolge es in deinem Notizbuch. Komm danach zurück und füg eine Notiz hinzu. Ein Foto der Seite ist gern gesehen.\n\nTippe dann auf „Alle Schritte ansehen ›“, um deine Zeitleiste anzuschauen."
       },
       "finish": {
         "title": "Schreib das Datum und fertig",
-        "description": "Schreib heute's Datum in dein Notizbuch und füg hier eine letzte Notiz hinzu. Dann gestalte dein Abzeichen. Es sagt, dass du ein Ziel-Notizbuch führen kannst.\n\nDanach blätter um und fang dein echtes Ziel an."
+        "description": "Schreib das heutige Datum in dein Notizbuch und füg hier eine letzte Notiz hinzu. Tippe dann auf „Dein Abzeichen gestalten“. Es sagt, dass du ein Ziel-Notizbuch führen kannst.\n\nDanach blätter um und fang dein echtes Ziel an."
       }
     }
   }
