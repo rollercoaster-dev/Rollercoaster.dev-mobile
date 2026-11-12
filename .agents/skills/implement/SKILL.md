@@ -7,7 +7,7 @@ description: Use when implementing an agreed issue plan in an isolated Rollercoa
 
 Input: issue number, exact plan path, isolated worktree, and optional resume step. Return commits, tested HEAD, acceptance results, validation commands/results, and any blockers.
 
-1. Read the plan and applicable `AGENTS.md` files. Inspect the branch and working tree, preserving existing work. For manager dispatch, verify the supplied reservation with `python3 ~/.local/share/rollercoaster-pm/current/scripts/project_manager/pm.py --state-dir ~/.local/state/rollercoaster-pm check-pr ISSUE` before implementation. A denied check stops work; only the manager owns claims and priority approval.
+1. Read the plan and applicable `AGENTS.md` files. Inspect the branch and working tree, preserving existing work. Only the manager owns priority and plan approval.
 2. Make the smallest change that satisfies the acceptance criteria, following existing patterns. Add meaningful behavior tests for feature/bug changes, including relevant failure cases. Do not add arbitrary abstractions, unrelated cleanup, or brittle tests that merely duplicate implementation.
 3. Validate each logical change with the relevant tests and checks. From the repository root, use the package scripts:
 

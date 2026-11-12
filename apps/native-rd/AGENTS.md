@@ -172,7 +172,7 @@ Each `docs/` subdirectory has an `index.md` with a summary and links:
 
 ## Agent Workflow
 
-- **Planning**: repository docs and issue acceptance criteria. Automated prioritization uses `.agents/skills/project-manager/`.
+- **Planning**: repository docs and issue acceptance criteria. Automated prioritization runs in auto-dev, a personal tool outside this repo.
 - **Issue tracking**: GitHub Issues + GitHub Project board
 - **Code review**: independent code, test, and failure-handling review through `.agents/skills/review/`.
 - **Expert review**: `.agents/skills/expert-review/` — a report-only panel of `review-*` subagents (`.claude/agents/`) grounded in this repo's docs and ADRs, with every finding verified against the code. `/self-review` runs it before a PR; run it alone for a report without fixes.

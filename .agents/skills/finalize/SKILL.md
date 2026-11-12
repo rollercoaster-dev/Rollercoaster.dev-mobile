@@ -9,13 +9,7 @@ Input: issue, exact plan path, review report, isolated worktree, tested/reviewed
 
 1. Verify repository `rollercoaster-dev/Rollercoaster.dev-mobile`, issue branch, clean issue-owned state, plan acceptance checks, and review coverage. Preserve unrelated work. Inspect the complete diff and commits relative to `origin/main`; all commits need DCO trailers. Never publish from main or use `force` to bypass a failed gate.
 2. Run final applicable validation on the exact candidate HEAD: root `bun run type-check`, `bun run lint`, and `bun run test`, plus plan acceptance checks. Existing results may be reused only when they demonstrably cover the identical HEAD and environment. Inspect build scripts and run applicable package builds; do not assume native compilation is a no-op. A missing reviewer, failing check, or unmet acceptance criterion blocks finalization.
-3. For manager-dispatched work, run immediately before push/PR publication:
-
-   ```bash
-   python3 ~/.local/share/rollercoaster-pm/current/scripts/project_manager/pm.py --state-dir ~/.local/state/rollercoaster-pm check-pr ISSUE
-   ```
-
-   Require success. Workers must not claim a slot themselves, relabel automated work manual, override priority approval, or bypass a denied audit/slot/pause gate. Direct manual issue work does not require a manager reservation.
+3. Manager-dispatched work publishes a **draft** PR; never merge or bypass a failed gate.
 
 4. Write a real temporary Markdown file for the PR body. Lead with the problem and resulting behavior; include acceptance/Intent Verification with truthful checkboxes, relevant Decisions and Discovery Log, actual validation commands and HEAD, and tracked follow-up links. Use `Closes #ISSUE` only when the PR satisfies the complete issue acceptance criteria, so Joe’s merge closes the implemented issue. Partial work uses `Refs #ISSUE`. This does not authorize closing stale or superseded issues. Derive the conventional title from the actual change, not the `codex/` branch prefix. Write the body file inside `tmp/native-verify/<issue>/` and embed each verify-native capture as `![alt](./capture.png)`. Captures never enter git or a PR comment (`.claude/rules/no-committed-review-screenshots.md`); confirm `git diff --name-only origin/main...HEAD` lists no image or video file.
 5. Push the issue branch with `git push -u origin HEAD`. Check for an existing PR on that exact branch with explicit `--repo` before creating another; update/reuse it on resume. Create a new PR using the body file:
