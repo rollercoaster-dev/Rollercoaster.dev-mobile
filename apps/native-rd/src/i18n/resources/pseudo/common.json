@@ -111,7 +111,8 @@
     "evidenceTypeOptions": "[Êṽïđêñçê ţýþê øþţïøñš········]",
     "plannedEvidenceTypes": "[Þĺàññêđ êṽïđêñçê ţýþêš·········]",
     "selectEvidenceType": "[Šêĺêçţ {{label}}······]",
-    "deselectEvidenceType": "[Đêšêĺêçţ {{label}}·······]"
+    "deselectEvidenceType": "[Đêšêĺêçţ {{label}}·······]",
+    "switchToEvidenceType": "[Šŵïţçĥ ţø {{label}}········]"
   },
   "stepCard": {
     "status": {

@@ -93,7 +93,8 @@
     "evidenceTypeOptions": "Evidence type options",
     "plannedEvidenceTypes": "Planned evidence types",
     "selectEvidenceType": "Select {{label}}",
-    "deselectEvidenceType": "Deselect {{label}}"
+    "deselectEvidenceType": "Deselect {{label}}",
+    "switchToEvidenceType": "Switch to {{label}}"
   },
   "stepCard": {
     "status": {

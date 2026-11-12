@@ -25,6 +25,13 @@ export interface AuthoringEvidenceTypePickerProps {
   compact?: boolean;
   /** Optional label shown above the chips. */
   label?: string;
+  /**
+   * How a tap reads to a screen reader. `"multiple"` (default): each chip is a
+   * checkbox that switches its own type on or off. `"single"`: the chips are a
+   * radio group, so a tap on another type reads as switching to it. The caller
+   * still owns what a tap writes; this only names it (#828).
+   */
+  selectionMode?: "multiple" | "single";
 }
 
 /**
@@ -89,7 +96,14 @@ export function EvidenceTypePicker(props: EvidenceTypePickerProps) {
     return <CaptureSheet {...captureProps} />;
   }
 
-  const { selectedTypes, onToggleType, compact = false, label } = props;
+  const {
+    selectedTypes,
+    onToggleType,
+    compact = false,
+    label,
+    selectionMode = "multiple",
+  } = props;
+  const single = selectionMode === "single";
 
   if (compact) {
     return (
@@ -131,29 +145,34 @@ export function EvidenceTypePicker(props: EvidenceTypePickerProps) {
           {label}
         </Text>
       ) : null}
+      {/* Not `accessible`: an accessible container is one VoiceOver element
+          and hides the chips inside it, so no chip could announce its own
+          on/off state (#828). */}
       <View
         style={styles.chipsContainer}
-        accessible
-        accessibilityRole="none"
+        accessibilityRole={single ? "radiogroup" : "none"}
         accessibilityLabel={t("common:a11y.evidenceTypeOptions")}
       >
         {EVIDENCE_OPTIONS.map((opt) => {
           const isSelected = selectedTypes.includes(opt.type);
           const optLabel = evidenceLabel(t, opt.type);
+          const hint = single
+            ? isSelected
+              ? undefined
+              : t("common:a11y.switchToEvidenceType", { label: optLabel })
+            : isSelected
+              ? t("common:a11y.deselectEvidenceType", { label: optLabel })
+              : t("common:a11y.selectEvidenceType", { label: optLabel });
           return (
             <Pressable
               key={opt.type}
               testID={`evidence-type-chip-${opt.type}`}
               style={[styles.chip, isSelected && styles.chipSelected]}
               onPress={() => onToggleType?.(opt.type)}
-              accessibilityRole="checkbox"
+              accessibilityRole={single ? "radio" : "checkbox"}
               accessibilityState={{ checked: isSelected }}
               accessibilityLabel={optLabel}
-              accessibilityHint={
-                isSelected
-                  ? t("common:a11y.deselectEvidenceType", { label: optLabel })
-                  : t("common:a11y.selectEvidenceType", { label: optLabel })
-              }
+              accessibilityHint={hint}
             >
               <Text variant="body" style={styles.chipIcon}>
                 {opt.icon}

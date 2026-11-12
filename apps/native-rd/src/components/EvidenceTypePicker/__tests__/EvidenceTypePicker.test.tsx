@@ -128,6 +128,62 @@ describe("EvidenceTypePicker", () => {
         expect(chip.props.accessibilityHint).toBe(expectedHint(label));
       },
     );
+
+    // An `accessible` container is a single VoiceOver element that hides the
+    // chips inside it, so no chip could announce its own state (#828).
+    it.each(["multiple", "single"] as const)(
+      "leaves each chip reachable by a screen reader (%s)",
+      (selectionMode) => {
+        renderWithProviders(
+          <EvidenceTypePicker
+            {...defaultProps}
+            selectionMode={selectionMode}
+          />,
+        );
+        const group = screen.getByLabelText(
+          i18n.t("common:a11y.evidenceTypeOptions"),
+        );
+        expect(group.props.accessible).not.toBe(true);
+      },
+    );
+
+    describe("single selection (#828)", () => {
+      const renderSingle = () =>
+        renderWithProviders(
+          <EvidenceTypePicker
+            selectedTypes={[EvidenceType.voice_memo as EvidenceTypeValue]}
+            onToggleType={jest.fn()}
+            selectionMode="single"
+          />,
+        );
+
+      it("announces the chips as a radio group with the planned one checked", () => {
+        renderSingle();
+        expect(
+          screen.getByLabelText(i18n.t("common:a11y.evidenceTypeOptions")).props
+            .accessibilityRole,
+        ).toBe("radiogroup");
+        for (const opt of EVIDENCE_OPTIONS) {
+          const chip = screen.getByRole("radio", { name: labelFor(opt.type) });
+          expect(chip.props.accessibilityState).toEqual({
+            checked: opt.type === EvidenceType.voice_memo,
+          });
+        }
+      });
+
+      it("hints that tapping another type switches to it", () => {
+        renderSingle();
+        const note = labelFor(EvidenceType.text);
+        expect(
+          screen.getByRole("radio", { name: note }).props.accessibilityHint,
+        ).toBe(`Switch to ${note}`);
+        expect(
+          screen.getByRole("radio", {
+            name: labelFor(EvidenceType.voice_memo),
+          }).props.accessibilityHint,
+        ).toBeUndefined();
+      });
+    });
   });
 
   describe("compact mode", () => {
