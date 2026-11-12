@@ -69,9 +69,9 @@
   "evidencePlanSheet": {
     "title": "Planned evidence",
     "typesLabel": "Evidence types",
-    "explainerSingle": "This step asks for one kind of evidence. Tap another kind to switch to it.",
-    "explainerMultiple": "This step asks for every kind that is on. Tap a kind to switch it on or off.",
-    "allowSeveralCta": "Ask for more than one kind"
+    "explainerSingle": "This step needs one kind of evidence. Tap another kind to switch to it.",
+    "explainerMultiple": "This step needs every kind that is switched on. Tap a kind to switch it on or off.",
+    "allowSeveralCta": "Allow more than one kind"
   },
   "progressStrip": {
     "doneCount": "{{done}} / {{total}} done",

@@ -12,6 +12,7 @@ import { reportError } from "../../../services/sentry-report";
 import { i18n } from "../../../i18n";
 import { evidenceLabel, evidenceShortLabel } from "../../../i18n/labels";
 import { FocusModeScreen } from "../FocusModeScreen";
+import * as a11yFocus from "../../../utils/accessibilityFocus";
 
 // --- Mocks ---
 
@@ -1185,31 +1186,62 @@ describe("FocusModeScreen", () => {
       });
     });
 
-    it("adds a type alongside the planned one after 'ask for more than one kind'", () => {
-      const announce = jest
-        .spyOn(AccessibilityInfo, "announceForAccessibility")
-        .mockImplementation(() => {});
+    it("adds a type alongside the planned one after 'allow more than one kind'", () => {
+      const focusSpy = jest.spyOn(a11yFocus, "focusAccessibilityRef");
+      try {
+        setupQueries({
+          steps: [step("step-1", { plannedEvidenceTypes: '["photo"]' })],
+        });
+        renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+        fireEvent.press(screen.getByTestId("focus-current-task-change-plan"));
+        focusSpy.mockClear();
+        fireEvent.press(
+          screen.getByTestId("focus-evidence-plan-allow-several"),
+        );
+        const explainer = screen.getByTestId("focus-evidence-plan-explainer");
+        expect(explainer).toHaveTextContent(
+          t("focusMode:evidencePlanSheet.explainerMultiple"),
+        );
+        // The control has done its job and leaves, so screen-reader focus
+        // moves to the line that now says what a tap does.
+        expect(
+          screen.queryByTestId("focus-evidence-plan-allow-several"),
+        ).toBeNull();
+        const focusedTestIDs = focusSpy.mock.calls.map(
+          ([ref]) =>
+            (ref?.current as { props?: { testID?: string } } | null)?.props
+              ?.testID,
+        );
+        expect(focusedTestIDs).toContain("focus-evidence-plan-explainer");
+        fireEvent.press(
+          screen.getByRole("checkbox", { name: evidenceLabel(t, "video") }),
+        );
+        expect(mockUpdateStep).toHaveBeenCalledWith("step-1", {
+          plannedEvidenceTypes: ["photo", "video"],
+        });
+      } finally {
+        focusSpy.mockRestore();
+      }
+    });
+
+    it("closes when the card moves to another step while it is open", () => {
       setupQueries({
         steps: [step("step-1", { plannedEvidenceTypes: '["photo"]' })],
       });
-      renderWithProviders(<FocusModeScreen {...routeProps} />);
-
-      fireEvent.press(screen.getByTestId("focus-current-task-change-plan"));
-      fireEvent.press(screen.getByTestId("focus-evidence-plan-allow-several"));
-      const multiple = t("focusMode:evidencePlanSheet.explainerMultiple");
-      expect(screen.getByText(multiple)).toBeOnTheScreen();
-      expect(announce).toHaveBeenCalledWith(multiple);
-      // The control has done its job; it leaves rather than toggling back.
-      expect(
-        screen.queryByTestId("focus-evidence-plan-allow-several"),
-      ).toBeNull();
-      fireEvent.press(
-        screen.getByRole("checkbox", { name: evidenceLabel(t, "video") }),
+      const { rerender } = renderWithProviders(
+        <FocusModeScreen {...routeProps} />,
       );
-      expect(mockUpdateStep).toHaveBeenCalledWith("step-1", {
-        plannedEvidenceTypes: ["photo", "video"],
+      fireEvent.press(screen.getByTestId("focus-current-task-change-plan"));
+      expect(
+        screen.getByTestId("focus-evidence-plan-explainer"),
+      ).toBeOnTheScreen();
+
+      setupQueries({
+        steps: [step("step-2", { plannedEvidenceTypes: '["photo","video"]' })],
       });
-      announce.mockRestore();
+      rerender(<FocusModeScreen {...routeProps} />);
+      expect(screen.queryByTestId("focus-evidence-plan-explainer")).toBeNull();
     });
 
     it("opens a step that already plans several types as on/off toggles", () => {

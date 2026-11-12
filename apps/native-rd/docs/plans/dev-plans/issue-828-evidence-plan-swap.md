@@ -14,12 +14,22 @@ Goal wizard and the step list; those keep multi-select.
 
 - **D1 (owner may overrule).** The issue listed three options and none was
   chosen. Implemented: when exactly one type is planned, picking another type
-  replaces it (a swap). Several types stay possible through an explicit "Ask
-  for more than one kind" control. A step that already plans several opens as
-  on/off toggles. The sheet's sub-line says what a tap does in each mode.
+  replaces it (a swap). Several types stay possible through an explicit "Allow
+  more than one kind" control. A step that already plans several opens as
+  on/off toggles. A line at the top of the sheet says what a tap does in each
+  mode ("This step needs one kind of evidence. Tap another kind to switch to
+  it." / "This step needs every kind that is switched on. Tap a kind to switch
+  it on or off.").
 - **D2.** The mode is fixed when the sheet opens, so a chip never changes role
   while the reader is using it. Turning a two-type plan down to one leaves the
   sheet in on/off mode until it closes.
+- **D2a.** If the card moves to another step while the sheet is open, the
+  sheet closes, so a mode read off one step never edits another (review
+  finding, correctness).
+- **D2b.** "Allow more than one kind" leaves once pressed; screen-reader focus
+  moves to the explainer line, which now describes on/off mode (review
+  finding, accessibility). The line is rendered in the sheet body (same style
+  as AnimatedSheet's sub-line) so it can take focus.
 - **D3.** Swap leaves the sheet open, so the reader sees the change and can
   still close it themselves.
 - **D4.** `EvidenceTypePicker` gains `selectionMode` (default `"multiple"`). In
@@ -57,8 +67,21 @@ Goal wizard and the step list; those keep multi-select.
 - #826 tutorial step 4 tells readers to "Pick another kind, then tap Audio to
   turn it off". With this change that can become "Pick another kind".
 
+## Review findings
+
+- Correctness: stale mode on step change (fixed, D2a). Container label (see Follow-ups).
+- Tests: hard-coded hint string (fixed, uses `i18n.t`); spy restore (fixed, `try/finally`).
+- Accessibility: focus lost when the CTA unmounts (fixed, D2b). Container label; silent last-type tap (Follow-ups).
+- i18n/copy: "asks for every kind" was ambiguous and de "verlangt" read as demanding (fixed: "needs", "brauchst du"; CTA now "Allow more than one kind" / "Mehrere Arten zulassen").
+
 ## Follow-ups
 
 - Simplify tutorial step 4 copy in `templates.json` once #826 and this land.
+- The chip container's `evidenceTypeOptions` label is likely not announced on
+  iOS now that the container is not `accessible` (it was hiding the chips
+  before). Confirm on device; if lost, carry the group name in the visible
+  label. Path: `src/components/EvidenceTypePicker/EvidenceTypePicker.tsx`.
+- Tapping the last remaining type in on/off mode does nothing and says
+  nothing (pre-existing). Consider a short announcement.
 - Device check with VoiceOver and TalkBack of the radio group and the
   announcement after "Ask for more than one kind".

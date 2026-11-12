@@ -176,7 +176,7 @@ describe("EvidenceTypePicker", () => {
         const note = labelFor(EvidenceType.text);
         expect(
           screen.getByRole("radio", { name: note }).props.accessibilityHint,
-        ).toBe(`Switch to ${note}`);
+        ).toBe(i18n.t("common:a11y.switchToEvidenceType", { label: note }));
         expect(
           screen.getByRole("radio", {
             name: labelFor(EvidenceType.voice_memo),
