@@ -1161,28 +1161,70 @@ describe("FocusModeScreen", () => {
       ).toBeOnTheScreen();
     });
 
-    it("writes the new plan when a type is toggled on", () => {
+    // #828: a step planning one type opens in swap mode. Picking Note on an
+    // Audio step must replace Audio, not leave the step owing both.
+    it("swaps a single planned type for the one picked", () => {
+      setupQueries({
+        steps: [step("step-1", { plannedEvidenceTypes: '["voice_memo"]' })],
+      });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      fireEvent.press(screen.getByTestId("focus-current-task-change-plan"));
+      expect(
+        screen.getByText(t("focusMode:evidencePlanSheet.explainerSingle")),
+      ).toBeOnTheScreen();
+      const audio = screen.getByRole("radio", {
+        name: evidenceLabel(t, "voice_memo"),
+      });
+      expect(audio.props.accessibilityState).toEqual({ checked: true });
+      fireEvent.press(
+        screen.getByRole("radio", { name: evidenceLabel(t, "text") }),
+      );
+      expect(mockUpdateStep).toHaveBeenCalledWith("step-1", {
+        plannedEvidenceTypes: ["text"],
+      });
+    });
+
+    it("adds a type alongside the planned one after 'ask for more than one kind'", () => {
+      const announce = jest
+        .spyOn(AccessibilityInfo, "announceForAccessibility")
+        .mockImplementation(() => {});
       setupQueries({
         steps: [step("step-1", { plannedEvidenceTypes: '["photo"]' })],
       });
       renderWithProviders(<FocusModeScreen {...routeProps} />);
 
       fireEvent.press(screen.getByTestId("focus-current-task-change-plan"));
+      fireEvent.press(screen.getByTestId("focus-evidence-plan-allow-several"));
+      const multiple = t("focusMode:evidencePlanSheet.explainerMultiple");
+      expect(screen.getByText(multiple)).toBeOnTheScreen();
+      expect(announce).toHaveBeenCalledWith(multiple);
+      // The control has done its job; it leaves rather than toggling back.
+      expect(
+        screen.queryByTestId("focus-evidence-plan-allow-several"),
+      ).toBeNull();
       fireEvent.press(
         screen.getByRole("checkbox", { name: evidenceLabel(t, "video") }),
       );
       expect(mockUpdateStep).toHaveBeenCalledWith("step-1", {
         plannedEvidenceTypes: ["photo", "video"],
       });
+      announce.mockRestore();
     });
 
-    it("writes the reduced plan when a type is toggled off", () => {
+    it("opens a step that already plans several types as on/off toggles", () => {
       setupQueries({
         steps: [step("step-1", { plannedEvidenceTypes: '["photo","video"]' })],
       });
       renderWithProviders(<FocusModeScreen {...routeProps} />);
 
       fireEvent.press(screen.getByTestId("focus-current-task-change-plan"));
+      expect(
+        screen.getByText(t("focusMode:evidencePlanSheet.explainerMultiple")),
+      ).toBeOnTheScreen();
+      expect(
+        screen.queryByTestId("focus-evidence-plan-allow-several"),
+      ).toBeNull();
       fireEvent.press(
         screen.getByRole("checkbox", { name: evidenceLabel(t, "video") }),
       );
@@ -1191,19 +1233,49 @@ describe("FocusModeScreen", () => {
       });
     });
 
-    it("refuses to deselect the last remaining type", () => {
-      // "Every step requires evidence" — a step must never reach a 0-type plan.
+    it("reopens in swap mode after the sheet was switched to several", () => {
       setupQueries({
         steps: [step("step-1", { plannedEvidenceTypes: '["photo"]' })],
       });
       renderWithProviders(<FocusModeScreen {...routeProps} />);
 
       fireEvent.press(screen.getByTestId("focus-current-task-change-plan"));
+      fireEvent.press(screen.getByTestId("focus-evidence-plan-allow-several"));
+      fireEvent.press(screen.getByTestId("focus-evidence-plan-close"));
+      fireEvent.press(screen.getByTestId("focus-current-task-change-plan"));
       fireEvent.press(
-        screen.getByRole("checkbox", { name: evidenceLabel(t, "photo") }),
+        screen.getByRole("radio", { name: evidenceLabel(t, "video") }),
       );
-      expect(mockUpdateStep).not.toHaveBeenCalled();
+      expect(mockUpdateStep).toHaveBeenCalledWith("step-1", {
+        plannedEvidenceTypes: ["video"],
+      });
     });
+
+    // "Every step requires evidence" — a step must never reach a 0-type plan,
+    // whether the sheet is swapping or toggling.
+    it.each([
+      ["swap", "radio", false],
+      ["on/off", "checkbox", true],
+    ] as const)(
+      "refuses to deselect the last remaining type (%s)",
+      (_mode, role, allowSeveral) => {
+        setupQueries({
+          steps: [step("step-1", { plannedEvidenceTypes: '["photo"]' })],
+        });
+        renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+        fireEvent.press(screen.getByTestId("focus-current-task-change-plan"));
+        if (allowSeveral) {
+          fireEvent.press(
+            screen.getByTestId("focus-evidence-plan-allow-several"),
+          );
+        }
+        fireEvent.press(
+          screen.getByRole(role, { name: evidenceLabel(t, "photo") }),
+        );
+        expect(mockUpdateStep).not.toHaveBeenCalled();
+      },
+    );
 
     it("clears rather than re-adds a chip when an unknown stored type selected it", () => {
       // The column is free-form JSON, so an unknown type can be stored. It

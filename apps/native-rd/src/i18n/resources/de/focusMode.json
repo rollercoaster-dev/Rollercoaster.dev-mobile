@@ -68,7 +68,10 @@
   },
   "evidencePlanSheet": {
     "title": "Geplante Nachweise",
-    "typesLabel": "Nachweisarten"
+    "typesLabel": "Nachweisarten",
+    "explainerSingle": "Dieser Schritt verlangt eine Art von Nachweis. Tippe eine andere Art an, um zu ihr zu wechseln.",
+    "explainerMultiple": "Dieser Schritt verlangt jede Art, die eingeschaltet ist. Tippe eine Art an, um sie ein- oder auszuschalten.",
+    "allowSeveralCta": "Mehr als eine Art verlangen"
   },
   "progressStrip": {
     "doneCount": "{{done}} / {{total}} erledigt",
