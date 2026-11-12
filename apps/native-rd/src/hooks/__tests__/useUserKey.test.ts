@@ -26,6 +26,7 @@ jest.mock("../../crypto", () => ({
     getPublicKey: jest
       .fn()
       .mockResolvedValue({ kty: "EC", crv: "P-256", x: "pubx", y: "puby" }),
+    ensureDeviceOnly: jest.fn().mockResolvedValue(undefined),
   },
 }));
 
@@ -129,6 +130,35 @@ describe("useUserKey", () => {
       expect(result.current.isReady).toBe(true);
       expect(result.current.keyId).toBe("existing-key-id");
       expect(result.current.error).toBeNull();
+    });
+
+    it("moves the verified key to device-only storage", async () => {
+      mockUseQuery.mockReturnValue([
+        { id: MOCK_SETTINGS_ID, keyId: "existing-key-id" },
+      ]);
+
+      renderHook(() => useUserKey());
+      await act(async () => {});
+
+      expect(mockKeyProvider.ensureDeviceOnly).toHaveBeenCalledWith(
+        "existing-key-id",
+      );
+    });
+
+    it("stays ready and keeps the keyId when the device-only move fails", async () => {
+      mockKeyProvider.ensureDeviceOnly.mockRejectedValueOnce(
+        new Error("keychain write failed"),
+      );
+      mockUseQuery.mockReturnValue([
+        { id: MOCK_SETTINGS_ID, keyId: "existing-key-id" },
+      ]);
+
+      const { result } = renderHook(() => useUserKey());
+      await act(async () => {});
+
+      expect(result.current.isReady).toBe(true);
+      expect(result.current.error).toBeNull();
+      expect(mockClearUserSettingsKey).not.toHaveBeenCalled();
     });
 
     it("isReady is false until verification resolves (gates downstream consumers)", async () => {
