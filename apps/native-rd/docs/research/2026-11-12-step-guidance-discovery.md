@@ -37,6 +37,8 @@ Shared-goal authors mostly write the second kind. The tutorial is unusual in nee
 
 Quote the button label and say where it sits. Cheap, works today, translates with the rest of the copy.
 
+Found on the emulator, 2026-11-12: the first version of the new copy was three short paragraphs, and it pushed "Set this step aside" below the fold on a Pixel 8 in the default theme. The step told the reader to tap a button they could not see. Trimming the text fixed that one screen. Larger-text themes and smaller phones will still hide it, so prose length and control visibility pull against each other. That is an argument for B.
+
 Limits: the copy drifts when a label changes, and nothing checks it. A tutorial goal already started keeps its old text, because template strings are copied into the user's own rows at insert.
 
 ### B. Highlight the real control

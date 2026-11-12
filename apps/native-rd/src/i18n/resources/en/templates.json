@@ -21,7 +21,7 @@
       },
       "setAside": {
         "title": "Set this step aside, then pick it back up",
-        "description": "Tap “Set this step aside” below, under the evidence box. The app moves on to your next step and nothing is lost. Stopping isn’t failing.\n\nTo come back, tap “See all steps ›” and choose the step marked “Set aside”. Then tap “Pick this back up”.\n\nIn your journal, mark one of your three steps as set aside, any way you like. Then add a note here."
+        "description": "Tap “Set this step aside” under the evidence box. Stopping isn’t failing. To come back, tap “See all steps ›”, choose the step marked “Set aside”, then “Pick this back up”.\n\nIn your journal, mark one of your three steps as set aside. Then add a note here."
       },
       "fiveMinutes": {
         "title": "Do five minutes on your first step",

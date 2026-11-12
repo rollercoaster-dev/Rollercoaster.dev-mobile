@@ -21,7 +21,7 @@
       },
       "setAside": {
         "title": "Leg diesen Schritt beiseite, dann nimm ihn wieder auf",
-        "description": "Tippe unten, unter dem Beweis-Feld, auf „Diesen Schritt beiseitelegen“. Die App geht zu deinem nächsten Schritt weiter und nichts geht verloren. Stoppen ist nicht scheitern.\n\nUm zurückzukommen, tippe auf „Alle Schritte ansehen ›“ und wähle den Schritt mit „Zur Seite gelegt“. Tippe dann auf „Wieder aufnehmen“.\n\nMarkiere in deinem Notizbuch einen deiner drei Schritte als beiseitegelegt, wie es dir passt. Füg dann hier eine Notiz hinzu."
+        "description": "Tippe unter dem Beweis-Feld auf „Diesen Schritt beiseitelegen“. Stoppen ist nicht scheitern. Um zurückzukommen, tippe auf „Alle Schritte ansehen ›“, wähle den Schritt mit „Zur Seite gelegt“, dann „Wieder aufnehmen“.\n\nMarkiere in deinem Notizbuch einen deiner drei Schritte als beiseitegelegt. Füg dann hier eine Notiz hinzu."
       },
       "fiveMinutes": {
         "title": "Fünf Minuten an deinem ersten Schritt",
