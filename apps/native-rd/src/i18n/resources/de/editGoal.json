@@ -44,6 +44,16 @@
       "legend": "Abzeichen markieren Tage, auf denen deine anderen Schritte liegen",
       "marksA11ySuffix_one": "{{count}} weiterer Schritt hier",
       "marksA11ySuffix_other": "{{count}} weitere Schritte hier"
+    },
+    "stepDescription": {
+      "addPrompt": "＋ Beschreibung",
+      "addA11yLabel": "Beschreibung zu \"{{title}}\" hinzufügen",
+      "editA11yLabel": "Beschreibung zu \"{{title}}\"",
+      "editA11yHint": "Beschreibung bearbeiten",
+      "inputA11yLabel": "Beschreibung zu \"{{title}}\"",
+      "placeholder": "Wie du vorgehst, Notizen, Links",
+      "clear": "Text löschen",
+      "tooLong": "Eine Beschreibung kann bis zu {{max}} Zeichen enthalten. Diese hat {{length}}."
     }
   },
   "confirmDelete": {

@@ -11,6 +11,12 @@ export type {
 } from "./EditGoalView";
 export { EditGoalRowTiming, bindRowTiming } from "./EditGoalRowTiming";
 export type { EditGoalRowTimingProps } from "./EditGoalRowTiming";
+export { EditGoalRowDescription } from "./EditGoalRowDescription";
+export type {
+  EditGoalRowDescriptionProps,
+  EditGoalRowDescriptionBinding,
+  EditGoalDescriptionCopy,
+} from "./EditGoalRowDescription";
 export { EditGoalStepList } from "./EditGoalStepList";
 export type { EditGoalStepListProps } from "./EditGoalStepList";
 export { EditGoalStepRow } from "./EditGoalStepRow";

@@ -47,6 +47,11 @@ import type {
   EditGoalTimingHost,
 } from "./EditGoalView";
 import { bindRowTiming } from "./EditGoalRowTiming";
+import {
+  descriptionLength,
+  type EditGoalDescriptionCopy,
+  type EditGoalRowDescriptionBinding,
+} from "./EditGoalRowDescription";
 
 export interface EditGoalStepListProps {
   steps: EditGoalStep[];
@@ -167,6 +172,26 @@ export interface EditGoalStepListProps {
   editTimingSetA11yLabel?: (title: string, lines: string[]) => string;
   /** In-row timing editor wiring (#576), id-bound per row on the way down. */
   timingHost?: EditGoalTimingHost;
+  // --- Step description (#803) ---
+  /**
+   * Writes a step's or sub-step's description (ids are unique across both);
+   * `null` clears it. Return `false` when the write failed so the editor stays
+   * open with the draft. Omitted → descriptions render read-only and no add
+   * prompt shows (New Goal wizard, Storybook).
+   */
+  onStepDescriptionChange?: (
+    id: string,
+    description: string | null,
+  ) => boolean | void;
+  /** Longest description the host can store. Default 1000 (`String1000`). */
+  stepDescriptionMaxLength?: number;
+  stepDescriptionCopy?: EditGoalDescriptionCopy;
+}
+
+function hasRow(steps: EditGoalStep[], id: string): boolean {
+  return steps.some(
+    (s) => s.id === id || (s.subSteps ?? []).some((ss) => ss.id === id),
+  );
 }
 
 const defaultStepCountLabel = (count: number) =>
@@ -220,6 +245,9 @@ export function EditGoalStepList({
   editTimingUnsetA11yLabel,
   editTimingSetA11yLabel,
   timingHost,
+  onStepDescriptionChange,
+  stepDescriptionMaxLength = 1000,
+  stepDescriptionCopy,
 }: EditGoalStepListProps) {
   const { theme } = useUnistyles();
   const { animationPref } = useAnimationPref();
@@ -231,6 +259,23 @@ export function EditGoalStepList({
   // (ids are unique across both). commitEditing routes to the right callback.
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
+  // The one open description editor and its draft (#803, D2). Kept here, like
+  // the rename state, so a row swapping shells mid-edit can't drop the draft.
+  const [descriptionEdit, setDescriptionEdit] = useState<{
+    id: string;
+    draft: string;
+  } | null>(null);
+  // The row whose description editor last closed, so its line takes back
+  // screen-reader focus (#803).
+  const [descriptionFocusId, setDescriptionFocusId] = useState<string | null>(
+    null,
+  );
+  // A row deleted (or synced away) while its editor was open takes the editor
+  // with it, rather than leaving a save aimed at a missing id. Adjusted during
+  // render, React's "store info from a previous render" pattern.
+  if (descriptionEdit && !hasRow(steps, descriptionEdit.id)) {
+    setDescriptionEdit(null);
+  }
   const [screenReaderActive, setScreenReaderActive] = useState(false);
   // Which row-level delete is awaiting confirmation (#460, D1/D2). One modal
   // instance below is driven by this; the rows only signal intent.
@@ -245,7 +290,9 @@ export function EditGoalStepList({
     onReorderSubSteps,
     onReparentStep,
     dragScrollController,
-    editingId,
+    // An open description editor counts as editing: drag stays off, so a
+    // long-press in its text field can never lift the card.
+    editingId: editingId ?? descriptionEdit?.id ?? null,
     announceReorder,
     announcePromote,
     announceNestedUnder,
@@ -322,6 +369,12 @@ export function EditGoalStepList({
   }
 
   function beginEdit(id: string, title: string) {
+    // An open description draft is saved first; if it can't be, the rename
+    // waits rather than leaving two editors open.
+    if (descriptionEdit && !saveDescription(false)) return;
+    // Rows remount when a rename turns drag off; a still-set id would pull
+    // focus back to the closed description line, away from the rename input.
+    setDescriptionFocusId(null);
     setEditingId(id);
     setEditText(title);
   }
@@ -343,6 +396,66 @@ export function EditGoalStepList({
     }
     setEditingId(null);
     setEditText("");
+  }
+
+  function currentDescription(id: string): string | null {
+    const step = steps.find((s) => s.id === id);
+    return (step ?? findSubStep(id))?.description ?? null;
+  }
+
+  /**
+   * Writes the open draft and closes the editor. Returns false — editor left
+   * open, draft intact — when the draft is over the limit or the host reports
+   * a failed write.
+   */
+  function saveDescription(restoreFocus = true): boolean {
+    if (!descriptionEdit || !onStepDescriptionChange) return false;
+    const { id, draft } = descriptionEdit;
+    // The row refuses over-length before calling; this guard keeps the list
+    // honest on its own, and covers switching rows below.
+    if (descriptionLength(draft) > stepDescriptionMaxLength) return false;
+    // Outer whitespace only — inner line breaks are the user's paragraphs.
+    const trimmed = draft.trim();
+    const next = trimmed === "" ? null : trimmed;
+    if (next !== currentDescription(id)) {
+      if (onStepDescriptionChange(id, next) === false) return false;
+    }
+    setDescriptionEdit(null);
+    // Only when the user closed this editor; a save on the way to another
+    // editor leaves focus with that one.
+    if (restoreFocus) setDescriptionFocusId(id);
+    return true;
+  }
+
+  function bindDescription(
+    id: string,
+  ): EditGoalRowDescriptionBinding | undefined {
+    if (!onStepDescriptionChange) return undefined;
+    const isEditing = descriptionEdit?.id === id;
+    return {
+      isEditing,
+      draft: isEditing ? descriptionEdit.draft : "",
+      maxLength: stepDescriptionMaxLength,
+      onStartEditing: () => {
+        // One description editor at a time. Moving to another row saves the
+        // open draft first; if that can't be saved, the open one stays put
+        // rather than losing what was typed.
+        if (descriptionEdit && !saveDescription(false)) return;
+        if (editingId) commitEditing();
+        setDescriptionFocusId(null);
+        setDescriptionEdit({ id, draft: currentDescription(id) ?? "" });
+      },
+      onDraftChange: (draft) => setDescriptionEdit({ id, draft }),
+      onSave: () => {
+        saveDescription();
+      },
+      onCancel: () => {
+        setDescriptionEdit(null);
+        setDescriptionFocusId(id);
+      },
+      focusOnMount: descriptionFocusId === id,
+      copy: stepDescriptionCopy,
+    };
   }
 
   function handleAddSubStep(parentStepId: string) {
@@ -419,6 +532,7 @@ export function EditGoalStepList({
           editTimingUnsetA11yLabel={editTimingUnsetA11yLabel}
           editTimingSetA11yLabel={editTimingSetA11yLabel}
           timingHost={timingHost}
+          bindDescription={bindDescription}
         />
         <Pressable
           style={styles.addSubStepRow}
@@ -541,6 +655,7 @@ export function EditGoalStepList({
                 editTimingUnsetA11yLabel={editTimingUnsetA11yLabel}
                 editTimingSetA11yLabel={editTimingSetA11yLabel}
                 {...bindRowTiming(timingHost, step.id)}
+                descriptionBinding={bindDescription(step.id)}
               >
                 {/* Sub-steps block (D12), rendered inside the parent card so
                     it drags with the parent. See renderSubStepBlock. */}

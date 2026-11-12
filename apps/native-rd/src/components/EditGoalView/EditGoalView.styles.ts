@@ -262,6 +262,56 @@ export const styles = StyleSheet.create((theme) => ({
   timingLineInert: {
     minHeight: 0,
   },
+  // Step / sub-step description slot (#803). Same 44pt band as the timing
+  // line; the text wraps freely so large type grows the row, never clips it.
+  descriptionLine: {
+    minHeight: 44,
+    alignSelf: "stretch" as const,
+    justifyContent: "center" as const,
+    paddingVertical: theme.space[1],
+    borderRadius: theme.radius.sm,
+    marginTop: theme.space[1],
+  },
+  descriptionText: {
+    fontSize: theme.size.sm,
+    fontFamily: theme.fontFamily.body,
+    color: theme.colors.textSecondary,
+  },
+  descriptionEditor: {
+    gap: theme.space[2],
+    marginTop: theme.space[1],
+  },
+  descriptionEditInput: {
+    minHeight: 88,
+    fontSize: theme.size.sm,
+    fontFamily: theme.fontFamily.body,
+    color: theme.colors.text,
+    backgroundColor: theme.colors.background,
+    borderWidth: theme.borderWidth.medium,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.sm,
+    paddingHorizontal: theme.space[3],
+    paddingVertical: theme.space[2],
+    textAlignVertical: "top" as const,
+  },
+  // Neutral body text, not an error tone (ADR-0012): it states the limit.
+  descriptionTooLong: {
+    fontSize: theme.size.sm,
+    fontFamily: theme.fontFamily.body,
+    color: theme.colors.text,
+  },
+  descriptionActions: {
+    flexDirection: "row" as const,
+    flexWrap: "wrap" as const,
+    alignItems: "center" as const,
+    gap: theme.space[2],
+  },
+  descriptionActionsEnd: {
+    flexDirection: "row" as const,
+    flexWrap: "wrap" as const,
+    gap: theme.space[2],
+    marginLeft: "auto" as const,
+  },
   timingLinePressed: {
     backgroundColor: theme.colors.backgroundTertiary,
   },

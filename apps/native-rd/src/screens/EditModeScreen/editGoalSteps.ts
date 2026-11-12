@@ -74,6 +74,7 @@ export function buildEditGoalSteps(
     dateDepChips: buildDateDepChips(root, stepRows, t, language, now),
     isCompleted: root.status === StepStatus.completed,
     timing: buildTiming(root, population),
+    description: root.description ?? null,
     // Sub-steps are full timing participants (#575/D4), so everything the
     // parent row gets, a sub-row gets too — including the chips and status
     // #575 added to the shape but left for this issue to populate.
@@ -87,6 +88,7 @@ export function buildEditGoalSteps(
         dateDepChips: buildDateDepChips(child, stepRows, t, language, now),
         isCompleted: child.status === StepStatus.completed,
         timing: buildTiming(child, population),
+        description: child.description ?? null,
       }),
     ),
   }));

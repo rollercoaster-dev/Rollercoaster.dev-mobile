@@ -33,6 +33,10 @@ import { styles } from "./EditGoalView.styles";
 import type { EditGoalSubStep, EditGoalTimingCopy } from "./EditGoalView";
 import type { StepTimingValue } from "../StepTimingEditor";
 import { EditGoalRowTiming } from "./EditGoalRowTiming";
+import {
+  EditGoalRowDescription,
+  type EditGoalRowDescriptionBinding,
+} from "./EditGoalRowDescription";
 import { HierarchyActionRow } from "./HierarchyActionRow";
 import type { RowGeometry } from "./useEditGoalHierarchyDragTypes";
 import { useRowGeometryRegistration } from "./useRowGeometryRegistration";
@@ -110,6 +114,8 @@ export interface EditGoalSubStepRowProps {
   timingNow?: Date;
   timingLocale?: string;
   timingCopy?: EditGoalTimingCopy;
+  /** Description slot wiring (#803), id-bound by the list. Absent → read-only. */
+  descriptionBinding?: EditGoalRowDescriptionBinding;
 }
 
 export function EditGoalSubStepRow({
@@ -156,6 +162,7 @@ export function EditGoalSubStepRow({
   timingNow,
   timingLocale,
   timingCopy,
+  descriptionBinding,
 }: EditGoalSubStepRowProps) {
   const { theme } = useUnistyles();
   // At accessibility sizes the fixed-width controls squeeze the title to one
@@ -360,6 +367,15 @@ export function EditGoalSubStepRow({
     </View>
   );
 
+  const descriptionSlot = (
+    <EditGoalRowDescription
+      title={subStep.title}
+      description={subStep.description}
+      binding={descriptionBinding}
+      testID={`edit-goal-substep-description-${subStep.id}`}
+    />
+  );
+
   // One pressable timing target, between the row body and the accessible
   // hierarchy actions (D12) — a quick tap never reaches the row's
   // manual-activation Pan or its 400ms LongPress.
@@ -388,6 +404,7 @@ export function EditGoalSubStepRow({
     return (
       <View>
         {primaryRow}
+        {descriptionSlot}
         {timingLine}
         {accessibleActions}
       </View>
@@ -403,6 +420,7 @@ export function EditGoalSubStepRow({
     <GestureDetector gesture={composed}>
       <Animated.View style={animatedStyle}>
         {primaryRow}
+        {descriptionSlot}
         {timingLine}
         {accessibleActions}
       </Animated.View>
