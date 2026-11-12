@@ -71,9 +71,9 @@ Rechecked on the emulator in English and German: no step hides a control it poin
 
 Left open, because copy cannot fix them:
 
-- The "change" sheet adds a type where the reader expects a swap.
-- A saved note cannot be reread from its step.
-- Step 3 does not teach adding steps.
+- The "change" sheet adds a type where the reader expects a swap. Tracked in #828.
+- A saved note cannot be reread from its step. Already tracked in #696.
+- Step 3 does not teach adding steps. Tracked in #829.
 - A set-aside step hides its own text.
 - "Focus Mode", "Keep warm" and "Pin to cockpit" are still unexplained.
 
