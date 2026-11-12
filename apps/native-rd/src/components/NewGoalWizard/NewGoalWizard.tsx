@@ -26,7 +26,6 @@
 import React, { useRef, useState } from "react";
 import {
   View,
-  Text as RNText,
   TextInput,
   Pressable,
   ScrollView,
@@ -34,6 +33,7 @@ import {
 } from "react-native";
 import { KeyboardAvoidingFrame } from "../KeyboardAvoidingFrame";
 import { ScrollAtLargeType } from "../ScrollAtLargeType";
+import { Text } from "../Text";
 import { X } from "phosphor-react-native";
 import { useUnistyles } from "react-native-unistyles";
 import { IconButton } from "../IconButton";
@@ -538,10 +538,16 @@ export function NewGoalWizard({
                 contentContainerStyle={styles.stepBodyScrollContent}
                 testID="new-goal-step-body-name"
               >
-                <RNText style={styles.eyebrow}>{nameEyebrow}</RNText>
-                <RNText style={styles.nameHeadline} accessibilityRole="header">
+                <Text variant="caption" chrome style={styles.eyebrow}>
+                  {nameEyebrow}
+                </Text>
+                <Text
+                  variant="headline"
+                  style={styles.nameHeadline}
+                  accessibilityRole="header"
+                >
                   {nameTitle}
-                </RNText>
+                </Text>
                 <TextInput
                   style={styles.titleInput}
                   value={goalTitle}
@@ -556,7 +562,9 @@ export function NewGoalWizard({
                   accessibilityLabel={goalTitlePlaceholder}
                   testID="new-goal-title-input"
                 />
-                <RNText style={styles.hint}>{nameHint}</RNText>
+                <Text variant="metadata" style={styles.hint}>
+                  {nameHint}
+                </Text>
               </ScrollAtLargeType>
               <Animated.View style={[styles.footer, nameFooterPadding]}>
                 <Button
@@ -577,10 +585,15 @@ export function NewGoalWizard({
                   hitSlop={6}
                   testID="new-goal-quick-add"
                 >
-                  <RNText style={styles.quickAddText}>
+                  <Text variant="label" style={styles.quickAddText}>
                     {quickAddPrefix}
-                    <RNText style={styles.quickAddLink}>{quickAddLabel}</RNText>
-                  </RNText>
+                    <Text
+                      variant="label"
+                      style={[styles.quickAddText, styles.quickAddLink]}
+                    >
+                      {quickAddLabel}
+                    </Text>
+                  </Text>
                 </Pressable>
               </Animated.View>
             </>
@@ -593,11 +606,19 @@ export function NewGoalWizard({
               >
                 {/* Goal recap: the title from step 1, echoed so the first-step
                 input has context (prototype's "Goal" eyebrow + title line). */}
-                <RNText style={styles.eyebrow}>{stepGoalEyebrow}</RNText>
-                <RNText style={styles.stepGoalRecap}>{goalTitle}</RNText>
-                <RNText style={styles.nameHeadline} accessibilityRole="header">
+                <Text variant="caption" chrome style={styles.eyebrow}>
+                  {stepGoalEyebrow}
+                </Text>
+                <Text variant="metadata" style={styles.stepGoalRecap}>
+                  {goalTitle}
+                </Text>
+                <Text
+                  variant="headline"
+                  style={styles.nameHeadline}
+                  accessibilityRole="header"
+                >
                   {stepHeadline}
-                </RNText>
+                </Text>
                 <TextInput
                   style={styles.titleInput}
                   value={firstStepTitle}
@@ -610,7 +631,9 @@ export function NewGoalWizard({
                   testID="new-goal-first-step-input"
                 />
                 <View style={styles.evidenceRow}>
-                  <RNText style={styles.eyebrow}>{evidenceEyebrow}</RNText>
+                  <Text variant="caption" chrome style={styles.eyebrow}>
+                    {evidenceEyebrow}
+                  </Text>
                   {/* One collapsed a11y node (icon + label + "change"); the whole
                   press target opens the picker (D7). The purple chip carries
                   the icon+label; "change" sits outside it as a plain link, both
@@ -628,19 +651,20 @@ export function NewGoalWizard({
                     testID="new-goal-evidence-chip"
                   >
                     <View style={styles.evidenceChip}>
-                      <RNText
+                      <Text
+                        variant="caption"
                         style={styles.evidenceChipIcon}
                         importantForAccessibility="no"
                       >
                         {plannedIcon}
-                      </RNText>
-                      <RNText style={styles.evidenceChipLabel}>
+                      </Text>
+                      <Text variant="caption" style={styles.evidenceChipLabel}>
                         {plannedLabel}
-                      </RNText>
+                      </Text>
                     </View>
-                    <RNText style={styles.evidenceChipChange}>
+                    <Text variant="caption" style={styles.evidenceChipChange}>
                       {changeEvidenceLabel}
-                    </RNText>
+                    </Text>
                   </Pressable>
                 </View>
               </ScrollAtLargeType>
@@ -749,24 +773,33 @@ export function NewGoalWizard({
                 contentContainerStyle={styles.stepBodyScrollContent}
                 testID="new-goal-step-body-ready"
               >
-                <RNText style={styles.readyHeadline} accessibilityRole="header">
+                <Text
+                  variant="taskTitle"
+                  style={styles.readyHeadline}
+                  accessibilityRole="header"
+                >
                   {readyHeadline}
-                </RNText>
+                </Text>
                 <View style={styles.summaryCard}>
-                  <RNText style={styles.summaryTitle}>{goalTitle}</RNText>
-                  <RNText style={styles.summaryMeta}>
+                  <Text variant="title" style={styles.summaryTitle}>
+                    {goalTitle}
+                  </Text>
+                  <Text variant="mono" style={styles.summaryMeta}>
                     {stepCountSummary(stepCount)}
-                  </RNText>
+                  </Text>
                 </View>
                 <View style={styles.badgeNoteBanner}>
-                  <RNText
+                  <Text
+                    variant="metadata"
                     style={styles.badgeNoteIcon}
                     accessibilityElementsHidden
                     importantForAccessibility="no"
                   >
                     🏆
-                  </RNText>
-                  <RNText style={styles.badgeNoteText}>{badgeNote}</RNText>
+                  </Text>
+                  <Text variant="metadata" style={styles.badgeNoteText}>
+                    {badgeNote}
+                  </Text>
                 </View>
               </ScrollAtLargeType>
               <Animated.View

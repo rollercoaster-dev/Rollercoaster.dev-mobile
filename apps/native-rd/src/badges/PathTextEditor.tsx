@@ -1,8 +1,10 @@
 import React, { useCallback } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Pressable, TextInput, View } from "react-native";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
+
+import { Text } from "../components/Text";
 
 import { getPathTextMaxChars } from "./text/pathTextLimits";
 import { BadgeShape, PathTextPosition } from "./types";
@@ -45,6 +47,8 @@ function CharCounter({ count, max, label, a11y }: CharCounterProps) {
   const isNearLimit = max - count <= COUNTER_WARNING_REMAINING;
   return (
     <Text
+      variant="caption"
+      chrome
       style={[styles.counter, isNearLimit && styles.counterWarning]}
       accessibilityLabel={a11y}
     >
@@ -121,6 +125,7 @@ export function PathTextEditor({
         ]}
       >
         <Text
+          variant="metadata"
           style={[
             styles.toggleText,
             {
@@ -191,6 +196,7 @@ export function PathTextEditor({
                   ]}
                 >
                   <Text
+                    variant="metadata"
                     style={[
                       styles.optionText,
                       {

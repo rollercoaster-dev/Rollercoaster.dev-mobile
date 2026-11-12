@@ -1,5 +1,6 @@
 import React from "react";
-import { Pressable, Text } from "react-native";
+import { Pressable } from "react-native";
+import { Text } from "../Text";
 import { styles } from "./FAB.styles";
 
 export interface FABProps {
@@ -17,7 +18,13 @@ export function FAB({ isOpen, onToggle }: FABProps) {
       accessibilityState={{ expanded: isOpen }}
       style={({ pressed }) => [styles.button, pressed && styles.pressed]}
     >
-      <Text style={[styles.icon, isOpen && styles.iconOpen]}>+</Text>
+      <Text
+        variant="title"
+        chrome
+        style={[styles.icon, isOpen && styles.iconOpen]}
+      >
+        +
+      </Text>
     </Pressable>
   );
 }

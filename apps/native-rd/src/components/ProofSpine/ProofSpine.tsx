@@ -1,5 +1,6 @@
 import React from "react";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
+import { Text } from "../Text";
 import { useTranslation } from "react-i18next";
 import type { EvidenceTypeValue } from "../../types/evidence";
 import { ProofCard } from "./ProofCard";
@@ -30,7 +31,9 @@ export function ProofSpine({ evidence, onCardPress }: ProofSpineProps) {
       <View style={styles.container}>
         {/* Empty state shows the plain "THE PROOF" label only — no count or
             "SWIPE →" hint, since there is nothing to swipe (matches prototype). */}
-        <Text style={styles.header}>{t("badgeDetail:proofSpine.title")}</Text>
+        <Text variant="caption" chrome style={styles.header}>
+          {t("badgeDetail:proofSpine.title")}
+        </Text>
         {/* `accessible` collapses this block into one node, so the label must
             carry the explanatory copy itself — otherwise screen readers announce
             only "Proof gallery, empty" and drop the message. Interpolate the
@@ -42,7 +45,7 @@ export function ProofSpine({ evidence, onCardPress }: ProofSpineProps) {
             message: t("badgeDetail:proofSpine.emptyState.message"),
           })}
         >
-          <Text style={styles.emptyStateText}>
+          <Text variant="metadata" style={styles.emptyStateText}>
             {t("badgeDetail:proofSpine.emptyState.message")}
           </Text>
         </View>
@@ -52,7 +55,7 @@ export function ProofSpine({ evidence, onCardPress }: ProofSpineProps) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>
+      <Text variant="caption" chrome style={styles.header}>
         {t("badgeDetail:proofSpine.header", { count: evidence.length })}
       </Text>
       {/* role="list" + a count-aware label mirror BadgeDetailScreen's

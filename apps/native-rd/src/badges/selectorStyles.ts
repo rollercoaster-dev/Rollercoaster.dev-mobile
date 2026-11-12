@@ -18,9 +18,14 @@ export const selectorStyles = StyleSheet.create((theme) => ({
     paddingHorizontal: theme.space[4],
     paddingVertical: theme.space[2],
   },
+  // Rendered through shared Text's `caption` variant. The cell is a fixed
+  // 88pt tall, so pin the compact line height and no tracking rather than take
+  // caption's 1.6 line height and label tracking.
   label: {
     fontSize: 11,
     fontFamily: theme.fontFamily.body,
+    lineHeight: Math.round(11 * 1.3),
+    letterSpacing: 0,
   },
   cell: {
     alignItems: "center",

@@ -1,6 +1,7 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
+import { Text } from "../../components/Text";
 import type { ComposedTheme } from "../../themes/compose";
 import { useCopyToken } from "./useCopyToken";
 
@@ -19,8 +20,12 @@ export function SectionHeader({
 }: SectionHeaderProps): React.JSX.Element {
   return (
     <View style={sharedStyles.header}>
-      <Text style={sharedStyles.title}>{title}</Text>
-      <Text style={sharedStyles.desc}>{description}</Text>
+      <Text variant="title" style={sharedStyles.title}>
+        {title}
+      </Text>
+      <Text variant="metadata" style={sharedStyles.desc}>
+        {description}
+      </Text>
     </View>
   );
 }
@@ -33,7 +38,11 @@ export function CopiedBadge({
   visible,
 }: CopiedBadgeProps): React.JSX.Element | null {
   if (!visible) return null;
-  return <Text style={sharedStyles.copied}>Copied!</Text>;
+  return (
+    <Text variant="caption" style={sharedStyles.copied}>
+      Copied!
+    </Text>
+  );
 }
 
 type CopyableTokenProps = {
@@ -49,7 +58,9 @@ export function CopyableToken({
 }: CopyableTokenProps): React.JSX.Element {
   return (
     <Pressable onPress={() => onCopy(path)} style={sharedStyles.tokenRow}>
-      <Text style={sharedStyles.mono}>{path}</Text>
+      <Text variant="mono" style={sharedStyles.mono}>
+        {path}
+      </Text>
       <CopiedBadge visible={copiedToken === path} />
     </Pressable>
   );

@@ -1,9 +1,10 @@
-import { View, Text, type TextStyle, type ViewStyle } from "react-native";
+import { View, type TextStyle, type ViewStyle } from "react-native";
 import { useTranslation } from "react-i18next";
 import { themes, parseThemeName, type ThemeName } from "../../themes/compose";
 import { variantOverrides } from "../../themes/variants";
 import { size } from "../../themes/tokens";
 import { shadowStyle } from "../../styles/shadows";
+import { Text } from "../Text";
 import { styles } from "./ThemeSampleCard.styles";
 
 interface ThemeSampleCardProps {
@@ -25,7 +26,6 @@ function previewStyles(themeId: ThemeName) {
   const def = variantOverrides[variant];
 
   const sizeScale = def.size ?? size;
-  const fontFamily = def.fontFamily;
 
   // Fill and border track the real `Card` component (backgroundSecondary +
   // borderWidth.thick), not `colors.background`. WelcomeScreen paints its page
@@ -57,22 +57,28 @@ function previewStyles(themeId: ThemeName) {
     borderColor: cardTheme.colors.border,
   };
 
+  // Each text style starts from the *previewed* theme's text role, so shared
+  // Text's variant (resolved against the active theme) can't leak the active
+  // theme's font, line height or spacing into another theme's sample.
   const badgeText: TextStyle = {
+    ...cardTheme.textStyles.label,
+    // A single centered glyph: tracking would push it off-center.
+    letterSpacing: 0,
     color: cardTheme.colors.accentPurpleFg,
     fontSize: sizeScale.sm,
     fontWeight: "700",
   };
 
   const sampleTitle: TextStyle = {
+    ...cardTheme.textStyles.metadata,
     fontSize: sizeScale.sm,
-    fontFamily,
     fontWeight: "700",
     color: cardTheme.colors.text,
   };
 
   const sampleMeta: TextStyle = {
+    ...cardTheme.textStyles.caption,
     fontSize: sizeScale.xs,
-    fontFamily,
     color: cardTheme.colors.textSecondary,
   };
 
@@ -86,8 +92,8 @@ function previewStyles(themeId: ThemeName) {
   };
 
   const ctaText: TextStyle = {
+    ...cardTheme.textStyles.caption,
     fontSize: sizeScale.xs,
-    fontFamily,
     fontWeight: "700",
     color: cardTheme.colors.background,
     letterSpacing: 0.5,
@@ -117,18 +123,22 @@ export function ThemeSampleCard({ themeId }: ThemeSampleCardProps) {
   return (
     <View testID="theme-sample-card" style={preview.sampleCard}>
       <View style={preview.badge}>
-        <Text style={preview.badgeText}>★</Text>
+        <Text variant="label" chrome style={preview.badgeText}>
+          ★
+        </Text>
       </View>
       <View style={styles.sampleTextCol}>
-        <Text style={preview.sampleTitle}>
+        <Text variant="metadata" style={preview.sampleTitle}>
           {t("common:theme.preview.title")}
         </Text>
-        <Text style={preview.sampleMeta}>
+        <Text variant="caption" style={preview.sampleMeta}>
           {t("common:theme.preview.progress")}
         </Text>
       </View>
       <View style={preview.ctaPill}>
-        <Text style={preview.ctaText}>{t("common:theme.preview.cta")}</Text>
+        <Text variant="caption" chrome style={preview.ctaText}>
+          {t("common:theme.preview.cta")}
+        </Text>
       </View>
     </View>
   );

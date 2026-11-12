@@ -2,13 +2,13 @@ import React from "react";
 import {
   Pressable,
   View,
-  Text,
   Switch,
   type AccessibilityActionEvent,
 } from "react-native";
 import { useUnistyles } from "react-native-unistyles";
 import { useTypeScale } from "../../hooks/useTypeScale";
 import { styles } from "./SettingsRow.styles";
+import { Text } from "../Text";
 
 export interface SettingsRowProps {
   label: string;
@@ -67,13 +67,23 @@ export function SettingsRow({
     <>
       {isLargeType && value ? (
         <View style={styles.stack} testID="settings-row-stack">
-          <Text style={[styles.label, styles.stackedLabel]}>{label}</Text>
-          <Text style={[styles.value, styles.stackedValue]}>{value}</Text>
+          <Text variant="body" style={[styles.label, styles.stackedLabel]}>
+            {label}
+          </Text>
+          <Text variant="metadata" style={[styles.value, styles.stackedValue]}>
+            {value}
+          </Text>
         </View>
       ) : (
         <>
-          <Text style={styles.label}>{label}</Text>
-          {value && <Text style={styles.value}>{value}</Text>}
+          <Text variant="body" style={styles.label}>
+            {label}
+          </Text>
+          {value && (
+            <Text variant="metadata" style={styles.value}>
+              {value}
+            </Text>
+          )}
         </>
       )}
       {toggle && (
@@ -88,7 +98,11 @@ export function SettingsRow({
           }}
         />
       )}
-      {onPress && !toggle && <Text style={styles.chevron}>›</Text>}
+      {onPress && !toggle && (
+        <Text variant="metadata" style={styles.chevron}>
+          ›
+        </Text>
+      )}
     </>
   );
 

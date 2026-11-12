@@ -1,8 +1,9 @@
 import React, { useMemo } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { useTranslation } from "react-i18next";
 
+import { Text } from "../components/Text";
 import { selectorStyles } from "./selectorStyles";
 
 // ---------------------------------------------------------------------------
@@ -118,6 +119,8 @@ export function ColorPicker({
                 ]}
               />
               <Text
+                variant="caption"
+                chrome
                 style={[
                   selectorStyles.label,
                   {
@@ -174,6 +177,8 @@ export function ColorPicker({
               </Text>
             </View>
             <Text
+              variant="caption"
+              chrome
               style={[
                 selectorStyles.label,
                 {

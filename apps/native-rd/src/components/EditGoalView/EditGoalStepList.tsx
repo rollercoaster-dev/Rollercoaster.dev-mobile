@@ -25,7 +25,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
   View,
-  Text as RNText,
   TextInput,
   Pressable,
   AccessibilityInfo,
@@ -366,14 +365,17 @@ export function EditGoalStepList({
           hitSlop={6}
           testID={`edit-goal-break-into-${step.id}`}
         >
-          <RNText
+          <Text
+            variant="metadata"
             style={styles.breakIntoGlyph}
             accessibilityElementsHidden
             importantForAccessibility="no"
           >
             {"⚊"}
-          </RNText>
-          <RNText style={styles.breakIntoText}>{breakIntoSubStepsLabel}</RNText>
+          </Text>
+          <Text variant="metadata" style={styles.breakIntoText}>
+            {breakIntoSubStepsLabel}
+          </Text>
         </Pressable>
       );
     }
@@ -426,14 +428,17 @@ export function EditGoalStepList({
           hitSlop={6}
           testID={`edit-goal-add-substep-${step.id}`}
         >
-          <RNText
+          <Text
+            variant="body"
             style={styles.addSubStepGlyph}
             accessibilityElementsHidden
             importantForAccessibility="no"
           >
             {"+"}
-          </RNText>
-          <RNText style={styles.addSubStepText}>{addSubStepLabel}</RNText>
+          </Text>
+          <Text variant="metadata" style={styles.addSubStepText}>
+            {addSubStepLabel}
+          </Text>
         </Pressable>
       </View>
     );
@@ -455,7 +460,9 @@ export function EditGoalStepList({
         >
           {stepsSectionLabel}
         </Text>
-        <RNText style={styles.stepCount}>{stepCountLabel(steps.length)}</RNText>
+        <Text variant="metadata" chrome style={styles.stepCount}>
+          {stepCountLabel(steps.length)}
+        </Text>
       </View>
 
       <GestureHandlerRootView
@@ -597,7 +604,9 @@ export function EditGoalStepList({
           accessibilityRole="button"
           accessibilityLabel={addStepButtonLabel}
         >
-          <RNText style={styles.addButtonText}>+</RNText>
+          <Text variant="title" style={styles.addButtonText}>
+            +
+          </Text>
         </Pressable>
       </View>
 

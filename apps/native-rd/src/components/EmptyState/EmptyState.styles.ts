@@ -7,6 +7,8 @@ export const styles = StyleSheet.create((theme) => ({
     gap: theme.space[2],
   },
   icon: {
+    // 48pt glyph: every Text variant's lineHeight is shorter and would clip it.
+    lineHeight: 58,
     fontSize: 48,
     marginBottom: theme.space[2],
   },

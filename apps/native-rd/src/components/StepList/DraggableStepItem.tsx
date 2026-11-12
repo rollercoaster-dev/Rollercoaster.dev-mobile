@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Pressable, Text as RNText, Modal } from "react-native";
+import { View, Pressable, Modal } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useTranslation } from "react-i18next";
@@ -151,13 +151,14 @@ export function DraggableStepItem({
         ) : (
           <View>
             <View style={styles.stepRow}>
-              <RNText
+              <Text
+                variant="title"
                 style={styles.dragHandle}
                 accessibilityElementsHidden
                 importantForAccessibility="no"
               >
                 ≡
-              </RNText>
+              </Text>
               <Pressable
                 style={styles.stepContent}
                 onPress={onLabelPress ? () => onLabelPress(step) : undefined}
@@ -167,7 +168,9 @@ export function DraggableStepItem({
                   onLabelPress ? "Tap to edit step title" : undefined
                 }
               >
-                <RNText style={styles.stepTitleText}>{step.title}</RNText>
+                <Text variant="body" style={styles.stepTitleText}>
+                  {step.title}
+                </Text>
               </Pressable>
               {onDeleteStep && (
                 <IconButton
@@ -270,11 +273,11 @@ export function DraggableStepItem({
                       )}
                       testID={`step-nest-target-${step.id}-${target.id}`}
                     >
-                      <RNText style={styles.pickerRowText}>
+                      <Text variant="body" style={styles.pickerRowText}>
                         {t("editGoal:stepList.a11y.nestUnder", {
                           title: target.title,
                         })}
-                      </RNText>
+                      </Text>
                     </Pressable>
                   ))}
                   <Button

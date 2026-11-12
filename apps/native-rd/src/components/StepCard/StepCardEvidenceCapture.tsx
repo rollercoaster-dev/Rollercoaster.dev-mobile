@@ -1,5 +1,6 @@
 import React from "react";
-import { View, Text, Pressable } from "react-native";
+import { View, Pressable } from "react-native";
+import { Text } from "../Text";
 import { useTranslation } from "react-i18next";
 import {
   EVIDENCE_OPTIONS,
@@ -67,10 +68,16 @@ export function EvidenceCaptureButtons({
               label: optionLabel,
             })}
           >
-            <Text style={styles.quickActionIcon} accessibilityElementsHidden>
+            <Text
+              variant="body"
+              style={styles.quickActionIcon}
+              accessibilityElementsHidden
+            >
               {option.icon}
             </Text>
-            <Text style={styles.quickActionText}>{optionLabel}</Text>
+            <Text variant="label" style={styles.quickActionText}>
+              {optionLabel}
+            </Text>
           </Pressable>
         );
       })}

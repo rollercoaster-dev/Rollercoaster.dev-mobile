@@ -1,11 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import {
-  View,
-  Text as RNText,
-  TextInput,
-  Pressable,
-  AccessibilityInfo,
-} from "react-native";
+import { View, TextInput, Pressable, AccessibilityInfo } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useSharedValue } from "react-native-reanimated";
 import { useTranslation } from "react-i18next";
@@ -714,12 +708,22 @@ export function StepList({
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <RNText style={styles.headerLabel} accessibilityRole="header">
+        <Text
+          variant="caption"
+          chrome
+          style={styles.headerLabel}
+          accessibilityRole="header"
+        >
           {t("editGoal:stepList.header")}
-        </RNText>
-        <RNText style={styles.count} accessibilityLabel={stepCountLabel}>
+        </Text>
+        <Text
+          variant="caption"
+          chrome
+          style={styles.count}
+          accessibilityLabel={stepCountLabel}
+        >
           {stepCountLabel}
-        </RNText>
+        </Text>
       </View>
 
       <GestureHandlerRootView style={styles.stepItems}>
@@ -728,13 +732,14 @@ export function StepList({
             editingId === step.id ? (
               <View>
                 <View style={styles.editRow}>
-                  <RNText
+                  <Text
+                    variant="title"
                     style={styles.dragHandle}
                     accessibilityElementsHidden
                     importantForAccessibility="no"
                   >
                     ≡
-                  </RNText>
+                  </Text>
                   <TextInput
                     style={styles.editInput}
                     value={editText}
@@ -828,13 +833,14 @@ export function StepList({
               ) : (
                 <View>
                   <View style={styles.stepRow}>
-                    <RNText
+                    <Text
+                      variant="title"
                       style={styles.dragHandle}
                       accessibilityElementsHidden
                       importantForAccessibility="no"
                     >
                       ≡
-                    </RNText>
+                    </Text>
                     <Pressable
                       style={styles.stepContent}
                       onPress={
@@ -848,7 +854,9 @@ export function StepList({
                           : undefined
                       }
                     >
-                      <RNText style={styles.stepTitleText}>{step.title}</RNText>
+                      <Text variant="body" style={styles.stepTitleText}>
+                        {step.title}
+                      </Text>
                     </Pressable>
                     {onDeleteStep && (
                       <IconButton
@@ -962,7 +970,12 @@ export function StepList({
                           { title: affordanceParent.title },
                         )}
                       >
-                        <RNText style={styles.addStepButtonText}>+</RNText>
+                        <Text
+                          variant="headline"
+                          style={styles.addStepButtonText}
+                        >
+                          +
+                        </Text>
                       </Pressable>
                     </View>
                     <View style={styles.addSubStepPickerRow}>
@@ -989,9 +1002,9 @@ export function StepList({
                       "editGoal:stepList.addSubStepA11yHint",
                     )}
                   >
-                    <RNText style={styles.addSubStepText}>
+                    <Text variant="metadata" style={styles.addSubStepText}>
                       {`+ ${t("editGoal:stepList.addSubStepLabel")}`}
-                    </RNText>
+                    </Text>
                   </Pressable>
                 ))}
             </View>
@@ -1069,7 +1082,9 @@ export function StepList({
               accessibilityRole="button"
               accessibilityLabel={t("editGoal:stepList.addButtonA11y")}
             >
-              <RNText style={styles.addStepButtonText}>+</RNText>
+              <Text variant="headline" style={styles.addStepButtonText}>
+                +
+              </Text>
             </Pressable>
           </View>
           <EvidenceTypePicker

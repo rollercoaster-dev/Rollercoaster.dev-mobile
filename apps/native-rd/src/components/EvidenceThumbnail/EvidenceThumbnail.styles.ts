@@ -37,6 +37,8 @@ export const styles = StyleSheet.create((theme) => ({
     lineHeight: 16,
   },
   durationBadge: {
+    // Matches textSnippet; caption's 1.6 would grow the fixed thumbnail.
+    lineHeight: 16,
     fontSize: theme.size.xs,
     fontFamily: theme.fontFamily.mono,
     color: theme.colors.textMuted,
@@ -46,6 +48,7 @@ export const styles = StyleSheet.create((theme) => ({
     padding: theme.space[2],
   },
   title: {
+    lineHeight: 16,
     fontSize: theme.size.xs,
     fontWeight: theme.fontWeight.medium,
     fontFamily: theme.fontFamily.body,
@@ -53,6 +56,7 @@ export const styles = StyleSheet.create((theme) => ({
     numberOfLines: 1,
   },
   type: {
+    lineHeight: 16,
     fontSize: theme.size.xs,
     fontFamily: theme.fontFamily.mono,
     color: theme.colors.textMuted,
@@ -61,6 +65,7 @@ export const styles = StyleSheet.create((theme) => ({
     marginTop: 2,
   },
   linkUrl: {
+    lineHeight: 16,
     fontSize: theme.size.xs,
     fontFamily: theme.fontFamily.mono,
     color: theme.colors.accentPrimary,

@@ -39,7 +39,6 @@
 import React, { useState, useCallback } from "react";
 import {
   View,
-  Text as RNText,
   TextInput,
   ScrollView,
   type GestureResponderEvent,
@@ -52,6 +51,7 @@ import { DotsThree, Pencil } from "phosphor-react-native";
 import { useUnistyles } from "react-native-unistyles";
 import { IconButton } from "../IconButton";
 import { Button } from "../Button";
+import { Text } from "../Text";
 import { ScreenSubHeader } from "../ScreenHeader/ScreenSubHeader";
 import { EvidenceTypePicker } from "../EvidenceTypePicker";
 import {
@@ -672,7 +672,9 @@ export function EditGoalView({
               </View>
             ) : null}
 
-            <RNText style={styles.sectionLabel}>{goalSectionLabel}</RNText>
+            <Text variant="caption" chrome style={styles.sectionLabel}>
+              {goalSectionLabel}
+            </Text>
             <View style={styles.titleCard}>
               <TextInput
                 style={styles.titleInput}

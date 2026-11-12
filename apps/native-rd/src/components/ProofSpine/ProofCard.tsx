@@ -1,10 +1,11 @@
 import React from "react";
-import { Pressable, Text } from "react-native";
+import { Pressable } from "react-native";
 import { useTranslation } from "react-i18next";
 import type { EvidenceTypeValue } from "../../types/evidence";
 import type { Evidence } from "../../themes/adapter";
 import { EVIDENCE_TYPE_ICONS } from "../../constants/evidenceIcons";
 import { styles } from "./ProofCard.styles";
+import { Text } from "../Text";
 
 export interface ProofCardProps {
   id: string;
@@ -90,17 +91,20 @@ export function ProofCard({ id, name, type, onCardPress }: ProofCardProps) {
       ]}
     >
       <Text
+        variant="taskTitle"
         style={styles.icon}
         accessibilityElementsHidden
         importantForAccessibility="no"
       >
         {icon}
       </Text>
-      <Text style={styles.name(fgKey)} numberOfLines={2}>
+      <Text variant="metadata" style={styles.name(fgKey)} numberOfLines={2}>
         {name}
       </Text>
       {typeLabel ? (
-        <Text style={styles.typeTag(fgKey)}>{typeLabel}</Text>
+        <Text variant="caption" chrome style={styles.typeTag(fgKey)}>
+          {typeLabel}
+        </Text>
       ) : null}
     </Pressable>
   );

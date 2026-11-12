@@ -1,8 +1,9 @@
 import React, { useCallback } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { useTranslation } from "react-i18next";
 
+import { Text } from "../components/Text";
 import { selectorStyles } from "./selectorStyles";
 import { BadgeFrame } from "./types";
 
@@ -87,6 +88,7 @@ export function FrameSelector({
                 style={[styles.thumbnail, { borderColor: theme.colors.border }]}
               >
                 <Text
+                  variant="headline"
                   style={[
                     styles.glyph,
                     {
@@ -100,6 +102,8 @@ export function FrameSelector({
                 </Text>
               </View>
               <Text
+                variant="caption"
+                chrome
                 style={[
                   selectorStyles.label,
                   { color: theme.colors.textSecondary, fontWeight: "500" },

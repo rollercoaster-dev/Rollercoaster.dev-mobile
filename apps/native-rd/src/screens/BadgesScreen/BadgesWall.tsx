@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
   View,
-  Text,
   Pressable,
   FlatList,
   ScrollView,
@@ -19,6 +18,7 @@ import { BadgeRenderer } from "../../badges/BadgeRenderer";
 import type { BadgeDesign } from "../../badges/types";
 import { BadgeWallCell } from "../../components/BadgeWallCell/BadgeWallCell";
 import { Button } from "../../components/Button";
+import { Text } from "../../components/Text";
 import { CELL_SIZE } from "../../components/BadgeWallCell/BadgeWallCell.styles";
 import { useAnimationPref } from "../../hooks/useAnimationPref";
 import { formatDate } from "../../utils/format";
@@ -110,7 +110,7 @@ function SpotlightArt({
   if (design) return <BadgeRenderer design={design} size={size} />;
   return (
     <View style={[styles.spotlightArtFallback, { width: size, height: size }]}>
-      <Text style={styles.spotlightArtFallbackText}>
+      <Text variant="headline" style={styles.spotlightArtFallbackText}>
         {(title.charAt(0) || "?").toUpperCase()}
       </Text>
     </View>
@@ -172,10 +172,16 @@ export function BadgesWall({
         testID="badges-wall-empty-scroll"
       >
         <GhostBadge glowStyle={glowStyle} />
-        <Text style={styles.emptyTitle} accessibilityRole="header">
+        <Text
+          variant="headline"
+          style={styles.emptyTitle}
+          accessibilityRole="header"
+        >
           {t("badges:wall.empty.title")}
         </Text>
-        <Text style={styles.emptyBody}>{t("badges:wall.empty.body")}</Text>
+        <Text variant="body" style={styles.emptyBody}>
+          {t("badges:wall.empty.body")}
+        </Text>
         <View style={styles.emptyAction}>
           <Button
             label={t("badges:wall.empty.action")}
@@ -214,10 +220,14 @@ export function BadgesWall({
   const listHeader = (
     <View>
       <View style={styles.header}>
-        <Text style={styles.headerCount} testID="badges-wall-count">
+        <Text
+          variant="screenTitle"
+          style={styles.headerCount}
+          testID="badges-wall-count"
+        >
           {t("badges:wall.count", { count })}
         </Text>
-        <Text style={styles.headerOverline}>
+        <Text variant="metadata" chrome style={styles.headerOverline}>
           {t("badges:wall.allVerifiable")}
         </Text>
       </View>
@@ -250,21 +260,29 @@ export function BadgesWall({
               size={spotlightArtSize}
             />
             <View style={styles.spotlightBody}>
-              <Text style={styles.spotlightOverline}>
+              <Text variant="metadata" chrome style={styles.spotlightOverline}>
                 {t("badges:wall.justEarned")}
               </Text>
-              <Text style={styles.spotlightTitle} numberOfLines={2}>
+              <Text
+                variant="title"
+                style={styles.spotlightTitle}
+                numberOfLines={2}
+              >
                 {spotlight.goalTitle}
               </Text>
               {spotlight.earnedAt ? (
-                <Text style={styles.spotlightDate}>
+                <Text variant="metadata" style={styles.spotlightDate}>
                   {formatDate(spotlight.earnedAt, i18n.language)}
                 </Text>
               ) : null}
             </View>
             {/* Decorative "open" arrow — the whole card is already a button, so
                 it's dropped on narrow surfaces to give the title its width. */}
-            {isNarrow ? null : <Text style={styles.spotlightArrow}>→</Text>}
+            {isNarrow ? null : (
+              <Text variant="title" chrome style={styles.spotlightArrow}>
+                →
+              </Text>
+            )}
           </View>
         </Pressable>
       ) : null}

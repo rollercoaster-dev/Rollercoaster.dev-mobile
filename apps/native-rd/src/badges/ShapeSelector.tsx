@@ -1,8 +1,9 @@
 import React, { useCallback } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
 import { useUnistyles } from "react-native-unistyles";
 import { useTranslation } from "react-i18next";
 
+import { Text } from "../components/Text";
 import { selectorStyles } from "./selectorStyles";
 import { BadgeShapeView } from "./shapes/BadgeShapeView";
 import { BadgeShape } from "./types";
@@ -82,6 +83,8 @@ export function ShapeSelector({
                 showShadow={false}
               />
               <Text
+                variant="caption"
+                chrome
                 style={[
                   selectorStyles.label,
                   { color: theme.colors.textSecondary, fontWeight: "500" },

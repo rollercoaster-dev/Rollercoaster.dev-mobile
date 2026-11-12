@@ -236,6 +236,8 @@ export const styles = StyleSheet.create((theme) => ({
   },
   stepDeleteGlyph: {
     fontSize: theme.size.lg,
+    // Shared Text's title variant is semibold; the glyph stays regular.
+    fontWeight: theme.fontWeight.normal,
     color: theme.colors.textMuted,
   },
   // The row's one timing target (#575/D1): stacked borderless truth-lines, the
@@ -436,6 +438,8 @@ export const styles = StyleSheet.create((theme) => ({
   },
   subStepDeleteGlyph: {
     fontSize: theme.size.lg,
+    // Shared Text's title variant is semibold; the glyph stays regular.
+    fontWeight: theme.fontWeight.normal,
     color: theme.colors.textMuted,
   },
   // "add a sub-step" — inside the rail, blue (accentPrimary) like the proto.

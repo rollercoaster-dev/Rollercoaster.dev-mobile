@@ -1,6 +1,7 @@
-import { View, Text, Pressable } from "react-native";
+import { View, Pressable } from "react-native";
 import { BadgeRenderer } from "../../badges/BadgeRenderer";
 import type { BadgeDesign } from "../../badges/types";
+import { Text } from "../Text";
 import { styles, CELL_SIZE } from "./BadgeWallCell.styles";
 
 /** Minimal presentational subset of a badge row this cell needs. */
@@ -44,7 +45,7 @@ export function BadgeWallCell({ badge, onPress, testID }: BadgeWallCellProps) {
         <BadgeRenderer design={badge.design} size={CELL_SIZE} />
       ) : (
         <View style={styles.fallback}>
-          <Text style={styles.fallbackText}>
+          <Text variant="headline" style={styles.fallbackText}>
             {(badge.title.charAt(0) || "?").toUpperCase()}
           </Text>
         </View>

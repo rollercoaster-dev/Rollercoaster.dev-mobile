@@ -1,5 +1,6 @@
 import React, { memo } from "react";
-import { View, Text, Pressable, ScrollView } from "react-native";
+import { View, Pressable, ScrollView } from "react-native";
+import { Text } from "../Text";
 import Animated from "react-native-reanimated";
 import { useTranslation } from "react-i18next";
 import { Checkbox } from "../Checkbox";
@@ -197,6 +198,7 @@ function StepCardLeaf({
         contentContainerStyle={styles.cardBodyContent}
       >
         <Text
+          variant="headline"
           style={styles.title}
           numberOfLines={2}
           accessible
@@ -216,7 +218,9 @@ function StepCardLeaf({
                 count: step.evidenceCount,
               })}
             >
-              <Text style={styles.evidenceText}>{evidenceLabel}</Text>
+              <Text variant="caption" chrome style={styles.evidenceText}>
+                {evidenceLabel}
+              </Text>
             </Pressable>
             <Animated.View
               style={[styles.evidenceFlash, flashStyle]}
@@ -234,7 +238,12 @@ function StepCardLeaf({
             completion checkbox. Hidden until something is captured. */}
         {capturedChips.length > 0 && (
           <View style={styles.evidenceRail}>
-            <Text style={styles.evidenceRailLabel} accessibilityRole="text">
+            <Text
+              variant="caption"
+              chrome
+              style={styles.evidenceRailLabel}
+              accessibilityRole="text"
+            >
               {t("focusMode:evidenceRail.zoneLabel")}
             </Text>
             <View style={styles.evidenceRailRow}>
@@ -249,13 +258,19 @@ function StepCardLeaf({
                 >
                   {chip.icon && (
                     <Text
+                      variant="metadata"
                       style={styles.evidenceChipIcon}
                       accessibilityElementsHidden
                     >
                       {chip.icon}
                     </Text>
                   )}
-                  <Text style={styles.evidenceChipText} numberOfLines={1}>
+                  <Text
+                    variant="caption"
+                    chrome
+                    style={styles.evidenceChipText}
+                    numberOfLines={1}
+                  >
                     {chip.label}
                   </Text>
                 </View>
@@ -273,6 +288,7 @@ function StepCardLeaf({
       <View style={styles.cardFoot}>
         {isBlocked ? (
           <Text
+            variant="metadata"
             style={styles.addEvidencePromptText}
             accessibilityRole="text"
             accessibilityLabel={
