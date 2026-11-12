@@ -651,7 +651,7 @@ describe("FocusCurrentTaskCard", () => {
       const chip = screen.getByTestId("focus-current-task-evidence-chip-ev-1");
       expect(chip.props.accessibilityRole).toBe("button");
       expect(chip.props.accessibilityHint).toBe(
-        "Opens this evidence to view it",
+        i18n.t("focusMode:evidenceRail.openHint"),
       );
       expect(
         screen.getByRole("button", { name: "Kitchen reset, Photo captured" }),

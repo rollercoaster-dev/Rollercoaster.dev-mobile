@@ -72,3 +72,13 @@ i18n gap), StepCard's own read-only rail.
 - Pre-existing lint error in `EditGoalRowDescription.tsx` (from #815) needs its own fix.
 - `TimelineEvidenceCard` and `EvidenceThumbnail` build their a11y label and hint from hardcoded English;
   they should go through `t()`.
+- Review (correctness, low): a fast double tap on a chip can push two viewers. Timeline evidence cards
+  have the same gap, so a shared guard belongs in its own change.
+- Review (UI, low): the chip's pressed state copies `Card.pressed` but has not been seen on a device in
+  the shadowed themes.
+
+## Review
+
+Correctness, tests and accessibility reviewers ran on the diff. Nothing blocking. Fixed: a stale
+"read-only" style comment, the hint assertion now reads the i18n key, and a negative assertion with no
+reachable trigger was dropped. Paused cards render no rail, so there is nothing to wire there.

@@ -1197,7 +1197,6 @@ describe("FocusModeScreen", () => {
       // Back from the viewer: the route param was already consumed.
       rerender(<FocusModeScreen {...routeProps} />);
       expect(currentCardTitle()).toBe("Practice");
-      expect(mockUncompleteStep).not.toHaveBeenCalled();
     });
   });
 

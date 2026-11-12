@@ -147,8 +147,8 @@ export const styles = StyleSheet.create((theme) => {
       fontWeight: theme.fontWeight.bold,
       color: theme.colors.accentPrimary,
     },
-    // Captured rail — read-only green chips (`accentMint`, the prototype's
-    // #d4f4e7), label leans green. Mirrors the StepCard rail contract (#360).
+    // Captured rail — green chips (`accentMint`, the prototype's #d4f4e7),
+    // label leans green (#360). Each chip opens the evidence viewer (#696).
     evidenceRail: {
       gap: theme.space[1],
     },
