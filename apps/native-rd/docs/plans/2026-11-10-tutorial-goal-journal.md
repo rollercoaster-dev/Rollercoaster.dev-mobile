@@ -208,3 +208,11 @@ on any step. That is what step 6's copy relies on: "Finish it as usual, then thi
   The Goals-screen offer guards against this; the Settings row does not yet.
 - German copy for the `templates` namespace (bundle is `{}`, falls back to English).
 - `scripts/worktree-boot.sh` passes `--no-dev-tools`, which this Expo CLI rejects.
+- From #829 review: a sub-step's Focus card does not name its parent step, so a
+  reader on their step 6 sub-step loses sight of step 6's text until they finish
+  it. Showing the parent's title there would help any goal with sub-steps.
+- From #829 review: Edit Goal's "Done" pushes a second Focus Mode instead of going
+  back to the first (see the #829 decision's Limits). Needs its own issue.
+- Step 6's new copy needs an emulator pass in en and de: the Focus card's
+  controls must stay on screen, and renaming "New sub-step" then tapping "Done"
+  must keep the typed name.
