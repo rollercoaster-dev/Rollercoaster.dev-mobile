@@ -62,6 +62,23 @@ export const activeGoalsQuery = evolu.createQuery((db) =>
 );
 
 /**
+ * Whether any goal was ever seeded from a template: one row, or none.
+ *
+ * Deliberately ignores `status` and `isDeleted`. The Goals-screen tutorial
+ * offer (#593) asks "has this person already started the tutorial?", and a
+ * finished or deleted tutorial goal still answers yes.
+ * @param templateId - Template id the goal was seeded from
+ */
+export const goalFromTemplateQuery = (templateId: string) =>
+  evolu.createQuery((db) =>
+    db
+      .selectFrom("goal")
+      .select(["id"])
+      .where("templateId", "=", templateId as NonEmptyString1000)
+      .limit(1),
+  );
+
+/**
  * Steps for every active goal in a single subscription, grouped client-side
  * by goalId. Avoids the N+1 of calling stepsByGoalQuery per goal card on the
  * home screen.
@@ -1867,6 +1884,19 @@ export function markWelcomeSeen(id: UserSettingsId) {
   return evolu.update("userSettings", {
     id,
     hasSeenWelcome: Int.orThrow(1),
+  } as Parameters<typeof evolu.update>[1]);
+}
+
+/**
+ * Stop offering the tutorial goal on the Goals screen (#593).
+ * Called when the user dismisses the offer or starts the tutorial. One-way:
+ * nothing sets it back, and "Start the tutorial goal" in Settings stays.
+ * Idempotent — safe to call if already set.
+ */
+export function hideTutorialOffer(id: UserSettingsId) {
+  return evolu.update("userSettings", {
+    id,
+    tutorialOfferHidden: Int.orThrow(1),
   } as Parameters<typeof evolu.update>[1]);
 }
 

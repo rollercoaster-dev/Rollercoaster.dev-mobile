@@ -6,6 +6,7 @@
 
 import {
   createUserSettings,
+  hideTutorialOffer,
   pinGoal,
   unpinGoal,
   updateUserSettings,
@@ -129,6 +130,16 @@ describe("cockpit pin (#396)", () => {
     expect(second).toEqual({
       ok: true,
       value: { id: mockSettingsId, pinnedGoalId: "goal_test_456" },
+    });
+  });
+});
+
+describe("tutorial offer (#593)", () => {
+  test("hideTutorialOffer writes the one-way flag onto the settings singleton", () => {
+    const result = hideTutorialOffer(mockSettingsId);
+    expect(result).toEqual({
+      ok: true,
+      value: { id: mockSettingsId, tutorialOfferHidden: 1 },
     });
   });
 });

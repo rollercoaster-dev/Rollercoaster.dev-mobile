@@ -8,6 +8,17 @@
     "body": "Füge dein erstes Lernziel hinzu, um zu starten.",
     "cta": "Ziel erstellen"
   },
+  "tutorialOffer": {
+    "title": "Neu hier? Probier das Tutorial-Ziel aus",
+    "body": "Ein kurzes Übungsziel, das dich zusammen mit einem Papier-Journal durch die App führt. Du kannst es auch später in den Einstellungen starten.",
+    "start": "Tutorial starten",
+    "dismiss": "Nein danke",
+    "dismissHint": "Blendet diese Karte aus. Das Tutorial bleibt in den Einstellungen verfügbar.",
+    "startFailed": {
+      "title": "Tutorial-Ziel konnte nicht angelegt werden",
+      "message": "Etwas ist schiefgelaufen. Versuch es nochmal."
+    }
+  },
   "actions": {
     "newGoal": "Neues Ziel"
   },

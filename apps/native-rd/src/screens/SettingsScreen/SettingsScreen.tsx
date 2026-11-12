@@ -18,6 +18,9 @@ import type {
 } from "../../navigation/types";
 import { reportError } from "../../services/sentry-report";
 import { buildTutorialTemplate, insertTemplate } from "../../templates";
+import { hideTutorialOffer } from "../../db";
+import { useUserSettingsRow } from "../../hooks/useUserSettingsRow";
+import { runEvoluMutation } from "../../utils/evoluMutation";
 import { Text } from "../../components/Text";
 import { useTabScreenContentInset } from "../../navigation/useTabScreenContentInset";
 import { ErrorBoundary } from "../../components/ErrorBoundary";
@@ -110,13 +113,16 @@ function LanguagePicker() {
  * Onboarding section. "Replay welcome" re-opens the first-launch welcome as a
  * modal (#416 D3/D6) and never mutates `hasSeenWelcome`. "Start the tutorial
  * goal" seeds the "Find your footing" template (#593) as a new goal and opens
- * it in Focus Mode. Both use the plain `SettingsRow` button affordance.
+ * it in Focus Mode; it also retires the Goals-screen tutorial offer, which
+ * would otherwise keep inviting someone who has already started. Both use the
+ * plain `SettingsRow` button affordance.
  */
 function OnboardingSection() {
   const navigation =
     useNavigation<NativeStackNavigationProp<SettingsStackParamList>>();
   const { t } = useTranslation(["settings"]);
   const { showToast } = useToast();
+  const { settings } = useUserSettingsRow();
 
   function handleStartTutorial() {
     const result = insertTemplate(buildTutorialTemplate(t));
@@ -124,6 +130,15 @@ function OnboardingSection() {
       reportError(result.error, { area: "goal.mutate", kind: "create" });
       showToast({ message: t("settings:errors.tutorialStartFailed") });
       return;
+    }
+    if (settings) {
+      runEvoluMutation(
+        () => hideTutorialOffer(settings.id),
+        (error) => {
+          logger.error("Failed to hide the tutorial offer", { error });
+          reportError(error, { area: "db.write" });
+        },
+      );
     }
     // The goal exists either way; without a tab parent (Storybook, a test
     // host) it is simply waiting on the Goals tab.
