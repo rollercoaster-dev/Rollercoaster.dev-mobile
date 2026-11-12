@@ -1,9 +1,10 @@
-import { View, Text, Pressable } from "react-native";
+import { View, Pressable } from "react-native";
 import { useTranslation } from "react-i18next";
 import { themeOptions } from "../../hooks/useTheme";
 import { themes, type ThemeName } from "../../themes/compose";
 import { themeA11yLabel } from "../../i18n/labels";
 import { getSwatch, stripeWidths } from "./swatch-utils";
+import { Text } from "../Text";
 import { styles } from "./ThemeSwatchRail.styles";
 
 interface ThemeSwatchRailProps {
@@ -96,7 +97,11 @@ export function ThemeSwatchRail({
                   />
                 </View>
                 {isSelected ? (
-                  <Text style={[styles.check, { color: colors.accentPurple }]}>
+                  <Text
+                    variant="body"
+                    chrome
+                    style={[styles.check, { color: colors.accentPurple }]}
+                  >
                     ✓
                   </Text>
                 ) : null}
@@ -117,10 +122,14 @@ export function ThemeSwatchRail({
           back, not just that something is selected. Inherited from
           ThemeSwitcher, which carried the same testID before #416.
         */}
-        <Text testID="selected-theme" style={styles.captionLabel}>
+        <Text
+          variant="title"
+          testID="selected-theme"
+          style={styles.captionLabel}
+        >
           {t(`common:theme.options.${selectedThemeId}.label`)}
         </Text>
-        <Text style={styles.captionDescription}>
+        <Text variant="metadata" style={styles.captionDescription}>
           {t(`common:theme.options.${selectedThemeId}.description`)}
         </Text>
       </View>

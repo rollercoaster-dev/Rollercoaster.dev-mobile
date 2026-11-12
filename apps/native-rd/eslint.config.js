@@ -19,6 +19,7 @@ const localRules = {
         "no-shared-component-reimplementation": require("./src/eslint-rules/no-shared-component-reimplementation"),
         "require-barrel-export": require("./src/eslint-rules/require-barrel-export"),
         "no-raw-jsx-strings": require("./src/eslint-rules/no-raw-jsx-strings"),
+        "no-native-text-import": require("./src/eslint-rules/no-native-text-import"),
       },
     },
   },
@@ -30,6 +31,7 @@ const localRules = {
     "local/no-shared-component-reimplementation": "warn",
     "local/require-barrel-export": "error",
     "local/no-raw-jsx-strings": "error",
+    "local/no-native-text-import": "error",
   },
 };
 
@@ -63,6 +65,15 @@ module.exports = defineConfig([
     },
   },
   localRules,
+  {
+    // Shared Text (#745): stories and tests may render raw RN Text to build
+    // fixtures; production code may not. components/Text/ is exempt in the
+    // rule itself.
+    files: ["**/*.stories.tsx", "**/__tests__/**"],
+    rules: {
+      "local/no-native-text-import": "off",
+    },
+  },
   {
     // Type-scaling policy (#741): useTypeScale() is the only OS font-scale
     // reader, so caps and thresholds can't be bypassed. See

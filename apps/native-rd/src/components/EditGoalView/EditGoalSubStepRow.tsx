@@ -10,7 +10,6 @@
 import React from "react";
 import {
   View,
-  Text as RNText,
   TextInput,
   Pressable,
   type GestureResponderEvent,
@@ -29,10 +28,15 @@ import type { AnimationPref } from "../../hooks/useAnimationPref";
 import { getTimingConfig } from "../../utils/animation";
 import { useTypeScale } from "../../hooks/useTypeScale";
 import { EvidenceTypePicker } from "../EvidenceTypePicker";
+import { Text } from "../Text";
 import { styles } from "./EditGoalView.styles";
 import type { EditGoalSubStep, EditGoalTimingCopy } from "./EditGoalView";
 import type { StepTimingValue } from "../StepTimingEditor";
 import { EditGoalRowTiming } from "./EditGoalRowTiming";
+import {
+  EditGoalRowDescription,
+  type EditGoalRowDescriptionBinding,
+} from "./EditGoalRowDescription";
 import { HierarchyActionRow } from "./HierarchyActionRow";
 import type { RowGeometry } from "./useEditGoalHierarchyDragTypes";
 import { useRowGeometryRegistration } from "./useRowGeometryRegistration";
@@ -110,6 +114,8 @@ export interface EditGoalSubStepRowProps {
   timingNow?: Date;
   timingLocale?: string;
   timingCopy?: EditGoalTimingCopy;
+  /** Description slot wiring (#803), id-bound by the list. Absent → read-only. */
+  descriptionBinding?: EditGoalRowDescriptionBinding;
 }
 
 export function EditGoalSubStepRow({
@@ -156,6 +162,7 @@ export function EditGoalSubStepRow({
   timingNow,
   timingLocale,
   timingCopy,
+  descriptionBinding,
 }: EditGoalSubStepRowProps) {
   const { theme } = useUnistyles();
   // At accessibility sizes the fixed-width controls squeeze the title to one
@@ -175,13 +182,14 @@ export function EditGoalSubStepRow({
   const noAnimation = animationPref === "none";
 
   const marker = (
-    <RNText
+    <Text
+      variant="body"
       style={styles.subStepMarker}
       accessibilityElementsHidden
       importantForAccessibility="no"
     >
       {"≡"}
-    </RNText>
+    </Text>
   );
 
   function resetDragState() {
@@ -283,7 +291,9 @@ export function EditGoalSubStepRow({
           accessibilityHint={tapToEditHint}
           testID={`edit-goal-substep-title-${subStep.id}`}
         >
-          <RNText style={styles.subStepTitleText}>{subStep.title}</RNText>
+          <Text variant="metadata" style={styles.subStepTitleText}>
+            {subStep.title}
+          </Text>
         </Pressable>
       </View>
       <View
@@ -313,7 +323,9 @@ export function EditGoalSubStepRow({
           hitSlop={8}
           testID={`edit-goal-substep-delete-${subStep.id}`}
         >
-          <RNText style={styles.subStepDeleteGlyph}>{"×"}</RNText>
+          <Text variant="title" style={styles.subStepDeleteGlyph}>
+            {"×"}
+          </Text>
         </Pressable>
       </View>
     </>
@@ -355,6 +367,15 @@ export function EditGoalSubStepRow({
     </View>
   );
 
+  const descriptionSlot = (
+    <EditGoalRowDescription
+      title={subStep.title}
+      description={subStep.description}
+      binding={descriptionBinding}
+      testID={`edit-goal-substep-description-${subStep.id}`}
+    />
+  );
+
   // One pressable timing target, between the row body and the accessible
   // hierarchy actions (D12) — a quick tap never reaches the row's
   // manual-activation Pan or its 400ms LongPress.
@@ -383,6 +404,7 @@ export function EditGoalSubStepRow({
     return (
       <View>
         {primaryRow}
+        {descriptionSlot}
         {timingLine}
         {accessibleActions}
       </View>
@@ -398,6 +420,7 @@ export function EditGoalSubStepRow({
     <GestureDetector gesture={composed}>
       <Animated.View style={animatedStyle}>
         {primaryRow}
+        {descriptionSlot}
         {timingLine}
         {accessibleActions}
       </Animated.View>

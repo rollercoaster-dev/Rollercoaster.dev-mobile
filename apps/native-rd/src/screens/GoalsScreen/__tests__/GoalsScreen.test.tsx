@@ -42,6 +42,11 @@ jest.mock("../../../db", () => ({
   deleteGoal: jest.fn(),
   pinGoal: jest.fn(),
   unpinGoal: jest.fn(),
+  hideTutorialOffer: jest.fn(),
+  goalFromTemplateQuery: (templateId: string) => ({
+    __brand: "goalFromTemplateQuery",
+    templateId,
+  }),
   StepStatus: { pending: "pending", completed: "completed", paused: "paused" },
   // Faithful copy of the real resolver (leaf/invite/parked/flat/none + orphan
   // promotion, paused skipped like completed) so buildCockpitGoal's next-step
@@ -105,7 +110,18 @@ jest.mock("../../../services/sentry-report", () => ({
   reportError: (...args: unknown[]) => mockReportError(...args),
 }));
 
-const { deleteGoal, pinGoal, unpinGoal } = require("../../../db");
+const mockInsertTemplate = jest.fn();
+jest.mock("../../../templates", () => ({
+  ...jest.requireActual("../../../templates"),
+  insertTemplate: (...args: unknown[]) => mockInsertTemplate(...args),
+}));
+
+const {
+  deleteGoal,
+  pinGoal,
+  unpinGoal,
+  hideTutorialOffer,
+} = require("../../../db");
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -116,6 +132,7 @@ beforeEach(() => {
   deleteGoal.mockReturnValue({ ok: true, value: {} });
   pinGoal.mockReturnValue({ ok: true, value: {} });
   unpinGoal.mockReturnValue({ ok: true, value: {} });
+  hideTutorialOffer.mockReturnValue({ ok: true, value: {} });
 });
 
 const makeGoalRow = (overrides: Record<string, unknown> = {}) => ({
@@ -132,8 +149,10 @@ const mockData = (
   goals: Record<string, unknown>[],
   steps: Record<string, unknown>[] = [],
   settings: Record<string, unknown> | null = null,
+  tutorialGoals: Record<string, unknown>[] = [],
 ) => {
   mockUseQuery.mockImplementation((query: { __brand?: string }) => {
+    if (query?.__brand === "goalFromTemplateQuery") return tutorialGoals;
     if (query?.__brand === "activeGoalsQuery") return goals;
     if (query?.__brand === "stepsForActiveGoalsQuery") return steps;
     if (query?.__brand === "userSettingsQuery") return settings ? [settings] : []; // prettier-ignore
@@ -169,6 +188,111 @@ describe("GoalsScreen", () => {
       renderWithProviders(<GoalsScreen />);
       fireEvent.press(screen.getByText(i18n.t("goals:emptyState.cta")));
       expect(mockNavigate).toHaveBeenCalledWith("NewGoal");
+    });
+  });
+
+  describe("tutorial offer (#593)", () => {
+    const offer = () => screen.queryByTestId("tutorial-offer");
+
+    it("offers the tutorial above the empty state on a fresh settings row", () => {
+      mockData([], [], { id: "settings-1", tutorialOfferHidden: null });
+      renderWithProviders(<GoalsScreen />);
+      expect(offer()).toBeOnTheScreen();
+      expect(
+        screen.getByText(i18n.t("goals:emptyState.title")),
+      ).toBeOnTheScreen();
+    });
+
+    it("still offers it to someone who already has goals", () => {
+      mockData([makeGoalRow()], [], {
+        id: "settings-1",
+        tutorialOfferHidden: null,
+      });
+      renderWithProviders(<GoalsScreen />);
+      expect(offer()).toBeOnTheScreen();
+    });
+
+    it.each([
+      ["the offer was dismissed or the tutorial started", { id: "settings-1", tutorialOfferHidden: 1 }], // prettier-ignore
+      ["the settings row has not loaded yet", null],
+    ])("shows no offer when %s", (_case, settings) => {
+      mockData([], [], settings);
+      renderWithProviders(<GoalsScreen />);
+      expect(offer()).toBeNull();
+    });
+
+    it("shows no offer when a tutorial goal already exists, even with the flag unset", () => {
+      // A tutorial started from Settings before the flag existed, or one that
+      // has since been finished or deleted.
+      mockData([], [], { id: "settings-1", tutorialOfferHidden: null }, [
+        { id: "goal-tutorial" },
+      ]);
+      renderWithProviders(<GoalsScreen />);
+      expect(offer()).toBeNull();
+    });
+
+    it("declining writes the one-way flag and seeds nothing", () => {
+      mockData([], [], { id: "settings-1", tutorialOfferHidden: null });
+      renderWithProviders(<GoalsScreen />);
+      fireEvent.press(screen.getByTestId("tutorial-offer-dismiss"));
+      expect(hideTutorialOffer).toHaveBeenCalledWith("settings-1");
+      expect(mockInsertTemplate).not.toHaveBeenCalled();
+      expect(mockNavigate).not.toHaveBeenCalled();
+    });
+
+    it("starting seeds the tutorial, retires the offer and opens it in Focus Mode", () => {
+      mockInsertTemplate.mockReturnValue({ ok: true, goalId: "goal-tutorial" });
+      mockData([], [], { id: "settings-1", tutorialOfferHidden: null });
+      renderWithProviders(<GoalsScreen />);
+      fireEvent.press(screen.getByTestId("tutorial-offer-start"));
+
+      expect(mockInsertTemplate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: i18n.t("templates:tutorial.title"),
+        }),
+      );
+      expect(hideTutorialOffer).toHaveBeenCalledWith("settings-1");
+      expect(mockNavigate).toHaveBeenCalledWith("FocusMode", {
+        goalId: "goal-tutorial",
+      });
+    });
+
+    it("a second tap before the flag echoes back does not seed a second tutorial", () => {
+      mockInsertTemplate.mockReturnValue({ ok: true, goalId: "goal-tutorial" });
+      mockData([], [], { id: "settings-1", tutorialOfferHidden: null });
+      renderWithProviders(<GoalsScreen />);
+      fireEvent.press(screen.getByTestId("tutorial-offer-start"));
+      fireEvent.press(screen.getByTestId("tutorial-offer-start"));
+      expect(mockInsertTemplate).toHaveBeenCalledTimes(1);
+    });
+
+    it("keeps the offer and says so when seeding fails, and a retry works", () => {
+      const alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+      mockInsertTemplate.mockReturnValueOnce({
+        ok: false,
+        error: new Error("insert failed"),
+      });
+      mockData([], [], { id: "settings-1", tutorialOfferHidden: null });
+      renderWithProviders(<GoalsScreen />);
+      fireEvent.press(screen.getByTestId("tutorial-offer-start"));
+
+      expect(alertSpy).toHaveBeenCalledWith(
+        i18n.t("goals:tutorialOffer.startFailed.title"),
+        i18n.t("goals:tutorialOffer.startFailed.message"),
+      );
+      expect(mockReportError).toHaveBeenCalledWith(expect.any(Error), {
+        area: "goal.mutate",
+        kind: "create",
+      });
+      expect(hideTutorialOffer).not.toHaveBeenCalled();
+      expect(mockNavigate).not.toHaveBeenCalled();
+
+      mockInsertTemplate.mockReturnValue({ ok: true, goalId: "goal-tutorial" });
+      fireEvent.press(screen.getByTestId("tutorial-offer-start"));
+      expect(mockNavigate).toHaveBeenCalledWith("FocusMode", {
+        goalId: "goal-tutorial",
+      });
+      alertSpy.mockRestore();
     });
   });
 

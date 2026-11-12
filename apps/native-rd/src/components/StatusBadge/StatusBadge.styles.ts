@@ -37,6 +37,8 @@ export const styles = StyleSheet.create((theme) => ({
     fontFamily: theme.fontFamily.body,
     textTransform: "uppercase",
     letterSpacing: theme.letterSpacing.wide,
+    // Pill keeps its compact height; caption's 1.6 line height would add ~4pt.
+    lineHeight: Math.round(theme.size.xs * 1.3),
   },
   textActive: {
     color: theme.narrative.climb.text,

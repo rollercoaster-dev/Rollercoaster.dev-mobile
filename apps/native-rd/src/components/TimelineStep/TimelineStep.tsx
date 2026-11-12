@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { View, Text, Pressable } from "react-native";
+import { View, Pressable } from "react-native";
 import { useTranslation } from "react-i18next";
+import { Text } from "../Text";
 import { TimelineNode } from "../TimelineNode";
 import { stepStateColorMap } from "../TimelineNode/stepStateColorMap";
 import { TimelineEvidenceCard } from "../TimelineEvidenceCard";
@@ -112,13 +113,15 @@ export function TimelineStep({
             style={styles.header}
           >
             <View style={styles.titleContainer}>
-              <Text style={styles.title} numberOfLines={2}>
+              <Text variant="body" style={styles.title} numberOfLines={2}>
                 {step.title}
               </Text>
             </View>
             <StateWord status={step.status} label={statusLabel} />
             {hasEvidence && (
               <Text
+                variant="metadata"
+                chrome
                 style={[styles.chevron, expanded && styles.chevronExpanded]}
                 accessibilityElementsHidden
               >
@@ -229,13 +232,19 @@ function ChildRow({
           style={styles.childHeader}
         >
           <View style={styles.titleContainer}>
-            <Text style={styles.childTitle} numberOfLines={2}>
+            <Text
+              variant="metadata"
+              style={styles.childTitle}
+              numberOfLines={2}
+            >
               {child.title}
             </Text>
           </View>
           <StateWord status={child.status} label={statusLabel} />
           {hasEvidence && (
             <Text
+              variant="metadata"
+              chrome
               style={[styles.chevron, expanded && styles.chevronExpanded]}
               accessibilityElementsHidden
             >
@@ -273,7 +282,9 @@ function ChildRow({
 function StateWord({ status, label }: { status: StepStatus; label: string }) {
   return (
     <View style={styles.stateWordPill(status)}>
-      <Text style={styles.stateWordText(status)}>{label}</Text>
+      <Text variant="caption" chrome style={styles.stateWordText(status)}>
+        {label}
+      </Text>
     </View>
   );
 }

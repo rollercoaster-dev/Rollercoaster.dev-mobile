@@ -153,9 +153,13 @@ export const styles = StyleSheet.create((theme) => ({
   iconCellSelected: {
     borderColor: theme.colors.border,
   },
+  // Shared Text `caption` chrome; the grid cell is fixed, so keep the compact
+  // line height and no tracking instead of caption's.
   iconLabel: {
     fontSize: 9,
     fontFamily: theme.fontFamily.body,
+    lineHeight: Math.round(9 * 1.3),
+    letterSpacing: 0,
     color: theme.colors.textMuted,
     marginTop: 2,
     textAlign: "center",

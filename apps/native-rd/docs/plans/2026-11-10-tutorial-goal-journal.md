@@ -127,7 +127,11 @@ Landed with this plan:
 - Storybook story for the Focus card with a description.
 - `docs/architecture/data-model.md`: add `goal.templateId` and `step.description`.
 - Tutorial template content and copy (en + de), picker and first-run wiring
-  (epic children E, G, H, I).
-- Tapping "Start the tutorial goal" twice makes two tutorial goals.
+  (epic children E, G, H, I). Done so far: a dismissable tutorial offer on the
+  Goals screen (`TutorialOfferCard`, `useTutorialOffer`). It goes away for good
+  once the tutorial is started, declined, or a tutorial goal already exists
+  (`userSettings.tutorialOfferHidden`).
+- Tapping "Start the tutorial goal" twice in Settings makes two tutorial goals.
+  The Goals-screen offer guards against this; the Settings row does not yet.
 - German copy for the `templates` namespace (bundle is `{}`, falls back to English).
 - `scripts/worktree-boot.sh` passes `--no-dev-tools`, which this Expo CLI rejects.

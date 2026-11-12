@@ -42,6 +42,8 @@ export const styles = StyleSheet.create((theme) => ({
   },
   title: {
     fontSize: theme.size.md,
+    // A two-line header title: keep it compact, not body's 1.6 reading leading.
+    lineHeight: Math.round(theme.size.md * 1.3),
     fontWeight: theme.fontWeight.bold,
     color: theme.colors.text,
   },

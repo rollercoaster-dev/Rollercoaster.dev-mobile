@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { View, Text as RNText, Pressable } from "react-native";
+import { View, Pressable } from "react-native";
 import { useUnistyles } from "react-native-unistyles";
 import {
   BadgeRenderer,
@@ -80,12 +80,13 @@ export function BadgeCard({
           ) : (
             <View style={styles.initials(badgeSize)}>
               {/* Sized from badgeSize, which already tracks the scaled text column. */}
-              <RNText
+              <Text
+                variant="display"
                 style={styles.initialsText(badgeSize)}
                 allowFontScaling={false}
               >
                 {(title.charAt(0) || "?").toUpperCase()}
-              </RNText>
+              </Text>
             </View>
           )}
         </View>

@@ -1,7 +1,9 @@
 import React, { useCallback } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Pressable, TextInput, View } from "react-native";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { useTranslation } from "react-i18next";
+
+import { Text } from "../components/Text";
 
 import { BannerPosition } from "./types";
 
@@ -69,6 +71,7 @@ export function BannerEditor({
         ]}
       >
         <Text
+          variant="metadata"
           style={[
             styles.toggleText,
             {
@@ -127,6 +130,7 @@ export function BannerEditor({
                   ]}
                 >
                   <Text
+                    variant="metadata"
                     style={[
                       styles.optionText,
                       {

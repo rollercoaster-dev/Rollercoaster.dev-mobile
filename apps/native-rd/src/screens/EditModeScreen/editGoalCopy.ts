@@ -49,6 +49,7 @@ export type EditGoalCopyProps = Pick<
   | "whenPromptLabel"
   | "editTimingUnsetA11yLabel"
   | "editTimingSetA11yLabel"
+  | "stepDescriptionCopy"
 >;
 
 export function buildEditGoalCopy(
@@ -102,6 +103,25 @@ export function buildEditGoalCopy(
         title,
         lines: lines.join(", "),
       }),
+    stepDescriptionCopy: {
+      addPrompt: t("editGoal:editor.stepDescription.addPrompt"),
+      addA11yLabel: (title) =>
+        t("editGoal:editor.stepDescription.addA11yLabel", { title }),
+      editA11yLabel: (title) =>
+        t("editGoal:editor.stepDescription.editA11yLabel", { title }),
+      editA11yHint: t("editGoal:editor.stepDescription.editA11yHint"),
+      inputA11yLabel: (title) =>
+        t("editGoal:editor.stepDescription.inputA11yLabel", { title }),
+      placeholder: t("editGoal:editor.stepDescription.placeholder"),
+      saveLabel: t("common:actions.save"),
+      cancelLabel: t("common:actions.cancel"),
+      clearLabel: t("editGoal:editor.stepDescription.clear"),
+      tooLongMessage: (count, max) =>
+        t("editGoal:editor.stepDescription.tooLong", {
+          length: count,
+          max,
+        }),
+    },
   };
 }
 

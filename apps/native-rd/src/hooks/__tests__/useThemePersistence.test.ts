@@ -384,4 +384,68 @@ describe("useThemePersistence", () => {
       expect(setThemeSpy).toHaveBeenCalledWith("light-default");
     });
   });
+
+  // App.tsx holds the navigator back until this is true: a screen mounted in
+  // the default theme and switched a tick later kept stale header ink.
+  describe("isThemeRestored (gates the navigator)", () => {
+    it("is false while the settings row is still loading", () => {
+      mockUseQuery.mockReturnValue([]);
+      const { result } = renderHook(() => useThemePersistence());
+      expect(result.current.isThemeRestored).toBe(false);
+    });
+
+    it("is true once settings load with no saved theme", () => {
+      mockUseQuery.mockReturnValue([makeSettings({ theme: null })]);
+      const { result } = renderHook(() => useThemePersistence());
+      expect(result.current.isThemeRestored).toBe(true);
+    });
+
+    it("is true once the saved theme has been applied", () => {
+      mockUseQuery.mockReturnValue([makeSettings({ theme: "dark-default" })]);
+      const { result } = renderHook(() => useThemePersistence());
+      expect(setThemeSpy).toHaveBeenCalledWith("dark-default");
+      expect(result.current.isThemeRestored).toBe(true);
+    });
+
+    it("is true once an invalid saved theme has fallen back", () => {
+      mockUseQuery.mockReturnValue([makeSettings({ theme: "dark-dyslexia" })]);
+      const { result } = renderHook(() => useThemePersistence());
+      expect(setThemeSpy).toHaveBeenCalledWith("light-default");
+      expect(result.current.isThemeRestored).toBe(true);
+    });
+
+    it("stays false while the saved theme is deferred in the background, then turns true on resume", () => {
+      setAppState("background");
+      mockUseQuery.mockReturnValue([makeSettings({ theme: "dark-default" })]);
+      const { result } = renderHook(() => useThemePersistence());
+      expect(result.current.isThemeRestored).toBe(false);
+
+      act(() => emitAppState("active"));
+      expect(result.current.isThemeRestored).toBe(true);
+    });
+
+    it("stays true when the user picks a first theme and Evolu echoes it back", () => {
+      mockUseQuery.mockReturnValue([makeSettings({ theme: null })]);
+      const { result, rerender } = renderHook(() => useThemePersistence());
+      expect(result.current.isThemeRestored).toBe(true);
+
+      act(() => {
+        result.current.setTheme("dark-default");
+      });
+      // The write lands and the row now carries a theme the read-effect dedups.
+      mockUseQuery.mockReturnValue([makeSettings({ theme: "dark-default" })]);
+      rerender({});
+      expect(result.current.isThemeRestored).toBe(true);
+    });
+
+    it("turns true when the row lands after a loading first render", () => {
+      mockUseQuery.mockReturnValue([]);
+      const { result, rerender } = renderHook(() => useThemePersistence());
+      expect(result.current.isThemeRestored).toBe(false);
+
+      mockUseQuery.mockReturnValue([makeSettings({ theme: "dark-default" })]);
+      rerender({});
+      expect(result.current.isThemeRestored).toBe(true);
+    });
+  });
 });

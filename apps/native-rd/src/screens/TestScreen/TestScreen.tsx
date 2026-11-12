@@ -3,9 +3,10 @@
  * labels/demo copy, not shippable product strings. Disabled file-wide rather
  * than per-line; the whole file gets migrated to t() or deleted as a unit when
  * the design-system showcase work lands. */
-import { View, Text, ScrollView, Pressable } from "react-native";
+import { View, ScrollView, Pressable } from "react-native";
 import { UnistylesRuntime, useUnistyles } from "react-native-unistyles";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Text } from "../../components/Text";
 import { ThemeSwitcher } from "../../components/ThemeSwitcher";
 import { composeTheme } from "../../themes/compose";
 import { palette } from "../../themes/palette";
@@ -55,8 +56,12 @@ function renderNarrativeArc(
 
   return (
     <View style={styles.previewSection}>
-      <Text style={styles.previewSectionTitle(theme)}>Narrative Arc</Text>
-      <Text style={styles.previewSectionDesc(theme)}>{desc}</Text>
+      <Text variant="title" style={styles.previewSectionTitle(theme)}>
+        Narrative Arc
+      </Text>
+      <Text variant="metadata" style={styles.previewSectionDesc(theme)}>
+        {desc}
+      </Text>
       <View style={styles.previewGrid}>
         <View
           style={styles.narrativeCard(
@@ -66,6 +71,8 @@ function renderNarrativeArc(
           )}
         >
           <Text
+            variant="caption"
+            chrome
             style={styles.badgeLabel(
               theme.narrative.climb.text,
               theme.narrative.climb.bg,
@@ -74,7 +81,9 @@ function renderNarrativeArc(
           >
             Climb
           </Text>
-          <Text style={styles.previewBody(theme)}>{copy.climb}</Text>
+          <Text variant="metadata" style={styles.previewBody(theme)}>
+            {copy.climb}
+          </Text>
         </View>
         <View
           style={styles.narrativeCard(
@@ -84,6 +93,8 @@ function renderNarrativeArc(
           )}
         >
           <Text
+            variant="caption"
+            chrome
             style={styles.badgeLabel(
               theme.narrative.drop.text,
               theme.narrative.drop.bg,
@@ -92,7 +103,9 @@ function renderNarrativeArc(
           >
             Drop
           </Text>
-          <Text style={styles.previewBody(theme)}>{copy.drop}</Text>
+          <Text variant="metadata" style={styles.previewBody(theme)}>
+            {copy.drop}
+          </Text>
         </View>
         <View
           style={styles.narrativeCard(
@@ -106,6 +119,8 @@ function renderNarrativeArc(
               {storyLabels.map((item) => (
                 <Text
                   key={item.label}
+                  variant="caption"
+                  chrome
                   style={styles.storyLabel(
                     item.color,
                     theme.narrative.stories.accentForeground,
@@ -118,6 +133,8 @@ function renderNarrativeArc(
             </View>
           ) : (
             <Text
+              variant="caption"
+              chrome
               style={styles.badgeLabel(
                 theme.narrative.stories.accentForeground,
                 theme.narrative.stories.accent1,
@@ -127,7 +144,9 @@ function renderNarrativeArc(
               Stories
             </Text>
           )}
-          <Text style={styles.previewBody(theme)}>{copy.stories}</Text>
+          <Text variant="metadata" style={styles.previewBody(theme)}>
+            {copy.stories}
+          </Text>
         </View>
         <View
           style={styles.narrativeCard(
@@ -137,6 +156,8 @@ function renderNarrativeArc(
           )}
         >
           <Text
+            variant="caption"
+            chrome
             style={styles.badgeLabel(
               reliefLabelText,
               theme.narrative.relief.accent,
@@ -145,7 +166,9 @@ function renderNarrativeArc(
           >
             Relief
           </Text>
-          <Text style={styles.previewBody(theme)}>{copy.relief}</Text>
+          <Text variant="metadata" style={styles.previewBody(theme)}>
+            {copy.relief}
+          </Text>
         </View>
       </View>
     </View>
@@ -159,8 +182,12 @@ function renderAccentPalette(
 ) {
   return (
     <View style={styles.previewSection}>
-      <Text style={styles.previewSectionTitle(theme)}>Accent Palette</Text>
-      <Text style={styles.previewSectionDesc(theme)}>{desc}</Text>
+      <Text variant="title" style={styles.previewSectionTitle(theme)}>
+        Accent Palette
+      </Text>
+      <Text variant="metadata" style={styles.previewSectionDesc(theme)}>
+        {desc}
+      </Text>
       <View style={styles.accentPaletteRow(accents.length)}>
         {accents.map((accent) => (
           <View
@@ -168,6 +195,7 @@ function renderAccentPalette(
             style={styles.accentSwatch(accent.color, theme)}
           >
             <Text
+              variant="metadata"
               style={styles.accentText(
                 theme.narrative.stories.accentForeground,
                 theme,
@@ -185,11 +213,19 @@ function renderAccentPalette(
 function renderTypeSamples(theme: ComposedTheme, body: string, mono: string) {
   return (
     <View style={styles.previewSection}>
-      <Text style={styles.previewSectionTitle(theme)}>Type Samples</Text>
+      <Text variant="title" style={styles.previewSectionTitle(theme)}>
+        Type Samples
+      </Text>
       <View style={styles.typeSamples(theme)}>
-        <Text style={styles.typeHeadline(theme)}>Anybody Headline</Text>
-        <Text style={styles.previewBody(theme)}>{body}</Text>
-        <Text style={styles.previewMono(theme)}>{mono}</Text>
+        <Text variant="headline" style={styles.typeHeadline(theme)}>
+          Anybody Headline
+        </Text>
+        <Text variant="metadata" style={styles.previewBody(theme)}>
+          {body}
+        </Text>
+        <Text variant="mono" style={styles.previewMono(theme)}>
+          {mono}
+        </Text>
       </View>
     </View>
   );
@@ -198,10 +234,10 @@ function renderTypeSamples(theme: ComposedTheme, body: string, mono: string) {
 function renderLanding(theme: ComposedTheme) {
   return (
     <View style={styles.previewSection}>
-      <Text style={styles.previewSectionTitle(theme)}>
+      <Text variant="title" style={styles.previewSectionTitle(theme)}>
         The Full Ride (Landing)
       </Text>
-      <Text style={styles.previewSectionDesc(theme)}>
+      <Text variant="metadata" style={styles.previewSectionDesc(theme)}>
         Full narrative arc showcase: Climb, Drop, Stories, Relief.
       </Text>
       <View
@@ -211,14 +247,16 @@ function renderLanding(theme: ComposedTheme) {
           theme,
         )}
       >
-        <Text style={styles.displayText(theme, "7xl")}>
+        <Text variant="display" style={styles.displayText(theme, "7xl")}>
           Badges{"\n"}with bite.
         </Text>
-        <Text style={styles.previewBody(theme)}>
+        <Text variant="metadata" style={styles.previewBody(theme)}>
           Open Badges credentialing for the neurodivergent-first web.
         </Text>
         <View style={styles.landingCtaRow}>
           <Text
+            variant="caption"
+            chrome
             style={styles.badgeLabel(
               theme.narrative.climb.text,
               theme.narrative.climb.bg,
@@ -228,6 +266,8 @@ function renderLanding(theme: ComposedTheme) {
             Get started
           </Text>
           <Text
+            variant="caption"
+            chrome
             style={styles.badgeLabel(
               theme.narrative.climb.bg,
               theme.narrative.climb.text,
@@ -247,15 +287,18 @@ function renderLanding(theme: ComposedTheme) {
         )}
       >
         <Text
+          variant="display"
           style={styles.displayText(theme, "6xl", theme.narrative.drop.accent)}
         >
           Make it{"\n"}official.
         </Text>
-        <Text style={styles.previewBody(theme)}>
+        <Text variant="metadata" style={styles.previewBody(theme)}>
           Issue, verify, and manage credentials with a system built for clarity.
         </Text>
         <View style={styles.landingCtaRow}>
           <Text
+            variant="caption"
+            chrome
             style={styles.badgeLabel(
               theme.narrative.drop.text,
               theme.narrative.drop.bg,
@@ -265,6 +308,8 @@ function renderLanding(theme: ComposedTheme) {
             Self-signed badges
           </Text>
           <Text
+            variant="caption"
+            chrome
             style={styles.badgeLabel(
               theme.narrative.drop.bg,
               theme.narrative.drop.accent,
@@ -283,7 +328,7 @@ function renderLanding(theme: ComposedTheme) {
           theme,
         )}
       >
-        <Text style={styles.displayText(theme, "5xl")}>
+        <Text variant="display" style={styles.displayText(theme, "5xl")}>
           Every badge{"\n"}tells a story.
         </Text>
         <View style={styles.storyLabelRow}>
@@ -295,6 +340,8 @@ function renderLanding(theme: ComposedTheme) {
           ].map((item) => (
             <Text
               key={item.label}
+              variant="caption"
+              chrome
               style={styles.storyLabel(
                 item.color,
                 theme.narrative.stories.accentForeground,
@@ -314,14 +361,16 @@ function renderLanding(theme: ComposedTheme) {
           theme,
         )}
       >
-        <Text style={styles.displayText(theme, "5xl")}>
+        <Text variant="display" style={styles.displayText(theme, "5xl")}>
           Start{"\n"}building.
         </Text>
-        <Text style={styles.previewBody(theme)}>
+        <Text variant="metadata" style={styles.previewBody(theme)}>
           Open source. Accessible by default. Ready when you are.
         </Text>
         <View style={styles.landingCtaRow}>
           <Text
+            variant="caption"
+            chrome
             style={styles.badgeLabel(
               pickReadableText(theme.narrative.relief.accent),
               theme.narrative.relief.accent,
@@ -612,13 +661,15 @@ export function TestScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.hero}>
           <View style={styles.heroText}>
-            <Text style={styles.heroTitle}>Design Tokens</Text>
-            <Text style={styles.heroSubtitle}>
+            <Text variant="taskTitle" style={styles.heroTitle}>
+              Design Tokens
+            </Text>
+            <Text variant="body" style={styles.heroSubtitle}>
               Drama from scale and color. Accessibility without compromise.
             </Text>
           </View>
           <View style={styles.themeInfo}>
-            <Text style={styles.themeInfoText}>
+            <Text variant="body" style={styles.themeInfoText}>
               Current theme: {UnistylesRuntime.themeName}
             </Text>
           </View>
@@ -629,12 +680,16 @@ export function TestScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Token Overview</Text>
-          <Text style={styles.sectionDesc}>
+          <Text variant="headline" style={styles.sectionTitle}>
+            Token Overview
+          </Text>
+          <Text variant="metadata" style={styles.sectionDesc}>
             Narrative color arc, mood themes, and quick links.
           </Text>
-          <Text style={styles.sectionTitle}>Color Narrative</Text>
-          <Text style={styles.sectionDesc}>
+          <Text variant="headline" style={styles.sectionTitle}>
+            Color Narrative
+          </Text>
+          <Text variant="metadata" style={styles.sectionDesc}>
             Four narrative sections define the emotional arc of the landing page
             and flow through every mood theme.
           </Text>
@@ -647,6 +702,8 @@ export function TestScreen() {
               )}
             >
               <Text
+                variant="caption"
+                chrome
                 style={styles.badgeLabel(
                   theme.narrative.climb.text,
                   theme.narrative.climb.bg,
@@ -655,11 +712,13 @@ export function TestScreen() {
               >
                 Climb
               </Text>
-              <Text style={styles.narrativeTitle(theme)}>The Climb</Text>
-              <Text style={styles.previewBody(theme)}>
+              <Text variant="title" style={styles.narrativeTitle(theme)}>
+                The Climb
+              </Text>
+              <Text variant="metadata" style={styles.previewBody(theme)}>
                 Energy builds. Yellow warmth, dark ink. The opening statement.
               </Text>
-              <Text style={styles.overviewCode(theme)}>
+              <Text variant="mono" style={styles.overviewCode(theme)}>
                 narrative.climb.bg / narrative.climb.text
               </Text>
             </View>
@@ -671,6 +730,8 @@ export function TestScreen() {
               )}
             >
               <Text
+                variant="caption"
+                chrome
                 style={styles.badgeLabel(
                   theme.narrative.drop.text,
                   theme.narrative.drop.bg,
@@ -679,11 +740,13 @@ export function TestScreen() {
               >
                 Drop
               </Text>
-              <Text style={styles.narrativeTitle(theme)}>The Drop</Text>
-              <Text style={styles.previewBody(theme)}>
+              <Text variant="title" style={styles.narrativeTitle(theme)}>
+                The Drop
+              </Text>
+              <Text variant="metadata" style={styles.previewBody(theme)}>
                 Deep black to indigo. The moment of impact. Purple accents glow.
               </Text>
-              <Text style={styles.overviewCode(theme)}>
+              <Text variant="mono" style={styles.overviewCode(theme)}>
                 narrative.drop.bg / narrative.drop.text
               </Text>
             </View>
@@ -695,6 +758,8 @@ export function TestScreen() {
               )}
             >
               <Text
+                variant="caption"
+                chrome
                 style={styles.badgeLabel(
                   theme.narrative.stories.accentForeground,
                   theme.narrative.stories.accent1,
@@ -703,12 +768,14 @@ export function TestScreen() {
               >
                 Stories
               </Text>
-              <Text style={styles.narrativeTitle(theme)}>The Stories</Text>
-              <Text style={styles.previewBody(theme)}>
+              <Text variant="title" style={styles.narrativeTitle(theme)}>
+                The Stories
+              </Text>
+              <Text variant="metadata" style={styles.previewBody(theme)}>
                 Deep indigo canvas. Multi-color accents for individual badge
                 stories.
               </Text>
-              <Text style={styles.overviewCode(theme)}>
+              <Text variant="mono" style={styles.overviewCode(theme)}>
                 narrative.stories.bg / narrative.stories.text
               </Text>
             </View>
@@ -720,6 +787,8 @@ export function TestScreen() {
               )}
             >
               <Text
+                variant="caption"
+                chrome
                 style={styles.badgeLabel(
                   pickReadableText(theme.narrative.relief.accent),
                   theme.narrative.relief.accent,
@@ -728,11 +797,13 @@ export function TestScreen() {
               >
                 Relief
               </Text>
-              <Text style={styles.narrativeTitle(theme)}>The Relief</Text>
-              <Text style={styles.previewBody(theme)}>
+              <Text variant="title" style={styles.narrativeTitle(theme)}>
+                The Relief
+              </Text>
+              <Text variant="metadata" style={styles.previewBody(theme)}>
                 Mint calm. The landing zone. Footer, CTA, resolution.
               </Text>
-              <Text style={styles.overviewCode(theme)}>
+              <Text variant="mono" style={styles.overviewCode(theme)}>
                 narrative.relief.bg / narrative.relief.text
               </Text>
             </View>
@@ -740,18 +811,22 @@ export function TestScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Design Language</Text>
-          <Text style={styles.sectionDesc}>
+          <Text variant="headline" style={styles.sectionTitle}>
+            Design Language
+          </Text>
+          <Text variant="metadata" style={styles.sectionDesc}>
             Display type and narrative blocks define the visual identity.
           </Text>
           <View style={styles.displayBlock(theme)}>
-            <Text style={styles.displayText(theme, "5xl")}>
+            <Text variant="display" style={styles.displayText(theme, "5xl")}>
               Badges{"\n"}with bite.
             </Text>
           </View>
           <View style={styles.row}>
             <View style={styles.sectionBlock(theme)}>
               <Text
+                variant="caption"
+                chrome
                 style={styles.badgeLabel(
                   theme.colors.backgroundSecondary,
                   theme.colors.text,
@@ -760,12 +835,14 @@ export function TestScreen() {
               >
                 Section Block
               </Text>
-              <Text style={styles.sectionBlockText(theme)}>
+              <Text variant="metadata" style={styles.sectionBlockText(theme)}>
                 Clean cards with thin borders. No offset shadows.
               </Text>
             </View>
             <View style={styles.sectionBlock(theme)}>
               <Text
+                variant="caption"
+                chrome
                 style={styles.badgeLabel(
                   theme.colors.backgroundSecondary,
                   theme.colors.text,
@@ -774,7 +851,7 @@ export function TestScreen() {
               >
                 Badge Label
               </Text>
-              <Text style={styles.sectionBlockText(theme)}>
+              <Text variant="metadata" style={styles.sectionBlockText(theme)}>
                 Inline label without offset. Clean, readable metadata.
               </Text>
             </View>
@@ -782,21 +859,27 @@ export function TestScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Type Samples</Text>
+          <Text variant="headline" style={styles.sectionTitle}>
+            Type Samples
+          </Text>
           <View style={styles.typeSamples(theme)}>
-            <Text style={styles.typeHeadline(theme)}>Anybody Headline</Text>
-            <Text style={styles.previewBody(theme)}>
+            <Text variant="headline" style={styles.typeHeadline(theme)}>
+              Anybody Headline
+            </Text>
+            <Text variant="metadata" style={styles.previewBody(theme)}>
               Instrument Sans body copy keeps rhythm calm and clear.
             </Text>
-            <Text style={styles.previewMono(theme)}>
+            <Text variant="mono" style={styles.previewMono(theme)}>
               DM Mono for code and metadata.
             </Text>
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Mood Quick Links</Text>
-          <Text style={styles.sectionDesc}>
+          <Text variant="headline" style={styles.sectionTitle}>
+            Mood Quick Links
+          </Text>
+          <Text variant="metadata" style={styles.sectionDesc}>
             Each mood adapts the narrative arc for different accessibility
             needs.
           </Text>
@@ -813,22 +896,31 @@ export function TestScreen() {
               "Clean Signal (Low Info)",
             ].map((label) => (
               <Pressable key={label} style={styles.swatchCard(theme)}>
-                <Text style={styles.swatchText(theme)}>{label}</Text>
+                <Text variant="mono" style={styles.swatchText(theme)}>
+                  {label}
+                </Text>
               </Pressable>
             ))}
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Theme Pages</Text>
-          <Text style={styles.sectionDesc}>
+          <Text variant="headline" style={styles.sectionTitle}>
+            Theme Pages
+          </Text>
+          <Text variant="metadata" style={styles.sectionDesc}>
             Full overview pages rendered for each theme.
           </Text>
           {renderLanding(composeTheme("light", "default"))}
           {previewThemes.map((page) => (
             <View key={page.id} style={styles.previewCard(page.theme)}>
-              <Text style={styles.previewTitle(page.theme)}>{page.title}</Text>
-              <Text style={styles.previewSubtitle(page.theme)}>
+              <Text variant="headline" style={styles.previewTitle(page.theme)}>
+                {page.title}
+              </Text>
+              <Text
+                variant="metadata"
+                style={styles.previewSubtitle(page.theme)}
+              >
                 {page.subtitle}
               </Text>
               {page.narrativeDesc && page.narrativeCopy

@@ -11,7 +11,6 @@ import {
   FlatList,
   Modal,
   Pressable,
-  Text,
   TextInput,
   View,
   type ListRenderItemInfo,
@@ -25,6 +24,7 @@ import { useTranslation } from "react-i18next";
 import type { IconWeight } from "phosphor-react-native";
 
 import { HeaderBand } from "../components/ScreenHeader";
+import { Text } from "../components/Text";
 import { getIconComponent } from "./iconRegistry";
 import {
   searchIcons,
@@ -121,6 +121,8 @@ const ModalIconCell = React.memo(function ModalIconCell({
         color={isSelected ? selectedIconColor : iconColor}
       />
       <Text
+        variant="caption"
+        chrome
         style={[styles.iconLabel, isSelected && styles.iconLabelSelected]}
         numberOfLines={1}
       >
@@ -259,10 +261,16 @@ function IconPickerModalContent({
               weight="bold"
             />
           ) : (
-            <Text style={styles.closeIconFallback}>{"\u2715"}</Text>
+            <Text variant="title" chrome style={styles.closeIconFallback}>
+              {"\u2715"}
+            </Text>
           )}
         </Pressable>
-        <Text style={styles.headerTitle} accessibilityRole="header">
+        <Text
+          variant="title"
+          style={styles.headerTitle}
+          accessibilityRole="header"
+        >
           Choose Icon
         </Text>
         <Pressable
@@ -272,7 +280,9 @@ function IconPickerModalContent({
           style={styles.doneButton}
           testID={`${testID}-done`}
         >
-          <Text style={styles.headerTitle}>{t("iconPicker.done")}</Text>
+          <Text variant="title" style={styles.headerTitle}>
+            {t("iconPicker.done")}
+          </Text>
         </Pressable>
       </HeaderBand>
 
@@ -297,7 +307,7 @@ function IconPickerModalContent({
               />
             )}
           </View>
-          <Text style={styles.previewLabel}>
+          <Text variant="body" style={styles.previewLabel}>
             {selectedLabel} — {weightLabel}
           </Text>
         </View>
@@ -317,7 +327,9 @@ function IconPickerModalContent({
             autoCorrect={false}
             returnKeyType="search"
           />
-          <Text style={styles.searchCount}>{visibleIcons.length} icons</Text>
+          <Text variant="caption" chrome style={styles.searchCount}>
+            {visibleIcons.length} icons
+          </Text>
           {query.length > 0 && (
             <Pressable
               onPress={handleClearSearch}
@@ -325,7 +337,9 @@ function IconPickerModalContent({
               accessibilityLabel="Clear search"
               style={styles.clearButton}
             >
-              <Text style={styles.clearButtonText}>{"\u2715"}</Text>
+              <Text variant="title" chrome style={styles.clearButtonText}>
+                {"\u2715"}
+              </Text>
             </Pressable>
           )}
         </View>
@@ -380,7 +394,9 @@ function IconPickerModalContent({
           getItemLayout={getItemLayout}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No icons found</Text>
+              <Text variant="body" style={styles.emptyText}>
+                No icons found
+              </Text>
             </View>
           }
         />
@@ -407,6 +423,8 @@ function IconPickerModalContent({
                 ]}
               >
                 <Text
+                  variant="caption"
+                  chrome
                   style={[
                     styles.weightLabel,
                     isActive && styles.weightLabelActive,

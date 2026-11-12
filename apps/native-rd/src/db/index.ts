@@ -69,6 +69,8 @@ export {
   updateUserSettingsKey,
   clearUserSettingsKey,
   markWelcomeSeen,
+  hideTutorialOffer,
+  goalFromTemplateQuery,
   pinGoal,
   unpinGoal,
 } from "./queries";

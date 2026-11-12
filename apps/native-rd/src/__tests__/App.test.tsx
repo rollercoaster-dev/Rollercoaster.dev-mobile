@@ -20,11 +20,30 @@ jest.mock("../services/sentry-report", () => ({
 jest.mock("expo", () => ({ reloadAppAsync: jest.fn() }));
 jest.mock("expo-status-bar", () => ({ StatusBar: () => null }));
 // Screen coverage lives in navigation/__tests__/screenErrorBoundary.test.tsx.
-jest.mock("../navigation", () => ({ TabNavigator: () => null }));
+jest.mock("../navigation", () => {
+  const { View } = jest.requireActual("react-native");
+  return { TabNavigator: () => <View testID="tab-navigator" /> };
+});
+
+// The global db setup mocks ./db/evolu without EvoluAppProvider, which left
+// AppRoot rendering an undefined element. Supply a passthrough so the tree
+// below it really mounts.
+jest.mock("../db", () => ({
+  ...jest.requireActual("../db"),
+  EvoluAppProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+
+// StartupGate's own suite covers its Evolu error and timeout paths; here it
+// would need an Evolu error source, so it passes its children through.
+jest.mock("../components/StartupGate", () => ({
+  StartupGate: ({ children }: { children: React.ReactNode }) => children,
+}));
 
 const mockFailAt: { layer: "fonts" | "theme" | "shell" | null } = {
   layer: null,
 };
+const mockStartup: { isFirstLaunch: boolean | null; isThemeRestored: boolean } =
+  { isFirstLaunch: null, isThemeRestored: false };
 
 jest.mock("../hooks/useFonts", () => ({
   useFonts: () => {
@@ -49,8 +68,15 @@ jest.mock("../hooks/useTheme", () => {
 jest.mock("../hooks/useFirstLaunch", () => ({
   useFirstLaunch: () => {
     if (mockFailAt.layer === "shell") throw new Error("shell failed");
-    return { isFirstLaunch: null, markSeen: jest.fn() };
+    return { isFirstLaunch: mockStartup.isFirstLaunch, markSeen: jest.fn() };
   },
+}));
+
+jest.mock("../hooks/useThemePersistence", () => ({
+  useThemePersistence: () => ({
+    setTheme: jest.fn(),
+    isThemeRestored: mockStartup.isThemeRestored,
+  }),
 }));
 
 const originalConsoleError = console.error;
@@ -63,6 +89,9 @@ afterAll(() => {
 
 beforeEach(() => {
   (reportError as jest.Mock).mockClear();
+  mockFailAt.layer = null;
+  mockStartup.isFirstLaunch = null;
+  mockStartup.isThemeRestored = false;
 });
 
 describe("App root error boundary", () => {
@@ -80,4 +109,23 @@ describe("App root error boundary", () => {
       });
     },
   );
+});
+
+// A screen that mounts in the default theme and is switched a tick later keeps
+// stale ink on Android (Goals header title black on Night Ride's dark band).
+describe("App startup: the navigator waits for the saved theme", () => {
+  it("shows the loading view, not the navigator, while the theme is not restored", () => {
+    mockStartup.isFirstLaunch = false;
+    mockStartup.isThemeRestored = false;
+    render(<App />);
+    expect(screen.getByTestId("app-loading")).toBeTruthy();
+    expect(screen.queryByTestId("tab-navigator")).toBeNull();
+  });
+
+  it("mounts the navigator once the theme is restored", () => {
+    mockStartup.isFirstLaunch = false;
+    mockStartup.isThemeRestored = true;
+    render(<App />);
+    expect(screen.getByTestId("tab-navigator")).toBeTruthy();
+  });
 });

@@ -23,7 +23,6 @@
 import React, { useState } from "react";
 import {
   View,
-  Text as RNText,
   TextInput,
   Pressable,
   Modal,
@@ -45,11 +44,16 @@ import type { AnimationPref } from "../../hooks/useAnimationPref";
 import { getTimingConfig } from "../../utils/animation";
 import { useTypeScale } from "../../hooks/useTypeScale";
 import { Button } from "../Button";
+import { Text } from "../Text";
 import { EvidenceTypePicker } from "../EvidenceTypePicker";
 import { styles } from "./EditGoalView.styles";
 import type { EditGoalStep, EditGoalTimingCopy } from "./EditGoalView";
 import type { StepTimingValue } from "../StepTimingEditor";
 import { EditGoalRowTiming } from "./EditGoalRowTiming";
+import {
+  EditGoalRowDescription,
+  type EditGoalRowDescriptionBinding,
+} from "./EditGoalRowDescription";
 import { HierarchyActionRow } from "./HierarchyActionRow";
 import type { RowGeometry } from "./useEditGoalHierarchyDragTypes";
 import { useRowGeometryRegistration } from "./useRowGeometryRegistration";
@@ -150,6 +154,8 @@ export interface EditGoalStepRowProps {
   timingNow?: Date;
   timingLocale?: string;
   timingCopy?: EditGoalTimingCopy;
+  /** Description slot wiring (#803), id-bound by the list. Absent → read-only. */
+  descriptionBinding?: EditGoalRowDescriptionBinding;
 }
 
 export function EditGoalStepRow({
@@ -205,6 +211,7 @@ export function EditGoalStepRow({
   timingNow,
   timingLocale,
   timingCopy,
+  descriptionBinding,
 }: EditGoalStepRowProps) {
   const { theme } = useUnistyles();
   // At accessibility sizes the fixed-width controls squeeze the title to one
@@ -268,13 +275,14 @@ export function EditGoalStepRow({
 
   const body = isEditing ? (
     <View ref={headerRef} onLayout={measureAndRegister} style={styles.rowMain}>
-      <RNText
+      <Text
+        variant="body"
         style={styles.dragHandle}
         accessibilityElementsHidden
         importantForAccessibility="no"
       >
         {"≡"}
-      </RNText>
+      </Text>
       <TextInput
         style={styles.editInput}
         value={editText}
@@ -315,14 +323,17 @@ export function EditGoalStepRow({
         <View
           style={[styles.rowLead, isAccessibilitySize && styles.rowLeadStacked]}
         >
-          <RNText
+          <Text
+            variant="body"
             style={styles.dragHandle}
             accessibilityElementsHidden
             importantForAccessibility="no"
           >
             {"≡"}
-          </RNText>
-          <RNText style={styles.stepNumber}>{stepNumber}</RNText>
+          </Text>
+          <Text variant="metadata" style={styles.stepNumber}>
+            {stepNumber}
+          </Text>
           <Pressable
             style={styles.rowTitlePress}
             onPress={onStartEditing}
@@ -331,7 +342,9 @@ export function EditGoalStepRow({
             accessibilityHint={tapToEditHint}
             testID={`edit-goal-step-title-${step.id}`}
           >
-            <RNText style={styles.rowTitleText}>{step.title}</RNText>
+            <Text variant="metadata" style={styles.rowTitleText}>
+              {step.title}
+            </Text>
           </Pressable>
         </View>
         <View
@@ -361,10 +374,18 @@ export function EditGoalStepRow({
             hitSlop={8}
             testID={`edit-goal-step-delete-${step.id}`}
           >
-            <RNText style={styles.stepDeleteGlyph}>{"×"}</RNText>
+            <Text variant="title" style={styles.stepDeleteGlyph}>
+              {"×"}
+            </Text>
           </Pressable>
         </View>
       </View>
+      <EditGoalRowDescription
+        title={step.title}
+        description={step.description}
+        binding={descriptionBinding}
+        testID={`edit-goal-step-description-${step.id}`}
+      />
       {/* One pressable timing target, in the same slot the chip row occupied
           (D12) — a quick tap never reaches the card's manual-activation Pan or
           its 400ms LongPress, the same way this row's other Pressables already
@@ -437,9 +458,13 @@ export function EditGoalStepRow({
             style={styles.pickerContainer}
           >
             <View style={styles.pickerCard}>
-              <RNText style={styles.pickerTitle} accessibilityRole="header">
+              <Text
+                variant="body"
+                style={styles.pickerTitle}
+                accessibilityRole="header"
+              >
                 {nestUnderPickerTitle}
-              </RNText>
+              </Text>
               {/* Targets scroll between the pinned title and Cancel so a long
                   list at large type can't push Cancel off-screen (#754). */}
               <ScrollView
@@ -459,9 +484,9 @@ export function EditGoalStepRow({
                     accessibilityLabel={nestUnderRowA11yLabel(target.title)}
                     testID={`edit-goal-step-nest-target-${step.id}-${target.id}`}
                   >
-                    <RNText style={styles.pickerRowText}>
+                    <Text variant="body" style={styles.pickerRowText}>
                       {nestUnderRowLabel(target.title)}
-                    </RNText>
+                    </Text>
                   </Pressable>
                 ))}
               </ScrollView>

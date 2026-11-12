@@ -1,10 +1,4 @@
-import {
-  View,
-  Text,
-  Pressable,
-  type TextStyle,
-  type ViewStyle,
-} from "react-native";
+import { View, Pressable, type TextStyle, type ViewStyle } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useThemeContext, themeOptions } from "../../hooks/useTheme";
 import { useToast } from "../Toast";
@@ -13,6 +7,7 @@ import { themes, parseThemeName, type ThemeName } from "../../themes/compose";
 import { variantOverrides } from "../../themes/variants";
 import { size, lineHeight } from "../../themes/tokens";
 import { shadowStyle } from "../../styles/shadows";
+import { Text } from "../Text";
 import { styles } from "./ThemeSwitcher.styles";
 
 function previewStyles(themeId: ThemeName) {
@@ -22,20 +17,22 @@ function previewStyles(themeId: ThemeName) {
 
   const sizeScale = def.size ?? size;
   const lhScale = def.lineHeight ?? lineHeight;
-  const fontFamily = def.fontFamily;
 
+  // Each text style starts from the *previewed* theme's text role, so shared
+  // Text's variant (resolved against the active theme) can't leak the active
+  // theme's font, line height or spacing into another theme's preview.
   const label: TextStyle = {
+    ...cardTheme.textStyles.title,
     fontSize: sizeScale.lg,
     lineHeight: lhScale.lg,
     fontWeight: "600",
-    fontFamily,
     color: cardTheme.colors.text,
   };
 
   const description: TextStyle = {
+    ...cardTheme.textStyles.metadata,
     fontSize: sizeScale.sm,
     lineHeight: lhScale.sm,
-    fontFamily,
     color: cardTheme.colors.textSecondary,
     marginTop: 4,
   };
@@ -65,21 +62,24 @@ function previewStyles(themeId: ThemeName) {
   };
 
   const badgeText: TextStyle = {
+    ...cardTheme.textStyles.label,
+    // A single centered glyph: tracking would push it off-center.
+    letterSpacing: 0,
     color: cardTheme.colors.accentPurpleFg,
     fontSize: sizeScale.sm,
     fontWeight: "700",
   };
 
   const sampleTitle: TextStyle = {
+    ...cardTheme.textStyles.metadata,
     fontSize: sizeScale.sm,
-    fontFamily,
     fontWeight: "700",
     color: cardTheme.colors.text,
   };
 
   const sampleMeta: TextStyle = {
+    ...cardTheme.textStyles.caption,
     fontSize: sizeScale.xs,
-    fontFamily,
     color: cardTheme.colors.textSecondary,
   };
 
@@ -93,14 +93,15 @@ function previewStyles(themeId: ThemeName) {
   };
 
   const ctaText: TextStyle = {
+    ...cardTheme.textStyles.caption,
     fontSize: sizeScale.xs,
-    fontFamily,
     fontWeight: "700",
     color: cardTheme.colors.background,
     letterSpacing: 0.5,
   };
 
   const checkmark: TextStyle = {
+    ...cardTheme.textStyles.title,
     fontSize: sizeScale.lg,
     fontWeight: "900",
     color: cardTheme.colors.accentPurple,
@@ -146,7 +147,9 @@ export function ThemeSwitcher() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{t("common:theme.picker.title")}</Text>
+      <Text variant="headline" style={styles.title}>
+        {t("common:theme.picker.title")}
+      </Text>
 
       <View {...groupingA11y}>
         {themeOptions.map((option) => {
@@ -192,11 +195,16 @@ export function ThemeSwitcher() {
             >
               <View style={styles.headerRow}>
                 <View style={styles.headerText}>
-                  <Text style={preview.label}>{label}</Text>
-                  <Text style={preview.description}>{description}</Text>
+                  <Text variant="title" style={preview.label}>
+                    {label}
+                  </Text>
+                  <Text variant="metadata" style={preview.description}>
+                    {description}
+                  </Text>
                 </View>
                 {isSelected ? (
                   <Text
+                    variant="title"
                     style={preview.checkmark}
                     accessibilityLabel={t("common:theme.picker.selected")}
                   >
@@ -207,18 +215,20 @@ export function ThemeSwitcher() {
 
               <View style={preview.sampleCard}>
                 <View style={preview.badge}>
-                  <Text style={preview.badgeText}>★</Text>
+                  <Text variant="label" chrome style={preview.badgeText}>
+                    ★
+                  </Text>
                 </View>
                 <View style={styles.sampleTextCol}>
-                  <Text style={preview.sampleTitle}>
+                  <Text variant="metadata" style={preview.sampleTitle}>
                     {t("common:theme.preview.title")}
                   </Text>
-                  <Text style={preview.sampleMeta}>
+                  <Text variant="caption" style={preview.sampleMeta}>
                     {t("common:theme.preview.progress")}
                   </Text>
                 </View>
                 <View style={preview.ctaPill}>
-                  <Text style={preview.ctaText}>
+                  <Text variant="caption" chrome style={preview.ctaText}>
                     {t("common:theme.preview.cta")}
                   </Text>
                 </View>

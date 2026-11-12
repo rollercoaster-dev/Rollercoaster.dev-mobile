@@ -56,7 +56,8 @@ function ThemedApp() {
   const themeContext = useThemeContext();
   const { theme, isDark } = themeContext;
   const { isFirstLaunch, markSeen } = useFirstLaunch();
-  const { setTheme: persistingSetTheme } = useThemePersistence();
+  const { setTheme: persistingSetTheme, isThemeRestored } =
+    useThemePersistence();
   const insets = useSafeAreaInsets();
   const { topInsetColor, setTopInsetColor } = useTopInsetColorState();
   useDensity(); // Apply saved density to all themes on mount
@@ -70,8 +71,11 @@ function ThemedApp() {
   const navTheme = navigationTheme(theme, isDark);
 
   let body: React.ReactNode;
-  if (isFirstLaunch === null) {
-    // Loading: Evolu answered but the first settings row hasn't landed yet.
+  if (isFirstLaunch === null || !isThemeRestored) {
+    // Loading: Evolu answered but the first settings row hasn't landed yet, or
+    // it has and the saved theme is not applied yet. Screens must not mount
+    // before the theme is: one that mounts in the default theme and is
+    // switched a tick later keeps stale ink (see useThemePersistence).
     // StartupGate (above) owns the timeout and failure screen for this state.
     body = (
       <View

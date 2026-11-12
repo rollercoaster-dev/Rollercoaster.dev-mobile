@@ -10,7 +10,7 @@
  */
 
 import React, { useCallback, useState } from "react";
-import { Modal, Pressable, Text, View } from "react-native";
+import { Modal, Pressable, View } from "react-native";
 import {
   SafeAreaProvider,
   useSafeAreaInsets,
@@ -26,6 +26,7 @@ import ColorPicker, {
 
 import { Button } from "../components/Button";
 import { HeaderBand } from "../components/ScreenHeader";
+import { Text } from "../components/Text";
 import { Logger } from "../shims/rd-logger";
 import { getIconComponent } from "./iconRegistry";
 import { isValidHexColor } from "./types";
@@ -122,10 +123,16 @@ function ColorPickerModalContent({
               weight="bold"
             />
           ) : (
-            <Text style={styles.closeIconFallback}>{"✕"}</Text>
+            <Text variant="title" chrome style={styles.closeIconFallback}>
+              {"✕"}
+            </Text>
           )}
         </Pressable>
-        <Text style={styles.headerTitle} accessibilityRole="header">
+        <Text
+          variant="title"
+          style={styles.headerTitle}
+          accessibilityRole="header"
+        >
           {resolvedTitle}
         </Text>
         <View style={styles.headerSpacer} />

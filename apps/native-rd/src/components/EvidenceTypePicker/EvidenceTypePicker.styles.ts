@@ -36,6 +36,8 @@ export const styles = StyleSheet.create((theme) => ({
     borderColor: theme.colors.border,
   },
   chipIcon: {
+    // body's 26pt line box would grow the 44pt chip.
+    lineHeight: 20,
     fontSize: 16,
   },
   chipLabel: {
@@ -64,9 +66,13 @@ export const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.backgroundSecondary,
   },
   compactChipIcon: {
+    // Compact chips are tight; keep the line box near the glyph size.
+    lineHeight: 16,
     fontSize: 12,
   },
   compactChipLabel: {
+    lineHeight: 16,
+    letterSpacing: theme.letterSpacing.normal,
     fontSize: theme.size.xs,
     fontFamily: theme.fontFamily.body,
     color: theme.colors.textSecondary,

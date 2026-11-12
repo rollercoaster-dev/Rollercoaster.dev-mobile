@@ -203,6 +203,10 @@ export const Schema = {
     keyId: nullOr(NonEmptyString1000), // UUID referencing Ed25519 keypair in SecureStore
     hasSeenWelcome: nullOr(Int), // 1 = seen, null = first launch
     focusTimelineHidden: nullOr(Int), // 1 = hidden, null = visible (default)
+    // 1 = the Goals-screen tutorial offer was dismissed or the tutorial was
+    // started; null = still offered. Never cleared, so the offer cannot come
+    // back after the tutorial goal is completed or deleted.
+    tutorialOfferHidden: nullOr(Int),
     // The goal pinned to the cockpit hero slot, or null for the #381 default
     // (most-recently-worked). A single nullable FK here — rather than a flag on
     // `goal` — makes "two goals pinned at once" structurally impossible (#396 D1).

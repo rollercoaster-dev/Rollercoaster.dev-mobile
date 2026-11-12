@@ -266,10 +266,3 @@ optional.) The `ci-docs / Docs Format Check` name no longer exists.
 PR creation is restricted to collaborators (`pull_request_creation_policy:
 collaborators_only`), and secret scanning with push protection and Dependabot
 security updates are enabled.
-
-## Project manager automation
-
-`ci-project-manager / Project Manager Tests` runs `bun test scripts/project_manager`
-(Bun 1.3.7, no npm install) when `scripts/project_manager/**` or its workflow changes. It requires
-no GitHub write token, Telegram credential, network service, or native build.
-The guard, durable Telegram transport, and installer tests use temporary state.

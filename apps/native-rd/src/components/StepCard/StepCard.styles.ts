@@ -169,6 +169,8 @@ export const styles = StyleSheet.create((theme) => ({
     // Captions can be long; keep a chip to one line so the rail stays a tidy
     // summary (the full text lives in the evidence drawer).
     maxWidth: 180,
+    // Caption's label tracking would truncate the one-line chip sooner.
+    letterSpacing: theme.letterSpacing.normal,
   },
   // Typed quick-capture buttons, pinned in the card foot (#360). One per
   // planned-but-uncaptured evidence type; the row thins out as evidence lands.
@@ -289,6 +291,8 @@ export const styles = StyleSheet.create((theme) => ({
     fontSize: theme.size.xs,
     fontFamily: theme.fontFamily.mono,
     color: theme.colors.text,
+    // Keeps the count pill compact; caption's 1.6 line height would add ~4pt.
+    lineHeight: Math.round(theme.size.xs * 1.3),
   },
   // Evidence rollup row — sum of evidence across all parts (read-only count).
   overviewRollup: {
@@ -321,5 +325,7 @@ export const styles = StyleSheet.create((theme) => ({
     fontSize: theme.size.xs,
     fontFamily: theme.fontFamily.mono,
     color: theme.colors.text,
+    // Keeps the count pill compact; caption's 1.6 line height would add ~4pt.
+    lineHeight: Math.round(theme.size.xs * 1.3),
   },
 }));

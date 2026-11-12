@@ -13,6 +13,13 @@ export interface KeyProvider {
   /** Generate a new Ed25519 keypair, persist it, and return the keyId + public key */
   generateKeyPair(): Promise<{ keyId: string; publicKeyJwk: JsonWebKey }>;
 
+  /**
+   * Make sure a stored keypair is bound to this device (kept out of backups
+   * and device migration), moving it if an older build stored it otherwise.
+   * The key and its keyId do not change. Safe to call on every launch.
+   */
+  ensureDeviceOnly(keyId: string): Promise<void>;
+
   /** Retrieve the public key JWK for a stored keypair */
   getPublicKey(keyId: string): Promise<JsonWebKey>;
 

@@ -1,11 +1,7 @@
 import React from "react";
-import {
-  View,
-  Text,
-  Pressable,
-  type GestureResponderEvent,
-} from "react-native";
+import { View, Pressable, type GestureResponderEvent } from "react-native";
 import { useTranslation } from "react-i18next";
+import { Text } from "../Text";
 import {
   stepStateColorMap,
   type StepStateMapKey,
@@ -48,7 +44,7 @@ export function StateWordPill({ status }: { status: StepStateMapKey }) {
       accessibilityRole="text"
       accessibilityLabel={label}
     >
-      <Text style={styles.stateWordText(status)}>
+      <Text variant="label" chrome style={styles.stateWordText(status)}>
         {status === "completed" ? `✓ ${label}` : label}
       </Text>
     </View>
@@ -139,9 +135,13 @@ export function MetadataBand({
             tone={line.key}
             testID={`focus-current-task-metadata-mark-${line.key}`}
           />
-          <Text style={styles.metadataText}>{line.text}</Text>
+          <Text variant="metadata" style={styles.metadataText}>
+            {line.text}
+          </Text>
           {line.meta ? (
-            <Text style={styles.metadataMeta}>{line.meta}</Text>
+            <Text variant="metadata" style={styles.metadataMeta}>
+              {line.meta}
+            </Text>
           ) : null}
         </View>
       ))}
@@ -206,15 +206,21 @@ export function PlannedEvidenceBox({
         {entries.map((entry) => (
           <View key={entry.key} style={styles.plannedType}>
             {entry.icon ? (
-              <Text style={styles.plannedIcon} importantForAccessibility="no">
+              <Text
+                variant="title"
+                style={styles.plannedIcon}
+                importantForAccessibility="no"
+              >
                 {entry.icon}
               </Text>
             ) : null}
-            <Text style={styles.plannedLabel}>{entry.label}</Text>
+            <Text variant="label" style={styles.plannedLabel}>
+              {entry.label}
+            </Text>
           </View>
         ))}
       </View>
-      <Text style={styles.changeText}>
+      <Text variant="label" style={styles.changeText}>
         {t("focusMode:currentTask.inProgress.changeEvidencePlan")}
       </Text>
     </Pressable>
@@ -242,7 +248,12 @@ export function CapturedEvidenceRail({
   }
   return (
     <View style={styles.evidenceRail}>
-      <Text style={styles.evidenceRailLabel} accessibilityRole="text">
+      <Text
+        variant="label"
+        chrome
+        style={styles.evidenceRailLabel}
+        accessibilityRole="text"
+      >
         {label}
       </Text>
       <View style={styles.evidenceRailRow}>
@@ -276,13 +287,20 @@ export function CapturedEvidenceRail({
             >
               {icon ? (
                 <Text
+                  variant="label"
+                  chrome
                   style={styles.evidenceChipIcon}
                   accessibilityElementsHidden
                 >
                   {icon}
                 </Text>
               ) : null}
-              <Text style={styles.evidenceChipText} numberOfLines={2}>
+              <Text
+                variant="label"
+                chrome
+                style={styles.evidenceChipText}
+                numberOfLines={2}
+              >
                 {hasCaption ? caption : typeLabel}
               </Text>
             </View>

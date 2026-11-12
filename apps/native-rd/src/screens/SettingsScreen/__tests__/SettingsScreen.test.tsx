@@ -92,6 +92,19 @@ jest.mock("../../../services/sentry-report", () => ({
   reportError: (...args: unknown[]) => mockReportError(...args),
 }));
 
+const mockHideTutorialOffer = jest.fn();
+jest.mock("../../../db", () => ({
+  ...jest.requireActual("../../../db"),
+  hideTutorialOffer: (...args: unknown[]) => mockHideTutorialOffer(...args),
+}));
+
+jest.mock("../../../hooks/useUserSettingsRow", () => ({
+  useUserSettingsRow: () => ({
+    settings: { id: "settings-1" },
+    isLoading: false,
+  }),
+}));
+
 jest.mock("../../../templates", () => ({
   ...jest.requireActual("../../../templates"),
   insertTemplate: (...args: unknown[]) => mockInsertTemplate(...args),
@@ -267,6 +280,8 @@ describe("SettingsScreen", () => {
     beforeEach(() => {
       mockInsertTemplate.mockReset();
       mockTabNavigate.mockClear();
+      mockHideTutorialOffer.mockReset();
+      mockHideTutorialOffer.mockReturnValue({ ok: true, value: {} });
     });
 
     it("seeds the tutorial template and opens the new goal in Focus Mode", () => {
@@ -285,6 +300,20 @@ describe("SettingsScreen", () => {
         params: { goalId: "goal-tutorial" },
         initial: false,
       });
+    });
+
+    it("retires the Goals-screen tutorial offer once the tutorial is started here", () => {
+      mockInsertTemplate.mockReturnValue({ ok: true, goalId: "goal-tutorial" });
+      renderWithProviders(<SettingsScreen />);
+      startTutorial();
+      expect(mockHideTutorialOffer).toHaveBeenCalledWith("settings-1");
+    });
+
+    it("leaves the offer in place when the goal could not be created", () => {
+      mockInsertTemplate.mockReturnValue({ ok: false, error: new Error("x") });
+      renderWithProviders(<SettingsScreen />);
+      startTutorial();
+      expect(mockHideTutorialOffer).not.toHaveBeenCalled();
     });
 
     it("says so and stays put when the goal could not be created", () => {

@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, ScrollView } from "react-native";
+import { View, ScrollView } from "react-native";
 import { useTranslation } from "react-i18next";
 import { evidenceShortLabel } from "../../i18n/labels";
 import {
@@ -9,6 +9,7 @@ import {
 import { getMissingQuickEvidenceOptions } from "../StepCard/StepCardEvidenceCapture";
 import { ExpandableTitle } from "../ExpandableTitle";
 import { Button } from "../Button";
+import { Text } from "../Text";
 import { styles } from "./FocusCurrentTaskCard.styles";
 import {
   StateWordPill,
@@ -194,7 +195,7 @@ function InProgressView({
             dueDate={dueDate}
           />
           <View style={styles.plannedGroup}>
-            <Text style={styles.evidenceRequired}>
+            <Text variant="label" chrome style={styles.evidenceRequired}>
               {t("focusMode:currentTask.inProgress.evidenceRequired")}
             </Text>
             <PlannedEvidenceBox
@@ -260,7 +261,7 @@ function InProgressView({
                 />
               );
             })}
-            <Text style={styles.helperLine}>
+            <Text variant="body" style={styles.helperLine}>
               {t("focusMode:currentTask.inProgress.helperLine")}
             </Text>
           </>
@@ -280,7 +281,7 @@ function PausedView({ title, onPickUp }: FocusPausedCardProps) {
         <>
           <StateWordPill status="paused" />
           <StepTitlePreview title={title} />
-          <Text style={styles.bodyText}>
+          <Text variant="body" style={styles.bodyText}>
             {t("focusMode:currentTask.paused.body")}
           </Text>
         </>
@@ -350,14 +351,25 @@ function AllCompleteView({ onDesignBadge, sealed }: FocusAllCompleteCardProps) {
       centerBody
       body={
         <>
-          <Text style={styles.heading} accessible accessibilityRole="header">
+          <Text
+            variant="taskTitle"
+            style={styles.heading}
+            accessible
+            accessibilityRole="header"
+          >
             {t("focusMode:currentTask.allComplete.heading")}
           </Text>
           <View style={styles.calloutBox}>
-            <Text style={styles.calloutIcon} importantForAccessibility="no">
+            <Text
+              variant="title"
+              style={styles.calloutIcon}
+              importantForAccessibility="no"
+            >
               {"🏆"}
             </Text>
-            <Text style={styles.calloutText}>{calloutText}</Text>
+            <Text variant="body" style={styles.calloutText}>
+              {calloutText}
+            </Text>
           </View>
         </>
       }

@@ -1,5 +1,6 @@
 import React from "react";
-import { View, Text } from "react-native";
+import { View } from "react-native";
+import { Text } from "../Text";
 import { Button, type ButtonProps } from "../Button";
 import { styles } from "./EmptyState.styles";
 
@@ -13,11 +14,17 @@ export interface EmptyStateProps {
 export function EmptyState({ title, body, icon, action }: EmptyStateProps) {
   return (
     <View style={styles.container}>
-      {icon && <Text style={styles.icon}>{icon}</Text>}
-      <Text style={styles.title} accessibilityRole="header">
+      {icon && (
+        <Text variant="display" style={styles.icon}>
+          {icon}
+        </Text>
+      )}
+      <Text variant="title" style={styles.title} accessibilityRole="header">
         {title}
       </Text>
-      <Text style={styles.body}>{body}</Text>
+      <Text variant="body" style={styles.body}>
+        {body}
+      </Text>
       {action && (
         <View style={styles.action}>
           <Button label={action.label} onPress={action.onPress} />

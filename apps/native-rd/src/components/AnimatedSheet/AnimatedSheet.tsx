@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Pressable,
-  Text as RNText,
+  type Text as RNText,
   BackHandler,
   useWindowDimensions,
 } from "react-native";

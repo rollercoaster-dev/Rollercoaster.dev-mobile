@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { UnistylesRuntime } from "react-native-unistyles";
 import { updateUserSettings } from "../db";
 import { useUserSettingsRow } from "./useUserSettingsRow";
@@ -25,16 +25,29 @@ const logger = new Logger("useThemePersistence");
  * to `FALLBACK_THEME_NAME`. We do NOT auto-write the fallback back to Evolu
  * — that would clobber a value the user might recover by upgrading to a
  * build that re-supports it.
+ *
+ * `isThemeRestored` turns true once the saved theme (or the decision that
+ * there is none) has reached `UnistylesRuntime`. App.tsx holds the navigator
+ * back until then: a screen that mounts in the default theme and is switched
+ * a tick later keeps stale ink on Android (the Goals header title stayed
+ * light-theme black on Night Ride's dark band after a cold start).
  */
 export function useThemePersistence() {
   const { settings } = useUserSettingsRow();
   const lastAppliedRef = useRef<ThemeName | null>(null);
   const inFlightThemeRef = useRef<ThemeName | null>(null);
   const { runWhenActive } = useAppStateGuard();
+  // True once a saved theme has been pushed into Unistyles. Sticky: it never
+  // goes back to false, or a later theme change would unmount the navigator.
+  const [hasAppliedTheme, setHasAppliedTheme] = useState(false);
 
+  const hasSettings = settings !== null;
   const savedRaw = settings?.theme ?? null;
 
   useEffect(() => {
+    // Still loading: nothing to restore yet, so keep the navigator back.
+    if (!hasSettings) return;
+    // No saved theme — the default is already the right one.
     if (savedRaw === null) return;
 
     if (!isValidThemeName(savedRaw)) {
@@ -47,15 +60,23 @@ export function useThemePersistence() {
         // same invalid value (e.g. a duplicate Evolu emission) are deduped
         // even while the deferred call is still pending.
         lastAppliedRef.current = FALLBACK_THEME_NAME;
-        runWhenActive(() => UnistylesRuntime.setTheme(FALLBACK_THEME_NAME));
+        runWhenActive(() => {
+          UnistylesRuntime.setTheme(FALLBACK_THEME_NAME);
+          setHasAppliedTheme(true);
+        });
       }
       return;
     }
 
     if (lastAppliedRef.current === savedRaw) return;
     lastAppliedRef.current = savedRaw;
-    runWhenActive(() => UnistylesRuntime.setTheme(savedRaw));
-  }, [savedRaw, runWhenActive]);
+    // Flag flips inside the deferred call, not beside it: while the app is
+    // backgrounded the theme has not been applied, so neither has the restore.
+    runWhenActive(() => {
+      UnistylesRuntime.setTheme(savedRaw);
+      setHasAppliedTheme(true);
+    });
+  }, [hasSettings, savedRaw, runWhenActive]);
 
   // Returns true when the theme change was persisted, applied without a
   // settings row to persist to, dropped by the in-flight guard, or rejected as
@@ -85,6 +106,11 @@ export function useThemePersistence() {
       }
       inFlightThemeRef.current = name;
       lastAppliedRef.current = name;
+      // A theme picked in the UI means the app is already on screen. Mark it
+      // here, not in the deferred call: the read-effect dedups this value when
+      // Evolu echoes it back, so nothing else would set the flag and the
+      // navigator would unmount the moment `theme` stopped being null.
+      setHasAppliedTheme(true);
       // try/finally is load-bearing: if UnistylesRuntime.setTheme throws the
       // ref must still clear, or every subsequent setTheme call is silently
       // dropped for the lifetime of this hook instance.
@@ -110,5 +136,7 @@ export function useThemePersistence() {
     [settings, runWhenActive],
   );
 
-  return { setTheme };
+  const isThemeRestored = hasSettings && (savedRaw === null || hasAppliedTheme);
+
+  return { setTheme, isThemeRestored };
 }

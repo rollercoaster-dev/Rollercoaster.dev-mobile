@@ -38,6 +38,7 @@ export type ReportContext =
   | { area: "badge.storage"; kind?: "read" | "write" | "delete" }
   | { area: "key.generate" }
   | { area: "key.verify" }
+  | { area: "key.deviceOnly" }
   | { area: "evidence.capture"; kind: EvidenceTypeValue }
   | { area: "evidence.view"; kind?: EvidenceTypeValue }
   | { area: "evidence.cleanup" }

@@ -621,6 +621,16 @@ function EditContent({ goalId }: { goalId: string }) {
         onSubStepEvidenceChange={(subStepId, types) =>
           updateStepFields(subStepId, { plannedEvidenceTypes: types })
         }
+        // Steps and sub-steps alike (#803); `null` clears. A failed write
+        // returns false so the editor stays open with the draft.
+        onStepDescriptionChange={(id, stepDescription) =>
+          updateStepFields(
+            id,
+            { description: stepDescription },
+            "Failed to update step description",
+          )
+        }
+        stepDescriptionMaxLength={STRING_1000_MAX_LENGTH}
         onDeleteStep={handleDeleteStep}
         onDeleteSubStep={handleDeleteStep}
         onOverflowPress={() => setOverflowOpen(true)}
