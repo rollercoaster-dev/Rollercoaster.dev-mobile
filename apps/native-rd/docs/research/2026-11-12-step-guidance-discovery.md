@@ -20,6 +20,43 @@ A step can guide its reader with exactly two things: a title and one block of pr
 
 The tutorial is the first goal written by one person for another to follow. Shared goals make that the normal case: someone at a bike workshop writes a goal, and a learner they may never meet follows it. Whatever the tutorial lacks, every shared-goal author will lack too.
 
+## Walkthrough as a newcomer
+
+Run on 2026-11-12: Android emulator, Pixel 8, default theme, English. A fresh tutorial goal, all nine steps done as written, through to the badge designer. The reader is assumed to know nothing about the app.
+
+### What the reader is never told
+
+- **What evidence is.** Every step shows "EVIDENCE · REQUIRED" and "add evidence to complete". The step text says "add a note". Nothing says a note is evidence, or why the app wants it.
+- **That "Mark complete" exists.** Saving a note does not finish the step. A "✓ Mark complete" button appears, and the reader has to notice it. No step mentions it.
+- **What a badge is.** The word first appears in step 9: "Then tap 'Design your badge'. It says you can keep a goal journal." The last screen then says "Bake my badge" and "seals it into a verifiable badge".
+- **What the tutorial is for.** No step says how long it is or what the reader has at the end. Only the offer card on the Goals screen does, and it is gone once the goal starts.
+- **Words on the screens around it.** "Focus Mode", "Planned evidence", "Captured", and on the home screen "Keep warm" and "Pin to cockpit".
+
+### Where the text and the app disagree
+
+| Step | The text says                                        | What happens                                                                                                                                                |
+| ---- | ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1, 8 | "A photo is welcome"                                 | Only "Add Note" is on screen. Photo sits under "Add more evidence", which appears after the note is saved.                                                  |
+| 2    | "Type it as your note"                               | The note is saved and shown as a chip reading "Note". It cannot be opened from the step, so the reader cannot see what they wrote.                          |
+| 3    | "Type them as your note"                             | The plan had this step teach adding sub-steps. It now teaches nothing new, and the reader reaches "start your real goal" without having added a step.       |
+| 3    | (title)                                              | The title is cut off, with a "Show full title" button.                                                                                                      |
+| 4    | "Tap 'change' … to pick another kind of evidence"    | Tapping Note adds it. The step now needs audio and a note. The reader has to untick Audio too. The sheet is titled "Planned evidence" and explains nothing. |
+| 5    | "Tap 'Set this step aside'"                          | Works after the trim above. Once set aside, the card hides the step text, so the way back is no longer on screen.                                           |
+| 9    | "Add a last note here. Then tap 'Design your badge'" | "Design your badge" does not exist until "Mark complete" is tapped, which the text leaves out.                                                              |
+| 9    | "Start your real goal"                               | No pointer to "+ New goal".                                                                                                                                 |
+
+### Hidden controls
+
+Step 5 was the only step where a control the text points at was off screen, on this phone and theme. The other eight fit. Larger text or a smaller phone was not tested.
+
+### What this suggests
+
+The tutorial teaches the paper journal well and the app badly. The app has one loop: read the step, add evidence, mark complete. The tutorial uses that loop nine times and never names it.
+
+- Step 1 should teach the loop and nothing else: a note is the simplest evidence, evidence is the reader's own record that they did the step, and "Mark complete" finishes it.
+- Each later step should add one app idea: a second kind of evidence, changing what a step asks for, setting aside, the timeline, the badge.
+- Step 4's "change" sheet is an app problem as much as a copy problem. A reader who picks a different type expects a swap.
+
 ## Two kinds of guidance
 
 They need different tools, and mixing them is what makes the current prose hard to follow.
