@@ -10,6 +10,7 @@ Workspace root for `Rollercoaster.dev-mobile`. Most agent work happens inside `a
 | Build for any target               | `native-rd-build` skill (`apps/native-rd/.claude/skills/`) |
 | Touch CI                           | `docs/architecture/ci-contract.md`, `.github/workflows/`   |
 | Touch the badge core / tokens      | `packages/openbadges-core/`, `packages/design-tokens/`     |
+| See what is Now / Next / Later     | `docs/ROADMAP.md` (tracks, milestones, governing ADRs)     |
 | Understand cross-cutting plans     | `docs/plans/active/`                                       |
 | Understand how this repo was built | `docs/plans/completed/2026-05-14-mobile-extraction.md`     |
 
