@@ -173,7 +173,15 @@ export const styles = StyleSheet.create((theme) => {
       borderRadius: theme.radius.pill,
       paddingHorizontal: theme.space[2],
       paddingVertical: theme.space[1],
+      // Each chip opens the evidence viewer (#696), so it holds the 44pt target.
+      minHeight: 44,
       ...shadowStyle(theme, "cardElevationSmall"),
+    },
+    // The shared pressed state (design-language.md, as `Card`): the chip
+    // presses into its shadow.
+    evidenceChipPressed: {
+      transform: [{ translateX: 2 }, { translateY: 2 }],
+      shadowOffset: { width: 1, height: 1 },
     },
     evidenceChipIcon: {
       fontSize: 14,

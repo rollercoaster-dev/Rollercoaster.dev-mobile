@@ -52,6 +52,7 @@ interface TestOverrides {
   sealed?: boolean;
   onChangeEvidencePlan?: () => void;
   onAddEvidence?: (type?: string) => void;
+  onOpenEvidence?: (evidenceId: string) => void;
   afterStep?: string;
   waitingOn?: { who: string; expected?: string; isPast?: boolean };
   dueDate?: string;
@@ -70,6 +71,7 @@ function renderCard(overrides: TestOverrides = {}) {
     sealed: false,
     onChangeEvidencePlan: jest.fn(),
     onAddEvidence: jest.fn(),
+    onOpenEvidence: jest.fn(),
     ...overrides,
   };
   renderWithProviders(
@@ -580,11 +582,11 @@ describe("FocusCurrentTaskCard", () => {
     });
   });
 
-  // The read-only "Captured" rail (parts.tsx): one chip per captured piece —
-  // visible caption-or-type-label beside an a11y-hidden icon, with the type kept
-  // in the chip's accessibilityLabel. Mirrors the StepCard rail contract (#360).
-  // Exercised through the completed view, which renders the same rail with no
-  // planned-type row to collide with the chip labels.
+  // The "Captured" rail (parts.tsx): one chip per captured piece — visible
+  // caption-or-type-label beside an a11y-hidden icon, with the type kept in the
+  // chip's accessibilityLabel (#360). Each chip opens the evidence viewer
+  // (#696). Mostly exercised through the completed view, which renders the same
+  // rail with no planned-type row to collide with the chip labels.
   describe("CapturedEvidenceRail (captured chips)", () => {
     it("shows the caption as visible text and keeps the type in the a11y label", () => {
       renderCard({
@@ -630,17 +632,30 @@ describe("FocusCurrentTaskCard", () => {
       expect(screen.queryByText("sketch")).toBeNull();
     });
 
-    it("renders one chip per item with a unique token when id-less items share a type", () => {
-      renderCard({
-        status: "completed",
-        capturedEvidence: [{ type: "photo" }, { type: "photo" }],
-      });
+    // #696: a chip is how you reread what you captured, from the card you are
+    // on — the same button contract as a Timeline evidence card.
+    it.each(["in-progress", "completed"] as FocusCardStatus[])(
+      "%s: tapping a chip opens that piece of evidence, and only that one",
+      (status) => {
+        const props = renderCard({ status, capturedEvidence: captured });
+        fireEvent.press(
+          screen.getByTestId("focus-current-task-evidence-chip-ev-2"),
+        );
+        expect(props.onOpenEvidence).toHaveBeenCalledTimes(1);
+        expect(props.onOpenEvidence).toHaveBeenCalledWith("ev-2");
+      },
+    );
+
+    it("announces a chip as a button that opens the evidence", () => {
+      renderCard({ status: "completed", capturedEvidence: captured });
+      const chip = screen.getByTestId("focus-current-task-evidence-chip-ev-1");
+      expect(chip.props.accessibilityRole).toBe("button");
+      expect(chip.props.accessibilityHint).toBe(
+        "Opens this evidence to view it",
+      );
       expect(
-        screen.getByTestId("focus-current-task-evidence-chip-photo-0"),
-      ).toBeTruthy();
-      expect(
-        screen.getByTestId("focus-current-task-evidence-chip-photo-1"),
-      ).toBeTruthy();
+        screen.getByRole("button", { name: "Kitchen reset, Photo captured" }),
+      ).toBe(chip);
     });
 
     it("renders nothing when no evidence is captured", () => {

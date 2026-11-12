@@ -1147,6 +1147,60 @@ describe("FocusModeScreen", () => {
     });
   });
 
+  describe("reviewing captured evidence (#696)", () => {
+    it("opens the tapped chip's evidence in the shared viewer", () => {
+      setupQueries({
+        steps: [step("step-1", { plannedEvidenceTypes: '["photo","text"]' })],
+        stepEvidence: [
+          { id: "ev-1", type: "photo", stepId: "step-1" },
+          { id: "ev-2", type: "text", stepId: "step-1", description: "Notes" },
+        ],
+      });
+      renderWithProviders(<FocusModeScreen {...routeProps} />);
+
+      fireEvent.press(
+        screen.getByTestId("focus-current-task-evidence-chip-ev-2"),
+      );
+      expect(mockNavigate).toHaveBeenCalledWith("EvidenceViewer", {
+        goalId: "goal-1",
+        initialEvidenceId: "ev-2",
+      });
+    });
+
+    it("keeps the current step when the user comes back from the viewer", () => {
+      // A done step reached from the Timeline: the resolver alone would pick
+      // step-1, so only the held pin keeps step-2 on screen after the return.
+      setupQueries({
+        steps: [
+          step("step-1", { title: "Read docs" }),
+          step("step-2", {
+            title: "Practice",
+            status: "completed",
+            ordinal: 1,
+          }),
+        ],
+        stepEvidence: [{ id: "ev-9", type: "text", stepId: "step-2" }],
+      });
+      const { rerender } = renderWithProviders(
+        <FocusModeScreen {...routePropsForStep("step-2")} />,
+      );
+      expect(currentCardTitle()).toBe("Practice");
+
+      fireEvent.press(
+        screen.getByTestId("focus-current-task-evidence-chip-ev-9"),
+      );
+      expect(mockNavigate).toHaveBeenCalledWith("EvidenceViewer", {
+        goalId: "goal-1",
+        initialEvidenceId: "ev-9",
+      });
+
+      // Back from the viewer: the route param was already consumed.
+      rerender(<FocusModeScreen {...routeProps} />);
+      expect(currentCardTitle()).toBe("Practice");
+      expect(mockUncompleteStep).not.toHaveBeenCalled();
+    });
+  });
+
   describe("evidence plan sheet (#409 authoring grid)", () => {
     it("is closed until the planned box's change affordance is tapped", () => {
       setupQueries();
