@@ -57,6 +57,26 @@ The tutorial teaches the paper journal well and the app badly. The app has one l
 - Each later step should add one app idea: a second kind of evidence, changing what a step asks for, setting aside, the timeline, the badge.
 - Step 4's "change" sheet is an app problem as much as a copy problem. A reader who picks a different type expects a swap.
 
+### What the copy pass changed, and what it left
+
+Changed the same day, in copy only:
+
+- Step 1 names the loop: add evidence, "your own record that you did it", then "Mark complete".
+- Step 4 says to turn Audio off after picking another kind.
+- Steps 1 and 8 no longer offer a photo with no way to add one. Step 8 points at "Add more evidence".
+- Step 9 says "Mark complete" before "Design your badge", says what the badge is, and points at "New goal".
+- The goal description says how long the tutorial is and what it ends with.
+
+Rechecked on the emulator in English and German: no step hides a control it points at. German needed a shorter step 5 than English to fit.
+
+Left open, because copy cannot fix them:
+
+- The "change" sheet adds a type where the reader expects a swap.
+- A saved note cannot be reread from its step.
+- Step 3 does not teach adding steps.
+- A set-aside step hides its own text.
+- "Focus Mode", "Keep warm" and "Pin to cockpit" are still unexplained.
+
 ## Two kinds of guidance
 
 They need different tools, and mixing them is what makes the current prose hard to follow.

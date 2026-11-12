@@ -1,15 +1,15 @@
 {
   "tutorial": {
     "title": "Finde deinen Halt",
-    "description": "Lerne die App kennen und fang ein Notizbuch an, das du auch ohne sie führen kannst.",
+    "description": "Neun kurze Schritte. Lerne die App kennen und fang ein Notizbuch an, das du auch ohne sie führen kannst. Am Ende bekommst du ein Abzeichen.",
     "steps": {
       "journal": {
         "title": "Besorge oder mache dir ein Notizbuch",
-        "description": "Jedes Notizbuch funktioniert. Kein Notizbuch? Falte ein paar Blätter Papier in der Mitte. Heft sie zusammen oder mach zwei Löcher und binde sie mit Schnur zu. Lose Blätter gehen auch.\n\nSchreib dann eine Notiz, was du benutzt. Gern auch ein Foto."
+        "description": "Jedes Notizbuch funktioniert, lose Blätter auch. Kein Notizbuch? Falte ein paar Blätter Papier in der Mitte und hefte oder binde sie zusammen.\n\nJeder Schritt endet gleich. Du fügst einen Nachweis hinzu: deine eigene Aufzeichnung, dass du es gemacht hast. Hier ist das eine Notiz. Tippe auf „Notiz hinzufügen“ und schreib, was du benutzt. Tippe dann auf „Als erledigt markieren“."
       },
       "want": {
         "title": "Nenne eine Sache, die du wirklich willst",
-        "description": "Etwas, das dir wichtig ist, in deinen eigenen Worten. Tippe es als Notiz ein. Schreib dann dasselbe auf die erste Seite deines Notizbuches."
+        "description": "Etwas, das dir wichtig ist, in deinen eigenen Worten. Tippe auf „Notiz hinzufügen“ und schreib es auf. Schreib dasselbe auf die erste Seite deines Notizbuches. Tippe dann auf „Als erledigt markieren“."
       },
       "threeSteps": {
         "title": "Zerlege es in drei Schritte, die du dir vorstellen kannst",
@@ -17,11 +17,11 @@
       },
       "why": {
         "title": "Sag laut, warum",
-        "description": "Nimm etwa 30 Sekunden auf, warum du das willst. Es bleibt auf deinem Handy. Schreib dann eine Zeile warum in dein Notizbuch.\n\nKeine Lust zu sprechen? Tippe unten im Beweis-Feld auf „ändern“, um eine andere Art von Beweis zu wählen."
+        "description": "Nimm etwa 30 Sekunden auf, warum du das willst. Es bleibt auf deinem Handy. Schreib dann eine Zeile warum in dein Notizbuch.\n\nKeine Lust zu sprechen? Tippe im Nachweis-Feld auf „ändern“. Wähle eine andere Art und tippe dann auf Audio, um es abzuwählen."
       },
       "setAside": {
-        "title": "Leg diesen Schritt beiseite, dann nimm ihn wieder auf",
-        "description": "Tippe unter dem Beweis-Feld auf „Diesen Schritt beiseitelegen“. Stoppen ist nicht scheitern. Um zurückzukommen, tippe auf „Alle Schritte ansehen ›“, wähle den Schritt mit „Zur Seite gelegt“, dann „Wieder aufnehmen“.\n\nMarkiere in deinem Notizbuch einen deiner drei Schritte als beiseitegelegt. Füg dann hier eine Notiz hinzu."
+        "title": "Schritt beiseitelegen und wieder aufnehmen",
+        "description": "Tippe unten auf „Diesen Schritt beiseitelegen“. Stoppen ist nicht scheitern. Zurück geht es über „Alle Schritte ansehen ›“ und „Wieder aufnehmen“.\n\nMarkiere im Notizbuch einen deiner drei Schritte als beiseitegelegt. Füg hier eine Notiz hinzu."
       },
       "fiveMinutes": {
         "title": "Fünf Minuten an deinem ersten Schritt",
@@ -33,11 +33,11 @@
       },
       "paperOnly": {
         "title": "Eine Sitzung nur auf Papier",
-        "description": "Wenn du das nächste Mal an deiner Sache arbeitest, lass die App zu und verfolge es in deinem Notizbuch. Komm danach zurück und füg eine Notiz hinzu. Ein Foto der Seite ist gern gesehen.\n\nTippe dann auf „Alle Schritte ansehen ›“, um deine Zeitleiste anzuschauen."
+        "description": "Wenn du das nächste Mal an deiner Sache arbeitest, lass die App zu und verfolge es in deinem Notizbuch. Komm danach zurück und füg eine Notiz hinzu. Für ein Foto der Seite tippe nach deiner Notiz auf „Mehr Evidenz hinzufügen“.\n\nTippe dann auf „Alle Schritte ansehen ›“, um deine Zeitleiste anzuschauen."
       },
       "finish": {
         "title": "Schreib das Datum und fertig",
-        "description": "Schreib das heutige Datum in dein Notizbuch und füg hier eine letzte Notiz hinzu. Tippe dann auf „Dein Abzeichen gestalten“. Es sagt, dass du ein Ziel-Notizbuch führen kannst.\n\nDanach blätter um und fang dein echtes Ziel an."
+        "description": "Schreib das heutige Datum in dein Notizbuch und füg hier eine letzte Notiz hinzu. Tippe auf „Als erledigt markieren“, dann auf „Dein Abzeichen gestalten“. Das Abzeichen ist dein Andenken. Es sagt, dass du ein Ziel-Notizbuch führen kannst.\n\nDanach blätter um und tippe im Tab Ziele auf „Neues Ziel“, um dein echtes Ziel anzufangen."
       }
     }
   }
