@@ -22,14 +22,9 @@
  * renders read-only and no prompt shows.
  */
 import React, { useEffect, useRef } from "react";
-import {
-  AccessibilityInfo,
-  Pressable,
-  Text as RNText,
-  TextInput,
-  View,
-} from "react-native";
+import { AccessibilityInfo, Pressable, TextInput, View } from "react-native";
 import { useUnistyles } from "react-native-unistyles";
+import { Text } from "../Text";
 import { focusAccessibilityRef } from "../../utils/accessibilityFocus";
 import { Button } from "../Button";
 import { styles } from "./EditGoalView.styles";
@@ -124,9 +119,13 @@ export function EditGoalRowDescription({
   if (!binding) {
     if (!text) return null;
     return (
-      <RNText style={styles.descriptionText} testID={`${testID}-text`}>
+      <Text
+        variant="caption"
+        style={styles.descriptionText}
+        testID={`${testID}-text`}
+      >
         {text}
-      </RNText>
+      </Text>
     );
   }
 
@@ -148,9 +147,13 @@ export function EditGoalRowDescription({
         ]}
       >
         {text ? (
-          <RNText style={styles.descriptionText}>{text}</RNText>
+          <Text variant="caption" style={styles.descriptionText}>
+            {text}
+          </Text>
         ) : (
-          <RNText style={styles.whenPrompt}>{copy.addPrompt}</RNText>
+          <Text variant="metadata" style={styles.whenPrompt}>
+            {copy.addPrompt}
+          </Text>
         )}
       </Pressable>
     );
@@ -187,9 +190,13 @@ export function EditGoalRowDescription({
       {tooLong ? (
         // No live region: it would read out on every keystroke past the
         // limit. The refused Save announces it instead, on both platforms.
-        <RNText style={styles.descriptionTooLong} testID={`${testID}-too-long`}>
+        <Text
+          variant="caption"
+          style={styles.descriptionTooLong}
+          testID={`${testID}-too-long`}
+        >
           {tooLongText}
-        </RNText>
+        </Text>
       ) : null}
       <View style={styles.descriptionActions}>
         {binding.draft.length > 0 ? (
