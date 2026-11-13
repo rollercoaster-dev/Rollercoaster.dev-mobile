@@ -1,10 +1,18 @@
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   View,
   ActivityIndicator,
   AccessibilityInfo,
   ScrollView,
   type GestureResponderEvent,
+  type Text as RNText,
 } from "react-native";
 import { KeyboardAvoidingFrame } from "../../components/KeyboardAvoidingFrame";
 import { ScreenSubHeader } from "../../components/ScreenHeader";
@@ -30,10 +38,12 @@ import {
 import { EvidenceTypePicker } from "../../components/EvidenceTypePicker";
 import {
   AnimatedSheet,
+  sheetStyles,
   SheetBackground,
   useSheetTrigger,
 } from "../../components/AnimatedSheet";
 import { resolvePlannedEvidenceTypes } from "../../utils/parsePlannedEvidenceTypes";
+import { focusAccessibilityRef } from "../../utils/accessibilityFocus";
 import {
   goalsQuery,
   stepsByGoalQuery,
@@ -229,7 +239,21 @@ function FocusContent({
   // auto-advance again.
   const [pinnedStepId, setPinnedStepId] = useState<string | null>(null);
   // Authoring sheet: change which evidence types this step plans.
-  const [isPlanSheetOpen, setIsPlanSheetOpen] = useState(false);
+  // Holds the id of the step it was opened for, so it only shows while the
+  // card is still on that step (see `isPlanSheetOpen`).
+  const [planSheetStepId, setPlanSheetStepId] = useState<string | null>(null);
+  // How a chip tap reads in that sheet, fixed when it opens (#828). A step
+  // planning one type opens in "single": tapping another type swaps it, so a
+  // reader trading Audio for Note doesn't end up owing both. "Allow more
+  // than one kind" switches to "multiple", where chips toggle on and off. A
+  // step already planning several opens in "multiple". Fixed per opening so a
+  // chip never changes role under the reader's finger.
+  const [planSheetMode, setPlanSheetMode] = useState<"single" | "multiple">(
+    "single",
+  );
+  // The sheet's "what a tap does" line. Screen-reader focus moves here when
+  // "Allow more than one kind" leaves, so focus lands on what changed.
+  const planExplainerRef = useRef<RNText>(null);
   // Capture sheet: pick a type to capture right now, with none pre-implied.
   const [isCaptureSheetOpen, setIsCaptureSheetOpen] = useState(false);
   // The control that opened each sheet, so closing it returns screen-reader
@@ -270,6 +294,12 @@ function FocusContent({
     pinnedStepId !== null && stepRows.some((s) => s.id === pinnedStepId)
       ? pinnedStepId
       : resolveFocusStepId(stepRows);
+
+  // The plan sheet's mode was read off the step it opened on. If the card
+  // advances to another step (or that step is deleted) while the sheet is
+  // open, it closes rather than apply that mode to a different step's plan.
+  const isPlanSheetOpen =
+    planSheetStepId !== null && planSheetStepId === currentStepId;
 
   const currentStep = useMemo(
     () => stepRows.find((s) => s.id === currentStepId) ?? null,
@@ -526,23 +556,32 @@ function FocusContent({
   );
 
   /**
-   * Toggle a planned type. Guards the "every step requires evidence" invariant
-   * the same way the New Goal wizard does: the last remaining type can't be
-   * deselected, so a step never lands in a 0-selected state.
+   * Apply a chip tap to the planned types. In "single" mode a tap on another
+   * type replaces the plan with that type (a swap, #828). In "multiple" mode it
+   * toggles that type on or off. Either way the "every step requires evidence"
+   * invariant holds the same way the New Goal wizard guards it: the last
+   * remaining type can't be deselected, so a step never lands in a 0-selected
+   * state.
    */
   const handleTogglePlannedType = useCallback(
     (type: EvidenceTypeValue) => {
       if (!currentStepId) return;
       const isSelected = plannedEvidenceTypes.includes(type);
-      if (isSelected && plannedEvidenceTypes.length === 1) return;
-      const next = isSelected
-        ? plannedEvidenceTypes.filter((planned) => planned !== type)
-        : [...plannedEvidenceTypes, type];
+      let next: EvidenceTypeValue[];
+      if (planSheetMode === "single") {
+        if (isSelected) return;
+        next = [type];
+      } else {
+        if (isSelected && plannedEvidenceTypes.length === 1) return;
+        next = isSelected
+          ? plannedEvidenceTypes.filter((planned) => planned !== type)
+          : [...plannedEvidenceTypes, type];
+      }
       runStepMutation("step-evidence-plan", "evidence-plan", () =>
         updateStep(currentStepId as StepId, { plannedEvidenceTypes: next }),
       );
     },
-    [currentStepId, plannedEvidenceTypes, runStepMutation],
+    [currentStepId, plannedEvidenceTypes, planSheetMode, runStepMutation],
   );
 
   const handleTimelineTap = useCallback(() => {
@@ -636,7 +675,10 @@ function FocusContent({
                 capturedEvidence={capturedEvidence}
                 onChangeEvidencePlan={(event) => {
                   planTrigger.rememberTrigger(event);
-                  setIsPlanSheetOpen(true);
+                  setPlanSheetMode(
+                    plannedEvidenceTypes.length > 1 ? "multiple" : "single",
+                  );
+                  setPlanSheetStepId(currentStepId);
                 }}
                 onAddEvidence={handleAddEvidence}
                 onPause={handlePause}
@@ -674,11 +716,12 @@ function FocusContent({
       />
 
       {/* Evidence-plan sheet — change *which* types this step plans. The
-          authoring multi-select grid in the shared AnimatedSheet chrome,
-          mirroring the wizard's build-step sheet. */}
+          authoring chip grid in the shared AnimatedSheet chrome, mirroring the
+          wizard's build-step sheet. The first line says what a tap does in the
+          current mode (#828). */}
       <AnimatedSheet
         visible={isPlanSheetOpen}
-        onClose={() => setIsPlanSheetOpen(false)}
+        onClose={() => setPlanSheetStepId(null)}
         title={t("focusMode:evidencePlanSheet.title")}
         closeLabel={t("common:actions.close")}
         closeTestID="focus-evidence-plan-close"
@@ -686,11 +729,42 @@ function FocusContent({
         restoreFocusRef={planTrigger.restoreFocusRef}
         bottomClearance={PILL_LIFT}
       >
-        <EvidenceTypePicker
-          selectedTypes={plannedEvidenceTypes}
-          onToggleType={handleTogglePlannedType}
-          label={t("focusMode:evidencePlanSheet.typesLabel")}
-        />
+        <View style={styles.planSheetBody}>
+          <Text
+            ref={planExplainerRef}
+            variant="mono"
+            style={sheetStyles.subLine}
+            testID="focus-evidence-plan-explainer"
+          >
+            {planSheetMode === "single"
+              ? t("focusMode:evidencePlanSheet.explainerSingle")
+              : t("focusMode:evidencePlanSheet.explainerMultiple")}
+          </Text>
+          <EvidenceTypePicker
+            selectedTypes={plannedEvidenceTypes}
+            onToggleType={handleTogglePlannedType}
+            label={t("focusMode:evidencePlanSheet.typesLabel")}
+            selectionMode={planSheetMode}
+          />
+          {planSheetMode === "single" ? (
+            <Button
+              onPress={() => {
+                setPlanSheetMode("multiple");
+                // The button leaves with this tap; move focus to the line
+                // that now says what a tap does, instead of losing it.
+                focusAccessibilityRef(planExplainerRef);
+              }}
+              label={t("focusMode:evidencePlanSheet.allowSeveralCta")}
+              variant="ghost"
+              size="sm"
+              inline
+              accessibilityLabel={t(
+                "focusMode:evidencePlanSheet.allowSeveralCta",
+              )}
+              testID="focus-evidence-plan-allow-several"
+            />
+          ) : null}
+        </View>
       </AnimatedSheet>
     </View>
   );

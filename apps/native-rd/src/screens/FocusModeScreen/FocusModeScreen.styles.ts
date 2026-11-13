@@ -80,4 +80,7 @@ export const styles = StyleSheet.create((theme) => ({
   title: {
     flex: 1,
   },
+  planSheetBody: {
+    gap: theme.space[3],
+  },
 }));
