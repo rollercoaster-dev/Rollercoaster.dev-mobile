@@ -147,8 +147,8 @@ export const styles = StyleSheet.create((theme) => {
       fontWeight: theme.fontWeight.bold,
       color: theme.colors.accentPrimary,
     },
-    // Captured rail — read-only green chips (`accentMint`, the prototype's
-    // #d4f4e7), label leans green. Mirrors the StepCard rail contract (#360).
+    // Captured rail — green chips (`accentMint`, the prototype's #d4f4e7),
+    // label leans green (#360). Each chip opens the evidence viewer (#696).
     evidenceRail: {
       gap: theme.space[1],
     },
@@ -173,7 +173,15 @@ export const styles = StyleSheet.create((theme) => {
       borderRadius: theme.radius.pill,
       paddingHorizontal: theme.space[2],
       paddingVertical: theme.space[1],
+      // Each chip opens the evidence viewer (#696), so it holds the 44pt target.
+      minHeight: 44,
       ...shadowStyle(theme, "cardElevationSmall"),
+    },
+    // The shared pressed state (design-language.md, as `Card`): the chip
+    // presses into its shadow.
+    evidenceChipPressed: {
+      transform: [{ translateX: 2 }, { translateY: 2 }],
+      shadowOffset: { width: 1, height: 1 },
     },
     evidenceChipIcon: {
       fontSize: 14,

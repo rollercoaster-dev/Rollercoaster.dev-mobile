@@ -156,6 +156,7 @@ function FocusTab({
               onMarkComplete={noop}
               onChangeEvidencePlan={noop}
               onAddEvidence={noop}
+              onOpenEvidence={noop}
             />
           </View>
         </View>

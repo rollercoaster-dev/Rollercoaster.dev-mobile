@@ -145,6 +145,7 @@ function InProgressView({
   onMarkComplete,
   onChangeEvidencePlan,
   onAddEvidence,
+  onOpenEvidence,
   afterStep,
   waitingOn,
   dueDate,
@@ -206,6 +207,7 @@ function InProgressView({
           <CapturedEvidenceRail
             items={captured}
             label={t("focusMode:currentTask.inProgress.evidenceRailLabel")}
+            onOpenEvidence={onOpenEvidence}
           />
           <Button
             onPress={onPause}
@@ -299,11 +301,15 @@ function PausedView({ title, onPickUp }: FocusPausedCardProps) {
   );
 }
 
-/** Completed: pill above the title, the captured rail, single "reopen" CTA. */
+/**
+ * Completed: pill above the title, the captured rail (each chip opens the
+ * evidence viewer), single "reopen" CTA.
+ */
 function CompletedView({
   title,
   capturedEvidence,
   onReopen,
+  onOpenEvidence,
 }: FocusCompletedCardProps) {
   const { t } = useTranslation(["common", "focusMode"]);
   const captured = capturedEvidence ?? [];
@@ -317,6 +323,7 @@ function CompletedView({
           <CapturedEvidenceRail
             items={captured}
             label={t("focusMode:evidenceRail.zoneLabel")}
+            onOpenEvidence={onOpenEvidence}
           />
         </>
       }

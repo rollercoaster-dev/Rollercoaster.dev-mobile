@@ -12,13 +12,13 @@ import { TimingMarkIcon, type TimingMarkTone } from "../TimingMarkIcon";
 import { styles } from "./FocusCurrentTaskCard.styles";
 
 /**
- * A captured piece of evidence rendered as a read-only rail chip (#360). Mirrors
- * `CapturedEvidenceItem` from StepCard: the chip shows {@link caption} when set,
- * otherwise the type's short label.
+ * A captured piece of evidence rendered as a rail chip (#360). The chip shows
+ * {@link caption} when set, otherwise the type's short label, and opens the
+ * evidence viewer on that row (#696).
  */
 export interface FocusCapturedEvidenceItem {
-  /** Evidence row id — chip key/testID; falls back to type+index. */
-  id?: string;
+  /** Evidence row id — the chip's key/testID and the viewer's start item. */
+  id: string;
   type: string;
   /** User-entered caption. Null/blank → show the type label. */
   caption?: string | null;
@@ -228,19 +228,24 @@ export function PlannedEvidenceBox({
 }
 
 /**
- * Read-only evidence rail — one green status chip per captured piece, labelled
- * with its caption when it has one (else the type short-label). Mirrors the
- * StepCard rail: chips are `accessibilityRole="text"`, never buttons. We never
- * surface what is missing — the rail simply shows what is present. Hidden when
- * empty. The section {@link label} varies by state ("Captured" in-progress,
- * "Evidence" when completed).
+ * Captured-evidence rail — one green chip per captured piece, labelled with its
+ * caption when it has one (else the type short-label). Each chip is a button
+ * that opens the shared evidence viewer on that piece, as Timeline evidence
+ * cards and badge proof entries do (#696). The viewer is a pushed screen, so
+ * back returns to this card on the same step. We never surface what is missing
+ * — the rail simply shows what is present. Hidden when empty. The section
+ * {@link label} varies by state ("Captured" in-progress, "Evidence" when
+ * completed).
  */
 export function CapturedEvidenceRail({
   items,
   label,
+  onOpenEvidence,
 }: {
   items: readonly FocusCapturedEvidenceItem[];
   label: string;
+  /** Open the evidence viewer on this evidence row. */
+  onOpenEvidence: (evidenceId: string) => void;
 }) {
   const { t } = useTranslation(["common", "focusMode"]);
   if (items.length === 0) {
@@ -257,18 +262,13 @@ export function CapturedEvidenceRail({
         {label}
       </Text>
       <View style={styles.evidenceRailRow}>
-        {items.map((item, index) => {
+        {items.map((item) => {
           const caption = item.caption?.trim();
           const hasCaption = caption != null && caption.length > 0;
           // Normalize before label/icon lookup so an unknown type can't leak a
           // raw key or a missing icon — falls back to `file` (matches StepCard).
           const safeType = validateEvidenceType(item.type);
           const typeLabel = evidenceShortLabel(t, safeType);
-          // Stable, unique chip key/testID even when several captionless,
-          // id-less items share a type: `index` disambiguates within a type, and
-          // the raw `item.type` (not `safeType`) keeps an unknown type's chips
-          // distinct. Prefer the row id when present.
-          const token = item.id ?? `${item.type}-${index}`;
           const icon = EVIDENCE_OPTIONS.find((o) => o.type === safeType)?.icon;
           const a11yLabel = hasCaption
             ? t("focusMode:evidenceRail.capturedChipNamed", {
@@ -277,13 +277,18 @@ export function CapturedEvidenceRail({
               })
             : t("focusMode:evidenceRail.capturedChip", { type: typeLabel });
           return (
-            <View
-              key={token}
-              style={styles.evidenceChip}
+            <Pressable
+              key={item.id}
+              onPress={() => onOpenEvidence(item.id)}
+              style={({ pressed }) => [
+                styles.evidenceChip,
+                pressed && styles.evidenceChipPressed,
+              ]}
               accessible
-              accessibilityRole="text"
+              accessibilityRole="button"
               accessibilityLabel={a11yLabel}
-              testID={`focus-current-task-evidence-chip-${token}`}
+              accessibilityHint={t("focusMode:evidenceRail.openHint")}
+              testID={`focus-current-task-evidence-chip-${item.id}`}
             >
               {icon ? (
                 <Text
@@ -303,7 +308,7 @@ export function CapturedEvidenceRail({
               >
                 {hasCaption ? caption : typeLabel}
               </Text>
-            </View>
+            </Pressable>
           );
         })}
       </View>
