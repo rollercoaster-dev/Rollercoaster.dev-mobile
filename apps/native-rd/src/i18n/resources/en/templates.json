@@ -1,15 +1,15 @@
 {
   "tutorial": {
     "title": "Find your footing",
-    "description": "Learn the app, and start a paper journal you can keep without it.",
+    "description": "Nine short steps. Learn the app, and start a paper journal you can keep without it. You finish with a badge.",
     "steps": {
       "journal": {
         "title": "Get or make a journal",
-        "description": "Any notebook works. No notebook? Fold a few sheets of paper in half. Staple them, or punch two holes and tie them with string. Loose sheets are fine too.\n\nThen add a note saying what you’re using. A photo is welcome as well."
+        "description": "Any notebook works, loose sheets too. No notebook? Fold a few sheets of paper in half and staple or tie them.\n\nEvery step ends the same way. You add evidence: your own record that you did it. Here that’s a note. Tap “Add Note” and say what you’re using. Then tap “Mark complete”."
       },
       "want": {
         "title": "Name one thing you actually want",
-        "description": "Something that matters to you, in your own words. Type it as your note. Then write the same thing on the first page of your journal."
+        "description": "Something that matters to you, in your own words. Tap “Add Note” and type it. Write the same thing on the first page of your journal. Then tap “Mark complete”."
       },
       "threeSteps": {
         "title": "Break it into three steps you can picture",
@@ -17,11 +17,11 @@
       },
       "why": {
         "title": "Say why, out loud",
-        "description": "Record about 30 seconds on why you want this. It stays on your phone. Then write one line of why in your journal.\n\nRather not record? Tap the evidence box to change what this step asks for."
+        "description": "Record about 30 seconds on why you want this. It stays on your phone. Then write one line of why in your journal.\n\nRather not record? Tap “change” in the evidence box. Pick another kind, then tap Audio to turn it off."
       },
       "setAside": {
         "title": "Set this step aside, then pick it back up",
-        "description": "Set this step aside. The app moves on and nothing is lost. Find it again under See all steps and pick it back up. Stopping isn’t failing.\n\nIn your journal, mark one of your three steps as set aside, any way you like. Then add a note here."
+        "description": "Tap “Set this step aside” under the evidence box. Stopping isn’t failing. To come back, tap “See all steps ›”, choose the step marked “Set aside”, then “Pick this back up”.\n\nIn your journal, mark one of your three steps as set aside. Then add a note here."
       },
       "fiveMinutes": {
         "title": "Do five minutes on your first step",
@@ -29,15 +29,15 @@
       },
       "yours": {
         "title": "Make it yours",
-        "description": "Open Settings and try the themes until the app looks right for your eyes. Put your name or a mark on your journal’s cover. Then note which theme you picked."
+        "description": "Open the Settings tab and try each option under Theme until the app looks right for your eyes. Put your name or a mark on your journal’s cover. Then note which theme you picked."
       },
       "paperOnly": {
         "title": "One session on paper only",
-        "description": "Next time you work on your thing, leave the app shut and track it in your journal. Afterwards, come back and add a note about it. A photo of the page is welcome.\n\nThen open See all steps to look at your timeline."
+        "description": "Next time you work on your thing, leave the app shut and track it in your journal. Afterwards, come back and add a note about it. For a photo of the page, tap “Add more evidence” after your note.\n\nThen tap “See all steps ›” to look at your timeline."
       },
       "finish": {
         "title": "Write the date and finish",
-        "description": "Write today’s date in your journal and add a last note here. Then design your badge. It says you can keep a goal journal.\n\nAfter that, turn the page and start your real goal."
+        "description": "Write today’s date in your journal and add a last note here. Tap “Mark complete”, then “Design your badge”. The badge is your keepsake. It says you can keep a goal journal.\n\nAfter that, turn the page and tap “New goal” on the Goals tab to start your real one."
       }
     }
   }
