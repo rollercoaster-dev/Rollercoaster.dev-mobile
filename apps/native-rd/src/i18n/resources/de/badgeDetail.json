@@ -23,8 +23,8 @@
   },
   "proofSpine": {
     "title": "DER NACHWEIS",
-    "header_one": "DER NACHWEIS · {{count}} SCHRITT · WISCHEN →",
-    "header_other": "DER NACHWEIS · {{count}} SCHRITTE · WISCHEN →",
+    "header_one": "DER NACHWEIS · {{count}} BELEG · WISCHEN →",
+    "header_other": "DER NACHWEIS · {{count}} BELEGE · WISCHEN →",
     "emptyState": {
       "message": "Für dieses Goal wurden keine Belege angehängt — nichts in der Galerie zu zeigen."
     },

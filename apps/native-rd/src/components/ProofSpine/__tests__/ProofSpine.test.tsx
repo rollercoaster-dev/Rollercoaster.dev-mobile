@@ -57,6 +57,22 @@ describe("ProofSpine", () => {
     ).toBeOnTheScreen();
   });
 
+  // #698: the spine counts evidence items, not steps. Two items for one step
+  // must read as two items — a "STEPS" unit would contradict the goal's
+  // real step count on badge detail.
+  it.each([
+    [1, "THE PROOF · 1 ITEM · SWIPE →"],
+    [3, "THE PROOF · 3 ITEMS · SWIPE →"],
+  ])("labels %i evidence item(s) as items in the header", (count, header) => {
+    renderWithProviders(
+      <ProofSpine
+        evidence={threeItems.slice(0, count)}
+        onCardPress={jest.fn()}
+      />,
+    );
+    expect(screen.getByText(header)).toBeOnTheScreen();
+  });
+
   it("exposes a count-aware list container", () => {
     renderWithProviders(
       <ProofSpine evidence={threeItems} onCardPress={jest.fn()} />,

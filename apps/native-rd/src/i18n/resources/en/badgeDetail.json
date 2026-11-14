@@ -23,8 +23,8 @@
   },
   "proofSpine": {
     "title": "THE PROOF",
-    "header_one": "THE PROOF · {{count}} STEP · SWIPE →",
-    "header_other": "THE PROOF · {{count}} STEPS · SWIPE →",
+    "header_one": "THE PROOF · {{count}} ITEM · SWIPE →",
+    "header_other": "THE PROOF · {{count}} ITEMS · SWIPE →",
     "emptyState": {
       "message": "No evidence was attached to this goal — nothing to show in the gallery."
     },
