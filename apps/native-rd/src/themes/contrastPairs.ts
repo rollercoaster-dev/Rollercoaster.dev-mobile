@@ -120,6 +120,16 @@ export const contrastPairs: ContrastPair[] = [
     }),
   },
   {
+    // accentPurple surfaces with their designed ink: the Welcome footer band
+    // (#758) and the badge initials tiles (BadgeCard, BadgeWallCell).
+    key: "accentPurple",
+    label: "accent purple",
+    getColors: (t) => ({
+      fg: t.colors.accentPurpleFg,
+      bg: t.colors.accentPurple,
+    }),
+  },
+  {
     key: "highlight",
     label: "highlight",
     getColors: (t) => ({
