@@ -23,6 +23,8 @@ bun run test:e2e
 # A single flow. NOTE: this bypasses scripts/run-e2e.sh entirely, so the
 # UserDefaults pre-seeds below have to be done once per simulator by hand.
 xcrun simctl spawn booted defaults write dev.rollercoaster.app EXDevMenuIsOnboardingFinished -bool YES
+xcrun simctl spawn booted defaults write dev.rollercoaster.app EXDevMenuShowsAtLaunch -bool NO
+xcrun simctl spawn booted defaults write dev.rollercoaster.app EXDevMenuShowFloatingActionButton -bool NO
 xcrun simctl spawn booted defaults write dev.rollercoaster.app AppleLanguages -array en
 bun run test:e2e:single e2e/flows/full-ride.yaml
 ```
@@ -137,6 +139,13 @@ Two live examples:
 - The nest-under picker row's `Pressable` carries `editGoal:stepList.a11y.nestUnderA11y` → assert **`"Nest this step under Charlie step"`**, never the visible `Nest under "Charlie step"` child.
 
 This is verifiable, and should be verified, with `maestro hierarchy` — VoiceOver does not run in the Simulator, so the hierarchy dump is the only ground truth.
+
+### The dev client's Tools button covers top-right controls
+
+Dev builds draw Expo's floating Tools button (a gear) in a separate native window. It is not in Maestro's hierarchy, but it takes taps, and it sits over the top-right corner: on Badge detail it covers the ⋯ overflow (`celebration-hero-overflow`). A tap there opens the dev menu, and the next step fails with "element not found" (`overflow-row-*`) even though the app is fine. This is the likely cause of #759: a hand-run flow without the `EXDevMenuShowFloatingActionButton` seed above.
+
+- **iOS:** `scripts/run-e2e.sh` turns the button off. Running a flow by hand, seed it yourself (see Running Flows).
+- **Android:** there is no durable switch; `pm clear` brings the button back. `sheet-isolation.yaml` therefore taps ⋯ on iOS only. To check ⋯ by hand on Android, drag the button aside or tap the top-left edge of ⋯ that it leaves uncovered.
 
 ### Soft keyboard occlusion
 
