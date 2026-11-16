@@ -36,25 +36,23 @@ describe("ProofSpine", () => {
     expect(onCardPress).toHaveBeenCalledWith("2");
   });
 
-  it("renders the singular header for a single item", () => {
+  // #698: the header counts evidence items, not steps. Pin the English unit
+  // literally so a revert to "STEPS" fails.
+  it("renders the singular item header for a single item", () => {
     renderWithProviders(
       <ProofSpine
         evidence={[{ id: "1", name: "Only one", type: "photo" }]}
         onCardPress={jest.fn()}
       />,
     );
-    expect(
-      screen.getByText(i18n.t("badgeDetail:proofSpine.header", { count: 1 })),
-    ).toBeOnTheScreen();
+    expect(screen.getByText("THE PROOF · 1 ITEM · SWIPE →")).toBeOnTheScreen();
   });
 
-  it("renders the plural header for multiple items", () => {
+  it("renders the plural item header for multiple items", () => {
     renderWithProviders(
       <ProofSpine evidence={threeItems} onCardPress={jest.fn()} />,
     );
-    expect(
-      screen.getByText(i18n.t("badgeDetail:proofSpine.header", { count: 3 })),
-    ).toBeOnTheScreen();
+    expect(screen.getByText("THE PROOF · 3 ITEMS · SWIPE →")).toBeOnTheScreen();
   });
 
   it("exposes a count-aware list container", () => {
