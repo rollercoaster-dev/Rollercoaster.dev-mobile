@@ -21,8 +21,7 @@ export type PlaceholderError = {
 };
 
 export type PlaceholderCheckResult =
-  | { ok: true }
-  | { ok: false; error: PlaceholderError };
+  { ok: true } | { ok: false; error: PlaceholderError };
 
 /**
  * Extract all `{{name}}` placeholder token contents from `str` in source

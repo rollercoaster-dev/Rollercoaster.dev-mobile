@@ -223,12 +223,12 @@ Per `milestone-3-i18n.md:59-66`:
 
 ## Acceptance criteria → evidence
 
-| Issue criterion                                                                     | Evidence in this PR                                                                                                                                                                                               |
+| Issue criterion | Evidence in this PR |
 | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| No raw display strings in these screens                                             | `grep -nE '"[A-Z][a-z]+                                                                                                                                                                                           | <Text[^>]\*>[A-Z]' src/screens/{WelcomeScreen,NewGoalModal,SettingsScreen}` returns only icon glyphs (`X`, `★`), brand identifiers (`rollercoaster.dev`), version data (`0.1.0`), and dev-only Alert copy. |
-| Pseudo locale renders without broken layouts                                        | Smoke-test under `EXPO_PUBLIC_I18N_PSEUDO=true`: Welcome → Settings shows bracketed/accented copy. Footnote `"You can change this anytime in Settings."` pads ~40% — manually inspect for clipping in the footer. |
-| Tests pass                                                                          | `bun run test` green. Test changes documented above. Existing role-based assertion on Get Started already i18n-resilient.                                                                                         |
-| `screens.welcome.*` / `screens.newGoal.*` / `screens.settings.*` keyspace populated | Treat as satisfied by the corrected `welcome:*` / `newGoal:*` / `settings:*` keyspace per the namespace refactor (PR #108). PR description flags the correction.                                                  |
+| No raw display strings in these screens | `grep -nE '"[A-Z][a-z]+                                                                                                                                                                                           | <Text[^>]\*>[A-Z]' src/screens/{WelcomeScreen,NewGoalModal,SettingsScreen}` returns only icon glyphs (`X`, `★`), brand identifiers (`rollercoaster.dev`), version data (`0.1.0`), and dev-only Alert copy. |
+| Pseudo locale renders without broken layouts | Smoke-test under `EXPO_PUBLIC_I18N_PSEUDO=true`: Welcome → Settings shows bracketed/accented copy. Footnote `"You can change this anytime in Settings."` pads ~40% — manually inspect for clipping in the footer. |
+| Tests pass | `bun run test` green. Test changes documented above. Existing role-based assertion on Get Started already i18n-resilient. |
+| `screens.welcome.*` / `screens.newGoal.*` / `screens.settings.*` keyspace populated | Treat as satisfied by the corrected `welcome:*` / `newGoal:*` / `settings:*` keyspace per the namespace refactor (PR #108). PR description flags the correction. |
 
 ## Suggested commit shape
 

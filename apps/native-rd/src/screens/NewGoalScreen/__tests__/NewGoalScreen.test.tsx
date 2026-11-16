@@ -64,25 +64,21 @@ jest.mock("../../../hooks/useAnimationPref", () => ({
 }));
 
 type MockResult =
-  | { ok: true; value: { id: string } }
-  | { ok: false; error: unknown };
+  { ok: true; value: { id: string } } | { ok: false; error: unknown };
 
-const mockCreateGoal = jest.fn(
-  (..._args: unknown[]): MockResult => ({ ok: true, value: { id: "goal-1" } }),
-);
+const mockCreateGoal = jest.fn((..._args: unknown[]): MockResult => ({
+  ok: true,
+  value: { id: "goal-1" },
+}));
 let nextStepRowId = 1;
-const mockCreateStep = jest.fn(
-  (..._args: unknown[]): MockResult => ({
-    ok: true,
-    value: { id: `step-row-${nextStepRowId++}` },
-  }),
-);
-const mockCreateSubStep = jest.fn(
-  (..._args: unknown[]): MockResult => ({
-    ok: true,
-    value: { id: "sub-row-1" },
-  }),
-);
+const mockCreateStep = jest.fn((..._args: unknown[]): MockResult => ({
+  ok: true,
+  value: { id: `step-row-${nextStepRowId++}` },
+}));
+const mockCreateSubStep = jest.fn((..._args: unknown[]): MockResult => ({
+  ok: true,
+  value: { id: "sub-row-1" },
+}));
 
 jest.mock("../../../db", () => ({
   EvidenceType: {

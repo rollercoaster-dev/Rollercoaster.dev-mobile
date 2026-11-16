@@ -154,8 +154,7 @@ export async function signCredentialAsVcJwt(
   }
 
   const subject = input.unsignedCredential["credentialSubject"] as
-    | { id?: unknown }
-    | undefined;
+    { id?: unknown } | undefined;
 
   const payload = {
     iss: input.issuerDid,

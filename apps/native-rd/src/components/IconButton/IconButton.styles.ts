@@ -4,12 +4,7 @@ import type { ComposedTheme } from "../../themes/compose";
 
 export type IconButtonSize = "sm" | "md" | "lg";
 export type IconButtonTone =
-  | "chrome"
-  | "celebration"
-  | "ghost"
-  | "surface"
-  | "primary"
-  | "destructive";
+  "chrome" | "celebration" | "ghost" | "surface" | "primary" | "destructive";
 
 const sizeValues = {
   sm: 36,

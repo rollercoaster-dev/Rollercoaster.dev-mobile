@@ -177,10 +177,12 @@ export function runIntlProbe(): IntlProbeResult[] {
     probe("Segmenter (zh-CN)", () => {
       const Seg = (Intl as unknown as { Segmenter?: unknown }).Segmenter;
       if (typeof Seg !== "function") throw new Error("not a function");
-      const seg = new (Seg as new (
-        locale: string,
-        opts: { granularity: string },
-      ) => { segment: (s: string) => Iterable<unknown> })("zh-CN", {
+      const seg = new (
+        Seg as new (
+          locale: string,
+          opts: { granularity: string },
+        ) => { segment: (s: string) => Iterable<unknown> }
+      )("zh-CN", {
         granularity: "word",
       });
       return `${[...seg.segment("你好世界")].length} segments`;
