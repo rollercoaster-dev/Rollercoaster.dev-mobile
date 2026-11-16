@@ -199,8 +199,7 @@ export function unbakePNG(
   // Otherwise parse as JSON
   try {
     return JSON.parse(credentialText) as
-      | OB2.Assertion
-      | OB3.VerifiableCredential;
+      OB2.Assertion | OB3.VerifiableCredential;
   } catch (error) {
     throw new Error(
       `Failed to parse credential JSON: ${error instanceof Error ? error.message : String(error)}`,

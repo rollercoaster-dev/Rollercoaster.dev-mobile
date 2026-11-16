@@ -74,11 +74,7 @@ const logger = new Logger("BadgeDesignerScreen");
 const DEFAULT_BANNER = { text: "", position: BannerPosition.top } as const;
 
 type AccordionSectionId =
-  | "shape"
-  | "frame"
-  | "center"
-  | "colors"
-  | "inscriptions";
+  "shape" | "frame" | "center" | "colors" | "inscriptions";
 
 // Reserved space below topBar for the floating preview overlay at rest.
 // Sections scroll under the overlay; `pointerEvents="none"` lets taps pass

@@ -123,7 +123,7 @@ sub-steps carry no date/dep data at all).
 - [x] Add props: `onEditTiming?: () => void`, `isTimingExpanded?: boolean`
       (default `false`), `whenPromptLabel = "＋ when?"`,
       `editTimingUnsetA11yLabel = (title) => \`Set when "${title}" is due\``,
-      `editTimingSetA11yLabel = (title, lines) => \`Edit timing for "${title}": ${lines.join(", ")}\``.
+`editTimingSetA11yLabel = (title, lines) => \`Edit timing for "${title}": ${lines.join(", ")}\``.
 - [x] Replace the `{step.dateDepChips && ... <View style={styles.chipRow}>}`
       block with:
   - Compute `hasTiming = Boolean(step.dateDepChips?.length)`.

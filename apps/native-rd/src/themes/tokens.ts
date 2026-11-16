@@ -41,9 +41,7 @@ interface ShadowSpec {
 }
 
 type SemanticShadowKey =
-  | "cardElevation"
-  | "cardElevationSmall"
-  | "modalElevation";
+  "cardElevation" | "cardElevationSmall" | "modalElevation";
 
 type BaseShadow = Record<keyof typeof _shadow, ShadowSpec>;
 type AppShadow = Record<keyof BaseShadow | SemanticShadowKey, ShadowSpec>;

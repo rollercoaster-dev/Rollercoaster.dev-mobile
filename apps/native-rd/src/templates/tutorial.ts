@@ -41,13 +41,11 @@ export function buildTutorialTemplate<NS extends Namespace>(
     id: TUTORIAL_TEMPLATE_ID,
     title: t("tutorial.title", TEMPLATES_NS),
     description: t("tutorial.description", TEMPLATES_NS),
-    steps: STEPS.map(
-      ([key, evidenceType]): TemplateStep => ({
-        key,
-        title: t(`tutorial.steps.${key}.title`, TEMPLATES_NS),
-        description: t(`tutorial.steps.${key}.description`, TEMPLATES_NS),
-        plannedEvidenceTypes: [evidenceType],
-      }),
-    ),
+    steps: STEPS.map(([key, evidenceType]): TemplateStep => ({
+      key,
+      title: t(`tutorial.steps.${key}.title`, TEMPLATES_NS),
+      description: t(`tutorial.steps.${key}.description`, TEMPLATES_NS),
+      plannedEvidenceTypes: [evidenceType],
+    })),
   };
 }

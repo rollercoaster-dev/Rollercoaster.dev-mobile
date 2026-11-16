@@ -48,8 +48,7 @@ function BadgesWallContainer({
         goalTitle: titleOf(spotlightRow),
         // Raw ISO string — BadgesWall formats it with the active locale.
         earnedAt: (spotlightRow.completedAt ?? spotlightRow.createdAt) as
-          | string
-          | null,
+          string | null,
       }
     : null;
   const gallery: BadgesWallGalleryItem[] = rows.slice(1).map((row) => ({

@@ -72,8 +72,7 @@ export interface CaptureEvidenceTypePickerProps {
  * and never carries a meaningless `selectedTypes` (and vice versa).
  */
 export type EvidenceTypePickerProps =
-  | AuthoringEvidenceTypePickerProps
-  | CaptureEvidenceTypePickerProps;
+  AuthoringEvidenceTypePickerProps | CaptureEvidenceTypePickerProps;
 
 /**
  * Evidence-type picker with two presentation modes (see {@link EvidenceTypePickerProps}):

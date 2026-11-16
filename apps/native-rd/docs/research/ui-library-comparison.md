@@ -48,16 +48,17 @@ The existing monorepo uses a three-tier CSS custom property system:
 - No direct Vue compatibility (React-only components, but CSS variables exportable)
 
 **ND Theme Assessment:**
-| Theme | Support |
-|-------|---------|
-| Dark | Built-in |
-| High Contrast | Custom tokens |
-| Large Text | Font tokens |
+
+| Theme             | Support                                    |
+| ----------------- | ------------------------------------------ |
+| Dark              | Built-in                                   |
+| High Contrast     | Custom tokens                              |
+| Large Text        | Font tokens                                |
 | Dyslexia-Friendly | Custom fonts (OpenDyslexic via createFont) |
-| Autism-Friendly | Color tokens (muted palette) |
-| Low Vision | Spacing/size tokens |
-| Low Info Density | Spacing tokens |
-| Runtime Switching | Smart re-renders |
+| Autism-Friendly   | Color tokens (muted palette)               |
+| Low Vision        | Spacing/size tokens                        |
+| Low Info Density  | Spacing tokens                             |
+| Runtime Switching | Smart re-renders                           |
 
 ---
 
@@ -83,16 +84,17 @@ The existing monorepo uses a three-tier CSS custom property system:
 - Cannot share components with Vue (only Tailwind config/tokens)
 
 **ND Theme Assessment:**
-| Theme | Support |
-|-------|---------|
-| Dark | NativeWind auto |
-| High Contrast | Tailwind classes |
-| Large Text | Tailwind text sizes |
+
+| Theme             | Support                |
+| ----------------- | ---------------------- |
+| Dark              | NativeWind auto        |
+| High Contrast     | Tailwind classes       |
+| Large Text        | Tailwind text sizes    |
 | Dyslexia-Friendly | Custom fonts supported |
-| Autism-Friendly | Tailwind palette |
-| Low Vision | Tailwind utilities |
-| Low Info Density | Tailwind spacing |
-| Runtime Switching | CSS variables |
+| Autism-Friendly   | Tailwind palette       |
+| Low Vision        | Tailwind utilities     |
+| Low Info Density  | Tailwind spacing       |
+| Runtime Switching | CSS variables          |
 
 ---
 
