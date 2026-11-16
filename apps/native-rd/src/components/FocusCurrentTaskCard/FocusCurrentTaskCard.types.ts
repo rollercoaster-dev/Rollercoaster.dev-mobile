@@ -46,10 +46,15 @@ export interface FocusInProgressCardProps extends FocusCardBase {
    */
   plannedEvidenceTypes: readonly string[];
   /**
-   * Captured-evidence chips for the read-only rail. Shows what is present, never
-   * what is absent (#360).
+   * Captured-evidence chips for the rail. Shows what is present, never what is
+   * absent (#360).
    */
   capturedEvidence?: readonly FocusCapturedEvidenceItem[];
+  /**
+   * Open the shared evidence viewer on a captured chip's evidence row (#696),
+   * as Timeline evidence cards do.
+   */
+  onOpenEvidence: (evidenceId: string) => void;
   /**
    * Open the evidence-plan chooser (#409) — the whole planned box is the target.
    * Receives the press event so the screen can return focus here when the
@@ -97,13 +102,15 @@ export interface FocusPausedCardProps extends FocusCardBase {
   onPickUp: () => void;
 }
 
-/** Completed: pill + the read-only captured rail + a single "reopen" CTA. */
+/** Completed: pill + the captured rail + a single "reopen" CTA. */
 export interface FocusCompletedCardProps extends FocusCardBase {
   status: "completed";
-  /** Captured-evidence chips for the read-only rail. */
+  /** Captured-evidence chips for the rail. */
   capturedEvidence?: readonly FocusCapturedEvidenceItem[];
   /** Reopen a completed step. */
   onReopen: () => void;
+  /** Open the shared evidence viewer on a captured chip's evidence row (#696). */
+  onOpenEvidence: (evidenceId: string) => void;
 }
 
 /** All steps done (goal-level): trophy callout + a single "design badge" CTA. */

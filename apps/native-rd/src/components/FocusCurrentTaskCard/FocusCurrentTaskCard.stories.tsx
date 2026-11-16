@@ -28,6 +28,7 @@ const handlers = {
   onDesignBadge: noop,
   onChangeEvidencePlan: noop,
   onAddEvidence: noop,
+  onOpenEvidence: noop,
 };
 
 const capturedTwo: FocusCapturedEvidenceItem[] = [

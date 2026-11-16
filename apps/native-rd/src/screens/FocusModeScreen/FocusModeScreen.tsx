@@ -284,9 +284,9 @@ function FocusContent({
     [allStepEvidenceRows, currentStepId],
   );
 
-  // Read-only chips for the captured rail — what is present, never what is
-  // absent (#360). Each carries its caption so a chip can show it instead of
-  // the bare type label.
+  // Chips for the captured rail — what is present, never what is absent
+  // (#360). Each carries its caption so a chip can show it instead of the bare
+  // type label, and its row id so a tap opens that piece in the viewer (#696).
   const capturedEvidence = useMemo<FocusCapturedEvidenceItem[]>(
     () =>
       currentStepEvidenceRows
@@ -545,6 +545,19 @@ function FocusContent({
     [currentStepId, plannedEvidenceTypes, runStepMutation],
   );
 
+  // A captured chip opens the shared viewer, the route Timeline evidence cards
+  // use (#696). It is pushed over this screen and changes no step, so back
+  // lands on the same card: the pin and the derived step both survive.
+  const handleOpenEvidence = useCallback(
+    (evidenceId: string) => {
+      navigation.navigate("EvidenceViewer", {
+        goalId,
+        initialEvidenceId: evidenceId,
+      });
+    },
+    [goalId, navigation],
+  );
+
   const handleTimelineTap = useCallback(() => {
     navigation.navigate("TimelineJourney", { goalId });
   }, [goalId, navigation]);
@@ -620,6 +633,7 @@ function FocusContent({
                 title={currentStepTitle}
                 capturedEvidence={capturedEvidence}
                 onReopen={handleReopen}
+                onOpenEvidence={handleOpenEvidence}
               />
             ) : currentStep.status === StepStatus.paused ? (
               <FocusCurrentTaskCard
@@ -639,6 +653,7 @@ function FocusContent({
                   setIsPlanSheetOpen(true);
                 }}
                 onAddEvidence={handleAddEvidence}
+                onOpenEvidence={handleOpenEvidence}
                 onPause={handlePause}
                 onMarkComplete={handleMarkComplete}
                 afterStep={band?.afterStep}

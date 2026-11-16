@@ -148,6 +148,7 @@ function renderFocus(band: BandProps) {
       plannedEvidenceTypes={["text"]}
       onChangeEvidencePlan={jest.fn()}
       onAddEvidence={jest.fn()}
+      onOpenEvidence={jest.fn()}
       onPause={jest.fn()}
       onMarkComplete={jest.fn()}
       {...band}

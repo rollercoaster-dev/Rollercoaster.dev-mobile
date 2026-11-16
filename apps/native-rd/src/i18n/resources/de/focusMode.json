@@ -9,7 +9,8 @@
   "evidenceRail": {
     "zoneLabel": "Nachweis",
     "capturedChip": "{{type}} erfasst",
-    "capturedChipNamed": "{{caption}}, {{type}} erfasst"
+    "capturedChipNamed": "{{caption}}, {{type}} erfasst",
+    "openHint": "Öffnet diesen Nachweis zum Ansehen"
   },
   "band": {
     "childContext": "↳ {{parent}} · Teil {{index}} von {{total}}"
