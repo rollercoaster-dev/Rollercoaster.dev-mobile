@@ -87,9 +87,7 @@ export function pseudoize(value: string): string {
 }
 
 export type TranslationTree =
-  | string
-  | TranslationTree[]
-  | { [key: string]: TranslationTree };
+  string | TranslationTree[] | { [key: string]: TranslationTree };
 
 export function pseudoizeTree(input: TranslationTree): TranslationTree {
   if (typeof input === "string") return pseudoize(input);

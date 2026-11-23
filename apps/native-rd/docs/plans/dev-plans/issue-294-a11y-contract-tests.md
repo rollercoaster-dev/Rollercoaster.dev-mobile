@@ -237,12 +237,12 @@ Approximate lines: ~50.
 - [ ] Append to `contrastPairs` array in `contrastPairs.ts`:
       `ts
 {
-  key: "subStepRail",
-  label: "sub-step left rail",
-  getColors: (t) => ({
-    fg: t.colors.border,
-    bg: t.colors.background,
-  }),
+key: "subStepRail",
+label: "sub-step left rail",
+getColors: (t) => ({
+fg: t.colors.border,
+bg: t.colors.background,
+}),
 }
 `
       The left rail is `backgroundColor: theme.colors.border` rendered on

@@ -15,14 +15,14 @@ partly stale vs. the new three-line structure; the Förderlinien comparison page
   via other income or a bank statement.
 - Payout quarterly in arrears. Overheads: flat 5 % of personnel costs.
 - Three funding lines, same money/dates:
-  | | Innovation | Up and Coming | Resilienz |
-  |---|---|---|---|
-  | Focus | Datensicherheit + Software-Infrastruktur | same | decentralised/FOSS alternatives to Big Tech |
-  | Must be innovative | yes | yes | not necessarily |
-  | Dev share of hours | ~80 % | ~80 % | ~50 % |
-  | Second Stage application | optional | optional | **mandatory** |
-  | Extra bar | — | ≤25 y/o at 01.06 or in CS study/training | must be anchored in a community |
-  | Slots/year | up to 30 | — | up to 10 |
+  |                          | Innovation                               | Up and Coming                            | Resilienz                                   |
+  | ------------------------ | ---------------------------------------- | ---------------------------------------- | ------------------------------------------- |
+  | Focus                    | Datensicherheit + Software-Infrastruktur | same                                     | decentralised/FOSS alternatives to Big Tech |
+  | Must be innovative       | yes                                      | yes                                      | not necessarily                             |
+  | Dev share of hours       | ~80 %                                    | ~80 %                                    | ~50 %                                       |
+  | Second Stage application | optional                                 | optional                                 | **mandatory**                               |
+  | Extra bar                | —                                        | ≤25 y/o at 01.06 or in CS study/training | must be anchored in a community             |
+  | Slots/year               | up to 30                                 | —                                        | up to 10                                    |
 
 ## Hard formal requirements
 

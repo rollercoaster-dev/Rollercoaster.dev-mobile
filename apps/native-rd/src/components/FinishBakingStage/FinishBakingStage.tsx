@@ -26,10 +26,7 @@ export type FinishBakingPhase = "building" | "signing" | "baking" | "storing";
  * modulo that one rename).
  */
 export type FinishBakingStatus =
-  | FinishBakingPhase
-  | "no-key"
-  | "error"
-  | "success";
+  FinishBakingPhase | "no-key" | "error" | "success";
 
 export interface FinishBakingStageProps {
   /** Badge design to preview while the badge is baking / on success. */

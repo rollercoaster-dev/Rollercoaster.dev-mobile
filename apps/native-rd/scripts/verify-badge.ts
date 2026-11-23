@@ -240,8 +240,7 @@ function verifyIterationASignature(
   // Accept either so a spec-compliant credential routes through the
   // skipped path below instead of a misleading "broken" failure.
   const proof = (Array.isArray(rawProof) ? rawProof[0] : rawProof) as
-    | Record<string, unknown>
-    | undefined;
+    Record<string, unknown> | undefined;
   if (!proof || typeof proof !== "object") {
     return fail("signature.iterationA", "malformed proof shape");
   }
@@ -315,8 +314,7 @@ function conformanceChecks(
   jws: ParsedJws | null,
 ): CheckResult[] {
   const cs = credential.credentialSubject as
-    | Record<string, unknown>
-    | undefined;
+    Record<string, unknown> | undefined;
   const ach = cs?.achievement as Record<string, unknown> | undefined;
   const proof = credential.proof;
 
@@ -381,8 +379,7 @@ function conformanceChecks(
   ]);
   const EXTERNAL_PROOF_ALGORITHMS = new Set<string>(["ES256", "RS256"]);
   const proofObj = (Array.isArray(proof) ? proof[0] : proof) as
-    | Record<string, unknown>
-    | undefined;
+    Record<string, unknown> | undefined;
   const cryptosuite = proofObj?.cryptosuite;
   const proofType = proofObj?.type;
 

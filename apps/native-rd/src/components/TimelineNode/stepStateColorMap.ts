@@ -20,10 +20,7 @@ import type { ComposedTheme } from "../../themes/compose";
 
 /** The four step states this map covers (UI-layer, superset of DB StepStatus). */
 export type StepStateMapKey =
-  | "pending"
-  | "in-progress"
-  | "paused"
-  | "completed";
+  "pending" | "in-progress" | "paused" | "completed";
 
 /**
  * Fully-namespaced i18n key for a state-word badge label. Typed as a template

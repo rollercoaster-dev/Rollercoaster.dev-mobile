@@ -18,8 +18,7 @@ export function closestStyle(
   let node: StyledNode | null = el.parent;
   while (node) {
     const flat = StyleSheet.flatten(node.props.style as never) as
-      | Record<string, unknown>
-      | undefined;
+      Record<string, unknown> | undefined;
     if (flat && key in flat) return flat;
     node = node.parent;
   }

@@ -37,11 +37,7 @@ function makeDesign(overrides: Partial<BadgeDesign> = {}): BadgeDesign {
 }
 
 type AccordionSectionId =
-  | "shape"
-  | "frame"
-  | "center"
-  | "colors"
-  | "inscriptions";
+  "shape" | "frame" | "center" | "colors" | "inscriptions";
 
 // ---------------------------------------------------------------------------
 // Interactive composer — mirrors BadgeDesignerScreen's single-open accordion

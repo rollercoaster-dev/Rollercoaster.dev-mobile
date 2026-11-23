@@ -16,8 +16,7 @@ import type {
 import { validateTemplate } from "./validateTemplate";
 
 export type InsertTemplateResult =
-  | { ok: true; goalId: GoalId }
-  | { ok: false; error: unknown };
+  { ok: true; goalId: GoalId } | { ok: false; error: unknown };
 
 /** The local day `days` after `now`, as the `DateIso` a due date is stored as. */
 function dayOffsetToDateIso(now: Date, days: number): DateIso {

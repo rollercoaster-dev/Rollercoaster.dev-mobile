@@ -137,8 +137,7 @@ jest.mock("../../../db", () => ({
     afterStepTitle:
       step.afterStepId && step.afterStepId !== step.id
         ? ((goalSteps.find((s) => s.id === step.afterStepId)?.title as
-            | string
-            | undefined) ?? null)
+            string | undefined) ?? null)
         : null,
     waitingOnLabel: step.waitingOnLabel ?? null,
     waitingOnExpectedAt: step.waitingOnExpectedAt ?? null,

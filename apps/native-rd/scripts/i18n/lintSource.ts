@@ -34,9 +34,7 @@ import { join } from "node:path";
 const PLACEHOLDER_RE = /\{\{([^}]+)\}\}/g;
 
 export type FindingCategory =
-  | "bare-string"
-  | "placeholder-conflict"
-  | "banned-phrasing";
+  "bare-string" | "placeholder-conflict" | "banned-phrasing";
 
 export type Finding = {
   category: FindingCategory;
