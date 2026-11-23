@@ -78,19 +78,15 @@ export function buildEditGoalSteps(
     // Sub-steps are full timing participants (#575/D4), so everything the
     // parent row gets, a sub-row gets too — including the chips and status
     // #575 added to the shape but left for this issue to populate.
-    subSteps: root.children.map(
-      (child): EditGoalSubStep => ({
-        id: child.id,
-        title: child.title ?? "",
-        plannedEvidenceTypes: toPlannedEvidenceTypes(
-          child.plannedEvidenceTypes,
-        ),
-        dateDepChips: buildDateDepChips(child, stepRows, t, language, now),
-        isCompleted: child.status === StepStatus.completed,
-        timing: buildTiming(child, population),
-        description: child.description ?? null,
-      }),
-    ),
+    subSteps: root.children.map((child): EditGoalSubStep => ({
+      id: child.id,
+      title: child.title ?? "",
+      plannedEvidenceTypes: toPlannedEvidenceTypes(child.plannedEvidenceTypes),
+      dateDepChips: buildDateDepChips(child, stepRows, t, language, now),
+      isCompleted: child.status === StepStatus.completed,
+      timing: buildTiming(child, population),
+      description: child.description ?? null,
+    })),
   }));
 }
 

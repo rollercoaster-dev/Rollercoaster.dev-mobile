@@ -49,11 +49,7 @@ const LARGE_TYPE_SUBTITLE_LINES = 3;
 
 /** The five accordion sections, in top-to-bottom order. */
 export type FinishDesignSection =
-  | "shape"
-  | "frame"
-  | "center"
-  | "colors"
-  | "inscriptions";
+  "shape" | "frame" | "center" | "colors" | "inscriptions";
 
 const DEFAULT_BANNER = { text: "", position: BannerPosition.top } as const;
 

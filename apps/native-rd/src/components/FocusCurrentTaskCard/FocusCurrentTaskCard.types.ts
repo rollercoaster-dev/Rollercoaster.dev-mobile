@@ -9,10 +9,7 @@ import type { FocusCapturedEvidenceItem } from "./FocusCurrentTaskCard.parts";
  * `all-complete` has none either.
  */
 export type FocusCardStatus =
-  | "in-progress"
-  | "paused"
-  | "completed"
-  | "all-complete";
+  "in-progress" | "paused" | "completed" | "all-complete";
 
 /** Fields every variant carries, regardless of status. */
 interface FocusCardBase {

@@ -170,6 +170,7 @@ for the file, not the chat.
 - Experts with errors: …
 - Coverage gaps: <expert: files routed but not in reviewed_files>
 - Files: `<RUN>/findings.json`, `<RUN>/report.md`
+
 </details>
 ```
 

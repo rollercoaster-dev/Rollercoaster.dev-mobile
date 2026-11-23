@@ -575,8 +575,8 @@ implementation detail, not a blocker — but confirm before writing Step 6.
   glyph (⏸ via the map), and the opt-in `showStateBadge` badge wired. **Typed-i18n-key
   fix:** the repo uses i18next typed keys, so `t(badgeI18nKey)` rejected a plain
   `string`. Typed `badgeI18nKey` as the template literal `StepStateBadgeKey =
-\`common:stepCard.status.${StepStateMapKey}\`` — the map stays the source of truth
-  AND `t()` accepts it, matching the existing `t(\`common:modeIndicator.${mode}\`)`pattern (ModeIndicator.tsx). Pseudo regenerated with`gen:pseudo` (generated from
+\`common:stepCard.status.${StepStateMapKey}\``— the map stays the source of truth
+AND`t()`accepts it, matching the existing`t(\`common:modeIndicator.${mode}\`)`pattern (ModeIndicator.tsx). Pseudo regenerated with`gen:pseudo` (generated from
   en, never hand-edited).
 - [2026-06-29] **Step 6 done — story + tests.** `AllThemesMatrix` added (static
   `themes[name]` read, node cells painted via `stepStateNodeBg/Fg` through the map,

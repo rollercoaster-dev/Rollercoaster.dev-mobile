@@ -15,10 +15,7 @@
 import { z } from "zod";
 
 export type ParseErrorReason =
-  | "malformed-json"
-  | "schema-mismatch"
-  | "missing-keys"
-  | "extra-keys";
+  "malformed-json" | "schema-mismatch" | "missing-keys" | "extra-keys";
 
 export type ParseError =
   | { reason: "malformed-json"; detail: string }
@@ -27,8 +24,7 @@ export type ParseError =
   | { reason: "extra-keys"; extraKeys: string[] };
 
 export type ParseResult =
-  | { ok: true; data: Record<string, string> }
-  | { ok: false; error: ParseError };
+  { ok: true; data: Record<string, string> } | { ok: false; error: ParseError };
 
 export const llmResponseSchema = z.record(z.string(), z.string().min(1));
 

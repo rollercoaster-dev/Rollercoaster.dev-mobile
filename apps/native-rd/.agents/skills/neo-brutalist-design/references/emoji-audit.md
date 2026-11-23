@@ -114,9 +114,9 @@ Consumers and independent duplicates:
 | `src/components/EvidenceThumbnail/EvidenceThumbnail.tsx:27-32`    | `📷` `🎤` `📝` `🔗` `📄` `🎬` | **third copy** of the map — diverges from `evidenceIcons.ts` (`file` is `📄` here, `📎` there) |
 | `src/components/TimelineEvidenceCard/TimelineEvidenceCard.tsx:43` | `📄`                          | fallback                                                                                       |
 | `src/screens/CompletionFlowScreen/CompletionFlowScreen.tsx:747`   | `📄`                          | fallback                                                                                       |
-| `src/screens/CaptureFile/CaptureFile.tsx:30-41`                   | `📄` `📕` `🖼` `📊` `📝`      | mime-type → glyph switch                                                                       |
+| `src/screens/CaptureFile/CaptureFile.tsx:30-41`                   | `📄` `📕` `🖼` `📊` `📝`       | mime-type → glyph switch                                                                       |
 | `src/screens/CaptureLinkScreen/CaptureLinkScreen.tsx:117`         | `🔗`                          | hard-coded                                                                                     |
-| `src/screens/VoiceMemoScreen/VoiceMemoScreen.tsx:130`             | `🎙`                          | hard-coded, surrogate-pair escape + `️`                                                         |
+| `src/screens/VoiceMemoScreen/VoiceMemoScreen.tsx:130`             | `🎙`                           | hard-coded, surrogate-pair escape + `️`                                                         |
 | `src/components/EvidenceContent/FileContent.tsx:51`               | `📄`                          | hard-coded                                                                                     |
 
 Suggested Phosphor: `Camera` · `FilmSlate` · `NotePencil` · `Microphone` ·
