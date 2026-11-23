@@ -1,6 +1,5 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { AccessibilityInfo, ActivityIndicator, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { ScreenSubHeader } from "../../components/ScreenHeader";
@@ -13,9 +12,6 @@ import type { GoalId } from "../../db";
 import type { EvidenceViewerScreenProps } from "../../navigation/types";
 import { styles } from "./EvidenceViewerScreen.styles";
 import { ExpandableTitle } from "../../components/ExpandableTitle";
-
-// Hardcoded; useBottomTabBarHeight requires extra Jest ESM transform config.
-const TAB_BAR_HEIGHT = 12;
 
 function ViewerContent({
   goalId,
@@ -100,14 +96,11 @@ function ViewerContent({
 
 export function EvidenceViewerScreen({ route }: EvidenceViewerScreenProps) {
   const navigation = useNavigation();
-  const insets = useSafeAreaInsets();
   const { t } = useTranslation(["evidenceViewer"]);
   const { goalId, initialEvidenceId } = route.params;
 
   return (
-    <View
-      style={[styles.screen, { paddingBottom: TAB_BAR_HEIGHT + insets.bottom }]}
-    >
+    <View style={styles.screen} testID="evidence-viewer-screen">
       <ScreenSubHeader
         label={t("evidenceViewer:title")}
         onBack={() => navigation.goBack()}
