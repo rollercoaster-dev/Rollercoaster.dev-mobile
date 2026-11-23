@@ -920,6 +920,28 @@ describe("BadgeDetailScreen", () => {
       ).toBeOnTheScreen();
     });
 
+    // #698: a three-step goal with four evidence items (one step has a note
+    // and a link) must count four items, never "4 STEPS".
+    it("counts evidence items, not steps, in the proof header and list label", () => {
+      const credential = credentialWith([
+        { id: "urn:ulid:ev-1", type: ["Evidence"], name: "Step one note" },
+        { id: "urn:ulid:ev-2", type: ["Evidence"], name: "Step one link" },
+        { id: "urn:ulid:ev-3", type: ["Evidence"], name: "Step two photo" },
+        { id: "urn:ulid:ev-4", type: ["Evidence"], name: "Step three note" },
+      ]);
+      mockUseQuery.mockReturnValue([makeRow({ credential })]);
+
+      renderWithProviders(
+        <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+      );
+      expect(
+        screen.getByText("THE PROOF · 4 ITEMS · SWIPE →"),
+      ).toBeOnTheScreen();
+      expect(
+        screen.getByLabelText("Proof gallery, 4 evidence items"),
+      ).toBeOnTheScreen();
+    });
+
     // The credential bakes ids as `urn:ulid:<ulid>`, but EvidenceViewer matches
     // the live evidence rows' bare ULID. Passing the prefixed id through would
     // miss and silently land the viewer on the first item, not the tapped one.
