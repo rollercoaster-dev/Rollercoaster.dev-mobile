@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Pressable, TextInput, View } from "react-native";
+import { Pressable, ScrollView, TextInput, View } from "react-native";
 import { KeyboardAvoidingFrame } from "../KeyboardAvoidingFrame";
 import { useUnistyles } from "react-native-unistyles";
 
@@ -89,7 +89,16 @@ export function FinishCelebrateStage({
           so without keyboard avoidance the CTA below it sat under the keyboard
           with no way out. Same shape as the New Goal wizard fix. */}
       <KeyboardAvoidingFrame style={styles.keyboardFrame}>
-        <View style={styles.content}>
+        {/* Scrolls so the headline, summary and note stay reachable when they
+            outgrow the space above the pinned CTA: a small screen at large
+            text, or the keyboard shrinking the frame while the note is open
+            (#694). Short content still centers, as before. */}
+        <ScrollView
+          style={styles.content}
+          contentContainerStyle={styles.contentInner}
+          keyboardShouldPersistTaps="handled"
+          testID="finish-celebrate-scroll"
+        >
           <Text variant="mono" style={styles.eyebrow}>
             {eyebrow}
           </Text>
@@ -139,7 +148,7 @@ export function FinishCelebrateStage({
               </Text>
             </Pressable>
           )}
-        </View>
+        </ScrollView>
 
         <View style={styles.footer}>
           <Button

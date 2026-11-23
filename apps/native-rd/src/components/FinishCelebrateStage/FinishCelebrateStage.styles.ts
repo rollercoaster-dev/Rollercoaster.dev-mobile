@@ -14,8 +14,14 @@ export const styles = StyleSheet.create((theme) => ({
   },
   content: {
     flex: 1,
+  },
+  // flexGrow (not flex) so short content centers in the frame like the old
+  // fixed View did, while tall content grows past it and scrolls.
+  contentInner: {
+    flexGrow: 1,
     justifyContent: "center",
     paddingHorizontal: theme.space[6],
+    paddingVertical: theme.space[4],
   },
   eyebrow: {
     color: theme.colors.success,

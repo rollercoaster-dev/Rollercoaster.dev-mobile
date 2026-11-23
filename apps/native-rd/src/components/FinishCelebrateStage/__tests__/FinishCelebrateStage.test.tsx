@@ -4,6 +4,7 @@ import {
   renderWithProviders,
   screen,
   fireEvent,
+  within,
 } from "../../../__tests__/test-utils";
 import {
   FinishCelebrateStage,
@@ -31,6 +32,21 @@ describe("FinishCelebrateStage", () => {
         "All 5 steps done for Rewire the workshop — with 3 pieces of evidence.",
       ),
     ).toBeOnTheScreen();
+    expect(screen.getByTestId("finish-celebrate-cta")).toBeOnTheScreen();
+  });
+
+  it("scrolls the headline and open note above a pinned CTA (#694)", () => {
+    renderWithProviders(
+      <FinishCelebrateStage {...makeProps({ initialNoteOpen: true })} />,
+    );
+    // At large text, or with the keyboard up, the body can outgrow the frame;
+    // it must scroll while the CTA stays put below it.
+    const scroll = screen.getByTestId("finish-celebrate-scroll");
+    expect(within(scroll).getByText("You did it.")).toBeOnTheScreen();
+    expect(
+      within(scroll).getByTestId("finish-celebrate-note-input"),
+    ).toBeOnTheScreen();
+    expect(within(scroll).queryByTestId("finish-celebrate-cta")).toBeNull();
     expect(screen.getByTestId("finish-celebrate-cta")).toBeOnTheScreen();
   });
 
