@@ -1,5 +1,5 @@
 import React from "react";
-import { AccessibilityInfo } from "react-native";
+import { AccessibilityInfo, StyleSheet } from "react-native";
 import {
   renderWithProviders,
   screen,
@@ -9,6 +9,8 @@ import type { EvidenceViewerScreenProps } from "../../../navigation/types";
 
 import { EvidenceViewerScreen } from "../EvidenceViewerScreen";
 import { i18n } from "../../../i18n";
+import { PILL_LIFT } from "../../../navigation/FocusPillTabBar";
+import { space } from "../../../themes/tokens";
 
 const mockGoBack = jest.fn();
 jest.mock("@react-navigation/native", () => {
@@ -139,6 +141,18 @@ describe("EvidenceViewerScreen", () => {
     mockUseAllEvidenceForGoal.mockReturnValue([ITEMS[0]]);
     renderWithProviders(<EvidenceViewerScreen {...routeProps} />);
     expect(screen.queryByText(/\d \/ \d/)).toBeNull();
+  });
+
+  it("clears the lifted tab pill below the thumbnail strip (#694)", () => {
+    mockUseAllEvidenceForGoal.mockReturnValue(ITEMS);
+    renderWithProviders(<EvidenceViewerScreen {...routeProps} />);
+    // Same pinned-footer contract as FocusModeScreen and BadgeDetailScreen; the
+    // old hardcoded 12pt left the strip's bottom row under the pill.
+    expect(
+      StyleSheet.flatten(
+        screen.getByTestId("evidence-viewer-screen").props.style,
+      ).paddingBottom,
+    ).toBe(PILL_LIFT + space[3]);
   });
 
   it("back button navigates back", () => {

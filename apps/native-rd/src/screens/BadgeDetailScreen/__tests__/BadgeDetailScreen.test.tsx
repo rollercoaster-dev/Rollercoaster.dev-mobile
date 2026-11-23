@@ -1,5 +1,5 @@
 import React from "react";
-import { AccessibilityInfo, Alert } from "react-native";
+import { AccessibilityInfo, Alert, Dimensions } from "react-native";
 import {
   renderWithProviders,
   screen,
@@ -118,6 +118,48 @@ describe("BadgeDetailScreen", () => {
       <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
     );
     expect(screen.getByText("Learn TypeScript")).toBeOnTheScreen();
+  });
+
+  // #694: the hero stays pinned (sticky first child of the scroll) while it
+  // is a modest share of the window, and scrolls with the body once it would
+  // crowd out the proof below it (small screen, large text).
+  const layoutHero = (share: number) =>
+    fireEvent(screen.getByTestId("badge-detail-hero"), "layout", {
+      nativeEvent: {
+        layout: {
+          x: 0,
+          y: 0,
+          width: 400,
+          height: Dimensions.get("window").height * share,
+        },
+      },
+    });
+
+  it.each([
+    ["stays pinned", 0.3, [0]],
+    ["stays pinned at the threshold", 0.45, [0]],
+    ["scrolls with the body", 0.6, undefined],
+  ])("hero %s when it takes %s of the window", (_label, share, sticky) => {
+    mockUseQuery.mockReturnValue([makeRow()]);
+    renderWithProviders(
+      <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+    );
+    layoutHero(share);
+    expect(
+      screen.getByTestId("badge-detail-scroll").props.stickyHeaderIndices,
+    ).toEqual(sticky);
+  });
+
+  it("latches the hero decision on first layout so it never flips back", () => {
+    mockUseQuery.mockReturnValue([makeRow()]);
+    renderWithProviders(
+      <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+    );
+    layoutHero(0.6);
+    layoutHero(0.3);
+    expect(
+      screen.getByTestId("badge-detail-scroll").props.stickyHeaderIndices,
+    ).toBeUndefined();
   });
 
   // The earned date lives in the hero's verifiable chip for credentialed

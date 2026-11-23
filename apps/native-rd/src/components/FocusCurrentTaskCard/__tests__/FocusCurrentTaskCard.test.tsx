@@ -263,6 +263,45 @@ describe("FocusCurrentTaskCard", () => {
       expect(screen.queryByLabelText("Add Photo")).toBeNull();
     });
 
+    it("keeps a per-type invite for each of two outstanding types", () => {
+      renderCard({
+        status: "in-progress",
+        plannedEvidenceTypes: ["photo", "text"],
+        capturedEvidence: [],
+      });
+      expect(screen.getByLabelText("Add Photo")).toBeTruthy();
+      expect(screen.getByLabelText("Add Note")).toBeTruthy();
+      expect(screen.queryByTestId("focus-current-task-add-more")).toBeNull();
+    });
+
+    it("bounds the pinned footer to two buttons when every evidence type is outstanding (#694)", () => {
+      const props = renderCard({
+        status: "in-progress",
+        plannedEvidenceTypes: [
+          "photo",
+          "video",
+          "voice_memo",
+          "text",
+          "link",
+          "file",
+        ],
+        capturedEvidence: [],
+      });
+      expect(screen.getByTestId("focus-current-task-add-photo")).toBeTruthy();
+      for (const type of ["video", "voice_memo", "text", "link", "file"]) {
+        expect(
+          screen.queryByTestId(`focus-current-task-add-${type}`),
+        ).toBeNull();
+      }
+      const pressEvent = { nativeEvent: { target: 7 } };
+      fireEvent.press(
+        screen.getByTestId("focus-current-task-add-more"),
+        pressEvent,
+      );
+      // The generic invite opens the chooser, which offers every type.
+      expect(props.onAddEvidence).toHaveBeenCalledWith(undefined, pressEvent);
+    });
+
     it("reveals Mark complete + generic Add-more once both planned types are captured", () => {
       // Photo + Note planned, both captured: the plan is satisfied. Mark complete
       // leads, a generic "Add more evidence" secondary lets a further piece land,

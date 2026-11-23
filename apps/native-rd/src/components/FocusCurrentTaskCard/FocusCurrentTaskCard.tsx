@@ -37,6 +37,9 @@ export type {
   FocusAllCompleteCardProps,
 };
 
+/** Most per-type "Add {type}" invites the pinned footer shows at once (#694). */
+const MAX_FOOTER_INVITES = 2;
+
 function StepTitlePreview({ title }: { title: string }) {
   return (
     <ExpandableTitle
@@ -131,7 +134,9 @@ function CardShell({
  * every planned type has a captured piece — the app-wide multi-evidence gate
  * (D1, `getMissingQuickEvidenceOptions`), never shown disabled. While the plan
  * is unsatisfied the footer offers one filled-blue "Add {type}" invite per
- * still-needed type (first primary, rest outline, so one primary leads); once
+ * still-needed type (first primary, rest outline, so one primary leads; capped
+ * at MAX_FOOTER_INVITES, past which a generic "Add more evidence" follows the
+ * first invite — #694); once
  * satisfied it becomes "✓ Mark complete" + a generic outline "Add more evidence"
  * so a further piece can still be captured. Nothing frames evidence as
  * missing/needed — the invites simply thin out and vanish as evidence lands.
@@ -176,6 +181,17 @@ function InProgressView({
     normalizedPlannedTypes,
     capturedTypes,
   );
+  // The footer is pinned outside the scrolling body, so its height must stay
+  // bounded at any text size (#694): one button per outstanding type would
+  // stack six large buttons for a six-type plan and bury the body on a small
+  // screen. Up to MAX_FOOTER_INVITES types get their own invite; past that the
+  // first type leads and a generic "Add more evidence" opens the chooser, which
+  // offers every type. Either way the footer holds at most two buttons, the
+  // same as the satisfied state.
+  const overflowsInvites = unsatisfiedTypes.length > MAX_FOOTER_INVITES;
+  const invitedTypes = overflowsInvites
+    ? unsatisfiedTypes.slice(0, 1)
+    : unsatisfiedTypes;
 
   return (
     <CardShell
@@ -245,7 +261,7 @@ function InProgressView({
           </>
         ) : (
           <>
-            {unsatisfiedTypes.map((option, index) => {
+            {invitedTypes.map((option, index) => {
               const primary = index === 0;
               const label = t("focusMode:currentTask.inProgress.addTypeCta", {
                 type: evidenceShortLabel(t, option.type),
@@ -263,6 +279,18 @@ function InProgressView({
                 />
               );
             })}
+            {overflowsInvites ? (
+              <Button
+                onPress={(event) => onAddEvidence(undefined, event)}
+                label={t("focusMode:currentTask.inProgress.addMoreEvidenceCta")}
+                variant="secondary"
+                size="lg"
+                accessibilityLabel={t(
+                  "focusMode:currentTask.inProgress.addMoreEvidenceA11y",
+                )}
+                testID="focus-current-task-add-more"
+              />
+            ) : null}
             <Text variant="body" style={styles.helperLine}>
               {t("focusMode:currentTask.inProgress.helperLine")}
             </Text>

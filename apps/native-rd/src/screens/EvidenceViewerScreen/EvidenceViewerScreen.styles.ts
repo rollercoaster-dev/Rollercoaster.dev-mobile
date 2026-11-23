@@ -1,9 +1,15 @@
 import { StyleSheet } from "react-native-unistyles";
+import { PILL_LIFT } from "../../navigation/FocusPillTabBar";
 
 export const styles = StyleSheet.create((theme) => ({
   screen: {
     flex: 1,
     backgroundColor: theme.colors.background,
+    // The thumbnail strip is pinned to the bottom edge, so the screen clears
+    // the half of the tab pill that sticks up above its own slot — the same
+    // contract FocusModeScreen and BadgeDetailScreen use for their pinned
+    // footers (#694). The slot itself already sits above the safe area.
+    paddingBottom: PILL_LIFT + theme.space[3],
   },
   container: {
     flex: 1,
