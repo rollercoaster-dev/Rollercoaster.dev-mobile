@@ -1,5 +1,5 @@
 import React from "react";
-import { AccessibilityInfo, Alert } from "react-native";
+import { AccessibilityInfo, Alert, Dimensions } from "react-native";
 import {
   renderWithProviders,
   screen,
@@ -118,6 +118,32 @@ describe("BadgeDetailScreen", () => {
       <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
     );
     expect(screen.getByText("Learn TypeScript")).toBeOnTheScreen();
+  });
+
+  // #694: the hero stays pinned while it is a modest share of the window, and
+  // joins the scroll body once it would crowd out the proof below it (small
+  // screen, large text).
+  it.each([
+    ["stays pinned above the scroll", 0.3, false],
+    ["scrolls with the body", 0.6, true],
+  ])("hero %s when it takes %s of the window", (_label, share, scrolls) => {
+    mockUseQuery.mockReturnValue([makeRow()]);
+    renderWithProviders(
+      <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+    );
+    const windowHeight = Dimensions.get("window").height;
+    fireEvent(screen.getByTestId("badge-detail-hero"), "layout", {
+      nativeEvent: {
+        layout: { x: 0, y: 0, width: 400, height: windowHeight * share },
+      },
+    });
+    const scroll = screen.getByTestId("badge-detail-scroll");
+    expect(within(scroll).queryByTestId("badge-detail-hero") !== null).toBe(
+      scrolls,
+    );
+    // Back and ⋯ stay mounted either way.
+    expect(screen.getByTestId("celebration-hero-back")).toBeOnTheScreen();
+    expect(screen.getByTestId("celebration-hero-overflow")).toBeOnTheScreen();
   });
 
   // The earned date lives in the hero's verifiable chip for credentialed

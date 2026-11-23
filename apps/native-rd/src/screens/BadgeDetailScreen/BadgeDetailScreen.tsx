@@ -6,6 +6,7 @@ import {
   Pressable,
   ActivityIndicator,
   Alert,
+  useWindowDimensions,
 } from "react-native";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -73,6 +74,13 @@ const OVERFLOW_POPOVER_TOP_OFFSET = 56;
  * the viewer on the first item instead of the tapped one.
  */
 const EVIDENCE_ID_PREFIX = "urn:ulid:";
+
+/**
+ * Largest share of the window the pinned hero may take before it joins the
+ * scroll body (#694). At large text on a small screen the hero alone runs to
+ * ~450pt, which left the proof body a sliver between it and the Share CTA.
+ */
+const HERO_MAX_WINDOW_SHARE = 0.45;
 
 const logger = new Logger("BadgeDetailScreen");
 
@@ -207,6 +215,8 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
   const shareTrigger = useSheetTrigger();
   const { shouldAnimate } = useAnimationPref();
   const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
+  const [heroHeight, setHeroHeight] = useState<number | null>(null);
   const { theme } = useUnistyles();
   // The celebration band is the first thing under the status bar, so the
   // device top-inset strip App.tsx paints has to be the band's surface — not
@@ -350,6 +360,35 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
     });
   };
 
+  // Pinned, not scrolled, by default: the badge is the thing the screen is
+  // about, so it holds its position while the detail below it moves, and its
+  // back and ⋯ controls double as the screen's chrome. When it would eat more
+  // than HERO_MAX_WINDOW_SHARE of the window (small screen, large text) it
+  // scrolls with the body instead, so the proof body stays readable (#694).
+  const heroScrolls =
+    heroHeight !== null && heroHeight > windowHeight * HERO_MAX_WINDOW_SHARE;
+  const hero = (
+    <View
+      testID="badge-detail-hero"
+      onLayout={(event) => setHeroHeight(event.nativeEvent.layout.height)}
+    >
+      <CelebrationHeroHeader
+        badgeDesign={design}
+        badgeTitle={goalTitle}
+        credentialLabel={credentialLabel}
+        isVerified={isVerified}
+        showConfetti={shouldAnimate}
+        onBack={() => navigation.goBack()}
+        onOverflow={(event) => {
+          shareTrigger.rememberTrigger(event);
+          setShowOverflowMenu(true);
+        }}
+        backAccessibilityLabel={t("badgeDetail:fallback.goBack")}
+        overflowAccessibilityLabel={t("badgeDetail:hero.overflowLabel")}
+      />
+    </View>
+  );
+
   const closeOverflowMenu = () => setShowOverflowMenu(false);
 
   return (
@@ -358,31 +397,16 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
           is open — the one time the hero's back and ⋯ chrome is unreachable.
           The CTA hides itself; the sheet stays outside (#686). */}
       <SheetBackground style={styles.sheetBackground}>
-        {/* Pinned, not scrolled: the badge is the thing the screen is about,
-            so it holds its position while the detail below it moves. Its back
-            and ⋯ controls double as the screen's chrome and must stay
-            reachable. */}
-        <CelebrationHeroHeader
-          badgeDesign={design}
-          badgeTitle={goalTitle}
-          credentialLabel={credentialLabel}
-          isVerified={isVerified}
-          showConfetti={shouldAnimate}
-          onBack={() => navigation.goBack()}
-          onOverflow={(event) => {
-            shareTrigger.rememberTrigger(event);
-            setShowOverflowMenu(true);
-          }}
-          backAccessibilityLabel={t("badgeDetail:fallback.goBack")}
-          overflowAccessibilityLabel={t("badgeDetail:hero.overflowLabel")}
-        />
+        {heroScrolls ? null : hero}
 
         {/* flex:1 so the Share CTA below stays a pinned footer rather than being
             pushed off-screen by tall content. */}
         <ScrollView
           style={styles.scroll}
           contentContainerStyle={styles.scrollContent}
+          testID="badge-detail-scroll"
         >
+          {heroScrolls ? hero : null}
           <View style={styles.body}>
             {/* The hero's chip already carries the earned date for credentialed
                 badges, so this line only fills the gap when there is no chip. */}
