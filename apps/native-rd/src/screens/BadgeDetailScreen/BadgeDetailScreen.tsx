@@ -1,4 +1,4 @@
-import React, { Suspense, useMemo, useState } from "react";
+import React, { Suspense, useMemo, useRef, useState } from "react";
 import {
   View,
   ScrollView,
@@ -81,6 +81,9 @@ const EVIDENCE_ID_PREFIX = "urn:ulid:";
  * ~450pt, which left the proof body a sliver between it and the Share CTA.
  */
 const HERO_MAX_WINDOW_SHARE = 0.45;
+
+/** The hero is the scroll's first child; sticky keeps it pinned. */
+const STICKY_HERO = [0];
 
 const logger = new Logger("BadgeDetailScreen");
 
@@ -216,7 +219,10 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
   const { shouldAnimate } = useAnimationPref();
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
-  const [heroHeight, setHeroHeight] = useState<number | null>(null);
+  // Latched on the hero's first measurement so it never flips back and forth
+  // (a keyboard-driven window resize, a height at the threshold edge).
+  const [heroScrolls, setHeroScrolls] = useState<boolean | null>(null);
+  const scrollRef = useRef<ScrollView>(null);
   const { theme } = useUnistyles();
   // The celebration band is the first thing under the status bar, so the
   // device top-inset strip App.tsx paints has to be the band's surface — not
@@ -365,12 +371,19 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
   // back and ⋯ controls double as the screen's chrome. When it would eat more
   // than HERO_MAX_WINDOW_SHARE of the window (small screen, large text) it
   // scrolls with the body instead, so the proof body stays readable (#694).
-  const heroScrolls =
-    heroHeight !== null && heroHeight > windowHeight * HERO_MAX_WINDOW_SHARE;
+  // One tree either way: the hero is the scroll's first child, made sticky
+  // while pinned, so the switch never remounts it (no confetti replay, no
+  // lost screen-reader focus).
   const hero = (
     <View
       testID="badge-detail-hero"
-      onLayout={(event) => setHeroHeight(event.nativeEvent.layout.height)}
+      onLayout={(event) => {
+        if (heroScrolls !== null) return;
+        setHeroScrolls(
+          event.nativeEvent.layout.height >
+            windowHeight * HERO_MAX_WINDOW_SHARE,
+        );
+      }}
     >
       <CelebrationHeroHeader
         badgeDesign={design}
@@ -381,6 +394,11 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
         onBack={() => navigation.goBack()}
         onOverflow={(event) => {
           shareTrigger.rememberTrigger(event);
+          // The popover hangs from the ⋯ button's top-of-screen position;
+          // a scrolling hero is only there at scroll-top.
+          if (heroScrolls) {
+            scrollRef.current?.scrollTo({ y: 0, animated: false });
+          }
           setShowOverflowMenu(true);
         }}
         backAccessibilityLabel={t("badgeDetail:fallback.goBack")}
@@ -397,16 +415,16 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
           is open — the one time the hero's back and ⋯ chrome is unreachable.
           The CTA hides itself; the sheet stays outside (#686). */}
       <SheetBackground style={styles.sheetBackground}>
-        {heroScrolls ? null : hero}
-
         {/* flex:1 so the Share CTA below stays a pinned footer rather than being
             pushed off-screen by tall content. */}
         <ScrollView
           style={styles.scroll}
           contentContainerStyle={styles.scrollContent}
+          ref={scrollRef}
           testID="badge-detail-scroll"
+          stickyHeaderIndices={heroScrolls ? undefined : STICKY_HERO}
         >
-          {heroScrolls ? hero : null}
+          {hero}
           <View style={styles.body}>
             {/* The hero's chip already carries the earned date for credentialed
                 badges, so this line only fills the gap when there is no chip. */}

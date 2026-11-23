@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { Pressable, ScrollView, TextInput, View } from "react-native";
 import { KeyboardAvoidingFrame } from "../KeyboardAvoidingFrame";
 import { useUnistyles } from "react-native-unistyles";
@@ -82,6 +82,7 @@ export function FinishCelebrateStage({
 }: FinishCelebrateStageProps) {
   const { theme } = useUnistyles();
   const [noteOpen, setNoteOpen] = useState(initialNoteOpen);
+  const scrollRef = useRef<ScrollView>(null);
 
   return (
     <View style={styles.container} testID="finish-celebrate-stage">
@@ -94,6 +95,7 @@ export function FinishCelebrateStage({
             text, or the keyboard shrinking the frame while the note is open
             (#694). Short content still centers, as before. */}
         <ScrollView
+          ref={scrollRef}
           style={styles.content}
           contentContainerStyle={styles.contentInner}
           keyboardShouldPersistTaps="handled"
@@ -119,6 +121,9 @@ export function FinishCelebrateStage({
               value={closingNoteValue}
               onChangeText={onClosingNoteChange}
               onBlur={() => onSaveClosingNote?.(closingNoteValue)}
+              // The note is the last thing in the scroll; bring it into view
+              // when the keyboard shrinks the frame around it (#694).
+              onFocus={() => scrollRef.current?.scrollToEnd({ animated: true })}
               placeholder={closingNotePlaceholder}
               placeholderTextColor={theme.colors.textMuted}
               multiline
