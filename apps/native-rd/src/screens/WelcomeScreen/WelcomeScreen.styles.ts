@@ -14,13 +14,14 @@ export const styles = StyleSheet.create((theme) => ({
     flex: 1,
     gap: theme.space[1],
   },
+  // The hero sits on HeaderBand (chrome.screenHeaderBg), so its ink is the
+  // band's own foreground role, not accentPurpleFg (#758: 1.3:1 in Night Ride).
   heroGreeting: {
-    color: theme.colors.accentPurpleFg,
+    color: theme.chrome.screenHeaderFg,
     textTransform: "uppercase",
-    opacity: 0.85,
   },
   heroTitle: {
-    color: theme.colors.accentPurpleFg,
+    color: theme.chrome.screenHeaderFg,
   },
   body: {
     flex: 1,

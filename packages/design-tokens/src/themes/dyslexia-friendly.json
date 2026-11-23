@@ -48,6 +48,7 @@
     "interactive": {
       "primary": { "$value": "#4e7d9e" },
       "primary-foreground": { "$value": "#ffffff" },
+      "secondary-foreground": { "$value": "#ffffff" },
       "highlight": { "$value": "#3a6280" },
       "highlight-foreground": { "$value": "#ffffff" }
     },
