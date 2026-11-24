@@ -1,5 +1,11 @@
 import React, { useRef, useState } from "react";
-import { View, Alert, ScrollView, type TextInput } from "react-native";
+import {
+  AccessibilityInfo,
+  View,
+  Alert,
+  ScrollView,
+  type TextInput,
+} from "react-native";
 import { KeyboardAvoidingFrame } from "../../components/KeyboardAvoidingFrame";
 import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
@@ -55,15 +61,19 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
   }
 
   function validateUrl(): boolean {
-    if (!trimmedUrl) {
-      setUrlError(t("captureLink:validation.urlRequired"));
-      return false;
+    const message = !trimmedUrl
+      ? t("captureLink:validation.urlRequired")
+      : !hasValidUrl
+        ? t("captureLink:validation.urlInvalid")
+        : undefined;
+    if (!message) return true;
+    // FieldError announces a new message; a repeat tap with the same message
+    // re-renders nothing, so say it again here or the tap is silent (#693).
+    if (message === urlError) {
+      AccessibilityInfo.announceForAccessibility(message);
     }
-    if (!hasValidUrl) {
-      setUrlError(t("captureLink:validation.urlInvalid"));
-      return false;
-    }
-    return true;
+    setUrlError(message);
+    return false;
   }
 
   function handleSave() {

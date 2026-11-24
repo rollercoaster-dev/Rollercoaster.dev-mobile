@@ -112,7 +112,8 @@
     "plannedEvidenceTypes": "Geplante Nachweistypen",
     "selectEvidenceType": "Wähle {{label}}",
     "deselectEvidenceType": "Deselektiere {{label}}",
-    "switchToEvidenceType": "Zu {{label}} wechseln"
+    "switchToEvidenceType": "Zu {{label}} wechseln",
+    "fieldWithError": "{{label}}, {{error}}"
   },
   "stepCard": {
     "status": {

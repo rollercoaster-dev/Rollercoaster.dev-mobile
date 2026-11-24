@@ -16,9 +16,16 @@ describe("FieldError", () => {
     announce.mockRestore();
   });
 
-  it("shows the message as text, not only as color", () => {
-    renderWithProviders(<FieldError message="Add a web address" />);
+  // Color is never the only signal: words plus an icon, the icon hidden
+  // from screen readers since the message already says it.
+  it("shows the message as text beside a hidden warning icon", () => {
+    renderWithProviders(
+      <FieldError message="Add a web address" testID="url-error" />,
+    );
     expect(screen.getByText("Add a web address")).toBeOnTheScreen();
+    expect(
+      screen.getByTestId("url-error-icon", { includeHiddenElements: true }),
+    ).toHaveProp("accessibilityElementsHidden", true);
   });
 
   it("announces the message when it appears", () => {

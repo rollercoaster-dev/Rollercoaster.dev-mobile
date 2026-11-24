@@ -154,6 +154,7 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
               styles.textInput,
               isLargeType && styles.textInputLargeType,
               isFocused && styles.textInputFocused,
+              isOverLimit && styles.textInputError,
             ]}
             placeholder={t("captureText:input.placeholder")}
             placeholderTextColor={theme.colors.textMuted}
@@ -168,11 +169,22 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
             accessible
             accessibilityLabel={
               overLimitMessage
-                ? `${t("captureText:input.label")}, ${overLimitMessage}`
+                ? t("common:a11y.fieldWithError", {
+                    label: t("captureText:input.label"),
+                    error: overLimitMessage,
+                  })
                 : t("captureText:input.label")
             }
             accessibilityHint={t("captureText:input.hint")}
           />
+
+          {/* Inside the scroll so it stays reachable at large type. */}
+          {overLimitMessage ? (
+            <FieldError
+              message={overLimitMessage}
+              testID="capture-text-over-limit"
+            />
+          ) : null}
 
           <View style={styles.captionContainer}>
             <Input
@@ -186,13 +198,6 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
             />
           </View>
         </ScrollAtLargeType>
-
-        {overLimitMessage ? (
-          <FieldError
-            message={overLimitMessage}
-            testID="capture-text-over-limit"
-          />
-        ) : null}
 
         <View style={styles.footer}>
           <Text

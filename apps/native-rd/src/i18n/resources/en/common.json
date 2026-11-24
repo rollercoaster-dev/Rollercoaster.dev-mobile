@@ -29,12 +29,30 @@
     }
   },
   "evidenceTypes": {
-    "photo": { "label": "Photo", "shortLabel": "Photo" },
-    "video": { "label": "Video", "shortLabel": "Video" },
-    "voice_memo": { "label": "Audio", "shortLabel": "Audio" },
-    "text": { "label": "Note", "shortLabel": "Note" },
-    "link": { "label": "Link", "shortLabel": "Link" },
-    "file": { "label": "File", "shortLabel": "File" }
+    "photo": {
+      "label": "Photo",
+      "shortLabel": "Photo"
+    },
+    "video": {
+      "label": "Video",
+      "shortLabel": "Video"
+    },
+    "voice_memo": {
+      "label": "Audio",
+      "shortLabel": "Audio"
+    },
+    "text": {
+      "label": "Note",
+      "shortLabel": "Note"
+    },
+    "link": {
+      "label": "Link",
+      "shortLabel": "Link"
+    },
+    "file": {
+      "label": "File",
+      "shortLabel": "File"
+    }
   },
   "evidenceTypePicker": {
     "addEvidence": "Add evidence",
@@ -94,7 +112,8 @@
     "plannedEvidenceTypes": "Planned evidence types",
     "selectEvidenceType": "Select {{label}}",
     "deselectEvidenceType": "Deselect {{label}}",
-    "switchToEvidenceType": "Switch to {{label}}"
+    "switchToEvidenceType": "Switch to {{label}}",
+    "fieldWithError": "{{label}}, {{error}}"
   },
   "stepCard": {
     "status": {

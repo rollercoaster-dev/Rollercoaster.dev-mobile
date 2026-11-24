@@ -30,6 +30,7 @@ export function FieldError({ message, testID }: FieldErrorProps) {
     <View style={styles.row} testID={testID}>
       <View
         style={styles.icon}
+        testID={testID ? `${testID}-icon` : "field-error-icon"}
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
       >

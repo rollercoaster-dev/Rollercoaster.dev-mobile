@@ -15,8 +15,8 @@
     "save": "Save Link"
   },
   "validation": {
-    "urlRequired": "Please enter a URL",
-    "urlInvalid": "Please enter a valid URL (e.g. https://example.com)"
+    "urlRequired": "Add a web address to save this link.",
+    "urlInvalid": "That doesn't look like a web address yet. Try one like https://example.com"
   },
   "errors": {
     "couldNotSaveTitle": "Could not save link",

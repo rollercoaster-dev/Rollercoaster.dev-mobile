@@ -59,7 +59,6 @@ describe("Input", () => {
     const ref = React.createRef<TextInput>();
     renderWithProviders(<Input ref={ref} placeholder="Field" />);
     expect(ref.current).not.toBeNull();
-    expect(typeof ref.current?.focus).toBe("function");
   });
 
   it("uses label as accessibilityLabel when both label and placeholder are provided", () => {

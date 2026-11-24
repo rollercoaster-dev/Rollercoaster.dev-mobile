@@ -15,8 +15,8 @@
     "save": "Link speichern"
   },
   "validation": {
-    "urlRequired": "Gib eine URL ein",
-    "urlInvalid": "Gib eine gültige URL ein (z.B. https://example.com)"
+    "urlRequired": "Gib eine Webadresse ein, um den Link zu speichern.",
+    "urlInvalid": "Das sieht noch nicht wie eine Webadresse aus. Versuch es z. B. mit https://example.com"
   },
   "errors": {
     "couldNotSaveTitle": "Link konnte nicht gespeichert werden",

@@ -340,7 +340,12 @@ describe("CaptureTextNote", () => {
     expect(screen.getByText(message)).toBeOnTheScreen();
     expect(
       screen.getByTestId("capture-text-body").props.accessibilityLabel,
-    ).toBe(`${i18n.t("captureText:input.label")}, ${message}`);
+    ).toBe(
+      i18n.t("common:a11y.fieldWithError", {
+        label: i18n.t("captureText:input.label"),
+        error: message,
+      }),
+    );
 
     fireEvent.changeText(
       screen.getByTestId("capture-text-body"),
