@@ -15,6 +15,7 @@ import { useUnistyles } from "react-native-unistyles";
 import { Text } from "../../components/Text";
 import { Button } from "../../components/Button";
 import { Input } from "../../components/Input";
+import { FieldError } from "../../components/FieldError";
 import { ScreenSubHeader } from "../../components/ScreenHeader";
 import { ScrollAtLargeType } from "../../components/ScrollAtLargeType";
 import { useTypeScale } from "../../hooks/useTypeScale";
@@ -92,6 +93,10 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
   const charCount = trimmedContent.length;
   const isNearLimit = charCount >= WARNING_THRESHOLD;
   const isOverLimit = charCount > MAX_CONTENT_LENGTH;
+  // Over the limit Save is disabled; this says why, in words (#693).
+  const overLimitMessage = isOverLimit
+    ? t("captureText:validation.overLimit", { max: MAX_CONTENT_LENGTH })
+    : undefined;
 
   function handleSave() {
     if (!canSave || saving) return;
@@ -149,6 +154,7 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
               styles.textInput,
               isLargeType && styles.textInputLargeType,
               isFocused && styles.textInputFocused,
+              isOverLimit && styles.textInputError,
             ]}
             placeholder={t("captureText:input.placeholder")}
             placeholderTextColor={theme.colors.textMuted}
@@ -161,9 +167,24 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
             autoFocus
             maxLength={MAX_CONTENT_LENGTH + 100}
             accessible
-            accessibilityLabel={t("captureText:input.label")}
+            accessibilityLabel={
+              overLimitMessage
+                ? t("common:a11y.fieldWithError", {
+                    label: t("captureText:input.label"),
+                    error: overLimitMessage,
+                  })
+                : t("captureText:input.label")
+            }
             accessibilityHint={t("captureText:input.hint")}
           />
+
+          {/* Inside the scroll so it stays reachable at large type. */}
+          {overLimitMessage ? (
+            <FieldError
+              message={overLimitMessage}
+              testID="capture-text-over-limit"
+            />
+          ) : null}
 
           <View style={styles.captionContainer}>
             <Input

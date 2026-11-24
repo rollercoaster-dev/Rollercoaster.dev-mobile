@@ -25,12 +25,9 @@ export const styles = StyleSheet.create((theme) => ({
   inputFocused: {
     borderColor: theme.colors.focusRing,
   },
+  // Semantic error border (>= 3:1 non-text in every theme); the FieldError
+  // icon and message below carry the meaning without color (#693).
   inputError: {
-    borderColor: theme.colors.accentPrimary,
-  },
-  error: {
-    fontSize: theme.size.xs,
-    fontFamily: theme.fontFamily.body,
-    color: theme.colors.accentPrimary,
+    borderColor: theme.colors.error,
   },
 }));

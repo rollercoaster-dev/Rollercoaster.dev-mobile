@@ -12,6 +12,9 @@
   "charCount": {
     "a11y": "{{count}} of {{max}} characters used"
   },
+  "validation": {
+    "overLimit": "This note is longer than {{max}} characters. Shorten it a little to save it."
+  },
   "actions": {
     "save": "Save Note"
   },

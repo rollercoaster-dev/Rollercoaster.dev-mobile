@@ -1,5 +1,5 @@
 import React from "react";
-import { Alert, StyleSheet } from "react-native";
+import { AccessibilityInfo, Alert, StyleSheet, TextInput } from "react-native";
 import { usePreventRemove } from "@react-navigation/native";
 import {
   renderWithProviders,
@@ -158,6 +158,42 @@ describe("CaptureLinkScreen", () => {
     expect(mockCreateEvidence).not.toHaveBeenCalled();
   });
 
+  // #693: a failed save puts focus back on the field that needs the fix.
+  // Relies on the RN jest TextInput mock (@react-native/jest-preset) sharing
+  // one `focus` jest.fn across instances; `mock.contexts` (the `this` of each
+  // call) says which field was focused. The isMockFunction guard fails loudly
+  // if an RN upgrade changes that mock.
+  it("moves focus to the URL field when save fails validation", () => {
+    const focus = (TextInput.prototype as unknown as { focus: jest.Mock })
+      .focus;
+    expect(jest.isMockFunction(focus)).toBe(true);
+    focus.mockClear();
+    renderScreen();
+
+    fireEvent.press(screen.getByText(i18n.t("captureLink:actions.save")));
+
+    expect(focus).toHaveBeenCalledTimes(1);
+    expect(focus.mock.contexts[0].props.testID).toBe("capture-link-url");
+  });
+
+  // #693: tapping Save again with the same problem re-renders nothing, so
+  // the screen repeats the message or a screen-reader user hears silence.
+  it("re-announces the error when Save fails again unchanged", () => {
+    const announce = jest
+      .spyOn(AccessibilityInfo, "announceForAccessibility")
+      .mockImplementation(() => {});
+    renderScreen();
+    const message = i18n.t("captureLink:validation.urlRequired");
+
+    fireEvent.press(screen.getByText(i18n.t("captureLink:actions.save")));
+    fireEvent.press(screen.getByText(i18n.t("captureLink:actions.save")));
+
+    expect(
+      announce.mock.calls.filter(([text]) => text === message),
+    ).toHaveLength(2);
+    announce.mockRestore();
+  });
+
   it("clears validation error when user types", () => {
     renderScreen();
 
@@ -168,14 +204,15 @@ describe("CaptureLinkScreen", () => {
     ).toBeTruthy();
 
     // Start typing to clear error
-    fireEvent.changeText(
-      screen.getByLabelText(i18n.t("captureLink:urlInput.label")),
-      "h",
-    );
+    fireEvent.changeText(screen.getByTestId("capture-link-url"), "h");
 
     expect(
       screen.queryByText(i18n.t("captureLink:validation.urlRequired")),
     ).toBeNull();
+    // The field's name drops the error too, once it is fixed.
+    expect(
+      screen.getByLabelText(i18n.t("captureLink:urlInput.label")),
+    ).toBeOnTheScreen();
   });
 
   it("saves link evidence with goalId and navigates back", () => {

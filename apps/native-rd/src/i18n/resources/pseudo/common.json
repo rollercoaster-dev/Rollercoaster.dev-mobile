@@ -112,7 +112,8 @@
     "plannedEvidenceTypes": "[Þĺàññêđ êṽïđêñçê ţýþêš·········]",
     "selectEvidenceType": "[Šêĺêçţ {{label}}······]",
     "deselectEvidenceType": "[Đêšêĺêçţ {{label}}·······]",
-    "switchToEvidenceType": "[Šŵïţçĥ ţø {{label}}········]"
+    "switchToEvidenceType": "[Šŵïţçĥ ţø {{label}}········]",
+    "fieldWithError": "[{{label}}, {{error}}········]"
   },
   "stepCard": {
     "status": {

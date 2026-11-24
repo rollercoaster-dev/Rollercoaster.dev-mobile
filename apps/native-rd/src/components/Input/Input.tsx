@@ -1,15 +1,20 @@
 import React, { useState } from "react";
 import { View, TextInput, type TextInputProps } from "react-native";
 import { useUnistyles } from "react-native-unistyles";
+import { useTranslation } from "react-i18next";
 import { styles } from "./Input.styles";
 import { Text } from "../Text";
+import { FieldError } from "../FieldError";
 import { useThemeScale } from "../../hooks/useTypeScale";
 import { capFor } from "../../utils/typeScale";
 
 export interface InputProps extends Omit<TextInputProps, "style"> {
   label?: string;
+  /** Inline validation message; announced and added to the field's name. */
   error?: string;
   testID?: string;
+  /** React 19 passes `ref` as a prop; lets screens focus the field (#693). */
+  ref?: React.Ref<TextInput>;
 }
 
 export function Input({
@@ -20,11 +25,15 @@ export function Input({
   error,
   testID,
   maxFontSizeMultiplier,
+  accessibilityLabel,
+  ref,
   ...rest
 }: InputProps) {
   const { theme } = useUnistyles();
   const themeScale = useThemeScale();
   const [focused, setFocused] = useState(false);
+  const { t } = useTranslation(["common"]);
+  const name = accessibilityLabel ?? label ?? placeholder;
 
   return (
     <View style={styles.container}>
@@ -34,6 +43,7 @@ export function Input({
         </Text>
       )}
       <TextInput
+        ref={ref}
         style={[
           styles.input,
           focused && styles.inputFocused,
@@ -50,15 +60,20 @@ export function Input({
         onBlur={() => setFocused(false)}
         testID={testID}
         accessible
-        accessibilityLabel={label ?? placeholder}
+        accessibilityLabel={
+          error && name
+            ? t("common:a11y.fieldWithError", { label: name, error })
+            : name
+        }
         accessibilityState={{ disabled: rest.editable === false }}
         {...rest}
       />
-      {error && (
-        <Text variant="caption" style={styles.error}>
-          {error}
-        </Text>
-      )}
+      {error ? (
+        <FieldError
+          message={error}
+          testID={testID ? `${testID}-error` : undefined}
+        />
+      ) : null}
     </View>
   );
 }

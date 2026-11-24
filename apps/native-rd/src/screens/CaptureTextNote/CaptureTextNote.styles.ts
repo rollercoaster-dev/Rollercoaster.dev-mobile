@@ -45,6 +45,11 @@ export const styles = StyleSheet.create((theme) => ({
   textInputFocused: {
     borderColor: theme.colors.focusRing,
   },
+  // Same error border as the shared Input (#693); listed after focused so
+  // it wins while the note is over the limit.
+  textInputError: {
+    borderColor: theme.colors.error,
+  },
   footer: {
     flexDirection: "row",
     justifyContent: "space-between",

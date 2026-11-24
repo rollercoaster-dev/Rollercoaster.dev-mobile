@@ -4,6 +4,7 @@ import {
   screen,
   fireEvent,
 } from "../../../__tests__/test-utils";
+import { TextInput } from "react-native";
 import { Input } from "../Input";
 import { composeTheme } from "../../../themes/compose";
 
@@ -43,6 +44,21 @@ describe("Input", () => {
   it("does not render error element when no error", () => {
     renderWithProviders(<Input placeholder="Field" />);
     expect(screen.queryByText("Required field")).toBeNull();
+  });
+
+  // #693: the error is tied to the field, so a screen reader reading the
+  // field hears why it needs attention, not just its name.
+  it("adds the error to the field's accessible name", () => {
+    renderWithProviders(
+      <Input label="URL" placeholder="https://" error="Please enter a URL" />,
+    );
+    expect(screen.getByLabelText("URL, Please enter a URL")).toBeOnTheScreen();
+  });
+
+  it("forwards ref to the text field so screens can focus it", () => {
+    const ref = React.createRef<TextInput>();
+    renderWithProviders(<Input ref={ref} placeholder="Field" />);
+    expect(ref.current).not.toBeNull();
   });
 
   it("uses label as accessibilityLabel when both label and placeholder are provided", () => {

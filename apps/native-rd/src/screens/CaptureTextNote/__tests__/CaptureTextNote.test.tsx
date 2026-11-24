@@ -325,6 +325,38 @@ describe("CaptureTextNote", () => {
     ).toBe(true);
   });
 
+  // #693: over the limit, Save is disabled; the reason is shown in words,
+  // tied to the note field, and goes away once the note fits again.
+  it("explains why Save is disabled over the limit, and clears when fixed", () => {
+    renderWithProviders(
+      <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
+    );
+    const message = i18n.t("captureText:validation.overLimit", { max: MAX });
+
+    fireEvent.changeText(
+      screen.getByTestId("capture-text-body"),
+      "a".repeat(MAX + 1),
+    );
+    expect(screen.getByText(message)).toBeOnTheScreen();
+    expect(
+      screen.getByTestId("capture-text-body").props.accessibilityLabel,
+    ).toBe(
+      i18n.t("common:a11y.fieldWithError", {
+        label: i18n.t("captureText:input.label"),
+        error: message,
+      }),
+    );
+
+    fireEvent.changeText(
+      screen.getByTestId("capture-text-body"),
+      "a".repeat(MAX),
+    );
+    expect(screen.queryByTestId("capture-text-over-limit")).toBeNull();
+    expect(
+      screen.getByTestId("capture-text-body").props.accessibilityLabel,
+    ).toBe(i18n.t("captureText:input.label"));
+  });
+
   it("trims content before saving", () => {
     renderWithProviders(
       <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
