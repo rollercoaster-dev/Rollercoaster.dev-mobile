@@ -381,7 +381,7 @@ describe("TimelineJourneyScreen", () => {
 
     // Side by side, the buttons leave the title a sliver and it breaks mid-word.
     it("drops the actions below the title at accessibility sizes", () => {
-      mockFontScale(2.0);
+      mockFontScale(2.35);
       setupQueries();
       renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
       expect(headerDirection()).toBe("column");

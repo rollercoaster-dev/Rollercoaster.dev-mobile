@@ -82,16 +82,9 @@ function renderCard(overrides: TestOverrides = {}) {
 }
 
 describe("FocusCurrentTaskCard", () => {
-  // 2.35 is the largest size #746 audits: the card must still offer the full
-  // title there rather than forcing it to stay truncated.
-  it.each(
-    (["in-progress", "paused", "completed"] as FocusCardStatus[]).flatMap(
-      (status) => [1, 2.35].map((fontScale) => [status, fontScale] as const),
-    ),
-  )(
-    "%s bounds a long step title and expands it in place at fontScale %s",
-    (status, fontScale) => {
-      mockFontScale(fontScale);
+  it.each(["in-progress", "paused", "completed"] as FocusCardStatus[])(
+    "%s bounds a long step title and expands it in place",
+    (status) => {
       const title =
         "A detailed step title that would fill the card at large text";
       renderCard({ status, title, capturedEvidence: captured });
@@ -113,6 +106,29 @@ describe("FocusCurrentTaskCard", () => {
       ).toBeUndefined();
     },
   );
+
+  // #746: at the largest audited size the card must still clamp-then-expand,
+  // never force the title to stay truncated.
+  it("keeps a long step title expandable at fontScale 2.35", () => {
+    mockFontScale(2.35);
+    renderCard({
+      title: "A detailed step title that would fill the card at large text",
+    });
+    expect(
+      screen.getByTestId("focus-current-task-title").props.numberOfLines,
+    ).toBe(2);
+    fireEvent(
+      screen.getByTestId("focus-current-task-title-measure", {
+        includeHiddenElements: true,
+      }),
+      "textLayout",
+      { nativeEvent: { lines: [{ text: "a" }, { text: "b" }, { text: "c" }] } },
+    );
+    fireEvent.press(screen.getByTestId("focus-current-task-title-toggle"));
+    expect(
+      screen.getByTestId("focus-current-task-title").props.numberOfLines,
+    ).toBeUndefined();
+  });
 
   it("uses the shared action state for the leading and alternate footer controls", () => {
     renderCard({
