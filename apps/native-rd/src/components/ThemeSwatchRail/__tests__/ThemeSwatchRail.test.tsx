@@ -1,5 +1,5 @@
 import React from "react";
-import { ScrollView, StyleSheet } from "react-native";
+import { ScrollView } from "react-native";
 import {
   renderWithProviders,
   screen,
@@ -107,16 +107,28 @@ describe("ThemeSwatchRail", () => {
   );
 
   // Regression guard: the swatches used to sit in a horizontal ScrollView with
-  // no scroll indicator. At 408pt of content in ~361pt of usable width the 7th
-  // theme was ~1pt from the edge — visually "there are only 6 themes". They
-  // must wrap so every option is on screen on every device.
-  it("wraps the swatches instead of hiding them in a horizontal scroller", () => {
+  // no scroll indicator, hiding the 7th theme. The options must stay in a
+  // plain stacked list so every one is on screen on every device.
+  it("lists every option without a horizontal scroller", () => {
     renderWithProviders(
       <ThemeSwatchRail selectedThemeId="light-default" onSelect={jest.fn()} />,
     );
     expect(screen.UNSAFE_queryAllByType(ScrollView)).toHaveLength(0);
-    const row = screen.getByTestId("theme-swatch-row");
-    expect(StyleSheet.flatten(row.props.style).flexWrap).toBe("wrap");
+  });
+
+  // #690: a first-time user must be able to find the reading / contrast
+  // option before picking it, so every row shows its name and benefit, not
+  // just the selected one.
+  it("shows every theme's name and benefit before it is selected", () => {
+    renderWithProviders(
+      <ThemeSwatchRail selectedThemeId="light-default" onSelect={jest.fn()} />,
+    );
+    for (const option of themeOptions) {
+      expect(screen.getByText(captionLabelOf(option.id))).toBeOnTheScreen();
+      expect(
+        screen.getByText(captionDescriptionOf(option.id)),
+      ).toBeOnTheScreen();
+    }
   });
 
   it("renders the ✓ overlay on exactly the selected swatch", () => {
@@ -126,29 +138,21 @@ describe("ThemeSwatchRail", () => {
     expect(screen.getAllByText("✓")).toHaveLength(1);
   });
 
-  it("shows the selected theme's name and description in the caption", () => {
-    renderWithProviders(
-      <ThemeSwatchRail selectedThemeId="dark-default" onSelect={jest.fn()} />,
-    );
-    expect(screen.getByText(captionLabelOf("dark-default"))).toBeOnTheScreen();
-    expect(
-      screen.getByText(captionDescriptionOf("dark-default")),
-    ).toBeOnTheScreen();
-  });
-
-  it("updates the caption when the selected theme changes", () => {
+  it("puts the selected-theme handle on the selected row's name", () => {
     const { rerender } = renderWithProviders(
       <ThemeSwatchRail selectedThemeId="light-default" onSelect={jest.fn()} />,
     );
-    expect(screen.getByText(captionLabelOf("light-default"))).toBeOnTheScreen();
+    expect(screen.getByTestId("selected-theme")).toHaveTextContent(
+      captionLabelOf("light-default"),
+    );
 
     rerender(
       <ThemeSwatchRail selectedThemeId="dark-default" onSelect={jest.fn()} />,
     );
-    expect(screen.getByText(captionLabelOf("dark-default"))).toBeOnTheScreen();
-    expect(
-      screen.queryByText(captionLabelOf("light-default")),
-    ).not.toBeOnTheScreen();
+    expect(screen.getAllByTestId("selected-theme")).toHaveLength(1);
+    expect(screen.getByTestId("selected-theme")).toHaveTextContent(
+      captionLabelOf("dark-default"),
+    );
   });
 
   describe("pseudo locale (proves the group label is routed through i18n)", () => {

@@ -1,18 +1,33 @@
 import { StyleSheet } from "react-native-unistyles";
 
-const SWATCH_SIZE = 48;
+const SWATCH_SIZE = 40;
 
 export const styles = StyleSheet.create((theme) => ({
-  rail: {
-    gap: theme.space[3],
+  // One labeled radio row per theme, stacked. Rows (not a wrapping set of
+  // circles) so every option shows its name and benefit before it is picked
+  // (#690), and long names / 1.25x text wrap inside the row instead of
+  // pushing a swatch off-screen.
+  list: {
+    gap: theme.space[2],
   },
-  // Wraps rather than scrolls — see the component's docblock for the width
-  // arithmetic. `gap` applies to both axes, so wrapped rows stay spaced too.
-  swatchRow: {
+  row: {
     flexDirection: "row",
-    flexWrap: "wrap",
+    alignItems: "center",
     gap: theme.space[3],
-    paddingVertical: theme.space[1],
+    minHeight: 44,
+    paddingVertical: theme.space[2],
+    paddingHorizontal: theme.space[3],
+    borderRadius: theme.radius.sm,
+    borderWidth: theme.borderWidth.thin,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.background,
+  },
+  // Selected = thicker border in the text color (max contrast in every theme)
+  // plus the ✓ on the swatch, so selection never relies on color alone.
+  rowSelected: {
+    borderWidth: theme.borderWidth.thick,
+    borderColor: theme.colors.text,
+    backgroundColor: theme.colors.backgroundSecondary,
   },
   swatch: {
     width: SWATCH_SIZE,
@@ -36,14 +51,18 @@ export const styles = StyleSheet.create((theme) => ({
     fontSize: theme.size.md,
     fontWeight: theme.fontWeight.bold,
   },
-  captionLabel: {
-    fontSize: theme.size.lg,
-    lineHeight: theme.lineHeight.lg,
+  text: {
+    flex: 1,
+    flexShrink: 1,
+  },
+  label: {
+    fontSize: theme.size.md,
+    lineHeight: theme.lineHeight.md,
     fontWeight: theme.fontWeight.bold,
     fontFamily: theme.fontFamily.body,
     color: theme.colors.text,
   },
-  captionDescription: {
+  description: {
     fontSize: theme.size.sm,
     lineHeight: theme.lineHeight.sm,
     fontFamily: theme.fontFamily.body,

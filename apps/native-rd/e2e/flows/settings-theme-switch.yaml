@@ -35,8 +35,8 @@ env:
 - assertVisible: "Theme"
 - tapOn:
     id: "theme-swatch-dark-default"
-# The rail's caption carries the `selected-theme` testID and always renders the
-# SELECTED theme's label, so the combined matcher is a real outcome assertion:
+# The selected row's name carries the `selected-theme` testID and always reads
+# the SELECTED theme's label, so the combined matcher is a real outcome assertion:
 # it fails if the tap didn't take effect, where a bare id match would not.
 - assertVisible:
     id: "selected-theme"

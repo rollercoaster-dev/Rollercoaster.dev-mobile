@@ -59,10 +59,9 @@ env:
 - assertVisible: "Theme"
 
 # Deterministic post-restart assertion: the node bearing the `selected-theme`
-# testID is the rail's caption label, which always renders the SELECTED theme's
-# name (see ThemeSwatchRail.tsx). If persistence regressed and the app defaulted
-# back to light-default, that caption would read "The Full Ride" and this
-# combined matcher would fail.
+# testID is the SELECTED row's name in the theme picker (see ThemeSwatchRail.tsx).
+# If persistence regressed and the app defaulted back to light-default, that
+# node would read "The Full Ride" and this combined matcher would fail.
 - assertVisible:
     id: "selected-theme"
     text: "Night Ride"

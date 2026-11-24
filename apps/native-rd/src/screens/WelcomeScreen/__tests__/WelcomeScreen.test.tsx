@@ -68,9 +68,8 @@ describe("WelcomeScreen", () => {
       ).toBeOnTheScreen();
     });
 
-    // The rail renders only the selected theme's name as visible text; the
-    // other 6 exist solely as each swatch's accessibilityLabel, so this asserts
-    // reachability via label, not via getByText.
+    // Each row is one accessible radio whose label carries name + benefit, so
+    // this asserts screen-reader reachability via label, not via getByText.
     it("renders all 7 theme options as labelled swatches", () => {
       renderWithProviders(<WelcomeScreen onGetStarted={jest.fn()} />);
       for (const option of themeOptions) {
@@ -99,16 +98,11 @@ describe("WelcomeScreen", () => {
         );
       });
 
-      it("captions the rail with the active theme's name", () => {
+      it("marks the active theme's row as the selected theme", () => {
         renderWithProviders(<WelcomeScreen onGetStarted={jest.fn()} />);
-        expect(
-          screen.getByText(i18n.t("common:theme.options.dark-default.label")),
-        ).toBeOnTheScreen();
-        expect(
-          screen.queryByText(
-            i18n.t("common:theme.options.light-default.label"),
-          ),
-        ).toBeNull();
+        expect(screen.getByTestId("selected-theme")).toHaveTextContent(
+          i18n.t("common:theme.options.dark-default.label"),
+        );
       });
 
       it("previews the active theme's tokens in the sample card", () => {
