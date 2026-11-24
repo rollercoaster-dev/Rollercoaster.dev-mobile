@@ -5,6 +5,7 @@ import {
   screen,
   fireEvent,
 } from "../../../__tests__/test-utils";
+import { mockFontScale } from "../../../__tests__/fontScale";
 import { i18n } from "../../../i18n";
 import { FocusCurrentTaskCard } from "../FocusCurrentTaskCard";
 import type {
@@ -81,9 +82,16 @@ function renderCard(overrides: TestOverrides = {}) {
 }
 
 describe("FocusCurrentTaskCard", () => {
-  it.each(["in-progress", "paused", "completed"] as FocusCardStatus[])(
-    "%s bounds a long step title and expands it in place",
-    (status) => {
+  // 2.35 is the largest size #746 audits: the card must still offer the full
+  // title there rather than forcing it to stay truncated.
+  it.each(
+    (["in-progress", "paused", "completed"] as FocusCardStatus[]).flatMap(
+      (status) => [1, 2.35].map((fontScale) => [status, fontScale] as const),
+    ),
+  )(
+    "%s bounds a long step title and expands it in place at fontScale %s",
+    (status, fontScale) => {
+      mockFontScale(fontScale);
       const title =
         "A detailed step title that would fill the card at large text";
       renderCard({ status, title, capturedEvidence: captured });
