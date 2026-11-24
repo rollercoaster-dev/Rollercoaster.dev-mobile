@@ -1,5 +1,5 @@
-import React from "react";
-import { Pressable, View } from "react-native";
+import React, { useState } from "react";
+import { Pressable, View, useWindowDimensions } from "react-native";
 import { useTypeScale } from "../../hooks/useTypeScale";
 import { useTranslation } from "react-i18next";
 import { useUnistyles } from "react-native-unistyles";
@@ -11,7 +11,11 @@ import { Button } from "../../components/Button";
 import { IconButton, type IconButtonTone } from "../../components/IconButton";
 import { Text } from "../../components/Text";
 import { ExpandableTitle } from "../../components/ExpandableTitle";
-import { styles } from "./GoalsCockpit.styles";
+import {
+  KEEP_WARM_CELL_SHARE,
+  KEEP_WARM_MIN_TITLE_WIDTH,
+  styles,
+} from "./GoalsCockpit.styles";
 
 export interface CockpitHeroGoal {
   id: string;
@@ -126,6 +130,22 @@ export function GoalsCockpit({
   // One column for keep-warm tiles whenever type is large, whether that comes
   // from the Low Vision theme or from the OS text-size setting.
   const { isLargeType } = useTypeScale();
+  // ...and whenever half the grid leaves a title too little room to stay
+  // recognisable (#688). The budget mirrors the card's chrome: cell share,
+  // thick border and space[3] padding each side, and the pin's space[8]
+  // reserve, so density counts. Measured from the grid itself; until the first
+  // layout, seed from the window minus GoalsScreen's space[4] padding
+  // (GoalsScreen.styles listContent) so phones don't flash two columns.
+  const { width: windowWidth } = useWindowDimensions();
+  const [gridWidth, setGridWidth] = useState(0);
+  const keepWarmWidth = gridWidth || windowWidth - theme.space[4] * 2;
+  const twoColumnTitleWidth =
+    keepWarmWidth * KEEP_WARM_CELL_SHARE -
+    theme.borderWidth.thick * 2 -
+    theme.space[3] * 2 -
+    theme.space[8];
+  const keepWarmOneColumn =
+    isLargeType || twoColumnTitleWidth < KEEP_WARM_MIN_TITLE_WIDTH;
 
   if (!hero) {
     return (
@@ -251,14 +271,18 @@ export function GoalsCockpit({
           <Text variant="label" style={styles.sectionLabel}>
             {t("goals:cockpit.keepWarm")}
           </Text>
-          <View style={styles.keepWarmGrid}>
+          <View
+            style={styles.keepWarmGrid}
+            onLayout={(e) => setGridWidth(e.nativeEvent.layout.width)}
+            testID="keep-warm-grid"
+          >
             {keepWarm.map((goal) => (
               <View
                 key={goal.id}
                 testID={`keep-warm-cell-${goal.id}`}
                 style={[
                   styles.keepWarmCell,
-                  isLargeType && styles.keepWarmCellWide,
+                  keepWarmOneColumn && styles.keepWarmCellWide,
                 ]}
               >
                 <Pressable
@@ -282,7 +306,9 @@ export function GoalsCockpit({
                   <Text
                     variant="title"
                     style={styles.keepWarmTitle}
-                    numberOfLines={2}
+                    // A full row has room for a third line, which is where
+                    // long, similar names start to differ.
+                    numberOfLines={keepWarmOneColumn ? 3 : 2}
                   >
                     {goal.title}
                   </Text>

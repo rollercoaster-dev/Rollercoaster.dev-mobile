@@ -1,6 +1,7 @@
 import React from "react";
 import * as ReactNative from "react-native";
 import {
+  act,
   renderWithProviders,
   screen,
   fireEvent,
@@ -159,7 +160,61 @@ describe("GoalsCockpit", () => {
     expect(ReactNative.StyleSheet.flatten(cell.props.style).width).toBe("100%");
     expect(
       screen.getByText("Build a component library").props.numberOfLines,
-    ).toBe(2);
+    ).toBe(3);
+  });
+
+  // #688: two columns only when each title keeps >=140pt beside the pin.
+  // Default chrome: 0.48 * grid - 6 border - 24 padding - 32 pin reserve.
+  it.each([
+    [288, "100%", 3], // 320pt phone
+    [343, "100%", 3], // 375pt phone
+    [361, "100%", 3], // 393pt phone: ~111pt titles, still too cramped
+    [420, "100%", 3], // 139.6pt title, just under the budget
+    [421, "48%", 2], // 140.1pt title, two columns
+  ])(
+    "lays keep-warm out for a %ipt-wide grid as %s cells, %i title lines",
+    (gridWidth, cellWidth, titleLines) => {
+      renderWithProviders(
+        <GoalsCockpit hero={makeHero()} keepWarm={keepWarm} {...handlers()} />,
+      );
+      fireEvent(screen.getByTestId("keep-warm-grid"), "layout", {
+        nativeEvent: { layout: { width: gridWidth, height: 200, x: 0, y: 0 } },
+      });
+      const cell = screen.getByTestId("keep-warm-cell-kw-1");
+      expect(ReactNative.StyleSheet.flatten(cell.props.style).width).toBe(
+        cellWidth,
+      );
+      expect(
+        screen.getByText("Build a component library").props.numberOfLines,
+      ).toBe(titleLines);
+    },
+  );
+
+  // Before the grid's first layout the window width (minus the screen's
+  // space[4] padding) decides, so a phone never flashes two columns.
+  describe("before the grid is measured", () => {
+    const original = ReactNative.Dimensions.get("window");
+    afterEach(() => {
+      act(() => ReactNative.Dimensions.set({ window: original }));
+    });
+
+    it.each([
+      [375, "100%"],
+      [480, "48%"],
+    ])("seeds a %ipt window as %s cells", (windowWidth, cellWidth) => {
+      act(() =>
+        ReactNative.Dimensions.set({
+          window: { ...original, width: windowWidth },
+        }),
+      );
+      renderWithProviders(
+        <GoalsCockpit hero={makeHero()} keepWarm={keepWarm} {...handlers()} />,
+      );
+      const cell = screen.getByTestId("keep-warm-cell-kw-1");
+      expect(ReactNative.StyleSheet.flatten(cell.props.style).width).toBe(
+        cellWidth,
+      );
+    });
   });
 
   it("fires onStartResume with the hero id", () => {

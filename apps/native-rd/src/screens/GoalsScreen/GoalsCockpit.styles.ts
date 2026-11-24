@@ -1,6 +1,16 @@
 import { StyleSheet } from "react-native-unistyles";
 import { shadowStyle } from "../../styles/shadows";
 
+/**
+ * Keep-warm tiles sit two per row only when each title still gets at least
+ * this much width beside the pin (#688). Below it a title wraps about one
+ * word per line, so "Build a component library" and "Build a reading habit"
+ * both read as "Build a". In portrait that means one column on phones.
+ */
+export const KEEP_WARM_MIN_TITLE_WIDTH = 140;
+/** Width share of one keep-warm cell in the two-column grid (`keepWarmCell`). */
+export const KEEP_WARM_CELL_SHARE = 0.48;
+
 export const styles = StyleSheet.create((theme) => ({
   container: {
     gap: theme.space[6],
@@ -53,8 +63,8 @@ export const styles = StyleSheet.create((theme) => ({
     color: theme.colors.textMuted,
     textTransform: "uppercase",
   },
-  // Two-column grid by default; low-vision and increased OS type use one column
-  // so long goal titles have room to wrap.
+  // Two columns only on grids wide enough for readable titles; narrow grids,
+  // low-vision and increased OS type use one column so titles can wrap.
   keepWarmGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -66,7 +76,7 @@ export const styles = StyleSheet.create((theme) => ({
   // collapses its whole subtree into one screen-reader node — a pin nested
   // inside it would be unreachable, so it has to be a sibling.
   keepWarmCell: {
-    width: "48%",
+    width: `${KEEP_WARM_CELL_SHARE * 100}%`,
     position: "relative",
   },
   keepWarmCellWide: {
