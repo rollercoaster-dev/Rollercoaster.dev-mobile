@@ -1,5 +1,5 @@
 import React from "react";
-import { Alert, StyleSheet } from "react-native";
+import { Alert, StyleSheet, TextInput } from "react-native";
 import { usePreventRemove } from "@react-navigation/native";
 import {
   renderWithProviders,
@@ -158,6 +158,21 @@ describe("CaptureLinkScreen", () => {
     expect(mockCreateEvidence).not.toHaveBeenCalled();
   });
 
+  // #693: a failed save puts focus back on the field that needs the fix.
+  // The jest TextInput mock shares one `focus` jest.fn across instances, so
+  // `mock.contexts` (the `this` of each call) says which field was focused.
+  it("moves focus to the URL field when save fails validation", () => {
+    const focus = (TextInput.prototype as unknown as { focus: jest.Mock })
+      .focus;
+    focus.mockClear();
+    renderScreen();
+
+    fireEvent.press(screen.getByText(i18n.t("captureLink:actions.save")));
+
+    expect(focus).toHaveBeenCalledTimes(1);
+    expect(focus.mock.contexts[0].props.testID).toBe("capture-link-url");
+  });
+
   it("clears validation error when user types", () => {
     renderScreen();
 
@@ -168,14 +183,15 @@ describe("CaptureLinkScreen", () => {
     ).toBeTruthy();
 
     // Start typing to clear error
-    fireEvent.changeText(
-      screen.getByLabelText(i18n.t("captureLink:urlInput.label")),
-      "h",
-    );
+    fireEvent.changeText(screen.getByTestId("capture-link-url"), "h");
 
     expect(
       screen.queryByText(i18n.t("captureLink:validation.urlRequired")),
     ).toBeNull();
+    // The field's name drops the error too, once it is fixed.
+    expect(
+      screen.getByLabelText(i18n.t("captureLink:urlInput.label")),
+    ).toBeOnTheScreen();
   });
 
   it("saves link evidence with goalId and navigates back", () => {

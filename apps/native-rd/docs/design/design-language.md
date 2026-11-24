@@ -189,7 +189,7 @@ input: {
 },
 ```
 
-Label above the field: `sm`, medium, `colors.textSecondary`. Error: border and `xs` message in `colors.accentPrimary`.
+Label above the field: `sm`, medium, `colors.textSecondary`. Error: border in `colors.error`, and a `FieldError` below — a `WarningCircle` icon in `colors.error` beside an `xs` message in `colors.text` (the shared error red is under 4.5:1 as text in Night Ride and Warm Studio). The message is announced when it appears and appended to the field's accessible name; a failed submit moves focus to the field. When invalid input disables an action, show the reason with the same `FieldError` (#693).
 
 ### Keyboard and pinned footers — `KeyboardAvoidingFrame`
 

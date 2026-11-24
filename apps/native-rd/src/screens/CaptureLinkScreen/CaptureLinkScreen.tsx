@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { View, Alert, ScrollView } from "react-native";
+import React, { useRef, useState } from "react";
+import { View, Alert, ScrollView, type TextInput } from "react-native";
 import { KeyboardAvoidingFrame } from "../../components/KeyboardAvoidingFrame";
 import { useNavigation } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
@@ -29,6 +29,7 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
   const [url, setUrl] = useState("");
   const [caption, setCaption] = useState("");
   const [urlError, setUrlError] = useState<string | undefined>();
+  const urlInputRef = useRef<TextInput>(null);
   const [saving, setSaving] = useState(false);
   const { requestExit, exitAfterSave } = useUnsavedExitGuard({
     isDirty: url.length > 0 || caption.length > 0,
@@ -66,7 +67,11 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
   }
 
   function handleSave() {
-    if (!validateUrl()) return;
+    if (!validateUrl()) {
+      // Put the cursor (and screen-reader focus) back where the fix goes.
+      urlInputRef.current?.focus();
+      return;
+    }
 
     setSaving(true);
     try {
@@ -111,6 +116,7 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
         >
           <View style={styles.inputSection}>
             <Input
+              ref={urlInputRef}
               label={t("captureLink:urlInput.label")}
               placeholder={t("captureLink:urlInput.placeholder")}
               value={url}
@@ -120,7 +126,7 @@ export function CaptureLinkScreen({ route }: CaptureLinkScreenProps) {
               autoCorrect={false}
               keyboardType="url"
               // "done", not "next": nothing is wired to advance focus to the
-              // caption (Input exposes no ref), so the key blurs and dismisses.
+              // caption, so the key blurs and dismisses.
               returnKeyType="done"
               textContentType="URL"
               // The URL is stored verbatim (trimmed) in the evidence `uri`
