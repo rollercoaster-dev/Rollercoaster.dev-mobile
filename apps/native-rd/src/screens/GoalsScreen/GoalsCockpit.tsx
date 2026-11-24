@@ -1,5 +1,5 @@
-import React from "react";
-import { Pressable, View } from "react-native";
+import React, { useState } from "react";
+import { Pressable, View, useWindowDimensions } from "react-native";
 import { useTypeScale } from "../../hooks/useTypeScale";
 import { useTranslation } from "react-i18next";
 import { useUnistyles } from "react-native-unistyles";
@@ -11,7 +11,7 @@ import { Button } from "../../components/Button";
 import { IconButton, type IconButtonTone } from "../../components/IconButton";
 import { Text } from "../../components/Text";
 import { ExpandableTitle } from "../../components/ExpandableTitle";
-import { styles } from "./GoalsCockpit.styles";
+import { KEEP_WARM_TWO_COLUMN_MIN_WIDTH, styles } from "./GoalsCockpit.styles";
 
 export interface CockpitHeroGoal {
   id: string;
@@ -126,6 +126,16 @@ export function GoalsCockpit({
   // One column for keep-warm tiles whenever type is large, whether that comes
   // from the Low Vision theme or from the OS text-size setting.
   const { isLargeType } = useTypeScale();
+  // ...and whenever half the grid is too narrow for a title to stay
+  // recognisable (#688): at 320/375pt two columns cut similar titles down to
+  // their shared first word. Measured from the grid itself so density and
+  // container padding count; until the first layout, seed from the window
+  // minus GoalsScreen's horizontal padding so phones don't flash two columns.
+  const { width: windowWidth } = useWindowDimensions();
+  const [gridWidth, setGridWidth] = useState(0);
+  const keepWarmWidth = gridWidth || windowWidth - theme.space[4] * 2;
+  const keepWarmOneColumn =
+    isLargeType || keepWarmWidth < KEEP_WARM_TWO_COLUMN_MIN_WIDTH;
 
   if (!hero) {
     return (
@@ -251,14 +261,18 @@ export function GoalsCockpit({
           <Text variant="label" style={styles.sectionLabel}>
             {t("goals:cockpit.keepWarm")}
           </Text>
-          <View style={styles.keepWarmGrid}>
+          <View
+            style={styles.keepWarmGrid}
+            onLayout={(e) => setGridWidth(e.nativeEvent.layout.width)}
+            testID="keep-warm-grid"
+          >
             {keepWarm.map((goal) => (
               <View
                 key={goal.id}
                 testID={`keep-warm-cell-${goal.id}`}
                 style={[
                   styles.keepWarmCell,
-                  isLargeType && styles.keepWarmCellWide,
+                  keepWarmOneColumn && styles.keepWarmCellWide,
                 ]}
               >
                 <Pressable

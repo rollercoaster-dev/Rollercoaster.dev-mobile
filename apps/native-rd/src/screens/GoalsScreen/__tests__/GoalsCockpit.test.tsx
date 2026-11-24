@@ -162,6 +162,27 @@ describe("GoalsCockpit", () => {
     ).toBe(2);
   });
 
+  // #688: at 320/375pt two columns cut similar titles to their first word.
+  it.each([
+    [343, "100%"], // 375pt phone minus screen padding
+    [288, "100%"], // 320pt phone
+    [380, "48%"], // 412pt phone keeps two columns
+  ])(
+    "lays keep-warm out for a %ipt-wide grid as %s cells",
+    (gridWidth, cellWidth) => {
+      renderWithProviders(
+        <GoalsCockpit hero={makeHero()} keepWarm={keepWarm} {...handlers()} />,
+      );
+      fireEvent(screen.getByTestId("keep-warm-grid"), "layout", {
+        nativeEvent: { layout: { width: gridWidth, height: 200, x: 0, y: 0 } },
+      });
+      const cell = screen.getByTestId("keep-warm-cell-kw-1");
+      expect(ReactNative.StyleSheet.flatten(cell.props.style).width).toBe(
+        cellWidth,
+      );
+    },
+  );
+
   it("fires onStartResume with the hero id", () => {
     const h = handlers();
     renderWithProviders(

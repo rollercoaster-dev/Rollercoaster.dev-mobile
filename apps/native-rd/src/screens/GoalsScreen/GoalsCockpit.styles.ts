@@ -1,6 +1,14 @@
 import { StyleSheet } from "react-native-unistyles";
 import { shadowStyle } from "../../styles/shadows";
 
+/**
+ * Below this grid width the keep-warm tiles go one per row (#688). Two columns
+ * at 360pt leave each title ~110pt beside the pin's reserved corner: about
+ * one word per line, so "Build a component library" and "Build a habit" read
+ * the same. Matches the Badges wall's narrow breakpoint.
+ */
+export const KEEP_WARM_TWO_COLUMN_MIN_WIDTH = 360;
+
 export const styles = StyleSheet.create((theme) => ({
   container: {
     gap: theme.space[6],
@@ -53,8 +61,8 @@ export const styles = StyleSheet.create((theme) => ({
     color: theme.colors.textMuted,
     textTransform: "uppercase",
   },
-  // Two-column grid by default; low-vision and increased OS type use one column
-  // so long goal titles have room to wrap.
+  // Two-column grid by default; narrow grids, low-vision and increased OS type
+  // use one column so long goal titles have room to wrap.
   keepWarmGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
