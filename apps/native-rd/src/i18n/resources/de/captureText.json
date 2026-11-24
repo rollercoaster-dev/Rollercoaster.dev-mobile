@@ -12,6 +12,9 @@
   "charCount": {
     "a11y": "{{count}} von {{max}} Zeichen verwendet"
   },
+  "validation": {
+    "overLimit": "Die Notiz ist länger als {{max}} Zeichen. Kürze sie ein wenig, um sie zu speichern."
+  },
   "actions": {
     "save": "Notiz speichern"
   },

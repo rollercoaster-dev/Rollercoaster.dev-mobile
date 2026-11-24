@@ -15,6 +15,7 @@ import { useUnistyles } from "react-native-unistyles";
 import { Text } from "../../components/Text";
 import { Button } from "../../components/Button";
 import { Input } from "../../components/Input";
+import { FieldError } from "../../components/FieldError";
 import { ScreenSubHeader } from "../../components/ScreenHeader";
 import { ScrollAtLargeType } from "../../components/ScrollAtLargeType";
 import { useTypeScale } from "../../hooks/useTypeScale";
@@ -92,6 +93,10 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
   const charCount = trimmedContent.length;
   const isNearLimit = charCount >= WARNING_THRESHOLD;
   const isOverLimit = charCount > MAX_CONTENT_LENGTH;
+  // Over the limit Save is disabled; this says why, in words (#693).
+  const overLimitMessage = isOverLimit
+    ? t("captureText:validation.overLimit", { max: MAX_CONTENT_LENGTH })
+    : undefined;
 
   function handleSave() {
     if (!canSave || saving) return;
@@ -161,7 +166,11 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
             autoFocus
             maxLength={MAX_CONTENT_LENGTH + 100}
             accessible
-            accessibilityLabel={t("captureText:input.label")}
+            accessibilityLabel={
+              overLimitMessage
+                ? `${t("captureText:input.label")}, ${overLimitMessage}`
+                : t("captureText:input.label")
+            }
             accessibilityHint={t("captureText:input.hint")}
           />
 
@@ -177,6 +186,13 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
             />
           </View>
         </ScrollAtLargeType>
+
+        {overLimitMessage ? (
+          <FieldError
+            message={overLimitMessage}
+            testID="capture-text-over-limit"
+          />
+        ) : null}
 
         <View style={styles.footer}>
           <Text
