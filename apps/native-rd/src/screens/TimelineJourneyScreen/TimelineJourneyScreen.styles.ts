@@ -34,8 +34,21 @@ export const styles = StyleSheet.create((theme) => ({
   // keeps `flex: 1` so it takes the remaining width and wraps.
   headerActions: {
     flexDirection: "row",
+    flexWrap: "wrap",
     alignItems: "center",
     gap: theme.space[2],
+  },
+  // At accessibility text sizes the two buttons leave the title a sliver of
+  // width and it breaks mid-word, so the actions drop below the title (#746).
+  headerStacked: {
+    flexDirection: "column",
+    alignItems: "flex-start",
+  },
+  // flex: 1 (basis 0) collapses the title's height in a column; overriding
+  // only flexGrow/flexBasis still left it at zero height on Android.
+  titleStacked: {
+    flex: 0,
+    alignSelf: "stretch",
   },
   title: {
     flex: 1,

@@ -12,6 +12,7 @@ import type { StepStateMapKey } from "../../components/TimelineNode/stepStateCol
 import { TimelineStep } from "../../components/TimelineStep";
 import type { TimelineStepChild } from "../../components/TimelineStep";
 import { FinishLine } from "../../components/FinishLine";
+import { useTypeScale } from "../../hooks/useTypeScale";
 import {
   goalsQuery,
   stepsByGoalQuery,
@@ -77,6 +78,7 @@ function TimelineContent({
 }) {
   const navigation = useNavigation<NavigationProp<GoalsStackParamList>>();
   const { t, i18n } = useTranslation(["timelineJourney"]);
+  const { isAccessibilitySize } = useTypeScale();
   const rows = useQuery(goalsQuery);
   const goal = rows.find((r) => r.id === goalId);
   const stepRows = useQuery(stepsByGoalQuery(goalId as GoalId));
@@ -243,9 +245,15 @@ function TimelineContent({
     <View style={{ flex: 1 }}>
       {/* Header */}
       <View style={styles.header}>
-        <View style={styles.headerRow}>
+        <View
+          style={[
+            styles.headerRow,
+            isAccessibilitySize && styles.headerStacked,
+          ]}
+          testID="timeline-header-row"
+        >
           <Text
-            style={styles.title}
+            style={[styles.title, isAccessibilitySize && styles.titleStacked]}
             numberOfLines={2}
             accessible
             accessibilityRole="header"
