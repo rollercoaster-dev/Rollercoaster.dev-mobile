@@ -6,7 +6,7 @@ import {
   fireEvent,
   act,
 } from "../../../__tests__/test-utils";
-import { Toast } from "../Toast";
+import { Toast, type ToastProps } from "../Toast";
 import { ToastProvider, useToast } from "../ToastContext";
 import {
   AccessibilityInfo,
@@ -71,6 +71,17 @@ function deferSlideOut() {
   };
 }
 
+// #302: pressing the action clears the auto-dismiss timer, so an action
+// without onDismiss could never leave the screen. Type-only check: tsc on
+// tsconfig.test.json fails if this ever compiles.
+// @ts-expect-error -- an action requires onDismiss
+const _actionWithoutDismiss: ToastProps = {
+  visible: true,
+  message: "Deleted",
+  action: { label: "Undo", onPress() {} },
+};
+void _actionWithoutDismiss;
+
 describe("Toast", () => {
   it("renders message when visible", () => {
     renderWithProviders(<Toast visible message="Item deleted" />);
@@ -85,7 +96,12 @@ describe("Toast", () => {
   it("renders action button when provided", () => {
     const onPress = jest.fn();
     renderWithProviders(
-      <Toast visible message="Deleted" action={{ label: "Undo", onPress }} />,
+      <Toast
+        visible
+        message="Deleted"
+        action={{ label: "Undo", onPress }}
+        onDismiss={jest.fn()}
+      />,
     );
     expect(screen.getByLabelText("Undo")).toBeOnTheScreen();
   });
@@ -93,10 +109,50 @@ describe("Toast", () => {
   it("calls action onPress when button is pressed", () => {
     const onPress = jest.fn();
     renderWithProviders(
-      <Toast visible message="Deleted" action={{ label: "Undo", onPress }} />,
+      <Toast
+        visible
+        message="Deleted"
+        action={{ label: "Undo", onPress }}
+        onDismiss={jest.fn()}
+      />,
     );
     fireEvent.press(screen.getByLabelText("Undo"));
     expect(onPress).toHaveBeenCalledTimes(1);
+  });
+
+  it("dismisses before the action runs, so the action can show a new toast", () => {
+    const calls: string[] = [];
+    renderWithProviders(
+      <Toast
+        visible
+        message="Deleted"
+        action={{ label: "Undo", onPress: () => calls.push("action") }}
+        onDismiss={() => calls.push("dismiss")}
+      />,
+    );
+    fireEvent.press(screen.getByLabelText("Undo"));
+    expect(calls).toEqual(["dismiss", "action"]);
+  });
+
+  it("still dismisses when the action throws (#302)", () => {
+    const onDismiss = jest.fn();
+    renderWithProviders(
+      <Toast
+        visible
+        message="Deleted"
+        action={{
+          label: "Undo",
+          onPress: () => {
+            throw new Error("undo failed");
+          },
+        }}
+        onDismiss={onDismiss}
+      />,
+    );
+    expect(() => fireEvent.press(screen.getByLabelText("Undo"))).toThrow(
+      "undo failed",
+    );
+    expect(onDismiss).toHaveBeenCalledTimes(1);
   });
 
   it("has accessible alert role", () => {
@@ -300,6 +356,63 @@ describe("ToastContext", () => {
     expect(screen.queryByText("Context toast")).toBeNull();
   });
 
+  it("dismisses on action press via the provider (#302)", () => {
+    function ActionOnly() {
+      const { showToast } = useToast();
+      return (
+        <Pressable
+          testID="show-action-toast"
+          onPress={() =>
+            showToast({
+              message: "Step deleted",
+              action: { label: "Undo", onPress() {} },
+            })
+          }
+        >
+          <Text>Show</Text>
+        </Pressable>
+      );
+    }
+    renderWithProviders(
+      <ToastProvider>
+        <ActionOnly />
+      </ToastProvider>,
+    );
+    fireEvent.press(screen.getByTestId("show-action-toast"));
+    fireEvent.press(screen.getByLabelText("Undo"));
+    expect(screen.queryByText("Step deleted")).toBeNull();
+  });
+
+  it("keeps a toast the action shows on screen (#302)", () => {
+    function ReShow() {
+      const { showToast } = useToast();
+      return (
+        <Pressable
+          testID="show-undo-toast"
+          onPress={() =>
+            showToast({
+              message: "Step deleted",
+              action: {
+                label: "Undo",
+                onPress: () => showToast({ message: "Undo failed" }),
+              },
+            })
+          }
+        >
+          <Text>Show</Text>
+        </Pressable>
+      );
+    }
+    renderWithProviders(
+      <ToastProvider>
+        <ReShow />
+      </ToastProvider>,
+    );
+    fireEvent.press(screen.getByTestId("show-undo-toast"));
+    fireEvent.press(screen.getByLabelText("Undo"));
+    expect(screen.getByText("Undo failed")).toBeOnTheScreen();
+  });
+
   it("throws when useToast is used outside provider", () => {
     const consoleError = jest
       .spyOn(console, "error")
@@ -325,6 +438,7 @@ describe("Toast at large type", () => {
         visible
         message="Deleted"
         action={{ label: "Undo", onPress() {} }}
+        onDismiss={() => {}}
       />,
     );
     const container = StyleSheet.flatten(screen.getByRole("alert").props.style);
@@ -344,6 +458,7 @@ describe("Toast at large type", () => {
         visible
         message="Deleted"
         action={{ label: "Undo", onPress() {} }}
+        onDismiss={() => {}}
       />,
     );
     expect(screen.getByText("Undo").props.maxFontSizeMultiplier).toBe(1.25);
@@ -363,6 +478,7 @@ describe("Toast stacked layout", () => {
           visible
           message="Deleted"
           action={{ label: "Undo", onPress() {} }}
+          onDismiss={() => {}}
         />,
       );
       const message = StyleSheet.flatten(
