@@ -41,6 +41,14 @@ describe("shouldHideTabBar (#798)", () => {
     expect(shouldHideTabBar({}, "android")).toBe(false);
   });
 
+  it("hides the bar when a navigate targets NewGoal before the stack mounts", () => {
+    const route = {
+      name: "GoalsTab",
+      params: { screen: "NewGoal" },
+    } as unknown as Parameters<typeof shouldHideTabBar>[0];
+    expect(shouldHideTabBar(route, "android")).toBe(true);
+  });
+
   it("uses the last route when a partial state has no index", () => {
     const route = {
       state: { routes: [{ name: "Goals" }, { name: "NewGoal" }] },

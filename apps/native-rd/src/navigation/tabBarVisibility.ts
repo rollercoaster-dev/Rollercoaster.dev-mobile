@@ -1,5 +1,8 @@
 import { Platform } from "react-native";
 import type { NavigationState, PartialState } from "@react-navigation/native";
+import type { GoalsStackParamList, SettingsStackParamList } from "./types";
+
+type FullScreenRoute = keyof GoalsStackParamList | keyof SettingsStackParamList;
 
 /**
  * Stack routes that present as `presentation: "modal"`. On iOS a native-stack
@@ -8,22 +11,28 @@ import type { NavigationState, PartialState } from "@react-navigation/native";
  * tab, so the floating tab bar stays on top of it and of every in-tree sheet
  * it opens (#798). These routes hide the tab bar on Android instead.
  */
-export const FULL_SCREEN_ROUTES: ReadonlySet<string> = new Set([
-  "NewGoal",
-  "CompletionFlow",
-  "Welcome",
-]);
+export const FULL_SCREEN_ROUTES: ReadonlySet<string> = new Set<FullScreenRoute>(
+  ["NewGoal", "CompletionFlow", "Welcome"],
+);
 
 type TabRoute = {
   state?: NavigationState | PartialState<NavigationState>;
+  params?: object;
 };
 
-/** Name of the route focused inside a tab's nested stack, if it has one. */
+/**
+ * Name of the route focused inside a tab's nested stack. Before the stack
+ * mounts (a `navigate("GoalsTab", { screen })` into an unvisited tab) there
+ * is no state yet, so fall back to the `screen` param it was opened with.
+ */
 function focusedNestedRouteName(route: TabRoute): string | undefined {
   const nested = route.state;
-  if (!nested || nested.routes.length === 0) return undefined;
-  const index = nested.index ?? nested.routes.length - 1;
-  return nested.routes[index]?.name;
+  if (nested && nested.routes.length > 0) {
+    const index = nested.index ?? nested.routes.length - 1;
+    return nested.routes[index]?.name;
+  }
+  const screen = (route.params as { screen?: unknown } | undefined)?.screen;
+  return typeof screen === "string" ? screen : undefined;
 }
 
 /**
