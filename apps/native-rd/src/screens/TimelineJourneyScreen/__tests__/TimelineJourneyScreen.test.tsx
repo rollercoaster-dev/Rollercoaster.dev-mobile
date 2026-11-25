@@ -1,10 +1,12 @@
 import React from "react";
+import { StyleSheet } from "react-native";
 import {
   renderWithProviders,
   screen,
   fireEvent,
   within,
 } from "../../../__tests__/test-utils";
+import { mockFontScale } from "../../../__tests__/fontScale";
 import { TimelineJourneyScreen } from "../TimelineJourneyScreen";
 
 // --- Mocks ---
@@ -364,6 +366,30 @@ describe("TimelineJourneyScreen", () => {
     setupQueries();
     renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
     expect(screen.getAllByText("Timeline").length).toBeGreaterThanOrEqual(1);
+  });
+
+  describe("header at large type (#746)", () => {
+    const headerDirection = () =>
+      StyleSheet.flatten(screen.getByTestId("timeline-header-row").props.style)
+        .flexDirection;
+
+    it("keeps the title beside its actions at default size", () => {
+      setupQueries();
+      renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
+      expect(headerDirection()).toBe("row");
+    });
+
+    // Side by side, the buttons leave the title a sliver and it breaks mid-word.
+    it("drops the actions below the title at accessibility sizes", () => {
+      mockFontScale(2.35);
+      setupQueries();
+      renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
+      expect(headerDirection()).toBe("column");
+      expect(
+        StyleSheet.flatten(screen.getByText("Learn TypeScript").props.style)
+          .flex,
+      ).toBe(0);
+    });
   });
 
   describe("honest breakdown bar (#451)", () => {
