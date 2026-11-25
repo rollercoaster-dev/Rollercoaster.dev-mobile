@@ -12,7 +12,7 @@
 import React from "react";
 import { render, screen } from "@testing-library/react-native";
 import { i18n } from "../../i18n";
-import { reportError } from "../../services/sentry-report";
+import { reportRenderError } from "../../services/sentry-report";
 import { GoalsStack } from "../GoalsStack";
 import { BadgesStack } from "../BadgesStack";
 import { SettingsStack } from "../SettingsStack";
@@ -20,6 +20,7 @@ import { TabNavigator } from "../TabNavigator";
 
 jest.mock("../../services/sentry-report", () => ({
   reportError: jest.fn(),
+  reportRenderError: jest.fn(),
 }));
 
 const mockTarget: { route: string; throwTabBar: boolean } = {
@@ -202,16 +203,17 @@ afterAll(() => {
 });
 
 beforeEach(() => {
-  (reportError as jest.Mock).mockClear();
+  (reportRenderError as jest.Mock).mockClear();
   mockTarget.throwTabBar = false;
 });
 
 function expectScreenFallback() {
   expect(screen.getByTestId("error-boundary-fallback-screen")).toBeTruthy();
   expect(screen.getByText(i18n.t("common:errorBoundary.title"))).toBeTruthy();
-  expect(reportError).toHaveBeenCalledWith(expect.any(Error), {
-    area: "render",
-  });
+  expect(reportRenderError).toHaveBeenCalledWith(
+    expect.any(Error),
+    expect.any(String),
+  );
 }
 
 describe("screen error boundaries", () => {
@@ -269,8 +271,9 @@ describe("screen error boundaries", () => {
     mockTarget.throwTabBar = true;
     render(<TabNavigator />);
     expect(screen.getByTestId("error-boundary-fallback-compact")).toBeTruthy();
-    expect(reportError).toHaveBeenCalledWith(expect.any(Error), {
-      area: "render",
-    });
+    expect(reportRenderError).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.any(String),
+    );
   });
 });

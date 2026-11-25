@@ -2,11 +2,11 @@ import React from "react";
 import { render, fireEvent, screen, act } from "@testing-library/react-native";
 import { ErrorBoundary } from "../ErrorBoundary";
 import { AccessibilityInfo, Text } from "react-native";
-import { reportError } from "../../../services/sentry-report";
+import { reportRenderError } from "../../../services/sentry-report";
 import { i18n } from "../../../i18n";
 
 jest.mock("../../../services/sentry-report", () => ({
-  reportError: jest.fn(),
+  reportRenderError: jest.fn(),
 }));
 
 // findNodeHandle is a lazy getter on react-native's index, so jest.spyOn can't
@@ -48,7 +48,7 @@ afterAll(() => {
 
 describe("ErrorBoundary", () => {
   beforeEach(() => {
-    (reportError as jest.Mock).mockClear();
+    (reportRenderError as jest.Mock).mockClear();
   });
 
   it("renders children when no error", () => {
@@ -218,18 +218,22 @@ describe("ErrorBoundary", () => {
     expect(screen.queryByText(i18n.t("common:errorBoundary.title"))).toBeNull();
   });
 
-  it("reports rendered errors via reportError with area=render", () => {
+  it("reports rendered errors with React's component stack", () => {
     render(
       <ErrorBoundary>
         <ThrowingChild shouldThrow={true} />
       </ErrorBoundary>,
     );
 
-    expect(reportError).toHaveBeenCalledTimes(1);
-    const [err, ctx] = (reportError as jest.Mock).mock.calls[0];
+    expect(reportRenderError).toHaveBeenCalledTimes(1);
+    const [err, componentStack] = (reportRenderError as jest.Mock).mock
+      .calls[0];
     expect(err).toBeInstanceOf(Error);
     expect((err as Error).message).toBe("Test error");
-    expect(ctx).toEqual({ area: "render" });
+    // React's tree path to the crash, which runs up through the boundary.
+    // (Jest's source maps rename the throwing child's frame, so pin the
+    // boundary frame.)
+    expect(componentStack).toEqual(expect.stringContaining("at ErrorBoundary"));
   });
 
   it("uses custom fallback when provided", () => {

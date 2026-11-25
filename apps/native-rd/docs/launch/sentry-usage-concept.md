@@ -202,19 +202,15 @@ componentDidCatch(error: Error, info: React.ErrorInfo) {
 
 The hook is in place, the wiring is the TODO.
 
-**The single-line change:**
+**The change (shipped, then extended in #269):**
 
 ```ts
-componentDidCatch(error: Error, info: React.ErrorInfo) {
-  reportError(error, { area: "render" });
-  // info.componentStack is symbol info (component names), not user content.
-  // We deliberately do not pass it — the JS sourcemap upload + the error's
-  // own stack frames give us the same symbolicated picture, and we keep
-  // the reportError surface free of free-text strings.
+componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+  reportRenderError(error, errorInfo.componentStack);
 }
 ```
 
-We do **not** add `componentStack` as context — see §3.1 on why no free-text fields. The error's `stack` already carries the symbolicated chain after sourcemap upload.
+`componentStack` is the React tree path to the crash (which screen / subtree), which a minified JS stack can't show. It is the one free-text input `sentry-report.ts` accepts, and only through `reportRenderError`: the stack is scrubbed with the same redactions as exception text (`scrubComponentStack` in `sentry-filters.ts`), sent as the `react` context, and `scrubEvent` allowlists that context but rebuilds it to a single re-scrubbed `componentStack` string. `reportError` itself still writes no context.
 
 **Open question — do we still want a root-level boundary?**
 
