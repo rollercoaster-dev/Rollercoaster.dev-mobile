@@ -1,6 +1,7 @@
 import { Suspense, useCallback, useMemo } from "react";
 import { View, ScrollView, ActivityIndicator } from "react-native";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@evolu/react";
 import { useTranslation } from "react-i18next";
 import { Text } from "../../components/Text";
@@ -305,15 +306,18 @@ function useStepEvidence(
 }
 
 export function TimelineJourneyScreen({ route }: TimelineJourneyScreenProps) {
-  const navigation = useNavigation<NavigationProp<GoalsStackParamList>>();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<GoalsStackParamList>>();
   const { t } = useTranslation(["timelineJourney"]);
   const { goalId, originBadgeId } = route.params;
 
   // The screen's one back control (#695). When originBadgeId is set the user
   // arrived from BadgeDetail, so back hops tabs to BadgesTab/BadgeDetail rather
   // than staying in the Goals stack. Otherwise it returns to Focus for this
-  // goal — navigate, not goBack, so the destination is Focus whatever sits
-  // beneath (the completion modal can leave Timeline on top). With no tab
+  // goal — popTo, not goBack or navigate: it pops to the Focus beneath when
+  // there is one (navigate would push a second Focus on React Navigation 7 and
+  // grow the stack each round trip) and pushes Focus when there isn't (the
+  // completion modal can leave Timeline on top). With no tab
   // parent (deep link / modal host / Storybook) the badge path falls through
   // to Focus too.
   const handleBack = useCallback(() => {
@@ -334,7 +338,7 @@ export function TimelineJourneyScreen({ route }: TimelineJourneyScreenProps) {
         originBadgeId,
       });
     }
-    navigation.navigate("FocusMode", { goalId });
+    navigation.popTo("FocusMode", { goalId });
   }, [navigation, originBadgeId, goalId]);
 
   return (

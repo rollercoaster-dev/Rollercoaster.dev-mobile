@@ -21,7 +21,7 @@ import type { RootTabParamList } from "./types";
 
 type RouteName = keyof RootTabParamList;
 
-const ICON_SIZE = 24;
+const ICON_SIZE = 20;
 const ICON_WEIGHT = "bold" as const;
 const SLIDE_DURATION = 200;
 export const PILL_HEIGHT = 64;
@@ -278,12 +278,12 @@ const styles = StyleSheet.create((theme) => ({
   slot: {
     flex: 1,
     height: 48,
-    // Same row as the knob, so a label doesn't shift when its slot activates.
-    flexDirection: "row" as const,
+    // Icon over label, like the knob, so the label gets the slot's full width
+    // ("Einstellungen" at 320pt) and nothing shifts when a slot activates.
     alignItems: "center" as const,
     justifyContent: "center" as const,
-    gap: 8,
-    paddingHorizontal: 12,
+    gap: 2,
+    paddingHorizontal: 4,
   },
   knob: {
     position: "absolute" as const,
@@ -291,12 +291,11 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: 999,
     borderColor: theme.colors.border,
     borderWidth: theme.borderWidth.medium,
-    flexDirection: "row" as const,
     alignItems: "center" as const,
     justifyContent: "center" as const,
-    gap: 8,
+    gap: 2,
     // Keeps a long label ("Einstellungen" at 1.3x) inside the knob's border.
-    paddingHorizontal: 12,
+    paddingHorizontal: 4,
     ...shadowStyle(theme, "cardElevation"),
   },
   label: {
@@ -304,7 +303,8 @@ const styles = StyleSheet.create((theme) => ({
     flexShrink: 1,
     fontFamily: theme.fontFamily.body,
     fontWeight: theme.fontWeight.bold,
-    fontSize: theme.size.sm,
+    // xs so icon + label stack inside the 48pt knob, even at the 1.3x cap.
+    fontSize: theme.size.xs,
     letterSpacing: theme.letterSpacing.tight,
   },
 }));

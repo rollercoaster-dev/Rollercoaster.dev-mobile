@@ -1,5 +1,11 @@
-import React, { Suspense, useMemo, useState } from "react";
-import { View, ScrollView, ActivityIndicator, Alert } from "react-native";
+import React, { Suspense, useMemo, useRef, useState } from "react";
+import {
+  View,
+  ScrollView,
+  ActivityIndicator,
+  Alert,
+  Platform,
+} from "react-native";
 import { useTranslation } from "react-i18next";
 import { useNavigation } from "@react-navigation/native";
 import { useTabScreenContentInset } from "../../navigation/useTabScreenContentInset";
@@ -106,6 +112,9 @@ function GoalsCockpitContainer({
   const settings = useQuery(userSettingsQuery)[0] ?? null;
   const [deleteTarget, setDeleteTarget] = useState<GoalRow | null>(null);
   const [menuTarget, setMenuTarget] = useState<GoalRow | null>(null);
+  // iOS drops a Modal presented while another is still dismissing, so Delete
+  // from the menu opens the confirmation only once the menu has closed.
+  const pendingDelete = useRef<GoalRow | null>(null);
   const tutorialOffer = useTutorialOffer(settings, (goalId) =>
     navigation.navigate("FocusMode", { goalId }),
   );
@@ -268,8 +277,14 @@ function GoalsCockpitContainer({
         }}
         onDelete={() => {
           // Same confirmation as the long-press shortcut.
-          setDeleteTarget(menuTarget);
           setMenuTarget(null);
+          if (Platform.OS === "ios") pendingDelete.current = menuTarget;
+          else setDeleteTarget(menuTarget);
+        }}
+        onDismissed={() => {
+          if (!pendingDelete.current) return;
+          setDeleteTarget(pendingDelete.current);
+          pendingDelete.current = null;
         }}
       />
       <ConfirmDeleteModal

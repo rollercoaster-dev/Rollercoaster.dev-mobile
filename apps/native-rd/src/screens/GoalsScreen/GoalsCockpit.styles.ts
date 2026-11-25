@@ -39,7 +39,8 @@ export const styles = StyleSheet.create((theme) => ({
     top: theme.space[2],
     right: theme.space[2],
     zIndex: 1,
-    gap: theme.space[1],
+    // Wide enough that the two buttons' hitSlops don't meet.
+    gap: theme.space[2],
   },
   overline: {
     ...theme.textStyles.metadata,
@@ -102,7 +103,7 @@ export const styles = StyleSheet.create((theme) => ({
     // before the ⋯ joined the pin (#688's budget in GoalsCockpit).
     paddingRight: theme.space[3] + theme.space[8],
     // Tall enough that the stacked controls never hang below the card.
-    minHeight: theme.space[2] * 2 + KEEP_WARM_CONTROL_SIZE * 2 + theme.space[1],
+    minHeight: theme.space[2] * 3 + KEEP_WARM_CONTROL_SIZE * 2,
     gap: theme.space[2],
     ...shadowStyle(theme, "cardElevationSmall"),
   },
@@ -117,7 +118,8 @@ export const styles = StyleSheet.create((theme) => ({
     top: theme.space[2],
     right: theme.space[2],
     zIndex: 1,
-    gap: theme.space[1],
+    // Wide enough that the two buttons' hitSlops don't meet.
+    gap: theme.space[2],
   },
   keepWarmTitle: {
     color: theme.surfaceBorder.surfaceCardFg,

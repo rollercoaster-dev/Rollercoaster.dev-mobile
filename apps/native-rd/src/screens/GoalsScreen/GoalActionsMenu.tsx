@@ -20,6 +20,8 @@ export interface GoalActionsMenuProps {
   onEdit: (goalId: string) => void;
   onDelete: (goalId: string) => void;
   onClose: () => void;
+  /** iOS: the menu has finished closing (Modal onDismiss). */
+  onDismissed?: () => void;
 }
 
 export function GoalActionsMenu({
@@ -27,6 +29,7 @@ export function GoalActionsMenu({
   onEdit,
   onDelete,
   onClose,
+  onDismissed,
 }: GoalActionsMenuProps) {
   const { t } = useTranslation(["goals"]);
   const { theme } = useUnistyles();
@@ -37,6 +40,7 @@ export function GoalActionsMenu({
       transparent
       animationType="fade"
       onRequestClose={onClose}
+      onDismiss={onDismissed}
       accessibilityViewIsModal
     >
       {/* eslint-disable-next-line local/no-shared-component-reimplementation */}
