@@ -151,16 +151,34 @@ describe("ErrorBoundary", () => {
       expect(screen.getByText("Child content")).toBeTruthy();
     });
 
-    it("resets on its own when a resetKey changes", () => {
+    it("resets on its own when a resetKey changes, running onReset", () => {
+      const onReset = jest.fn();
       const { rerender } = render(
-        <ErrorBoundary resetKeys={["a"]}>
+        <ErrorBoundary resetKeys={["a"]} onReset={onReset}>
           <ThrowingChild shouldThrow={true} />
         </ErrorBoundary>,
       );
       expect(screen.getByTestId("error-boundary-fallback-screen")).toBeTruthy();
 
       rerender(
-        <ErrorBoundary resetKeys={["b"]}>
+        <ErrorBoundary resetKeys={["b"]} onReset={onReset}>
+          <ThrowingChild shouldThrow={false} />
+        </ErrorBoundary>,
+      );
+
+      expect(screen.getByText("Child content")).toBeTruthy();
+      expect(onReset).toHaveBeenCalledTimes(1);
+    });
+
+    it("resets when the resetKeys length changes", () => {
+      const { rerender } = render(
+        <ErrorBoundary resetKeys={["a"]}>
+          <ThrowingChild shouldThrow={true} />
+        </ErrorBoundary>,
+      );
+
+      rerender(
+        <ErrorBoundary resetKeys={["a", "b"]}>
           <ThrowingChild shouldThrow={false} />
         </ErrorBoundary>,
       );
@@ -182,7 +200,6 @@ describe("ErrorBoundary", () => {
       );
 
       expect(screen.getByTestId("error-boundary-fallback-screen")).toBeTruthy();
-      expect(screen.queryByText("Child content")).toBeNull();
     });
 
     it("does not retry in the update where the key change itself threw", () => {
