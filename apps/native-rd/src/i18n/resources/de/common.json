@@ -135,7 +135,8 @@
       "a11y": "{{label}}-Nachweis hinzufügen"
     },
     "evidenceBadge": {
-      "a11y": "{{count}} Nachweiseinträge, tippen zum Anzeigen"
+      "a11y_one": "{{count}} Nachweiseintrag, tippen zum Anzeigen",
+      "a11y_other": "{{count}} Nachweiseinträge, tippen zum Anzeigen"
     }
   },
   "goalCard": {
@@ -144,7 +145,8 @@
     "markComplete": "Ziel als erledigt markieren",
     "a11y": {
       "badgePreview": "Badge-Vorschau für {{title}}, tippen zum Bearbeiten des Designs",
-      "evidenceCount": "{{count}} Ziel-Nachweiseinträge, tippen zum Anzeigen",
+      "evidenceCount_one": "{{count}} Ziel-Nachweiseintrag, tippen zum Anzeigen",
+      "evidenceCount_other": "{{count}} Ziel-Nachweiseinträge, tippen zum Anzeigen",
       "markCompleteHint": "Öffnet Abschlussablauf zum Erfassen des finalen Nachweises"
     }
   },
