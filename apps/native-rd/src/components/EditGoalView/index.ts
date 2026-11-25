@@ -20,8 +20,14 @@ export type {
 export { EditGoalStepList } from "./EditGoalStepList";
 export type { EditGoalStepListProps } from "./EditGoalStepList";
 export { EditGoalStepRow } from "./EditGoalStepRow";
-export type { EditGoalStepRowProps } from "./EditGoalStepRow";
+export type {
+  EditGoalStepRowProps,
+  EditGoalStepRowCopy,
+} from "./EditGoalStepRow";
 export { EditGoalSubStepRow } from "./EditGoalSubStepRow";
-export type { EditGoalSubStepRowProps } from "./EditGoalSubStepRow";
+export type {
+  EditGoalSubStepRowProps,
+  EditGoalSubStepRowCopy,
+} from "./EditGoalSubStepRow";
 export { EditGoalOverflowMenu } from "./EditGoalOverflowMenu";
 export type { EditGoalOverflowMenuProps } from "./EditGoalOverflowMenu";
