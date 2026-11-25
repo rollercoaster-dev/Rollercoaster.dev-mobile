@@ -99,7 +99,7 @@ describe("StepCard", () => {
       <StepCard step={makeStep({ evidenceCount: 0 })} {...defaultProps} />,
     );
     expect(screen.queryByText("+ add evidence")).toBeNull();
-    expect(screen.queryByLabelText(/evidence items, tap to view/)).toBeNull();
+    expect(screen.queryByLabelText(/evidence items?, tap to view/)).toBeNull();
   });
 
   it("renders the evidence badge when count is > 0", () => {
