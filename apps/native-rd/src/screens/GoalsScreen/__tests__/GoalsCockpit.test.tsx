@@ -8,7 +8,7 @@ import {
 } from "../../../__tests__/test-utils";
 import { i18n } from "../../../i18n";
 import { Play } from "phosphor-react-native";
-import { useUnistyles } from "react-native-unistyles";
+import { UnistylesRuntime, useUnistyles } from "react-native-unistyles";
 import { composeTheme } from "../../../themes/compose";
 import { mockTheme } from "../../../__tests__/mocks/unistyles";
 import {
@@ -71,7 +71,10 @@ describe("GoalsCockpit", () => {
     const dark = composeTheme("dark", "default");
     jest
       .mocked(useUnistyles)
-      .mockReturnValue({ theme: dark } as ReturnType<typeof useUnistyles>);
+      // `rt` too: ProgressBar's useAnimationPref reads rt.themeName.
+      .mockReturnValue({ theme: dark, rt: UnistylesRuntime } as ReturnType<
+        typeof useUnistyles
+      >);
     try {
       renderWithProviders(
         <GoalsCockpit hero={makeHero()} keepWarm={[]} {...handlers()} />,
@@ -80,11 +83,10 @@ describe("GoalsCockpit", () => {
         dark.action.actionPrimaryFg,
       );
     } finally {
-      jest
-        .mocked(useUnistyles)
-        .mockReturnValue({ theme: mockTheme } as ReturnType<
-          typeof useUnistyles
-        >);
+      jest.mocked(useUnistyles).mockReturnValue({
+        theme: mockTheme,
+        rt: UnistylesRuntime,
+      } as ReturnType<typeof useUnistyles>);
     }
   });
   it.each([
