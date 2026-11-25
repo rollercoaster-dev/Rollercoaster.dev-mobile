@@ -16,12 +16,18 @@ export interface ScreenSubHeaderProps {
    * optically centered.
    */
   onBack?: () => void;
+  /**
+   * Screen-reader name for the back button. Defaults to "Go back"; pass one
+   * when the destination isn't obvious (e.g. Timeline: "Back to Badge").
+   */
+  backAccessibilityLabel?: string;
   right?: React.ReactNode;
 }
 
 export function ScreenSubHeader({
   label,
   onBack,
+  backAccessibilityLabel,
   right,
 }: ScreenSubHeaderProps) {
   const { t } = useTranslation(["common"]);
@@ -36,7 +42,9 @@ export function ScreenSubHeader({
           icon={<ArrowLeft size={24} weight="bold" />}
           onPress={onBack}
           tone="chrome"
-          accessibilityLabel={t("common:screenHeader.a11y.goBack")}
+          accessibilityLabel={
+            backAccessibilityLabel ?? t("common:screenHeader.a11y.goBack")
+          }
           testID="screen-sub-header-back"
         />
       ) : (

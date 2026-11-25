@@ -30,16 +30,16 @@ export const styles = StyleSheet.create((theme) => ({
     justifyContent: "space-between",
     gap: theme.space[2],
   },
-  // Back + "Edit ›" sit side by side at the end of the header row; the title
-  // keeps `flex: 1` so it takes the remaining width and wraps.
+  // "Edit ›" sits at the end of the header row (back lives in the sub-header
+  // above, #695); the title keeps `flex: 1` so it takes the remaining width.
   headerActions: {
     flexDirection: "row",
     flexWrap: "wrap",
     alignItems: "center",
     gap: theme.space[2],
   },
-  // At accessibility text sizes the two buttons leave the title a sliver of
-  // width and it breaks mid-word, so the actions drop below the title (#746).
+  // At accessibility text sizes the actions leave the title a sliver of width
+  // and it breaks mid-word, so they drop below the title (#746).
   headerStacked: {
     flexDirection: "column",
     alignItems: "flex-start",

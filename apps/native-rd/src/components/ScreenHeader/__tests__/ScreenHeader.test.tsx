@@ -61,6 +61,20 @@ describe("ScreenSubHeader", () => {
     expect(onBack).toHaveBeenCalledTimes(1);
   });
 
+  it("names the back button after its destination when given one", () => {
+    renderWithProviders(
+      <ScreenSubHeader
+        label="Timeline"
+        onBack={() => {}}
+        backAccessibilityLabel="Back to Badge"
+      />,
+    );
+    expect(screen.getByTestId("screen-sub-header-back")).toHaveProp(
+      "accessibilityLabel",
+      "Back to Badge",
+    );
+  });
+
   // A screen's sheet mounts inside its body, out of reach of the overlay's iOS
   // accessibilityViewIsModal, so the header hides itself (#686).
   it("hides its back button from assistive tech while a sheet is open", () => {

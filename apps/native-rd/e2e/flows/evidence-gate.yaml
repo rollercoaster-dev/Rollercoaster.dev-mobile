@@ -124,7 +124,7 @@ env:
       - back
 # Dismissing returns to whatever pushed the modal — Timeline, not Focus.
 - tapOn:
-    id: "timeline-back-button"
+    id: "screen-sub-header-back"
 - extendedWaitUntil:
     visible:
       id: "focus-current-task-add-text"
