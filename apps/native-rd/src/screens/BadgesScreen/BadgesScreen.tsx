@@ -14,7 +14,8 @@ import type {
   RootTabParamList,
 } from "../../navigation/types";
 import { useTopInsetColor } from "../../navigation/TopInsetColor";
-import { BadgesWall } from "./BadgesWall";
+import { useThemeContext } from "../../hooks/useTheme";
+import { BadgesWall, wallLayoutFor } from "./BadgesWall";
 import type { BadgesWallGalleryItem, BadgesWallSpotlight } from "./BadgesWall";
 import { WALL_SURFACE } from "./BadgesWall.styles";
 import { styles } from "./BadgesScreen.styles";
@@ -35,6 +36,8 @@ function BadgesWallContainer({
   const navigation = useNavigation<Nav>();
   const rows = useQuery(badgesWithGoalsQuery);
   const { t } = useTranslation(["badges"]);
+  const { variant } = useThemeContext();
+  const layout = wallLayoutFor(variant);
 
   const titleOf = (row: BadgeRow) =>
     (row.goalTitle as string | null) ?? t("badges:card.untitledFallback");
@@ -60,8 +63,9 @@ function BadgesWallContainer({
   // Populated, the wall is full-bleed with no ScreenHeader — so it also takes
   // over the device top-inset strip, which App.tsx otherwise paints in the
   // header color. Without this the dark surface sits under an orphaned purple
-  // band. The empty branch keeps its ScreenHeader, so the strip stays default.
-  useTopInsetColor(count > 0 ? WALL_SURFACE : null);
+  // band. The empty branch keeps its ScreenHeader, so the strip stays default,
+  // and so does the theme-aware list layout (it sits on the theme background).
+  useTopInsetColor(count > 0 && layout === "wall" ? WALL_SURFACE : null);
 
   const wall = (
     <BadgesWall
@@ -69,6 +73,7 @@ function BadgesWallContainer({
       spotlight={spotlight}
       gallery={gallery}
       contentInset={contentInset}
+      layout={layout}
       onOpenBadge={(badgeId) => navigation.navigate("BadgeDetail", { badgeId })}
       onSeeGoals={() => {
         // Goals lives on a sibling tab, so the jump goes through the tab

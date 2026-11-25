@@ -19,7 +19,10 @@ import type { BadgeDesign } from "../../badges/types";
 import { BadgeWallCell } from "../../components/BadgeWallCell/BadgeWallCell";
 import { Button } from "../../components/Button";
 import { Text } from "../../components/Text";
-import { CELL_SIZE } from "../../components/BadgeWallCell/BadgeWallCell.styles";
+import {
+  CELL_SIZE,
+  CELL_WIDTH,
+} from "../../components/BadgeWallCell/BadgeWallCell.styles";
 import { useAnimationPref } from "../../hooks/useAnimationPref";
 import { formatDate } from "../../utils/format";
 import { palette } from "../../themes/palette";
@@ -29,7 +32,26 @@ import {
   GALLERY_H_PADDING,
   SPOTLIGHT_NARROW_WIDTH,
   SPOTLIGHT_ART_COMPACT,
+  LIST_ART_SIZE,
 } from "./BadgesWall.styles";
+
+/**
+ * How the populated collection is presented (#689).
+ * - `wall`: the fixed dark "wall of proof" — spotlight + dense labeled grid.
+ * - `list`: a calmer, theme-aware labeled list (one badge per row, no glow, no
+ *   spotlight card) for the reduced-complexity themes. See {@link wallLayoutFor}.
+ */
+export type BadgesWallLayout = "wall" | "list";
+
+/**
+ * Clean Signal (lowInfo) and Loud & Clear (lowVision) get the labeled list:
+ * the dense dark gallery is the opposite of "reduced visual complexity", and a
+ * one-per-row list gives low-vision users big names instead of a 2-line
+ * caption. Every other theme keeps the intentional dark wall (#404 D5/D13).
+ */
+export function wallLayoutFor(variant: string): BadgesWallLayout {
+  return variant === "lowInfo" || variant === "lowVision" ? "list" : "wall";
+}
 
 /** Already-resolved most-recently-earned badge for the spotlight card (D7). */
 export interface BadgesWallSpotlight {
@@ -66,6 +88,8 @@ export interface BadgesWallProps {
    * Layout only — omit it and the gallery keeps its own fixed bottom padding.
    */
   contentInset?: { paddingBottom: number };
+  /** Populated presentation; defaults to the dark `wall` (#689). */
+  layout?: BadgesWallLayout;
 }
 
 /** Ghost-badge motif for the empty state — a dashed outline coin with the
@@ -133,6 +157,7 @@ export function BadgesWall({
   onOpenBadge,
   onSeeGoals,
   contentInset,
+  layout = "wall",
 }: BadgesWallProps) {
   const { t, i18n } = useTranslation(["badges"]);
   const { animationPref } = useAnimationPref();
@@ -195,6 +220,61 @@ export function BadgesWall({
     );
   }
 
+  if (layout === "list") {
+    // Spotlight first (newest), then the rest — same order as the wall, but as
+    // plain rows: the theme's own surface and ink, no glow, no dark panel.
+    const rows: BadgesWallGalleryItem[] = spotlight
+      ? [
+          {
+            id: spotlight.id,
+            title: spotlight.goalTitle,
+            design: spotlight.design,
+          },
+          ...gallery,
+        ]
+      : gallery;
+    return (
+      <FlatList
+        style={styles.listSurface}
+        data={rows}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={[styles.listContent, contentInset]}
+        testID="badges-wall-list"
+        ListHeaderComponent={
+          <View style={styles.listHeader}>
+            <Text
+              variant="screenTitle"
+              style={styles.listHeaderCount}
+              testID="badges-wall-count"
+            >
+              {t("badges:wall.count", { count })}
+            </Text>
+          </View>
+        }
+        renderItem={({ item }) => (
+          // eslint-disable-next-line local/no-shared-component-reimplementation -- tappable content row (a badge), not a Button lookalike
+          <Pressable
+            onPress={() => onOpenBadge(item.id)}
+            accessible
+            accessibilityRole="button"
+            accessibilityLabel={item.title}
+            testID={`badge-list-row-${item.id}`}
+            style={styles.listRow}
+          >
+            <SpotlightArt
+              design={item.design}
+              title={item.title}
+              size={LIST_ART_SIZE}
+            />
+            <Text variant="title" style={styles.listRowTitle}>
+              {item.title}
+            </Text>
+          </Pressable>
+        )}
+      />
+    );
+  }
+
   // Below SPOTLIGHT_NARROW_WIDTH the spotlight row can't hold 60pt art + a
   // trailing arrow AND a readable title, so it switches to a compact layout
   // (smaller art, tighter gaps, no arrow) that hands the reclaimed width to the
@@ -203,14 +283,15 @@ export function BadgesWall({
   const isNarrow = width > 0 && width < SPOTLIGHT_NARROW_WIDTH;
   const spotlightArtSize = isNarrow ? SPOTLIGHT_ART_COMPACT : CELL_SIZE;
 
-  // Pack as many fixed 60pt cells as fit across the measured surface width;
+  // Pack as many fixed-width labeled cells as fit across the measured surface width;
   // floor of 3 so a narrow/zero-width (test) viewport still lays out a grid.
   // `galleryRow` centers each row, so the leftover space (cells rarely divide
   // the width evenly) splits symmetrically instead of trailing off the right.
   const numColumns = Math.max(
     3,
     Math.floor(
-      (width - GALLERY_H_PADDING * 2 + GALLERY_GAP) / (CELL_SIZE + GALLERY_GAP),
+      (width - GALLERY_H_PADDING * 2 + GALLERY_GAP) /
+        (CELL_WIDTH + GALLERY_GAP),
     ),
   );
 
