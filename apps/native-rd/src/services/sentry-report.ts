@@ -80,6 +80,7 @@ export type ReportContext =
   // Startup never produced the user-settings row within StartupGate's bound.
   | { area: "db.startup"; kind: "timeout" }
   | { area: "settings.density" }
+  | { area: "settings.motion" }
   | { area: "settings.theme" }
   // The cockpit pin is a userSettings write, not a goal write — it belongs with
   // the other settings.* areas rather than under goal.mutate's closed kinds.

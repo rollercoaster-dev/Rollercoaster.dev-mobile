@@ -20,6 +20,27 @@
       }
     }
   },
+  "motion": {
+    "title": "Motion",
+    "options": {
+      "full": {
+        "label": "Full",
+        "description": "All animations"
+      },
+      "reduced": {
+        "label": "Reduced",
+        "description": "Less movement, nothing loops"
+      },
+      "none": {
+        "label": "None",
+        "description": "No animations"
+      }
+    },
+    "override": {
+      "theme": "{{theme}} keeps motion off. Your choice here applies in the other themes.",
+      "os": "Your device's Reduce Motion setting keeps motion off. Your choice here applies when it's off."
+    }
+  },
   "onboarding": {
     "title": "Onboarding",
     "replayWelcome": "Replay welcome",
@@ -32,7 +53,8 @@
   "errors": {
     "densitySaveFailed": "Couldn't save that density. Please try again.",
     "themeSaveFailed": "Couldn't save that theme. Please try again.",
-    "tutorialStartFailed": "Couldn't set up the tutorial goal. Please try again."
+    "tutorialStartFailed": "Couldn't set up the tutorial goal. Please try again.",
+    "motionSaveFailed": "Couldn't save that motion setting. Please try again."
   },
   "about": {
     "title": "About",

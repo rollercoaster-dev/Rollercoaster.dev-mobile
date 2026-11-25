@@ -3,6 +3,7 @@ import type { Namespace, TFunction } from "i18next";
 import type { EvidenceTypeValue } from "../types/evidence";
 import type { ThemeName } from "../themes/compose";
 import type { DensityLevel } from "../utils/density";
+import type { AnimationPref } from "../hooks/useAnimationPref";
 
 /**
  * Centralized lookups for the shared label keys this app uses across screens.
@@ -56,5 +57,19 @@ export function densityA11yLabel<NS extends Namespace>(
 ): string {
   const label = t(`density.options.${id}.label`, SETTINGS_NS);
   const description = t(`density.options.${id}.description`, SETTINGS_NS);
+  return `${label}. ${description}`;
+}
+
+/**
+ * Composite screen-reader label for a motion option: "<label>. <description>".
+ * Same contract as `densityA11yLabel` — the description is replaced by "✓" on
+ * the selected row, so it has to live in the accessible name.
+ */
+export function motionA11yLabel<NS extends Namespace>(
+  t: TFunction<NS>,
+  id: AnimationPref,
+): string {
+  const label = t(`motion.options.${id}.label`, SETTINGS_NS);
+  const description = t(`motion.options.${id}.description`, SETTINGS_NS);
   return `${label}. ${description}`;
 }
