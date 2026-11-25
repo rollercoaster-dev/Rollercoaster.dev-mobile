@@ -11,6 +11,8 @@
  *   and local paths from exception MESSAGE text
  *   (the SDK's default `createReactNativeRewriteFrames` already rewrites
  *   stack-frame filenames more aggressively, to `app:///main.jsbundle`)
+ * - `scrubEvent`: keep the `react` context only as a scrubbed
+ *   `componentStack` string (written by `reportRenderError`)
  * - `scrubEvent`: reduce request URLs to host-only
  * - `scrubEvent`: re-scrub final event breadcrumbs because native/device
  *   breadcrumbs can be merged after `beforeBreadcrumb`
@@ -56,6 +58,13 @@ const SANDBOX_PATH_PATTERN =
 const ANDROID_PATH_PATTERN = /\/data\/(?:user|data)\/[^\s'")>]*/g;
 const ANDROID_SHARED_STORAGE_PATH_PATTERN =
   /\/(?:storage\/emulated\/\d+|sdcard|mnt\/sdcard)\/[^\s'")>]*/g;
+// Install locations of the app bundle itself. Hermes writes these into
+// symbol-location text such as a React component stack
+// (`at GoalCard (/private/var/containers/Bundle/Application/<UUID>/…)`); the
+// per-install UUID / APK directory identify the device's install.
+const IOS_BUNDLE_PATH_PATTERN =
+  /(?:\/private)?\/var\/containers\/Bundle\/[^\s'")>]*/g;
+const ANDROID_APK_PATH_PATTERN = /\/data\/app\/[^\s'")>]*/g;
 
 const REDACTED_PATH = "/<redacted>";
 const REDACTED_EMAIL = "[redacted-email]";
@@ -72,6 +81,9 @@ const ALLOWED_CONTEXT_KEYS = new Set([
   "os",
   "runtime",
   "react_native_context",
+  // Written only by `reportRenderError` (sentry-report.ts) and rebuilt below
+  // to a single scrubbed `componentStack` string.
+  "react",
 ]);
 
 const HTTP_BREADCRUMB_CATEGORIES = new Set(["fetch", "xhr", "http", "request"]);
@@ -106,7 +118,29 @@ function scrubExceptionValue(value: string): string {
     .replace(SANDBOX_PATH_PATTERN, REDACTED_PATH)
     .replace(ANDROID_PATH_PATTERN, REDACTED_PATH)
     .replace(ANDROID_SHARED_STORAGE_PATH_PATTERN, REDACTED_PATH)
+    .replace(IOS_BUNDLE_PATH_PATTERN, REDACTED_PATH)
+    .replace(ANDROID_APK_PATH_PATTERN, REDACTED_PATH)
     .replace(LOCAL_PATH_PATTERN, REDACTED_PATH);
+}
+
+/**
+ * Scrub a React component stack (`errorInfo.componentStack`) before it leaves
+ * the device. The stack is component names plus their bundle locations; the
+ * same redactions as exception text apply, so a path or URL in a location
+ * never reaches Sentry.
+ */
+export function scrubComponentStack(stack: string): string {
+  return scrubExceptionValue(stack);
+}
+
+// Keep only a string `componentStack` from the `react` context, scrubbed.
+// Anything else an SDK or integration adds under that key is dropped.
+function scrubReactContext(
+  context: Record<string, unknown> | undefined,
+): { componentStack: string } | undefined {
+  const stack = context?.componentStack;
+  if (typeof stack !== "string") return undefined;
+  return { componentStack: scrubComponentStack(stack) };
 }
 
 function isHttpBreadcrumb(breadcrumb: Breadcrumb): boolean {
@@ -156,6 +190,14 @@ export function scrubEvent(event: ErrorEvent): ErrorEvent {
     for (const key of Object.keys(event.contexts)) {
       if (!ALLOWED_CONTEXT_KEYS.has(key)) {
         delete event.contexts[key];
+      }
+    }
+    if (event.contexts.react) {
+      const react = scrubReactContext(event.contexts.react);
+      if (react) {
+        event.contexts.react = react;
+      } else {
+        delete event.contexts.react;
       }
     }
   }

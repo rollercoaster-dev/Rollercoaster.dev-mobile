@@ -9,6 +9,7 @@ import {
   breadcrumb,
   reportError,
   reportLoggerError,
+  reportRenderError,
   type ReportContext,
 } from "../sentry-report";
 
@@ -153,6 +154,41 @@ describe("reportError", () => {
       "area",
       "kind",
     ]);
+  });
+});
+
+describe("reportRenderError", () => {
+  it("tags render and attaches the component stack as the react context", () => {
+    const err = new Error("boom");
+    const stack =
+      "\n    at GoalCard (app:///main.jsbundle:1:2)\n    at GoalsScreen";
+    reportRenderError(err, stack);
+    expect(mockState.captured).toHaveLength(1);
+    expect(mockState.captured[0].error).toBe(err);
+    expect(mockState.captured[0].scope.tags).toEqual({ area: "render" });
+    expect(mockState.captured[0].scope.contexts).toEqual({
+      react: { componentStack: stack },
+    });
+    expect(mockState.captured[0].scope.extras).toEqual({});
+  });
+
+  it("scrubs paths out of the component stack before it is attached", () => {
+    reportRenderError(
+      new Error("boom"),
+      "\n    at GoalCard (/private/var/containers/Bundle/Application/1A2B/App.app/main.jsbundle:1:2)\n    at Root (/Users/joe/code/app/index.js:3:4)",
+    );
+    const react = mockState.captured[0].scope.contexts.react as {
+      componentStack: string;
+    };
+    expect(react.componentStack).toBe(
+      "\n    at GoalCard (/<redacted>)\n    at Root (/<redacted>/code/app/index.js:3:4)",
+    );
+  });
+
+  it("sends no react context when React gave no component stack", () => {
+    reportRenderError(new Error("boom"), null);
+    expect(mockState.captured[0].scope.tags).toEqual({ area: "render" });
+    expect(mockState.captured[0].scope.contexts).toEqual({});
   });
 });
 

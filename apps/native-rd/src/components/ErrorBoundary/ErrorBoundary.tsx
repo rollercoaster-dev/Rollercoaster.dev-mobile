@@ -1,5 +1,5 @@
-import React, { Component, type ReactNode } from "react";
-import { reportError } from "../../services/sentry-report";
+import React, { Component, type ErrorInfo, type ReactNode } from "react";
+import { reportRenderError } from "../../services/sentry-report";
 import { ErrorBoundaryFallback } from "./ErrorBoundaryFallback";
 
 /**
@@ -37,8 +37,8 @@ export class ErrorBoundary extends Component<
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error) {
-    reportError(error, { area: "render" });
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    reportRenderError(error, errorInfo.componentStack);
     console.error("ErrorBoundary caught:", error);
   }
 

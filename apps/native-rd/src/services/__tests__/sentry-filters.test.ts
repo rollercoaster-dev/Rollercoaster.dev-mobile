@@ -244,6 +244,31 @@ describe("scrubEvent", () => {
     expect(scrubbed.contexts?.goal).toBeUndefined();
   });
 
+  it("keeps the react context only as a scrubbed componentStack", () => {
+    const event = makeEvent({
+      contexts: {
+        react: {
+          componentStack:
+            "\n    at GoalCard (/data/app/~~x==/com.rollercoaster-1/base.apk!/assets/index.android.bundle:1:2)\n    at Link (https://example.com/goal?id=1)",
+          props: { title: "leak: goal title" },
+        },
+      },
+    });
+    const scrubbed = scrubEvent(event);
+    expect(scrubbed.contexts?.react).toEqual({
+      componentStack:
+        "\n    at GoalCard (/<redacted>)\n    at Link (<redacted-url>)",
+    });
+  });
+
+  it("drops a react context that has no string componentStack", () => {
+    const event = makeEvent({
+      contexts: { react: { props: { title: "leak: goal title" } } },
+    });
+    const scrubbed = scrubEvent(event);
+    expect(scrubbed.contexts?.react).toBeUndefined();
+  });
+
   it("re-scrubs breadcrumbs merged onto the final event", () => {
     const event = makeEvent({
       breadcrumbs: [
