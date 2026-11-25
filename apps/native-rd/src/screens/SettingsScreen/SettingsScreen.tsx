@@ -29,8 +29,10 @@ import { SettingsSection } from "../../components/SettingsSection";
 import { SettingsRow } from "../../components/SettingsRow";
 import { SettingsThemeSection } from "../../components/SettingsThemeSection";
 import { SettingsDensityRows } from "../../components/SettingsDensityRows";
+import { SettingsMotionRows } from "../../components/SettingsMotionRows";
 import { useToast } from "../../components/Toast";
 import { useDensity } from "../../hooks/useDensity";
+import { useAnimationPref } from "../../hooks/useAnimationPref";
 import { useThemeContext } from "../../hooks/useTheme";
 import { Logger } from "../../shims/rd-logger";
 import { styles } from "./SettingsScreen.styles";
@@ -77,6 +79,28 @@ function DensitySection() {
         // toast so the row doesn't look "saved" while nothing persisted.
         if (!setDensity(level)) {
           showToast({ message: t("settings:errors.densitySaveFailed") });
+        }
+      }}
+    />
+  );
+}
+
+/**
+ * Owns the motion state for `SettingsMotionRows` (#692). Like DensitySection,
+ * the hook reads an Evolu query, so it stays inside the Suspense boundary.
+ */
+function MotionSection() {
+  const { userPref, override, setAnimationPref } = useAnimationPref();
+  const { showToast } = useToast();
+  const { t } = useTranslation(["settings"]);
+
+  return (
+    <SettingsMotionRows
+      selectedPref={userPref}
+      override={override}
+      onSelect={(pref) => {
+        if (!setAnimationPref(pref)) {
+          showToast({ message: t("settings:errors.motionSaveFailed") });
         }
       }}
     />
@@ -218,6 +242,12 @@ export function SettingsScreen({
         <ErrorBoundary>
           <Suspense fallback={<ActivityIndicator />}>
             <DensitySection />
+          </Suspense>
+        </ErrorBoundary>
+
+        <ErrorBoundary>
+          <Suspense fallback={<ActivityIndicator />}>
+            <MotionSection />
           </Suspense>
         </ErrorBoundary>
 
