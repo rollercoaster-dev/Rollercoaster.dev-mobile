@@ -142,13 +142,11 @@ export function Toast({
           style={[styles.actionButton, stacked && styles.actionButtonStacked]}
           onPress={() => {
             if (timerRef.current) clearTimeout(timerRef.current);
-            // Dismiss in `finally`: the timer is already cleared, so a
-            // throwing handler would otherwise strand the toast (#302).
-            try {
-              action.onPress();
-            } finally {
-              onDismissRef.current?.();
-            }
+            // Dismiss before the action: the timer is already cleared, so a
+            // throwing handler can't strand the toast, and a toast the action
+            // shows (e.g. "Undo failed") isn't hidden right after (#302).
+            onDismissRef.current?.();
+            action.onPress();
           }}
           accessibilityRole="button"
           accessibilityLabel={action.label}

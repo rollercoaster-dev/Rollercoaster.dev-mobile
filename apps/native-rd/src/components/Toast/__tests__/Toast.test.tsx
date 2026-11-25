@@ -120,7 +120,7 @@ describe("Toast", () => {
     expect(onPress).toHaveBeenCalledTimes(1);
   });
 
-  it("dismisses after the action runs", () => {
+  it("dismisses before the action runs, so the action can show a new toast", () => {
     const calls: string[] = [];
     renderWithProviders(
       <Toast
@@ -131,7 +131,7 @@ describe("Toast", () => {
       />,
     );
     fireEvent.press(screen.getByLabelText("Undo"));
-    expect(calls).toEqual(["action", "dismiss"]);
+    expect(calls).toEqual(["dismiss", "action"]);
   });
 
   it("still dismisses when the action throws (#302)", () => {
@@ -354,6 +354,63 @@ describe("ToastContext", () => {
     expect(screen.getByText("Context toast")).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId("hide-toast"));
     expect(screen.queryByText("Context toast")).toBeNull();
+  });
+
+  it("dismisses on action press via the provider (#302)", () => {
+    function ActionOnly() {
+      const { showToast } = useToast();
+      return (
+        <Pressable
+          testID="show-action-toast"
+          onPress={() =>
+            showToast({
+              message: "Step deleted",
+              action: { label: "Undo", onPress() {} },
+            })
+          }
+        >
+          <Text>Show</Text>
+        </Pressable>
+      );
+    }
+    renderWithProviders(
+      <ToastProvider>
+        <ActionOnly />
+      </ToastProvider>,
+    );
+    fireEvent.press(screen.getByTestId("show-action-toast"));
+    fireEvent.press(screen.getByLabelText("Undo"));
+    expect(screen.queryByText("Step deleted")).toBeNull();
+  });
+
+  it("keeps a toast the action shows on screen (#302)", () => {
+    function ReShow() {
+      const { showToast } = useToast();
+      return (
+        <Pressable
+          testID="show-undo-toast"
+          onPress={() =>
+            showToast({
+              message: "Step deleted",
+              action: {
+                label: "Undo",
+                onPress: () => showToast({ message: "Undo failed" }),
+              },
+            })
+          }
+        >
+          <Text>Show</Text>
+        </Pressable>
+      );
+    }
+    renderWithProviders(
+      <ToastProvider>
+        <ReShow />
+      </ToastProvider>,
+    );
+    fireEvent.press(screen.getByTestId("show-undo-toast"));
+    fireEvent.press(screen.getByLabelText("Undo"));
+    expect(screen.getByText("Undo failed")).toBeOnTheScreen();
   });
 
   it("throws when useToast is used outside provider", () => {
