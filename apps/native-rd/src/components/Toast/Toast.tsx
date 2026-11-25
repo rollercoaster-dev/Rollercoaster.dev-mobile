@@ -17,16 +17,23 @@ export interface ToastAction {
   onPress: () => void;
 }
 
-export interface ToastProps {
+interface ToastBaseProps {
   visible: boolean;
   message: string;
-  action?: ToastAction;
   duration?: number;
-  onDismiss?: () => void;
   /** Fired once the slide-out completes (finished === true), so the owner can
    * release the toast's state instead of holding it for the app's lifetime. */
   onExitComplete?: () => void;
 }
+
+// Pressing the action clears the auto-dismiss timer, so `onDismiss` is the
+// only way an actionable toast can leave the screen. The union makes an
+// `action` without `onDismiss` a type error instead of a stuck toast (#302).
+export type ToastProps = ToastBaseProps &
+  (
+    | { action?: undefined; onDismiss?: () => void }
+    | { action?: ToastAction; onDismiss: () => void }
+  );
 
 const SLIDE_DISTANCE = 100;
 
@@ -135,7 +142,13 @@ export function Toast({
           style={[styles.actionButton, stacked && styles.actionButtonStacked]}
           onPress={() => {
             if (timerRef.current) clearTimeout(timerRef.current);
-            action.onPress();
+            // Dismiss in `finally`: the timer is already cleared, so a
+            // throwing handler would otherwise strand the toast (#302).
+            try {
+              action.onPress();
+            } finally {
+              onDismissRef.current?.();
+            }
           }}
           accessibilityRole="button"
           accessibilityLabel={action.label}
