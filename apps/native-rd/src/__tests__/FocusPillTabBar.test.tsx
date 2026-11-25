@@ -82,7 +82,7 @@ describe("FocusPillTabBar", () => {
     expectAccessibleLabel(settings, "Settings");
   });
 
-  it("marks the active tab with selected state and shows only its label", () => {
+  it("marks the active tab with selected state and labels every tab", () => {
     const { props } = buildProps({ activeIndex: 1 });
     renderWithProviders(<FocusPillTabBar {...props} />);
 
@@ -97,18 +97,20 @@ describe("FocusPillTabBar", () => {
     });
 
     // The active label rides the slide knob, which is decorative (hidden from
-    // the a11y tree — each slot already exposes role/label/selected), so the
-    // visible-label assertions must opt into hidden elements. Only the active
-    // destination renders a label; the idle slots are icon-only.
+    // the a11y tree — each slot already exposes role/label/selected), so that
+    // assertion opts into hidden elements.
     expect(
-      screen.getByText("Badges", { includeHiddenElements: true }),
-    ).toBeOnTheScreen();
-    expect(
-      screen.queryByText("Goals", { includeHiddenElements: true }),
-    ).toBeNull();
-    expect(
-      screen.queryByText("Settings", { includeHiddenElements: true }),
-    ).toBeNull();
+      screen.getByTestId("tab-slide-knob-label", {
+        includeHiddenElements: true,
+      }),
+    ).toHaveTextContent("Badges");
+    // Idle destinations keep a visible name too (#695), drawn in their slot.
+    expect(screen.getByTestId("tab-GoalsTab-label")).toHaveTextContent("Goals");
+    expect(screen.getByTestId("tab-SettingsTab-label")).toHaveTextContent(
+      "Settings",
+    );
+    // The active slot leaves its label to the knob rather than drawing two.
+    expect(screen.queryByTestId("tab-BadgesTab-label")).toBeNull();
   });
 
   it.each([
@@ -250,6 +252,14 @@ describe("FocusPillTabBar", () => {
         }),
       ).toBeNull();
       expectAccessibleLabel(screen.getByTestId("tab-BadgesTab"), "Badges");
+    });
+
+    it("drops idle slot labels at accessibility sizes, keeping tab labels", () => {
+      const { props } = buildProps({ activeIndex: 1 });
+      renderWithProviders(<FocusPillTabBar {...props} />);
+      mockFontScale(2.35);
+      expect(screen.queryByTestId("tab-GoalsTab-label")).toBeNull();
+      expectAccessibleLabel(screen.getByTestId("tab-GoalsTab"), "Goals");
     });
   });
 

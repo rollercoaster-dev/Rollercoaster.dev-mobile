@@ -58,8 +58,8 @@ export function FocusPillTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const { shouldAnimate } = useAnimationPref();
   const { t } = useTranslation();
-  // At accessibility sizes no label fits a third of the pill, so the knob goes
-  // icon-only; the slot's accessibilityLabel still names the tab (#746).
+  // At accessibility sizes no label fits a third of the pill, so the bar goes
+  // icon-only; each slot's accessibilityLabel still names the tab (#746).
   const { isAccessibilitySize } = useTypeScale();
   // Rendered by the navigator outside every screen, so a screen's sheet can't
   // isolate it; hide it from assistive tech while any sheet is open (#686).
@@ -216,9 +216,24 @@ export function FocusPillTabBar({ state, navigation }: BottomTabBarProps) {
                 onPress={() => navigateTo(slot.entry)}
                 style={styles.slot}
               >
-                {/* The active slot's icon is drawn by the knob above it. */}
+                {/* The active slot's icon and label are drawn by the knob
+                    above it. Idle slots keep their label too, so every
+                    destination is named without having to visit it (#695). */}
                 {slot.isActive ? null : (
-                  <TabIcon name={slot.name} color={inactiveColor} />
+                  <>
+                    <TabIcon name={slot.name} color={inactiveColor} />
+                    {isAccessibilitySize ? null : (
+                      <Text
+                        variant="label"
+                        chrome
+                        testID={`tab-${slot.name}-label`}
+                        numberOfLines={1}
+                        style={[styles.label, { color: inactiveColor }]}
+                      >
+                        {tabLabels[slot.name]}
+                      </Text>
+                    )}
+                  </>
                 )}
               </Pressable>
             ))}
@@ -263,8 +278,12 @@ const styles = StyleSheet.create((theme) => ({
   slot: {
     flex: 1,
     height: 48,
+    // Same row as the knob, so a label doesn't shift when its slot activates.
+    flexDirection: "row" as const,
     alignItems: "center" as const,
     justifyContent: "center" as const,
+    gap: 8,
+    paddingHorizontal: 12,
   },
   knob: {
     position: "absolute" as const,
