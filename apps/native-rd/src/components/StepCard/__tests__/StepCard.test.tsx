@@ -3,7 +3,9 @@ import {
   renderWithProviders,
   screen,
   fireEvent,
+  act,
 } from "../../../__tests__/test-utils";
+import { i18n } from "../../../i18n";
 import {
   StepCard,
   type StepCardStep,
@@ -73,6 +75,23 @@ describe("StepCard", () => {
       <StepCard step={makeStep({ evidenceCount: 1 })} {...defaultProps} />,
     );
     expect(screen.getByText("1 item")).toBeOnTheScreen();
+    expect(
+      screen.getByLabelText("1 evidence item, tap to view"),
+    ).toBeOnTheScreen();
+  });
+
+  it("uses the German singular evidence badge label for 1 item (#80)", async () => {
+    await act(() => i18n.changeLanguage("de"));
+    try {
+      renderWithProviders(
+        <StepCard step={makeStep({ evidenceCount: 1 })} {...defaultProps} />,
+      );
+      expect(
+        screen.getByLabelText("1 Nachweiseintrag, tippen zum Anzeigen"),
+      ).toBeOnTheScreen();
+    } finally {
+      await act(() => i18n.changeLanguage("en"));
+    }
   });
 
   it("does not render the evidence badge when count is 0", () => {

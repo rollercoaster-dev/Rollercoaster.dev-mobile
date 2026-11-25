@@ -135,7 +135,8 @@
       "a11y": "Add {{label}} evidence"
     },
     "evidenceBadge": {
-      "a11y": "{{count}} evidence items, tap to view"
+      "a11y_one": "{{count}} evidence item, tap to view",
+      "a11y_other": "{{count}} evidence items, tap to view"
     }
   },
   "goalCard": {
@@ -144,7 +145,8 @@
     "markComplete": "Mark goal complete",
     "a11y": {
       "badgePreview": "Badge preview for {{title}}, tap to edit design",
-      "evidenceCount": "{{count}} goal evidence items, tap to view",
+      "evidenceCount_one": "{{count}} goal evidence item, tap to view",
+      "evidenceCount_other": "{{count}} goal evidence items, tap to view",
       "markCompleteHint": "Opens completion flow to capture final evidence"
     }
   },
