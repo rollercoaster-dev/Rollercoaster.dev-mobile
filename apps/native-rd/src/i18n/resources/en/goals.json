@@ -57,5 +57,11 @@
       "label": "{{title}}, {{stepsCompleted}} of {{stepsTotal}} steps completed, {{status}}",
       "labelWithNextStep": "{{title}}, next: {{nextStep}}, {{stepsCompleted}} of {{stepsTotal}} steps completed, {{status}}"
     }
+  },
+  "goalMenu": {
+    "open": "More options for {{title}}",
+    "edit": "Edit goal",
+    "delete": "Delete goal",
+    "dismiss": "Close menu"
   }
 }

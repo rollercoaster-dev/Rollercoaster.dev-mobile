@@ -4,7 +4,7 @@ import { useTypeScale } from "../../hooks/useTypeScale";
 import { useTranslation } from "react-i18next";
 import { useUnistyles } from "react-native-unistyles";
 import Svg, { Circle } from "react-native-svg";
-import { Play, PushPin } from "phosphor-react-native";
+import { DotsThree, Play, PushPin } from "phosphor-react-native";
 import { ProgressRing } from "../../components/ProgressRing";
 import { ProgressBar } from "../../components/ProgressBar";
 import { Button } from "../../components/Button";
@@ -45,6 +45,8 @@ export interface GoalsCockpitProps {
   onNewGoal: () => void;
   /** Long-press a hero or keep-warm card to delete its goal (D14). */
   onDeleteGoal: (goalId: string) => void;
+  /** The visible ⋯ on a hero or keep-warm card: opens its goal menu (#695). */
+  onOpenGoalMenu: (goalId: string) => void;
   /** True when the hero holds the slot because it is pinned, not by recency. */
   heroIsPinned: boolean;
   onPinGoal: (goalId: string) => void;
@@ -109,6 +111,34 @@ function PinToggle({
 }
 
 /**
+ * The visible way into a goal's menu (#695), beside the pin on every card so
+ * goal management never depends on discovering the long press.
+ */
+function GoalMenuButton({
+  title,
+  tone,
+  onPress,
+  testID,
+}: {
+  title: string;
+  tone: IconButtonTone;
+  onPress: () => void;
+  testID: string;
+}) {
+  const { t } = useTranslation(["goals"]);
+  return (
+    <IconButton
+      icon={<DotsThree size={20} weight="bold" />}
+      onPress={onPress}
+      tone={tone}
+      size="sm"
+      accessibilityLabel={t("goals:goalMenu.open", { title })}
+      testID={testID}
+    />
+  );
+}
+
+/**
  * Pure, prop-driven Goals cockpit. The container (GoalsScreen) owns the Evolu
  * query + navigation and feeds this view data as props, which is what makes the
  * populated cockpit storyable across all 7 themes (the web Storybook's Evolu
@@ -121,6 +151,7 @@ export function GoalsCockpit({
   onOpenGoal,
   onNewGoal,
   onDeleteGoal,
+  onOpenGoalMenu,
   heroIsPinned,
   onPinGoal,
   onUnpinGoal,
@@ -193,7 +224,8 @@ export function GoalsCockpit({
   return (
     <View style={styles.container}>
       {/* Hero has no onPress: tap = the explicit Start/Resume button below,
-          long-press = delete (mirrors the old GoalCard shortcut, D14).
+          long-press = delete (mirrors the old GoalCard shortcut, D14; the ⋯
+          is the visible route to the same action, #695).
           accessible={false} keeps the inner Button independently focusable for
           screen readers instead of collapsing the card into one a11y node. */}
       <Pressable
@@ -202,8 +234,8 @@ export function GoalsCockpit({
         onLongPress={() => onDeleteGoal(hero.id)}
         testID="goals-cockpit-hero"
       >
-        {/* Absolute so the pin sits in the hero's top-right corner without
-            displacing the centred ring/headline stack. */}
+        {/* Absolute so the pin and ⋯ sit in the hero's top-right corner
+            without displacing the centred ring/headline stack. */}
         <View style={styles.heroPin}>
           <PinToggle
             isPinned={heroIsPinned}
@@ -211,6 +243,12 @@ export function GoalsCockpit({
             tone="ghost"
             onPress={() => (heroIsPinned ? onUnpinGoal() : onPinGoal(hero.id))}
             testID="goals-cockpit-hero-pin"
+          />
+          <GoalMenuButton
+            title={hero.title}
+            tone="ghost"
+            onPress={() => onOpenGoalMenu(hero.id)}
+            testID="goals-cockpit-hero-menu"
           />
         </View>
         <ProgressRing
@@ -336,6 +374,12 @@ export function GoalsCockpit({
                     tone="surface"
                     onPress={() => onPinGoal(goal.id)}
                     testID={`keep-warm-pin-${goal.id}`}
+                  />
+                  <GoalMenuButton
+                    title={goal.title}
+                    tone="surface"
+                    onPress={() => onOpenGoalMenu(goal.id)}
+                    testID={`keep-warm-menu-${goal.id}`}
                   />
                 </View>
               </View>

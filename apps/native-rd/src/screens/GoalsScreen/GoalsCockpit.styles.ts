@@ -10,6 +10,8 @@ import { shadowStyle } from "../../styles/shadows";
 export const KEEP_WARM_MIN_TITLE_WIDTH = 140;
 /** Width share of one keep-warm cell in the two-column grid (`keepWarmCell`). */
 export const KEEP_WARM_CELL_SHARE = 0.48;
+/** IconButton `sm` box: the pin and ⋯ stacked in a keep-warm card's corner. */
+const KEEP_WARM_CONTROL_SIZE = 36;
 
 export const styles = StyleSheet.create((theme) => ({
   container: {
@@ -31,11 +33,13 @@ export const styles = StyleSheet.create((theme) => ({
   // Corner-parked pin: absolute so it never pushes the hero's centred stack
   // off-axis. Inset by space[2] rather than the hero's space[5] padding so the
   // 36pt control tucks into the corner instead of crowding the ring.
+  // Pin above ⋯, one column, the same on the hero and every keep-warm card.
   heroPin: {
     position: "absolute",
     top: theme.space[2],
     right: theme.space[2],
     zIndex: 1,
+    gap: theme.space[1],
   },
   overline: {
     ...theme.textStyles.metadata,
@@ -93,6 +97,12 @@ export const styles = StyleSheet.create((theme) => ({
     borderColor: theme.colors.border,
     borderRadius: theme.radius.sm,
     padding: theme.space[3],
+    // Reserve the pin + ⋯ column for every line (title, next step, bar) — the
+    // controls are out of flow, so padding does the work. Same title width as
+    // before the ⋯ joined the pin (#688's budget in GoalsCockpit).
+    paddingRight: theme.space[3] + theme.space[8],
+    // Tall enough that the stacked controls never hang below the card.
+    minHeight: theme.space[2] * 2 + KEEP_WARM_CONTROL_SIZE * 2 + theme.space[1],
     gap: theme.space[2],
     ...shadowStyle(theme, "cardElevationSmall"),
   },
@@ -107,12 +117,9 @@ export const styles = StyleSheet.create((theme) => ({
     top: theme.space[2],
     right: theme.space[2],
     zIndex: 1,
+    gap: theme.space[1],
   },
   keepWarmTitle: {
-    // Reserve the pin's corner so a long title truncates before it rather than
-    // running underneath — the pin is out of flow, so padding does the work
-    // that `flex: 1` beside an in-flow control used to.
-    paddingRight: theme.space[8],
     color: theme.surfaceBorder.surfaceCardFg,
   },
   keepWarmNextStep: {

@@ -27,6 +27,7 @@ import {
 } from "../../db";
 import { GoalsStackParamList } from "../../navigation/types";
 import { GoalsCockpit, type CockpitHeroGoal } from "./GoalsCockpit";
+import { GoalActionsMenu } from "./GoalActionsMenu";
 import { styles } from "./GoalsScreen.styles";
 
 const logger = new Logger("GoalsScreen");
@@ -104,6 +105,7 @@ function GoalsCockpitContainer({
   // so this container only ever reads.
   const settings = useQuery(userSettingsQuery)[0] ?? null;
   const [deleteTarget, setDeleteTarget] = useState<GoalRow | null>(null);
+  const [menuTarget, setMenuTarget] = useState<GoalRow | null>(null);
   const tutorialOffer = useTutorialOffer(settings, (goalId) =>
     navigation.navigate("FocusMode", { goalId }),
   );
@@ -237,6 +239,9 @@ function GoalsCockpitContainer({
           onDeleteGoal={(goalId) =>
             setDeleteTarget(rows.find((r) => r.id === goalId) ?? null)
           }
+          onOpenGoalMenu={(goalId) =>
+            setMenuTarget(rows.find((r) => r.id === goalId) ?? null)
+          }
           heroIsPinned={heroRow !== null && heroRow.id === pinnedGoalId}
           onPinGoal={(goalId) => {
             if (!settings) return;
@@ -250,6 +255,23 @@ function GoalsCockpitContainer({
           }}
         />
       </ScrollView>
+      <GoalActionsMenu
+        goal={
+          menuTarget
+            ? { id: menuTarget.id, title: menuTarget.title ?? "" }
+            : null
+        }
+        onClose={() => setMenuTarget(null)}
+        onEdit={(goalId) => {
+          setMenuTarget(null);
+          navigation.navigate("EditMode", { goalId });
+        }}
+        onDelete={() => {
+          // Same confirmation as the long-press shortcut.
+          setDeleteTarget(menuTarget);
+          setMenuTarget(null);
+        }}
+      />
       <ConfirmDeleteModal
         visible={deleteTarget !== null}
         onCancel={() => setDeleteTarget(null)}

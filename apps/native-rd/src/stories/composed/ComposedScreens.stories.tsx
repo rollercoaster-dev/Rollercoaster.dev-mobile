@@ -93,6 +93,7 @@ function GoalsTab() {
           onOpenGoal={noop}
           onNewGoal={noop}
           onDeleteGoal={noop}
+          onOpenGoalMenu={noop}
           heroIsPinned={false}
           onPinGoal={noop}
           onUnpinGoal={noop}

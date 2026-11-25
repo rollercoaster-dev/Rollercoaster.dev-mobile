@@ -57,5 +57,11 @@
       "label": "[{{title}}, {{stepsCompleted}} øƒ {{stepsTotal}} šţêþš çøɱþĺêţêđ, {{status}}······························]",
       "labelWithNextStep": "[{{title}}, ñêẋţ: {{nextStep}}, {{stepsCompleted}} øƒ {{stepsTotal}} šţêþš çøɱþĺêţêđ, {{status}}······································]"
     }
+  },
+  "goalMenu": {
+    "open": "[Ɱøŕê øþţïøñš ƒøŕ {{title}}··········]",
+    "edit": "[Êđïţ ğøàĺ····]",
+    "delete": "[Đêĺêţê ğøàĺ····]",
+    "dismiss": "[Çĺøšê ɱêñü····]"
   }
 }
