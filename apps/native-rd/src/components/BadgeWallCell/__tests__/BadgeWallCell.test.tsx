@@ -108,6 +108,21 @@ describe("BadgeWallCell", () => {
     expect(flattened.minHeight).toBeGreaterThanOrEqual(44);
   });
 
+  // #689: sighted users find a badge by its printed name, so two badges with
+  // the same design (or no design) still read differently on the wall.
+  it.each<[string, BadgeDesign | null]>([
+    ["with a design", design],
+    ["with a null design", null],
+  ])("shows the badge title as visible text (%s)", (_label, cellDesign) => {
+    renderWithProviders(
+      <BadgeWallCell
+        badge={{ title: "Read 12 books", design: cellDesign }}
+        onPress={() => {}}
+      />,
+    );
+    expect(screen.getByText("Read 12 books")).toBeOnTheScreen();
+  });
+
   describe("initial-letter fallback", () => {
     it.each([
       ["Trophy Goal", "T"],

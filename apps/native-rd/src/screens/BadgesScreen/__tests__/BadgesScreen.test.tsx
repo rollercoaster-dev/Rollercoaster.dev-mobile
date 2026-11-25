@@ -8,6 +8,10 @@ import { i18n } from "../../../i18n";
 import { TopInsetColorProvider } from "../../../navigation/TopInsetColor";
 import { WALL_SURFACE } from "../BadgesWall.styles";
 import { BadgesScreen } from "../BadgesScreen";
+import { ThemeProvider } from "../../../hooks/useTheme";
+import { mockTheme } from "../../../__tests__/mocks/unistyles";
+import type { ThemeName } from "../../../themes/compose";
+import type { Variant } from "../../../themes/variants";
 
 const mockNavigate = jest.fn();
 const mockGoBack = jest.fn();
@@ -176,6 +180,44 @@ describe("BadgesScreen", () => {
 
   // App.tsx paints the device top-inset strip in the header color; the
   // full-bleed wall has no header to continue, so it claims the strip instead.
+  // #689: the reduced-complexity themes read the collection as a labeled list
+  // on their own surface instead of the fixed dark wall.
+  describe("Clean Signal (lowInfo)", () => {
+    const lowInfo = {
+      themeName: "light-lowInfo" as ThemeName,
+      theme: mockTheme,
+      isDark: false,
+      variant: "lowInfo" as Variant,
+      setTheme: jest.fn(),
+    };
+    const renderLowInfo = (onChange = jest.fn()) => {
+      renderWithProviders(
+        <ThemeProvider value={lowInfo}>
+          <TopInsetColorProvider onChange={onChange}>
+            <BadgesScreen />
+          </TopInsetColorProvider>
+        </ThemeProvider>,
+      );
+      return onChange;
+    };
+
+    it("renders the labeled list instead of the wall", () => {
+      mockBadges([
+        makeBadgeRow({ id: "badge-1", goalTitle: "Learn TypeScript" }),
+        makeBadgeRow({ id: "badge-2", goalTitle: "Learn Rust" }),
+      ]);
+      renderLowInfo();
+      expect(screen.getByTestId("badge-list-row-badge-1")).toBeOnTheScreen();
+      expect(screen.getByTestId("badge-list-row-badge-2")).toBeOnTheScreen();
+      expect(screen.queryByTestId("badges-wall-spotlight")).toBeNull();
+    });
+
+    it("leaves the top-inset strip to the theme", () => {
+      mockBadges([makeBadgeRow()]);
+      expect(renderLowInfo()).not.toHaveBeenCalled();
+    });
+  });
+
   describe("top-inset strip", () => {
     const renderWithStrip = () => {
       const onChange = jest.fn();

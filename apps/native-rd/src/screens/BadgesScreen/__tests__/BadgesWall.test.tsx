@@ -6,7 +6,7 @@ import {
 } from "../../../__tests__/test-utils";
 import { i18n } from "../../../i18n";
 import { withRepeat } from "react-native-reanimated";
-import { BadgesWall } from "../BadgesWall";
+import { BadgesWall, wallLayoutFor } from "../BadgesWall";
 import type { BadgesWallGalleryItem, BadgesWallSpotlight } from "../BadgesWall";
 import { formatDate } from "../../../utils/format";
 import { BadgeShape, BadgeFrame, BadgeIconWeight } from "../../../badges/types";
@@ -244,6 +244,65 @@ describe("BadgesWall", () => {
       );
       fireEvent.press(screen.getByTestId("badge-wall-cell-g-1"));
       expect(onOpenBadge).toHaveBeenCalledWith("g-1");
+    });
+  });
+
+  describe("list layout (#689)", () => {
+    const renderList = (onOpenBadge = noop) =>
+      renderWithProviders(
+        <BadgesWall
+          count={3}
+          spotlight={SPOTLIGHT}
+          gallery={makeGallery(2)}
+          onOpenBadge={onOpenBadge}
+          onSeeGoals={noop}
+          layout="list"
+        />,
+      );
+
+    it("lists every badge, newest first, as a named row", () => {
+      renderList();
+      const rows = screen.getAllByTestId(/^badge-list-row-/);
+      expect(rows.map((r) => r.props.accessibilityLabel)).toEqual([
+        "Rewire the workshop",
+        "Badge 0",
+        "Badge 1",
+      ]);
+      expect(screen.getByText("Badge 1")).toBeOnTheScreen();
+    });
+
+    it("drops the spotlight card and the dense grid", () => {
+      renderList();
+      expect(screen.queryByTestId("badges-wall-spotlight")).toBeNull();
+      expect(screen.queryAllByTestId(/^badge-wall-cell-/)).toHaveLength(0);
+    });
+
+    it("keeps the count header", () => {
+      renderList();
+      expect(screen.getByTestId("badges-wall-count")).toHaveTextContent(
+        i18n.t("badges:wall.count", { count: 3 }),
+      );
+    });
+
+    it("opens a badge by its own id, the spotlight included", () => {
+      const onOpenBadge = jest.fn();
+      renderList(onOpenBadge);
+      fireEvent.press(screen.getByTestId("badge-list-row-spotlight-1"));
+      fireEvent.press(screen.getByTestId("badge-list-row-g-0"));
+      expect(onOpenBadge.mock.calls).toEqual([["spotlight-1"], ["g-0"]]);
+    });
+  });
+
+  describe("wallLayoutFor", () => {
+    it.each([
+      ["lowInfo", "list"],
+      ["lowVision", "list"],
+      ["default", "wall"],
+      ["highContrast", "wall"],
+      ["dyslexia", "wall"],
+      ["autismFriendly", "wall"],
+    ])("%s → %s", (variant, expected) => {
+      expect(wallLayoutFor(variant)).toBe(expected);
     });
   });
 

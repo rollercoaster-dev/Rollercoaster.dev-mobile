@@ -23,6 +23,8 @@ export const GALLERY_GAP = 12;
 export const SPOTLIGHT_NARROW_WIDTH = 360;
 /** Badge-art size in the spotlight's compact (narrow-surface) layout. */
 export const SPOTLIGHT_ART_COMPACT = 48;
+/** Badge-art size in the labeled list layout (#689). */
+export const LIST_ART_SIZE = 48;
 
 // The badge wall is a deliberately FIXED dark "wall of proof" surface (#404
 // D5/D13): it does NOT adapt per theme. These are the only sanctioned
@@ -172,6 +174,45 @@ export const styles = StyleSheet.create((theme) => ({
     fontFamily: theme.fontFamily.headline,
     fontSize: 20,
     color: theme.chrome.celebrationBg,
+  },
+
+  // --- List layout (#689): theme-aware, one labeled badge per row ---------
+  // Unlike the wall, every color here is a theme token: Clean Signal and Loud &
+  // Clear read the collection on their own surface, not the fixed dark wall.
+  listSurface: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+  },
+  listContent: {
+    paddingHorizontal: GALLERY_H_PADDING,
+    paddingBottom: theme.space[8],
+    gap: theme.space[3],
+  },
+  listHeader: {
+    paddingTop: theme.space[5],
+    paddingBottom: theme.space[3],
+    borderBottomWidth: theme.borderWidth.thick,
+    borderBottomColor: theme.colors.border,
+  },
+  listHeaderCount: {
+    ...theme.textStyles.screenTitle,
+    color: theme.colors.text,
+  },
+  listRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.space[3],
+    minHeight: 44,
+    padding: theme.space[3],
+    borderRadius: theme.radius.sm,
+    borderWidth: theme.borderWidth.medium,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.backgroundSecondary,
+  },
+  listRowTitle: {
+    ...theme.textStyles.title,
+    flex: 1,
+    color: theme.colors.text,
   },
 
   // --- Empty state: ghost badge + copy + CTA -----------------------------

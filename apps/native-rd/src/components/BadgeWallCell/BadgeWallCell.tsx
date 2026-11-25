@@ -2,7 +2,7 @@ import { View, Pressable } from "react-native";
 import { BadgeRenderer } from "../../badges/BadgeRenderer";
 import type { BadgeDesign } from "../../badges/types";
 import { Text } from "../Text";
-import { styles, CELL_SIZE } from "./BadgeWallCell.styles";
+import { styles, CELL_SIZE, LABEL_LINES } from "./BadgeWallCell.styles";
 
 /** Minimal presentational subset of a badge row this cell needs. */
 export interface BadgeWallCellBadge {
@@ -30,6 +30,10 @@ export interface BadgeWallCellProps {
  * neutral rounded square — NOT a circle. A null design has no shape to
  * represent, so a square-ish placeholder is the honest stand-in (mirrors the
  * initials pattern in BadgeCard) and stays visually distinct from real badges.
+ *
+ * The badge title is printed under the art (#689) so a sighted user can find a
+ * named badge without opening candidates, and identical or missing designs stay
+ * distinguishable. The visible name is the same string as the a11y label.
  */
 export function BadgeWallCell({ badge, onPress, testID }: BadgeWallCellProps) {
   return (
@@ -50,6 +54,9 @@ export function BadgeWallCell({ badge, onPress, testID }: BadgeWallCellProps) {
           </Text>
         </View>
       )}
+      <Text variant="metadata" style={styles.label} numberOfLines={LABEL_LINES}>
+        {badge.title}
+      </Text>
     </Pressable>
   );
 }
