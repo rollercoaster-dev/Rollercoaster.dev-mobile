@@ -1,5 +1,7 @@
 import type { TFunction } from "i18next";
 import type {
+  EditGoalStepRowCopy,
+  EditGoalSubStepRowCopy,
   EditGoalTimingCopy,
   EditGoalViewProps,
 } from "../../components/EditGoalView";
@@ -46,6 +48,8 @@ export type EditGoalCopyProps = Pick<
   | "nestUnderRowA11yLabel"
   | "nestUnderCancelLabel"
   | "unNestA11yLabel"
+  | "stepRowCopy"
+  | "subStepRowCopy"
   | "whenPromptLabel"
   | "editTimingUnsetA11yLabel"
   | "editTimingSetA11yLabel"
@@ -95,6 +99,7 @@ export function buildEditGoalCopy(
       t("editGoal:stepList.a11y.nestUnderA11y", { title }),
     nestUnderCancelLabel: t("common:actions.cancel"),
     unNestA11yLabel: t("editGoal:stepList.a11y.unNestA11y"),
+    ...buildStepRowCopy(t),
     whenPromptLabel: t("editGoal:editor.timing.whenPrompt"),
     editTimingUnsetA11yLabel: (title) =>
       t("editGoal:editor.timing.rowUnsetA11yLabel", { title }),
@@ -121,6 +126,50 @@ export function buildEditGoalCopy(
           length: count,
           max,
         }),
+    },
+  };
+}
+
+/**
+ * Each step / sub-step row's own screen-reader labels (#548). Shared with the
+ * New Goal wizard, which renders the same rows through EditGoalStepList — a
+ * row announces the same way in both places, so it reads the same keys.
+ *
+ * ↑/↓ use the same keys for steps and sub-steps because the English (and
+ * German) phrasing is identical; delete and rename keep their sub-step keys
+ * because those name the kind of row.
+ */
+export function buildStepRowCopy(t: TFunction<["editGoal", "common"]>): {
+  stepRowCopy: EditGoalStepRowCopy;
+  subStepRowCopy: EditGoalSubStepRowCopy;
+} {
+  const moveUp = (title: string) =>
+    t("editGoal:stepList.moveUpA11yLabel", { title });
+  const moveDown = (title: string) =>
+    t("editGoal:stepList.moveDownA11yLabel", { title });
+  const editEvidenceLabel = t("editGoal:stepList.editEvidenceA11yLabel");
+  return {
+    stepRowCopy: {
+      editStepA11yLabel: (title) =>
+        t("editGoal:stepList.editA11yLabel", { title }),
+      tapToEditHint: t("editGoal:stepList.tapToEditHint"),
+      editEvidenceLabel,
+      moveUpLabel: moveUp,
+      moveDownLabel: moveDown,
+      deleteStepLabel: (title) =>
+        t("editGoal:stepList.deleteA11yLabel", { title }),
+      clearStepTitleLabel: t("editGoal:stepList.clearTitleA11yLabel"),
+    },
+    subStepRowCopy: {
+      editSubStepA11yLabel: (title) =>
+        t("editGoal:stepList.subStepEditA11yLabel", { title }),
+      tapToEditHint: t("editGoal:stepList.subStepTapToEditHint"),
+      editEvidenceLabel,
+      deleteSubStepLabel: (title) =>
+        t("editGoal:stepList.subStepDeleteA11yLabel", { title }),
+      clearSubStepTitleLabel: t("editGoal:stepList.subStepClearTitleA11yLabel"),
+      moveSubStepUpLabel: moveUp,
+      moveSubStepDownLabel: moveDown,
     },
   };
 }

@@ -118,6 +118,21 @@ export interface EditGoalSubStepRowProps {
   descriptionBinding?: EditGoalRowDescriptionBinding;
 }
 
+/**
+ * The sub-row's own screen-reader copy, grouped so the list layer can forward
+ * it as one bundle (#548). English defaults stay on the row.
+ */
+export type EditGoalSubStepRowCopy = Pick<
+  EditGoalSubStepRowProps,
+  | "editSubStepA11yLabel"
+  | "tapToEditHint"
+  | "editEvidenceLabel"
+  | "deleteSubStepLabel"
+  | "clearSubStepTitleLabel"
+  | "moveSubStepUpLabel"
+  | "moveSubStepDownLabel"
+>;
+
 export function EditGoalSubStepRow({
   subStep,
   isBeingDragged,

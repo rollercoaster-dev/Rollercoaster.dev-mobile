@@ -69,6 +69,8 @@ import type {
 import type { DragScrollController } from "../StepList/dragAutoScroll";
 import { EditGoalStepList } from "./EditGoalStepList";
 import type { EditGoalDescriptionCopy } from "./EditGoalRowDescription";
+import type { EditGoalStepRowCopy } from "./EditGoalStepRow";
+import type { EditGoalSubStepRowCopy } from "./EditGoalSubStepRow";
 import Animated from "react-native-reanimated";
 import { PILL_LIFT } from "../../navigation/FocusPillTabBar";
 import { useKeyboardFooterPadding } from "../../utils/keyboard";
@@ -403,6 +405,9 @@ export interface EditGoalViewProps {
   unNestA11yLabel?: string;
   announcePromote?: (stepTitle: string) => string;
   announceNestedUnder?: (stepTitle: string, parentTitle: string) => string;
+  // --- Row screen-reader copy (#548), forwarded to every step / sub-step row ---
+  stepRowCopy?: EditGoalStepRowCopy;
+  subStepRowCopy?: EditGoalSubStepRowCopy;
   // --- Timing line (#575) ---
   /**
    * Fired when a step's or sub-step's timing line is tapped (#575). Ids are
@@ -498,6 +503,8 @@ export function EditGoalView({
   unNestA11yLabel,
   announcePromote,
   announceNestedUnder,
+  stepRowCopy,
+  subStepRowCopy,
   onEditTiming,
   whenPromptLabel,
   editTimingUnsetA11yLabel,
@@ -757,6 +764,8 @@ export function EditGoalView({
               unNestA11yLabel={unNestA11yLabel}
               announcePromote={announcePromote}
               announceNestedUnder={announceNestedUnder}
+              stepRowCopy={stepRowCopy}
+              subStepRowCopy={subStepRowCopy}
               onEditTiming={onEditTiming}
               whenPromptLabel={whenPromptLabel}
               editTimingUnsetA11yLabel={editTimingUnsetA11yLabel}

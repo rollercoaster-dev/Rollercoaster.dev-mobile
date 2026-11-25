@@ -33,6 +33,7 @@ import { reportError } from "../../services/sentry-report";
 import { useUnsavedExitGuard } from "../../hooks/useUnsavedExitGuard";
 import type { GoalsStackParamList } from "../../navigation/types";
 import { newGoalWizardCopy } from "./newGoalWizardCopy";
+import { buildStepRowCopy } from "../EditModeScreen/editGoalCopy";
 import { useNewGoalSteps } from "./useNewGoalSteps";
 import { styles } from "./NewGoalScreen.styles";
 
@@ -52,6 +53,9 @@ export function NewGoalScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<GoalsStackParamList, "NewGoal">>();
   const { t } = useTranslation(["newGoal", "common"]);
+  // The build step renders Edit Goal's own rows, so their screen-reader labels
+  // come from the same editGoal keys as on Edit Goal (#548).
+  const { t: tEditGoal } = useTranslation(["editGoal", "common"]);
 
   /**
    * Visited-screens stack with the current step on top — one state, not a
@@ -197,6 +201,7 @@ export function NewGoalScreen() {
         onCloseEvidencePicker={() => setEvidencePickerOpen(false)}
         {...stepProps}
         {...newGoalWizardCopy(t)}
+        {...buildStepRowCopy(tEditGoal)}
       />
     </View>
   );

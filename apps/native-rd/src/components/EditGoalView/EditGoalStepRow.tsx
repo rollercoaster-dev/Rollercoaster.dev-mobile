@@ -158,6 +158,22 @@ export interface EditGoalStepRowProps {
   descriptionBinding?: EditGoalRowDescriptionBinding;
 }
 
+/**
+ * The row's own screen-reader copy, grouped so the list layer can forward it
+ * as one bundle instead of seven loose props (#548). Every key keeps its
+ * English default on the row; a host that omits the bundle gets those.
+ */
+export type EditGoalStepRowCopy = Pick<
+  EditGoalStepRowProps,
+  | "editStepA11yLabel"
+  | "tapToEditHint"
+  | "editEvidenceLabel"
+  | "moveUpLabel"
+  | "moveDownLabel"
+  | "deleteStepLabel"
+  | "clearStepTitleLabel"
+>;
+
 export function EditGoalStepRow({
   step,
   stepNumber,
