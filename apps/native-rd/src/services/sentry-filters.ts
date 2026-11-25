@@ -32,6 +32,8 @@ import type { ErrorEvent, Breadcrumb } from "@sentry/react-native";
 // `/Users/joe/code/...` — leaks if a Mac path makes it into an exception
 // message string. Stack-frame filenames are handled separately by the SDK.
 const LOCAL_PATH_PATTERN = /\/Users\/[^/\s)]+/g;
+// Same for a Linux home dir (dev or CI builds run with Sentry enabled).
+const LINUX_HOME_PATH_PATTERN = /\/home\/[^/\s)]+/g;
 const EMAIL_PATTERN = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi;
 
 // Native IO errors from expo-document-picker / expo-camera / expo-av / Evolu
@@ -64,7 +66,8 @@ const ANDROID_SHARED_STORAGE_PATH_PATTERN =
 // per-install UUID / APK directory identify the device's install.
 const IOS_BUNDLE_PATH_PATTERN =
   /(?:\/private)?\/var\/containers\/Bundle\/[^\s'")>]*/g;
-const ANDROID_APK_PATH_PATTERN = /\/data\/app\/[^\s'")>]*/g;
+const ANDROID_APK_PATH_PATTERN =
+  /\/(?:data|mnt\/expand\/[^/\s'")>]+)\/app\/[^\s'")>]*/g;
 
 const REDACTED_PATH = "/<redacted>";
 const REDACTED_EMAIL = "[redacted-email]";
@@ -120,8 +123,13 @@ function scrubExceptionValue(value: string): string {
     .replace(ANDROID_SHARED_STORAGE_PATH_PATTERN, REDACTED_PATH)
     .replace(IOS_BUNDLE_PATH_PATTERN, REDACTED_PATH)
     .replace(ANDROID_APK_PATH_PATTERN, REDACTED_PATH)
-    .replace(LOCAL_PATH_PATTERN, REDACTED_PATH);
+    .replace(LOCAL_PATH_PATTERN, REDACTED_PATH)
+    .replace(LINUX_HOME_PATH_PATTERN, REDACTED_PATH);
 }
+
+// A deep tree with Hermes `address at …bundle:line:col` locations runs to
+// many KB; the frames nearest the crash come first, so keep those.
+export const MAX_COMPONENT_STACK_LENGTH = 8000;
 
 /**
  * Scrub a React component stack (`errorInfo.componentStack`) before it leaves
@@ -130,7 +138,8 @@ function scrubExceptionValue(value: string): string {
  * never reaches Sentry.
  */
 export function scrubComponentStack(stack: string): string {
-  return scrubExceptionValue(stack);
+  // Cap before scrubbing so a cut can't land mid-token after redaction.
+  return scrubExceptionValue(stack.slice(0, MAX_COMPONENT_STACK_LENGTH));
 }
 
 // Keep only a string `componentStack` from the `react` context, scrubbed.

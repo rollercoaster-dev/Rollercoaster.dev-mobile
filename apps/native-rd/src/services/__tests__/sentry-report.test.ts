@@ -185,11 +185,14 @@ describe("reportRenderError", () => {
     );
   });
 
-  it("sends no react context when React gave no component stack", () => {
-    reportRenderError(new Error("boom"), null);
-    expect(mockState.captured[0].scope.tags).toEqual({ area: "render" });
-    expect(mockState.captured[0].scope.contexts).toEqual({});
-  });
+  it.each([null, undefined, ""])(
+    "sends no react context when the component stack is %p",
+    (componentStack) => {
+      reportRenderError(new Error("boom"), componentStack);
+      expect(mockState.captured[0].scope.tags).toEqual({ area: "render" });
+      expect(mockState.captured[0].scope.contexts).toEqual({});
+    },
+  );
 });
 
 describe("reportLoggerError", () => {

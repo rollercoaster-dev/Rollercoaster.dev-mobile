@@ -38,8 +38,8 @@ export class ErrorBoundary extends Component<
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    reportRenderError(error, errorInfo.componentStack);
     console.error("ErrorBoundary caught:", error);
+    reportRenderError(error, errorInfo.componentStack);
   }
 
   handleReset = () => {

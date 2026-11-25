@@ -11,7 +11,12 @@
  */
 import type { ErrorEvent, Breadcrumb } from "@sentry/react-native";
 
-import { beforeBreadcrumbFilter, scrubEvent } from "../sentry-filters";
+import {
+  MAX_COMPONENT_STACK_LENGTH,
+  beforeBreadcrumbFilter,
+  scrubComponentStack,
+  scrubEvent,
+} from "../sentry-filters";
 
 const makeEvent = (overrides: Partial<ErrorEvent> = {}): ErrorEvent => ({
   type: undefined,
@@ -41,6 +46,46 @@ describe("scrubEvent", () => {
     const scrubbed = scrubEvent(event);
     expect(scrubbed.exception?.values?.[0]?.value).not.toContain("/Users/joe");
     expect(scrubbed.exception?.values?.[0]?.value).toContain("/<redacted>");
+  });
+
+  it.each([
+    [
+      "iOS app bundle path",
+      "load failed at /private/var/containers/Bundle/Application/1A2B-3C4D/App.app/main.jsbundle:1:2",
+      ["1A2B-3C4D", "/var/containers/Bundle"],
+    ],
+    [
+      "Android APK path",
+      "load failed at /data/app/~~Zx9==/com.rollercoaster-Ab1==/base.apk:1:2",
+      ["Zx9==", "/data/app/"],
+    ],
+    [
+      "Android adoptable-storage APK path",
+      "load failed at /mnt/expand/7d3f-91aa/app/~~Zx9==/base.apk:1:2",
+      ["7d3f-91aa", "/mnt/expand"],
+    ],
+    [
+      "Linux home path",
+      "ENOENT at /home/jc/code/native-rd/src/foo.ts:12",
+      ["/home/jc"],
+    ],
+  ])("redacts the %s in exception values", (_label, value, leaks) => {
+    const event = makeEvent({
+      exception: { values: [{ type: "Error", value }] },
+    });
+    const scrubbed = scrubEvent(event).exception?.values?.[0]?.value ?? "";
+    for (const leak of leaks) {
+      expect(scrubbed).not.toContain(leak);
+    }
+    expect(scrubbed).toContain("/<redacted>");
+  });
+
+  it("caps a component stack before scrubbing it", () => {
+    const frame = "\n    at GoalCard (app:///main.jsbundle:1:2)";
+    const stack = frame.repeat(1000);
+    expect(stack.length).toBeGreaterThan(MAX_COMPONENT_STACK_LENGTH);
+    const scrubbed = scrubComponentStack(stack);
+    expect(scrubbed).toBe(stack.slice(0, MAX_COMPONENT_STACK_LENGTH));
   });
 
   it.each([
