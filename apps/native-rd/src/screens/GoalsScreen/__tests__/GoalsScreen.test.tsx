@@ -1,5 +1,5 @@
 import React from "react";
-import { Alert } from "react-native";
+import { Alert, Modal, Platform } from "react-native";
 import {
   renderWithProviders,
   screen,
@@ -728,6 +728,89 @@ describe("GoalsScreen", () => {
       expect(
         screen.queryByText(i18n.t("goals:confirmDelete.title")),
       ).toBeNull();
+    });
+
+    // #695: the visible ⋯ reaches the same management as the long press.
+    describe("goal menu", () => {
+      const openMenu = () => {
+        mockData([
+          makeGoalRow({ id: "goal-1", title: "Learn TypeScript" }),
+          makeGoalRow({ id: "goal-2", title: "Read 12 books" }),
+        ]);
+        renderWithProviders(<GoalsScreen />);
+        fireEvent.press(screen.getByTestId("keep-warm-menu-goal-2"));
+      };
+
+      it("opens titled with the goal it was opened from", () => {
+        openMenu();
+        expect(screen.getByTestId("goal-menu")).toHaveTextContent(
+          /Read 12 books/,
+        );
+      });
+
+      it("Edit goal opens Edit for that goal and closes the menu", () => {
+        openMenu();
+        fireEvent.press(screen.getByTestId("goal-menu-edit"));
+        expect(mockNavigate).toHaveBeenCalledWith("EditMode", {
+          goalId: "goal-2",
+        });
+        expect(screen.queryByTestId("goal-menu")).toBeNull();
+      });
+
+      it.each(["ios", "android"] as const)(
+        "Delete goal asks first, then deletes that goal (%s)",
+        (os) => {
+          const original = Platform.OS;
+          Platform.OS = os;
+          try {
+            openMenu();
+            fireEvent.press(screen.getByTestId("goal-menu-delete"));
+            expect(screen.queryByTestId("goal-menu")).toBeNull();
+            if (os === "ios") {
+              // The confirmation waits for the menu Modal to finish closing.
+              expect(
+                screen.queryByText(i18n.t("goals:confirmDelete.title")),
+              ).toBeNull();
+              act(() => {
+                screen.UNSAFE_getAllByType(Modal)[0].props.onDismiss();
+              });
+            }
+            expect(deleteGoal).not.toHaveBeenCalled();
+            expect(
+              screen.getByText(
+                i18n.t("goals:confirmDelete.message", {
+                  title: "Read 12 books",
+                }),
+              ),
+            ).toBeOnTheScreen();
+            fireEvent.press(screen.getByText(i18n.t("common:actions.delete")));
+            expect(deleteGoal).toHaveBeenCalledWith("goal-2");
+          } finally {
+            Platform.OS = original;
+          }
+        },
+      );
+
+      it("opens from the hero for the hero goal", () => {
+        openMenu();
+        fireEvent.press(screen.getByTestId("goal-menu-backdrop"));
+        fireEvent.press(screen.getByTestId("goals-cockpit-hero-menu"));
+        expect(screen.getByTestId("goal-menu")).toHaveTextContent(
+          /Learn TypeScript/,
+        );
+        fireEvent.press(screen.getByTestId("goal-menu-edit"));
+        expect(mockNavigate).toHaveBeenCalledWith("EditMode", {
+          goalId: "goal-1",
+        });
+      });
+
+      it("closes from the backdrop without acting", () => {
+        openMenu();
+        fireEvent.press(screen.getByTestId("goal-menu-backdrop"));
+        expect(screen.queryByTestId("goal-menu")).toBeNull();
+        expect(mockNavigate).not.toHaveBeenCalled();
+        expect(deleteGoal).not.toHaveBeenCalled();
+      });
     });
 
     // confirmDelete had NO error handling before #503 — it closed the modal

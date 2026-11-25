@@ -61,6 +61,7 @@ const handlers = () => ({
   onOpenGoal: jest.fn(),
   onNewGoal: jest.fn(),
   onDeleteGoal: jest.fn(),
+  onOpenGoalMenu: jest.fn(),
   heroIsPinned: false,
   onPinGoal: jest.fn(),
   onUnpinGoal: jest.fn(),
@@ -265,6 +266,39 @@ describe("GoalsCockpit", () => {
     );
     fireEvent(screen.getByTestId("keep-warm-kw-1"), "onLongPress");
     expect(h.onDeleteGoal).toHaveBeenCalledWith("kw-1");
+  });
+
+  // #695: goal management has a visible entry on every card, not only the
+  // long press, and it names which goal it is for.
+  it.each([
+    {
+      testID: "goals-cockpit-hero-menu",
+      id: "hero",
+      title: "Ship the redesign",
+    },
+    {
+      testID: "keep-warm-menu-kw-1",
+      id: "kw-1",
+      title: "Build a component library",
+    },
+  ])("the ⋯ on $id opens its goal menu", ({ testID, id, title }) => {
+    const h = handlers();
+    renderWithProviders(
+      <GoalsCockpit
+        hero={makeHero({ title: "Ship the redesign" })}
+        keepWarm={keepWarm}
+        {...h}
+      />,
+    );
+    const button = screen.getByTestId(testID);
+    expect(button).toHaveProp(
+      "accessibilityLabel",
+      `More options for ${title}`,
+    );
+    fireEvent.press(button);
+    expect(h.onOpenGoalMenu).toHaveBeenCalledWith(id);
+    // Opening the menu is not a delete; that still needs a menu choice.
+    expect(h.onDeleteGoal).not.toHaveBeenCalled();
   });
 
   it("fires onNewGoal from the ghost button", () => {

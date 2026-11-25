@@ -21,7 +21,7 @@ import type { RootTabParamList } from "./types";
 
 type RouteName = keyof RootTabParamList;
 
-const ICON_SIZE = 24;
+const ICON_SIZE = 20;
 const ICON_WEIGHT = "bold" as const;
 const SLIDE_DURATION = 200;
 export const PILL_HEIGHT = 64;
@@ -58,8 +58,8 @@ export function FocusPillTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const { shouldAnimate } = useAnimationPref();
   const { t } = useTranslation();
-  // At accessibility sizes no label fits a third of the pill, so the knob goes
-  // icon-only; the slot's accessibilityLabel still names the tab (#746).
+  // At accessibility sizes no label fits a third of the pill, so the bar goes
+  // icon-only; each slot's accessibilityLabel still names the tab (#746).
   const { isAccessibilitySize } = useTypeScale();
   // Rendered by the navigator outside every screen, so a screen's sheet can't
   // isolate it; hide it from assistive tech while any sheet is open (#686).
@@ -216,9 +216,24 @@ export function FocusPillTabBar({ state, navigation }: BottomTabBarProps) {
                 onPress={() => navigateTo(slot.entry)}
                 style={styles.slot}
               >
-                {/* The active slot's icon is drawn by the knob above it. */}
+                {/* The active slot's icon and label are drawn by the knob
+                    above it. Idle slots keep their label too, so every
+                    destination is named without having to visit it (#695). */}
                 {slot.isActive ? null : (
-                  <TabIcon name={slot.name} color={inactiveColor} />
+                  <>
+                    <TabIcon name={slot.name} color={inactiveColor} />
+                    {isAccessibilitySize ? null : (
+                      <Text
+                        variant="label"
+                        chrome
+                        testID={`tab-${slot.name}-label`}
+                        numberOfLines={1}
+                        style={[styles.label, { color: inactiveColor }]}
+                      >
+                        {tabLabels[slot.name]}
+                      </Text>
+                    )}
+                  </>
                 )}
               </Pressable>
             ))}
@@ -263,8 +278,12 @@ const styles = StyleSheet.create((theme) => ({
   slot: {
     flex: 1,
     height: 48,
+    // Icon over label, like the knob, so the label gets the slot's full width
+    // ("Einstellungen" at 320pt) and nothing shifts when a slot activates.
     alignItems: "center" as const,
     justifyContent: "center" as const,
+    gap: 2,
+    paddingHorizontal: 4,
   },
   knob: {
     position: "absolute" as const,
@@ -272,12 +291,11 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: 999,
     borderColor: theme.colors.border,
     borderWidth: theme.borderWidth.medium,
-    flexDirection: "row" as const,
     alignItems: "center" as const,
     justifyContent: "center" as const,
-    gap: 8,
+    gap: 2,
     // Keeps a long label ("Einstellungen" at 1.3x) inside the knob's border.
-    paddingHorizontal: 12,
+    paddingHorizontal: 4,
     ...shadowStyle(theme, "cardElevation"),
   },
   label: {
@@ -285,7 +303,8 @@ const styles = StyleSheet.create((theme) => ({
     flexShrink: 1,
     fontFamily: theme.fontFamily.body,
     fontWeight: theme.fontWeight.bold,
-    fontSize: theme.size.sm,
+    // xs so icon + label stack inside the 48pt knob, even at the 1.3x cap.
+    fontSize: theme.size.xs,
     letterSpacing: theme.letterSpacing.tight,
   },
 }));

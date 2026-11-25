@@ -13,6 +13,7 @@ import { TimelineJourneyScreen } from "../TimelineJourneyScreen";
 
 const mockGoBack = jest.fn();
 const mockNavigate = jest.fn();
+const mockPopTo = jest.fn();
 const mockParentNavigate = jest.fn();
 // Controllable so a test can simulate "no tab parent" via
 // mockGetParent.mockReturnValueOnce(undefined) — matches the
@@ -26,6 +27,7 @@ jest.mock("@react-navigation/native", () => {
       ...actual.useNavigation(),
       goBack: mockGoBack,
       navigate: mockNavigate,
+      popTo: mockPopTo,
       getParent: mockGetParent,
     })),
   };
@@ -531,25 +533,36 @@ describe("TimelineJourneyScreen", () => {
     expect(screen.queryByText(/no goal evidence/i)).toBeNull();
   });
 
-  it('"Back to Focus" navigates to FocusMode', () => {
+  it('"Back to Focus" pops back to FocusMode rather than pushing another', () => {
     setupQueries();
     renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
     fireEvent.press(screen.getByLabelText("Back to Focus"));
-    expect(mockNavigate).toHaveBeenCalledWith("FocusMode", {
-      goalId: "goal-1",
-    });
+    expect(mockPopTo).toHaveBeenCalledWith("FocusMode", { goalId: "goal-1" });
+    expect(mockNavigate).not.toHaveBeenCalledWith(
+      "FocusMode",
+      expect.anything(),
+    );
   });
 
-  it("exposes the back CTA by testID, whichever label it carries", () => {
+  it("exposes the back control by testID, whichever label it carries", () => {
     // Its label alternates between backToFocus and backToBadge with the
     // navigation origin, so E2E flows address it by id (#502 bake-recovery
     // needs it after dismissing the completion modal onto Timeline).
     setupQueries();
-    renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
-    fireEvent.press(screen.getByTestId("timeline-back-button"));
-    expect(mockNavigate).toHaveBeenCalledWith("FocusMode", {
-      goalId: "goal-1",
-    });
+    renderWithProviders(
+      <TimelineJourneyScreen
+        {...routeProps}
+        route={{
+          ...routeProps.route,
+          params: { goalId: "goal-1", originBadgeId: "badge-7" },
+        }}
+      />,
+    );
+    fireEvent.press(screen.getByTestId("screen-sub-header-back"));
+    expect(mockParentNavigate).toHaveBeenCalledWith(
+      "BadgesTab",
+      expect.objectContaining({ params: { badgeId: "badge-7" } }),
+    );
   });
 
   it('"Edit ›" navigates to EditMode for this goal', () => {
@@ -559,11 +572,14 @@ describe("TimelineJourneyScreen", () => {
     expect(mockNavigate).toHaveBeenCalledWith("EditMode", { goalId: "goal-1" });
   });
 
-  it("back button navigates back", () => {
+  it("offers one back control, and it returns to Focus (#695)", () => {
     setupQueries();
     renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
-    fireEvent.press(screen.getByLabelText("Go back"));
-    expect(mockGoBack).toHaveBeenCalled();
+    // The body used to carry a second "Back to Focus" button beside the
+    // header arrow; back now has one home.
+    expect(screen.getAllByLabelText(/^Back to /)).toHaveLength(1);
+    fireEvent.press(screen.getByLabelText("Back to Focus"));
+    expect(mockGoBack).not.toHaveBeenCalled();
     // Pin the no-origin baseline: a future refactor that inverts the
     // `if (originBadgeId)` branch would otherwise still pass this test.
     expect(mockParentNavigate).not.toHaveBeenCalled();
@@ -611,22 +627,7 @@ describe("TimelineJourneyScreen", () => {
         initial: false,
       });
       // Should NOT fall through to the FocusMode path.
-      expect(mockNavigate).not.toHaveBeenCalledWith(
-        "FocusMode",
-        expect.anything(),
-      );
-    });
-
-    it("header back arrow also hops to BadgesTab/BadgeDetail", () => {
-      setupQueries();
-      renderWithProviders(<TimelineJourneyScreen {...badgeRouteProps} />);
-      fireEvent.press(screen.getByLabelText("Go back"));
-      expect(mockParentNavigate).toHaveBeenCalledWith("BadgesTab", {
-        screen: "BadgeDetail",
-        params: { badgeId: "badge-7" },
-        initial: false,
-      });
-      expect(mockGoBack).not.toHaveBeenCalled();
+      expect(mockPopTo).not.toHaveBeenCalled();
     });
 
     it("falls back to FocusMode when no tab parent is available", () => {
@@ -638,22 +639,9 @@ describe("TimelineJourneyScreen", () => {
       setupQueries();
       renderWithProviders(<TimelineJourneyScreen {...badgeRouteProps} />);
       fireEvent.press(screen.getByLabelText("Back to Badge"));
-      expect(mockNavigate).toHaveBeenCalledWith("FocusMode", {
+      expect(mockPopTo).toHaveBeenCalledWith("FocusMode", {
         goalId: "goal-1",
       });
-    });
-
-    it("header back falls back to goBack() when no tab parent is available", () => {
-      // Same defensive branch as the in-body button, but the header arrow
-      // falls through to goBack() (not FocusMode) — pinning the divergence.
-      mockGetParent.mockReturnValueOnce(
-        undefined as unknown as ReturnType<typeof mockGetParent>,
-      );
-      setupQueries();
-      renderWithProviders(<TimelineJourneyScreen {...badgeRouteProps} />);
-      fireEvent.press(screen.getByLabelText("Go back"));
-      expect(mockGoBack).toHaveBeenCalled();
-      expect(mockParentNavigate).not.toHaveBeenCalled();
     });
   });
 

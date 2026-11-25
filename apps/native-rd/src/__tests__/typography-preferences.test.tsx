@@ -101,6 +101,7 @@ describe("essential text follows typography preferences", () => {
         onOpenGoal={jest.fn()}
         onNewGoal={jest.fn()}
         onDeleteGoal={jest.fn()}
+        onOpenGoalMenu={jest.fn()}
         heroIsPinned={false}
         onPinGoal={jest.fn()}
         onUnpinGoal={jest.fn()}

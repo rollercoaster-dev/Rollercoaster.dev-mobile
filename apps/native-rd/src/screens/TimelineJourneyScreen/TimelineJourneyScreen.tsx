@@ -1,6 +1,7 @@
 import { Suspense, useCallback, useMemo } from "react";
 import { View, ScrollView, ActivityIndicator } from "react-native";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@evolu/react";
 import { useTranslation } from "react-i18next";
 import { Text } from "../../components/Text";
@@ -69,13 +70,7 @@ function findCurrentLeafId(
   return index === null ? null : (rows[index]?.id ?? null);
 }
 
-function TimelineContent({
-  goalId,
-  originBadgeId,
-}: {
-  goalId: string;
-  originBadgeId?: string;
-}) {
+function TimelineContent({ goalId }: { goalId: string }) {
   const navigation = useNavigation<NavigationProp<GoalsStackParamList>>();
   const { t, i18n } = useTranslation(["timelineJourney"]);
   const { isAccessibilitySize } = useTypeScale();
@@ -193,32 +188,6 @@ function TimelineContent({
     );
   }
 
-  // When originBadgeId is set the user arrived from BadgeDetail and the back
-  // affordance must hop tabs back to BadgesTab/BadgeDetail rather than stay in
-  // the Goals stack. handleHeaderBack mirrors this. Both fall through to
-  // in-stack navigation when the tab parent is missing (deep link / modal
-  // host / Storybook) — getParent() returns undefined in those hosts.
-  const handleBack = () => {
-    if (originBadgeId) {
-      const parent = navigation.getParent<NavigationProp<RootTabParamList>>();
-      if (parent) {
-        parent.navigate("BadgesTab", {
-          screen: "BadgeDetail",
-          params: { badgeId: originBadgeId },
-          // Seed Badges beneath BadgeDetail (see #325) so the list stays
-          // reachable via back / the Badges tab on a cold BadgesTab.
-          initial: false,
-        });
-        return;
-      }
-      logger.warn("Timeline back tapped without a tab navigator parent", {
-        goalId,
-        originBadgeId,
-      });
-    }
-    navigation.navigate("FocusMode", { goalId });
-  };
-
   // The return leg (#467): Focus Mode lands on the *tapped* step rather than on
   // whatever `resolveNextActionableStep` would otherwise pick, so tapping a
   // done or set-aside node shows that step's own card.
@@ -261,19 +230,6 @@ function TimelineContent({
             {goal.title}
           </Text>
           <View style={styles.headerActions}>
-            <Button
-              label={
-                originBadgeId
-                  ? t("timelineJourney:backToBadge")
-                  : t("timelineJourney:backToFocus")
-              }
-              onPress={handleBack}
-              variant="secondary"
-              size="sm"
-              // Label alternates between backToFocus and backToBadge depending
-              // on where the screen was opened from, so flows address it by id.
-              testID="timeline-back-button"
-            />
             <Button
               label={t("timelineJourney:editButton")}
               onPress={handleEditPress}
@@ -350,13 +306,21 @@ function useStepEvidence(
 }
 
 export function TimelineJourneyScreen({ route }: TimelineJourneyScreenProps) {
-  const navigation = useNavigation();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<GoalsStackParamList>>();
   const { t } = useTranslation(["timelineJourney"]);
   const { goalId, originBadgeId } = route.params;
 
-  // Mirrors handleBack in TimelineContent — see comment there for the
-  // cross-tab retargeting rationale and the parent-missing fallback.
-  const handleHeaderBack = useCallback(() => {
+  // The screen's one back control (#695). When originBadgeId is set the user
+  // arrived from BadgeDetail, so back hops tabs to BadgesTab/BadgeDetail rather
+  // than staying in the Goals stack. Otherwise it returns to Focus for this
+  // goal — popTo, not goBack or navigate: it pops to the Focus beneath when
+  // there is one (navigate would push a second Focus on React Navigation 7 and
+  // grow the stack each round trip) and pushes Focus when there isn't (the
+  // completion modal can leave Timeline on top). With no tab
+  // parent (deep link / modal host / Storybook) the badge path falls through
+  // to Focus too.
+  const handleBack = useCallback(() => {
     if (originBadgeId) {
       const parent = navigation.getParent<NavigationProp<RootTabParamList>>();
       if (parent) {
@@ -369,19 +333,25 @@ export function TimelineJourneyScreen({ route }: TimelineJourneyScreenProps) {
         });
         return;
       }
-      logger.warn(
-        "Timeline header back tapped without a tab navigator parent",
-        { goalId, originBadgeId },
-      );
+      logger.warn("Timeline back tapped without a tab navigator parent", {
+        goalId,
+        originBadgeId,
+      });
     }
-    navigation.goBack();
+    navigation.popTo("FocusMode", { goalId });
   }, [navigation, originBadgeId, goalId]);
 
   return (
     <View style={styles.screen}>
       <ScreenSubHeader
         label={t("timelineJourney:title")}
-        onBack={handleHeaderBack}
+        onBack={handleBack}
+        // Names the destination, which depends on where Timeline opened from.
+        backAccessibilityLabel={
+          originBadgeId
+            ? t("timelineJourney:backToBadge")
+            : t("timelineJourney:backToFocus")
+        }
       />
       <View style={styles.body}>
         <ErrorBoundary>
@@ -390,7 +360,7 @@ export function TimelineJourneyScreen({ route }: TimelineJourneyScreenProps) {
               <ActivityIndicator style={styles.loadingIndicator} size="large" />
             }
           >
-            <TimelineContent goalId={goalId} originBadgeId={originBadgeId} />
+            <TimelineContent goalId={goalId} />
           </Suspense>
         </ErrorBoundary>
       </View>

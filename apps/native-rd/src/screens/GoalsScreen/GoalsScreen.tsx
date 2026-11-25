@@ -1,5 +1,11 @@
-import React, { Suspense, useMemo, useState } from "react";
-import { View, ScrollView, ActivityIndicator, Alert } from "react-native";
+import React, { Suspense, useMemo, useRef, useState } from "react";
+import {
+  View,
+  ScrollView,
+  ActivityIndicator,
+  Alert,
+  Platform,
+} from "react-native";
 import { useTranslation } from "react-i18next";
 import { useNavigation } from "@react-navigation/native";
 import { useTabScreenContentInset } from "../../navigation/useTabScreenContentInset";
@@ -27,6 +33,7 @@ import {
 } from "../../db";
 import { GoalsStackParamList } from "../../navigation/types";
 import { GoalsCockpit, type CockpitHeroGoal } from "./GoalsCockpit";
+import { GoalActionsMenu } from "./GoalActionsMenu";
 import { styles } from "./GoalsScreen.styles";
 
 const logger = new Logger("GoalsScreen");
@@ -104,6 +111,10 @@ function GoalsCockpitContainer({
   // so this container only ever reads.
   const settings = useQuery(userSettingsQuery)[0] ?? null;
   const [deleteTarget, setDeleteTarget] = useState<GoalRow | null>(null);
+  const [menuTarget, setMenuTarget] = useState<GoalRow | null>(null);
+  // iOS drops a Modal presented while another is still dismissing, so Delete
+  // from the menu opens the confirmation only once the menu has closed.
+  const pendingDelete = useRef<GoalRow | null>(null);
   const tutorialOffer = useTutorialOffer(settings, (goalId) =>
     navigation.navigate("FocusMode", { goalId }),
   );
@@ -237,6 +248,9 @@ function GoalsCockpitContainer({
           onDeleteGoal={(goalId) =>
             setDeleteTarget(rows.find((r) => r.id === goalId) ?? null)
           }
+          onOpenGoalMenu={(goalId) =>
+            setMenuTarget(rows.find((r) => r.id === goalId) ?? null)
+          }
           heroIsPinned={heroRow !== null && heroRow.id === pinnedGoalId}
           onPinGoal={(goalId) => {
             if (!settings) return;
@@ -250,6 +264,29 @@ function GoalsCockpitContainer({
           }}
         />
       </ScrollView>
+      <GoalActionsMenu
+        goal={
+          menuTarget
+            ? { id: menuTarget.id, title: menuTarget.title ?? "" }
+            : null
+        }
+        onClose={() => setMenuTarget(null)}
+        onEdit={(goalId) => {
+          setMenuTarget(null);
+          navigation.navigate("EditMode", { goalId });
+        }}
+        onDelete={() => {
+          // Same confirmation as the long-press shortcut.
+          setMenuTarget(null);
+          if (Platform.OS === "ios") pendingDelete.current = menuTarget;
+          else setDeleteTarget(menuTarget);
+        }}
+        onDismissed={() => {
+          if (!pendingDelete.current) return;
+          setDeleteTarget(pendingDelete.current);
+          pendingDelete.current = null;
+        }}
+      />
       <ConfirmDeleteModal
         visible={deleteTarget !== null}
         onCancel={() => setDeleteTarget(null)}

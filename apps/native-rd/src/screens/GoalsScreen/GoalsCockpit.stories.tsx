@@ -39,6 +39,7 @@ const meta: Meta<typeof GoalsCockpit> = {
     onOpenGoal: noop,
     onNewGoal: noop,
     onDeleteGoal: noop,
+    onOpenGoalMenu: noop,
     heroIsPinned: false,
     onPinGoal: noop,
     onUnpinGoal: noop,
