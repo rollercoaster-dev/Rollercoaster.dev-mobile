@@ -1,13 +1,25 @@
 import React from "react";
-import { render, fireEvent, screen } from "@testing-library/react-native";
+import { render, fireEvent, screen, act } from "@testing-library/react-native";
 import { ErrorBoundary } from "../ErrorBoundary";
-import { Text } from "react-native";
+import { AccessibilityInfo, Text } from "react-native";
 import { reportError } from "../../../services/sentry-report";
 import { i18n } from "../../../i18n";
 
 jest.mock("../../../services/sentry-report", () => ({
   reportError: jest.fn(),
 }));
+
+// findNodeHandle is a lazy getter on react-native's index, so jest.spyOn can't
+// reach it; the test renderer has no native tags, so hand back a fixed one.
+const TITLE_TAG = 222;
+jest.mock("react-native", () => {
+  const RN = jest.requireActual("react-native");
+  Object.defineProperty(RN, "findNodeHandle", {
+    configurable: true,
+    value: jest.fn(() => 222),
+  });
+  return RN;
+});
 
 function ThrowingChild({
   shouldThrow,
@@ -94,6 +106,90 @@ describe("ErrorBoundary", () => {
     expect(
       screen.getByLabelText(i18n.t("common:errorBoundary.a11yAlert")),
     ).toBeTruthy();
+  });
+
+  describe("screen-reader focus", () => {
+    let setFocus: jest.SpyInstance;
+
+    beforeEach(() => {
+      jest.useFakeTimers();
+      setFocus = jest
+        .spyOn(AccessibilityInfo, "setAccessibilityFocus")
+        .mockImplementation(() => undefined);
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+      setFocus.mockRestore();
+    });
+
+    it.each(["screen", "root", "compact"] as const)(
+      "moves focus to the %s fallback once it appears",
+      (variant) => {
+        const { rerender } = render(
+          <ErrorBoundary variant={variant}>
+            <ThrowingChild shouldThrow={false} />
+          </ErrorBoundary>,
+        );
+        act(() => {
+          jest.runOnlyPendingTimers();
+        });
+        expect(setFocus).not.toHaveBeenCalled();
+
+        rerender(
+          <ErrorBoundary variant={variant}>
+            <ThrowingChild shouldThrow={true} />
+          </ErrorBoundary>,
+        );
+        act(() => {
+          jest.runOnlyPendingTimers();
+        });
+
+        expect(
+          screen.getByTestId(`error-boundary-title-${variant}`),
+        ).toBeTruthy();
+        expect(setFocus).toHaveBeenCalledTimes(1);
+        expect(setFocus).toHaveBeenCalledWith(TITLE_TAG);
+      },
+    );
+
+    it("drops the pending focus when Try Again recovers first", () => {
+      const { rerender } = render(
+        <ErrorBoundary>
+          <ThrowingChild shouldThrow={true} />
+        </ErrorBoundary>,
+      );
+      rerender(
+        <ErrorBoundary>
+          <ThrowingChild shouldThrow={false} />
+        </ErrorBoundary>,
+      );
+      fireEvent.press(
+        screen.getByRole("button", {
+          name: i18n.t("common:errorBoundary.retry"),
+        }),
+      );
+      act(() => {
+        jest.runOnlyPendingTimers();
+      });
+
+      expect(screen.getByText("Child content")).toBeTruthy();
+      expect(setFocus).not.toHaveBeenCalled();
+    });
+
+    it("leaves focus to a custom fallback", () => {
+      render(
+        <ErrorBoundary fallback={() => <Text>Custom</Text>}>
+          <ThrowingChild shouldThrow={true} />
+        </ErrorBoundary>,
+      );
+      act(() => {
+        jest.runOnlyPendingTimers();
+      });
+
+      expect(screen.getByText("Custom")).toBeTruthy();
+      expect(setFocus).not.toHaveBeenCalled();
+    });
   });
 
   it("resets error state on Try Again press", () => {
