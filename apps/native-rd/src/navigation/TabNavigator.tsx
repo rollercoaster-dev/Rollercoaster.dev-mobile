@@ -6,6 +6,7 @@ import { screenErrorBoundaryLayout } from "./screenErrorBoundary";
 import { GoalsStack } from "./GoalsStack";
 import { BadgesStack } from "./BadgesStack";
 import { SettingsStack } from "./SettingsStack";
+import { shouldHideTabBar } from "./tabBarVisibility";
 import type { RootTabParamList } from "./types";
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
@@ -24,11 +25,15 @@ export function TabNavigator() {
       }}
       // The tab bar sits outside every screen's boundary; a compact fallback
       // keeps the screen above it usable if the bar itself throws.
-      tabBar={(props) => (
-        <ErrorBoundary variant="compact">
-          <FocusPillTabBar {...props} />
-        </ErrorBoundary>
-      )}
+      // Full-screen modal routes (New goal, Completion, Welcome replay) hide
+      // the bar on Android, where they render inside the tab (#798).
+      tabBar={(props) =>
+        shouldHideTabBar(props.state.routes[props.state.index]) ? null : (
+          <ErrorBoundary variant="compact">
+            <FocusPillTabBar {...props} />
+          </ErrorBoundary>
+        )
+      }
       screenLayout={screenErrorBoundaryLayout}
     >
       <Tab.Screen name="GoalsTab" component={GoalsStack} />

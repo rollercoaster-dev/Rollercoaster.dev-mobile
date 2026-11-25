@@ -29,9 +29,9 @@ export function SettingsStack() {
       screenLayout={screenErrorBoundaryLayout}
     >
       <Stack.Screen name="Settings" component={SettingsScreen} />
-      {/* presentation: "modal" is a true full-screen native modal on both
-          platforms, so it covers the tab bar with no tabBarStyle plumbing —
-          the same precedent GoalsStack's NewGoal/CompletionFlow screens set. */}
+      {/* presentation: "modal" covers the tab bar on iOS only. On Android it
+          renders inside the tab, so TabNavigator hides the bar for this route
+          (FULL_SCREEN_ROUTES, #798) — same as GoalsStack's NewGoal. */}
       <Stack.Screen
         name="Welcome"
         component={WelcomeReplayScreen}

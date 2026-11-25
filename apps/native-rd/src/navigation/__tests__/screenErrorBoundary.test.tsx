@@ -75,7 +75,14 @@ function mockCreateNavigator() {
       return (
         <>
           {layout ? layout({ children: element }) : element}
-          {tabBar ? tabBar({}) : null}
+          {tabBar
+            ? tabBar({
+                state: {
+                  index: 0,
+                  routes: [{ key: mockTarget.route, name: mockTarget.route }],
+                },
+              })
+            : null}
         </>
       );
     },

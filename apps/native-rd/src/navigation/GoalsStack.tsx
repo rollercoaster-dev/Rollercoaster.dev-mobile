@@ -29,10 +29,11 @@ export function GoalsStack() {
     >
       <Stack.Screen name="Goals" component={GoalsScreen} />
       <Stack.Screen name="FocusMode" component={FocusModeScreen} />
-      {/* Modal presentation covers the tab bar on iOS with no changes to the
-          custom FocusPillTabBar — matching the canonical prototype, which
-          excludes `finish` from showTab exactly as it excludes `newgoal`.
-          The transition style is owned here, so neither entry point's plain
+      {/* Modal presentation covers the tab bar on iOS — matching the
+          canonical prototype, which excludes `finish` from showTab exactly as
+          it excludes `newgoal`. On Android the modal renders inside the tab,
+          so TabNavigator hides the bar for this route (#798). The transition
+          style is owned here, so neither entry point's plain
           navigate("CompletionFlow", { goalId }) changes (#449 D1). */}
       <Stack.Screen
         name="CompletionFlow"
@@ -41,9 +42,9 @@ export function GoalsStack() {
       />
       <Stack.Screen name="TimelineJourney" component={TimelineJourneyScreen} />
       <Stack.Screen name="EvidenceViewer" component={EvidenceViewerScreen} />
-      {/* presentation: "modal" is a true full-screen native modal on both
-          platforms, so it already covers the tab bar — the wizard needs no
-          tabBarStyle plumbing of its own (D1). */}
+      {/* presentation: "modal" covers the tab bar on iOS only. On Android it
+          renders inside the tab, so TabNavigator hides the bar for this route
+          (FULL_SCREEN_ROUTES, #798). */}
       <Stack.Screen
         name="NewGoal"
         component={NewGoalScreen}
