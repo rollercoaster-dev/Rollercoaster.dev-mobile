@@ -24,12 +24,13 @@ export function TabNavigator() {
         tabBarBackground: () => null,
       }}
       // The tab bar sits outside every screen's boundary; a compact fallback
-      // keeps the screen above it usable if the bar itself throws.
+      // keeps the screen above it usable if the bar itself throws, and the
+      // next navigation (a new state object) brings the bar back (#266).
       // Full-screen modal routes (New goal, Completion, Welcome replay) hide
       // the bar on Android, where they render inside the tab (#798).
       tabBar={(props) =>
         shouldHideTabBar(props.state.routes[props.state.index]) ? null : (
-          <ErrorBoundary variant="compact">
+          <ErrorBoundary variant="compact" resetKeys={[props.state]}>
             <FocusPillTabBar {...props} />
           </ErrorBoundary>
         )

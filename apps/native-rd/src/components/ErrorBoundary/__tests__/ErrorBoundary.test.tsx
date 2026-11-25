@@ -122,6 +122,87 @@ describe("ErrorBoundary", () => {
     expect(screen.queryByText(i18n.t("common:errorBoundary.title"))).toBeNull();
   });
 
+  describe("recovery (#266)", () => {
+    const retry = () =>
+      fireEvent.press(
+        screen.getByRole("button", {
+          name: i18n.t("common:errorBoundary.retry"),
+        }),
+      );
+
+    it("runs onReset before retrying, so a cleared cause renders the child", () => {
+      const cause = { broken: true };
+      function DataChild() {
+        if (cause.broken) throw new Error("bad data");
+        return <Text>Child content</Text>;
+      }
+      const onReset = jest.fn(() => {
+        cause.broken = false;
+      });
+      render(
+        <ErrorBoundary onReset={onReset}>
+          <DataChild />
+        </ErrorBoundary>,
+      );
+
+      retry();
+
+      expect(onReset).toHaveBeenCalledTimes(1);
+      expect(screen.getByText("Child content")).toBeTruthy();
+    });
+
+    it("resets on its own when a resetKey changes", () => {
+      const { rerender } = render(
+        <ErrorBoundary resetKeys={["a"]}>
+          <ThrowingChild shouldThrow={true} />
+        </ErrorBoundary>,
+      );
+      expect(screen.getByTestId("error-boundary-fallback-screen")).toBeTruthy();
+
+      rerender(
+        <ErrorBoundary resetKeys={["b"]}>
+          <ThrowingChild shouldThrow={false} />
+        </ErrorBoundary>,
+      );
+
+      expect(screen.getByText("Child content")).toBeTruthy();
+    });
+
+    it("keeps the fallback when the resetKeys are unchanged", () => {
+      const { rerender } = render(
+        <ErrorBoundary resetKeys={["a"]}>
+          <ThrowingChild shouldThrow={true} />
+        </ErrorBoundary>,
+      );
+
+      rerender(
+        <ErrorBoundary resetKeys={["a"]}>
+          <ThrowingChild shouldThrow={false} />
+        </ErrorBoundary>,
+      );
+
+      expect(screen.getByTestId("error-boundary-fallback-screen")).toBeTruthy();
+      expect(screen.queryByText("Child content")).toBeNull();
+    });
+
+    it("does not retry in the update where the key change itself threw", () => {
+      const { rerender } = render(
+        <ErrorBoundary resetKeys={["a"]}>
+          <ThrowingChild shouldThrow={false} />
+        </ErrorBoundary>,
+      );
+
+      rerender(
+        <ErrorBoundary resetKeys={["b"]}>
+          <ThrowingChild shouldThrow={true} />
+        </ErrorBoundary>,
+      );
+
+      expect(screen.getByTestId("error-boundary-fallback-screen")).toBeTruthy();
+      expect(reportError).toHaveBeenCalledTimes(1);
+    });
+  });
+
   it("reports rendered errors via reportError with area=render", () => {
     render(
       <ErrorBoundary>

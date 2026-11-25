@@ -273,4 +273,19 @@ describe("screen error boundaries", () => {
       area: "render",
     });
   });
+
+  it("brings the tab bar back on the next navigation (#266)", () => {
+    mockTarget.route = "GoalsTab";
+    mockTarget.throwTabBar = true;
+    const { rerender } = render(<TabNavigator />);
+    expect(screen.getByTestId("error-boundary-fallback-compact")).toBeTruthy();
+
+    // The fake navigator builds a new state object every render, as a real
+    // navigation does.
+    mockTarget.throwTabBar = false;
+    rerender(<TabNavigator />);
+
+    expect(screen.getByText("tab bar")).toBeTruthy();
+    expect(screen.queryByTestId("error-boundary-fallback-compact")).toBeNull();
+  });
 });

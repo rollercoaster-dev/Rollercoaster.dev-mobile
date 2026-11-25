@@ -16,11 +16,17 @@ import { ErrorBoundary } from "../components/ErrorBoundary";
  * Screens that already wrap their content in an inner `ErrorBoundary` (with a
  * Suspense fallback sized for that screen) keep it — the inner one catches
  * first; this one is the net for everything outside it.
+ *
+ * `route.params` is the screen's input: if the fallback is up and the screen
+ * gets new params (`setParams`, a deep link), the boundary resets and the
+ * screen renders again with them (#266).
  */
 export function screenErrorBoundaryLayout({
   children,
+  route,
 }: {
   children: ReactNode;
+  route?: { params?: object };
 }) {
-  return <ErrorBoundary>{children}</ErrorBoundary>;
+  return <ErrorBoundary resetKeys={[route?.params]}>{children}</ErrorBoundary>;
 }
