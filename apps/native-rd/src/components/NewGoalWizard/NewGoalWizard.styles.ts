@@ -133,6 +133,8 @@ export const styles = StyleSheet.create((theme) => ({
   },
   quickAddText: {
     fontSize: theme.size.sm,
+    // A sentence, not an overline: label's tracking broke it apart at large text.
+    letterSpacing: theme.letterSpacing.normal,
     fontWeight: theme.fontWeight.bold,
     color: theme.colors.textSecondary,
     textAlign: "center" as const,
@@ -239,6 +241,8 @@ export const styles = StyleSheet.create((theme) => ({
   evidenceChipLabel: {
     fontFamily: theme.fontFamily.mono,
     fontSize: theme.size.xs,
+    // A value, not an overline: caption's tracking spread it apart at large text.
+    letterSpacing: theme.letterSpacing.normal,
     color: theme.colors.text,
   },
   evidenceChipChange: {

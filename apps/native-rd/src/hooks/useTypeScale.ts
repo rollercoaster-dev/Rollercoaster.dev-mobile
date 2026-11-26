@@ -11,8 +11,10 @@ import {
 
 /**
  * The active theme's type scale (1.25 for Low Vision) without subscribing to
- * window dimensions. Shared `Text` and `Input` only need this to set their
- * cap; RN applies the OS scale natively, so they need not re-render on it.
+ * window dimensions. `TextField` and `Input` only need this to set their cap;
+ * RN applies the OS scale natively. (`Text` uses `useTypeScale` instead: it
+ * needs the OS scale to work around Android's uncapped spacing, see
+ * `cappedSpacing`.)
  */
 export function useThemeScale(): number {
   const { theme } = useUnistyles();
