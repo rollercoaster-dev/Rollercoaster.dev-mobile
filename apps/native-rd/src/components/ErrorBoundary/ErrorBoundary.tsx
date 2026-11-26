@@ -60,7 +60,8 @@ export class ErrorBoundary extends Component<
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("ErrorBoundary caught:", error);
+    // Dev only: in production the Sentry report below already carries it.
+    if (__DEV__) console.error("ErrorBoundary caught:", error);
     reportRenderError(error, errorInfo.componentStack);
   }
 

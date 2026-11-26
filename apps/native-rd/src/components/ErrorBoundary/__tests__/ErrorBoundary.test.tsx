@@ -334,6 +334,46 @@ describe("ErrorBoundary", () => {
     expect(componentStack).toEqual(expect.stringContaining("at ErrorBoundary"));
   });
 
+  describe("console logging", () => {
+    const devGlobal = global as unknown as { __DEV__: boolean };
+    const originalDev = devGlobal.__DEV__;
+    let errorSpy: jest.SpyInstance;
+
+    beforeEach(() => {
+      errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    });
+    afterEach(() => {
+      devGlobal.__DEV__ = originalDev;
+      errorSpy.mockRestore();
+    });
+
+    const boundaryLogs = () =>
+      errorSpy.mock.calls.filter((args) => args[0] === "ErrorBoundary caught:");
+
+    it("logs the caught error to the console in dev", () => {
+      devGlobal.__DEV__ = true;
+      render(
+        <ErrorBoundary>
+          <ThrowingChild shouldThrow={true} />
+        </ErrorBoundary>,
+      );
+
+      expect(boundaryLogs()).toHaveLength(1);
+    });
+
+    it("leaves production logging to the Sentry report", () => {
+      devGlobal.__DEV__ = false;
+      render(
+        <ErrorBoundary>
+          <ThrowingChild shouldThrow={true} />
+        </ErrorBoundary>,
+      );
+
+      expect(reportRenderError).toHaveBeenCalledTimes(1);
+      expect(boundaryLogs()).toHaveLength(0);
+    });
+  });
+
   it("uses custom fallback when provided", () => {
     render(
       <ErrorBoundary
