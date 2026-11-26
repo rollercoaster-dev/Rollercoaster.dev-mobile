@@ -1,9 +1,10 @@
 import React, { useCallback } from "react";
-import { Pressable, TextInput, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 
+import { TextField } from "../components/TextField";
 import { Text } from "../components/Text";
 
 import { getPathTextMaxChars } from "./text/pathTextLimits";
@@ -143,7 +144,7 @@ export function PathTextEditor({
           {(position === PathTextPosition.top ||
             position === PathTextPosition.both) && (
             <>
-              <TextInput
+              <TextField
                 accessibilityLabel={t("pathText.topA11y")}
                 value={text}
                 onChangeText={onChangeText}
@@ -217,7 +218,7 @@ export function PathTextEditor({
           {(position === PathTextPosition.bottom ||
             position === PathTextPosition.both) && (
             <>
-              <TextInput
+              <TextField
                 accessibilityLabel={t("pathText.bottomA11y")}
                 value={textBottom}
                 onChangeText={onChangeTextBottom}

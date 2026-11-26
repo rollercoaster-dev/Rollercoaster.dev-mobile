@@ -1,5 +1,6 @@
 import React, { useRef, useState } from "react";
-import { Pressable, ScrollView, TextInput, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
+import { TextField } from "../TextField";
 import { KeyboardAvoidingFrame } from "../KeyboardAvoidingFrame";
 import { useUnistyles } from "react-native-unistyles";
 
@@ -116,7 +117,7 @@ export function FinishCelebrateStage({
           </Text>
 
           {noteOpen ? (
-            <TextInput
+            <TextField
               style={styles.noteInput}
               value={closingNoteValue}
               onChangeText={onClosingNoteChange}

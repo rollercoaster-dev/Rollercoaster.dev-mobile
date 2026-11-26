@@ -1,12 +1,21 @@
 /**
- * Ban importing `Text` from react-native outside the shared Text component.
+ * Ban importing `Text` or `TextInput` from react-native outside their shared
+ * wrappers.
  *
  * Shared `Text` (src/components/Text/) applies the theme's type ramp and the
- * type-scaling caps (#741). A raw RN `Text` skips both, so it grows without a
- * cap under Dynamic Type and ignores theme fonts. Stories and tests are exempt
- * through a `files` override in eslint.config.js, not here.
+ * type-scaling caps (#741); shared `TextField` (src/components/TextField/)
+ * applies the body cap to inputs (#750). A raw RN `Text` or `TextInput` grows
+ * without a cap under Dynamic Type. Type-only imports (`type TextInput` for a
+ * ref) render nothing and stay allowed. Stories and tests are exempt through a
+ * `files` override in eslint.config.js, not here.
  */
-const EXEMPT_DIR = "/components/Text/";
+const BANNED = {
+  Text: { exemptDir: "/components/Text/", messageId: "noNativeText" },
+  TextInput: {
+    exemptDir: "/components/TextField/",
+    messageId: "noNativeTextInput",
+  },
+};
 
 /** @type {import('eslint').Rule.RuleModule} */
 module.exports = {
@@ -14,7 +23,7 @@ module.exports = {
     type: "problem",
     docs: {
       description:
-        "Disallow importing Text from react-native; use the shared Text component",
+        "Disallow importing Text or TextInput from react-native; use the shared Text or TextField component",
     },
     messages: {
       noNativeText: [
@@ -22,6 +31,12 @@ module.exports = {
         "Shared Text applies the theme's type ramp and the type-scaling caps ",
         "(docs/accessibility-guidelines.md#text-scaling). Pick the variant that ",
         "matches the text's role and keep local style overrides.",
+      ].join(""),
+      noNativeTextInput: [
+        "Import TextField from src/components/TextField, not TextInput from ",
+        "react-native. TextField applies the body type-scaling cap ",
+        "(docs/accessibility-guidelines.md#text-scaling) and passes every other ",
+        "prop through. Use `import { type TextInput }` for refs.",
       ].join(""),
     },
     schema: [],
@@ -32,8 +47,6 @@ module.exports = {
       /\\/g,
       "/",
     );
-    if (filename.includes(EXEMPT_DIR)) return {};
-
     function checkSpecifiers(node) {
       if (!node.source || node.source.value !== "react-native") return;
       // `import type { Text }` / `export type { Text }` render nothing.
@@ -50,8 +63,11 @@ module.exports = {
         if (!imported) continue;
         const name =
           imported.type === "Literal" ? imported.value : imported.name;
-        if (name === "Text") {
-          context.report({ node: specifier, messageId: "noNativeText" });
+        const banned = Object.prototype.hasOwnProperty.call(BANNED, name)
+          ? BANNED[name]
+          : null;
+        if (banned && !filename.includes(banned.exemptDir)) {
+          context.report({ node: specifier, messageId: banned.messageId });
         }
       }
     }

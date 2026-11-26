@@ -11,7 +11,6 @@ import {
   FlatList,
   Modal,
   Pressable,
-  TextInput,
   View,
   type ListRenderItemInfo,
 } from "react-native";
@@ -23,6 +22,7 @@ import { useUnistyles } from "react-native-unistyles";
 import { useTranslation } from "react-i18next";
 import type { IconWeight } from "phosphor-react-native";
 
+import { TextField } from "../components/TextField";
 import { HeaderBand } from "../components/ScreenHeader";
 import { Text } from "../components/Text";
 import { getIconComponent } from "./iconRegistry";
@@ -314,7 +314,7 @@ function IconPickerModalContent({
 
         {/* Search */}
         <View style={styles.searchContainer}>
-          <TextInput
+          <TextField
             testID={`${testID}-search`}
             accessibilityRole="search"
             accessibilityLabel="Search icons"

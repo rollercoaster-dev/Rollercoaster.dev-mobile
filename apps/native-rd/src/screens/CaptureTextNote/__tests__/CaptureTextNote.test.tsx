@@ -1,5 +1,10 @@
 import React from "react";
-import { Alert } from "react-native";
+import {
+  Alert,
+  StyleSheet,
+  type StyleProp,
+  type ViewStyle,
+} from "react-native";
 import { usePreventRemove } from "@react-navigation/native";
 import {
   renderWithProviders,
@@ -79,6 +84,16 @@ describe("CaptureTextNote", () => {
     expect(
       screen.getByLabelText(i18n.t("captureText:input.label")),
     ).toBeOnTheScreen();
+  });
+
+  // #750: the note body grew ~3.6x at iOS AX5 and truncated its placeholder.
+  it("caps the note body at the body type-scaling cap", () => {
+    renderWithProviders(
+      <CaptureTextNote route={defaultRoute} navigation={{} as any} />,
+    );
+    expect(
+      screen.getByTestId("capture-text-body").props.maxFontSizeMultiplier,
+    ).toBe(2);
   });
 
   it("renders caption input", () => {
@@ -448,10 +463,8 @@ describe("CaptureTextNote", () => {
 
   describe("fields at large type (#754)", () => {
     function flatStyle(style: unknown): Record<string, unknown> {
-      return Object.assign(
-        {},
-        ...(Array.isArray(style) ? style : [style]).filter(Boolean),
-      );
+      return (StyleSheet.flatten(style as StyleProp<ViewStyle>) ??
+        {}) as Record<string, unknown>;
     }
 
     it("keeps the note flex-filling a fixed View at default size", () => {

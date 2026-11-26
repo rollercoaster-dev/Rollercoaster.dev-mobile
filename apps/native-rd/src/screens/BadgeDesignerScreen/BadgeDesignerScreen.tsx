@@ -1,11 +1,6 @@
 import React, { Suspense, useCallback, useMemo, useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  ScrollView,
-  TextInput,
-  View,
-} from "react-native";
+import { ActivityIndicator, Alert, ScrollView, View } from "react-native";
+import { TextField } from "../../components/TextField";
 import { captureBadge, getCaptureDimensions } from "../../badges/captureBadge";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -503,7 +498,7 @@ function DesignEditor({
           testID="badge-designer-inscriptions"
         >
           <View style={styles.sectionStack}>
-            <TextInput
+            <TextField
               accessibilityLabel={t("badgeDesigner:bottomLabel.a11y")}
               value={bottomLabel}
               onChangeText={handleBottomLabelChange}

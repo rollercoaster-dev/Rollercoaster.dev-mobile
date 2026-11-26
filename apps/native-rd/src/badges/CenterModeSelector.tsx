@@ -1,8 +1,9 @@
 import React, { useCallback } from "react";
-import { Pressable, TextInput, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { useTranslation } from "react-i18next";
 
+import { TextField } from "../components/TextField";
 import { Text } from "../components/Text";
 import { selectorStyles } from "./selectorStyles";
 import { BadgeCenterMode } from "./types";
@@ -94,7 +95,7 @@ export function CenterModeSelector({
       </View>
 
       {selectedMode === BadgeCenterMode.monogram && (
-        <TextInput
+        <TextField
           accessibilityLabel={t("center.monogram.a11y")}
           value={monogram}
           onChangeText={onChangeMonogram}

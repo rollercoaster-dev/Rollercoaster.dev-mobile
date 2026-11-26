@@ -23,7 +23,6 @@
 import React, { useState } from "react";
 import {
   View,
-  TextInput,
   Pressable,
   Modal,
   ScrollView,
@@ -40,6 +39,7 @@ import Animated, {
   withTiming,
   runOnJS,
 } from "react-native-reanimated";
+import { TextField } from "../TextField";
 import type { AnimationPref } from "../../hooks/useAnimationPref";
 import { getTimingConfig } from "../../utils/animation";
 import { useTypeScale } from "../../hooks/useTypeScale";
@@ -299,7 +299,7 @@ export function EditGoalStepRow({
       >
         {"≡"}
       </Text>
-      <TextInput
+      <TextField
         style={styles.editInput}
         value={editText}
         onChangeText={onEditTextChange}

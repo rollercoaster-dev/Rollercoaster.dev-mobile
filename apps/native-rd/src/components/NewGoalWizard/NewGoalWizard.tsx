@@ -26,11 +26,11 @@
 import React, { useRef, useState } from "react";
 import {
   View,
-  TextInput,
   Pressable,
   ScrollView,
   type GestureResponderEvent,
 } from "react-native";
+import { TextField } from "../TextField";
 import { KeyboardAvoidingFrame } from "../KeyboardAvoidingFrame";
 import { ScrollAtLargeType } from "../ScrollAtLargeType";
 import { Text } from "../Text";
@@ -558,7 +558,7 @@ export function NewGoalWizard({
                 >
                   {nameTitle}
                 </Text>
-                <TextInput
+                <TextField
                   style={styles.titleInput}
                   value={goalTitle}
                   onChangeText={onGoalTitleChange}
@@ -566,8 +566,11 @@ export function NewGoalWizard({
                   placeholderTextColor={theme.colors.textMuted}
                   // The footer CTA sits under the soft keyboard and nothing here
                   // dismisses it, so without a return key the step is a dead end.
-                  // "done" blurs on submit (default blurOnSubmit) — same idiom as
+                  // "done" blurs on submit (submitBehavior below) — same idiom as
                   // EditGoalStepList's add-step input (#502).
+                  // Wraps instead of scrolling sideways at large text (#750).
+                  multiline
+                  submitBehavior="blurAndSubmit"
                   returnKeyType="done"
                   accessibilityLabel={goalTitlePlaceholder}
                   testID="new-goal-title-input"
@@ -629,13 +632,16 @@ export function NewGoalWizard({
                 >
                   {stepHeadline}
                 </Text>
-                <TextInput
+                <TextField
                   style={styles.titleInput}
                   value={firstStepTitle}
                   onChangeText={onFirstStepTitleChange}
                   placeholder={firstStepPlaceholder}
                   placeholderTextColor={theme.colors.textMuted}
                   // Same dead end as the name step's input (#502).
+                  // Wraps instead of scrolling sideways at large text (#750).
+                  multiline
+                  submitBehavior="blurAndSubmit"
                   returnKeyType="done"
                   accessibilityLabel={firstStepPlaceholder}
                   testID="new-goal-first-step-input"

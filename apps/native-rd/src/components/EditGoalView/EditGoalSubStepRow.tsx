@@ -8,12 +8,7 @@
  * symmetric here too, in-row editor included (#576).
  */
 import React from "react";
-import {
-  View,
-  TextInput,
-  Pressable,
-  type GestureResponderEvent,
-} from "react-native";
+import { View, Pressable, type GestureResponderEvent } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { XCircle } from "phosphor-react-native";
 import { useUnistyles } from "react-native-unistyles";
@@ -24,6 +19,7 @@ import Animated, {
   withTiming,
   runOnJS,
 } from "react-native-reanimated";
+import { TextField } from "../TextField";
 import type { AnimationPref } from "../../hooks/useAnimationPref";
 import { getTimingConfig } from "../../utils/animation";
 import { useTypeScale } from "../../hooks/useTypeScale";
@@ -257,7 +253,7 @@ export function EditGoalSubStepRow({
         style={styles.subStepRow}
       >
         {marker}
-        <TextInput
+        <TextField
           style={styles.subStepEditInput}
           value={editText}
           onChangeText={onEditTextChange}

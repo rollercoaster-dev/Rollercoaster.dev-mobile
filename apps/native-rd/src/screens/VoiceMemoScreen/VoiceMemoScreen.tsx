@@ -5,7 +5,8 @@
  * and saves the recording as evidence attached to a goal or step.
  */
 import React, { useState } from "react";
-import { View, TextInput, Alert, Pressable, Linking } from "react-native";
+import { View, Alert, Pressable, Linking } from "react-native";
+import { TextField } from "../../components/TextField";
 import { KeyboardAvoidingFrame } from "../../components/KeyboardAvoidingFrame";
 import { useUnistyles } from "react-native-unistyles";
 import { useNavigation } from "@react-navigation/native";
@@ -327,7 +328,7 @@ export function VoiceMemoScreen({ route }: CaptureVoiceMemoScreenProps) {
 
               {/* Save section */}
               <View style={styles.saveSection}>
-                <TextInput
+                <TextField
                   style={styles.captionInput}
                   placeholder={t("captureVoice:caption.placeholder")}
                   placeholderTextColor={theme.colors.textMuted}

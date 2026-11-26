@@ -22,8 +22,9 @@
  * renders read-only and no prompt shows.
  */
 import React, { useEffect, useRef } from "react";
-import { AccessibilityInfo, Pressable, TextInput, View } from "react-native";
+import { AccessibilityInfo, Pressable, View } from "react-native";
 import { useUnistyles } from "react-native-unistyles";
+import { TextField } from "../TextField";
 import { Text } from "../Text";
 import { focusAccessibilityRef } from "../../utils/accessibilityFocus";
 import { Button } from "../Button";
@@ -176,7 +177,7 @@ export function EditGoalRowDescription({
 
   return (
     <View style={styles.descriptionEditor}>
-      <TextInput
+      <TextField
         style={styles.descriptionEditInput}
         value={binding.draft}
         onChangeText={binding.onDraftChange}
