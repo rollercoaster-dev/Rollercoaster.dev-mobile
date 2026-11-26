@@ -4,6 +4,8 @@ import { themes, parseThemeName, type ThemeName } from "../../themes/compose";
 import { variantOverrides } from "../../themes/variants";
 import { size } from "../../themes/tokens";
 import { shadowStyle } from "../../styles/shadows";
+import { useTypeScale } from "../../hooks/useTypeScale";
+import { capForRole, themeScaleOf } from "../../utils/typeScale";
 import { Text } from "../Text";
 import { styles } from "./ThemeSampleCard.styles";
 
@@ -100,6 +102,9 @@ function previewStyles(themeId: ThemeName) {
   };
 
   return {
+    // The previewed theme's own type scale, so the CTA cap holds for Low
+    // Vision's 1.25x tokens even when another theme is active.
+    themeScale: themeScaleOf(sizeScale),
     sampleCard,
     badge,
     badgeText,
@@ -119,15 +124,27 @@ function previewStyles(themeId: ThemeName) {
 export function ThemeSampleCard({ themeId }: ThemeSampleCardProps) {
   const { t } = useTranslation(["common"]);
   const preview = previewStyles(themeId);
+  // At AX sizes the CTA beside the text squeezes the title until single words
+  // break mid-word; stack it under the text so the title gets the card width.
+  const { isAccessibilitySize } = useTypeScale();
 
   return (
-    <View testID="theme-sample-card" style={preview.sampleCard}>
+    <View
+      testID="theme-sample-card"
+      style={[preview.sampleCard, isAccessibilitySize && styles.cardStacked]}
+    >
       <View style={preview.badge}>
         <Text variant="label" chrome style={preview.badgeText}>
           ★
         </Text>
       </View>
-      <View style={styles.sampleTextCol}>
+      <View
+        testID="theme-sample-card-text"
+        style={[
+          styles.sampleTextCol,
+          isAccessibilitySize && styles.sampleTextColStacked,
+        ]}
+      >
         <Text variant="metadata" style={preview.sampleTitle}>
           {t("common:theme.preview.title")}
         </Text>
@@ -136,7 +153,12 @@ export function ThemeSampleCard({ themeId }: ThemeSampleCardProps) {
         </Text>
       </View>
       <View style={preview.ctaPill}>
-        <Text variant="caption" chrome style={preview.ctaText}>
+        <Text
+          testID="theme-sample-card-cta"
+          variant="caption"
+          maxFontSizeMultiplier={capForRole("control", preview.themeScale)}
+          style={preview.ctaText}
+        >
           {t("common:theme.preview.cta")}
         </Text>
       </View>

@@ -8,6 +8,8 @@ import {
 import { themeOptions } from "../../../hooks/useTheme";
 import { themes } from "../../../themes/compose";
 import { i18n } from "../../../i18n";
+import { mockFontScale } from "../../../__tests__/fontScale";
+import { CONTROL_CAP } from "../../../utils/typeScale";
 
 import { ThemeSampleCard } from "../ThemeSampleCard";
 
@@ -41,6 +43,39 @@ describe("ThemeSampleCard", () => {
       expect(card.backgroundColor).toBe(themes[id].colors.backgroundSecondary);
       expect(card.backgroundColor).not.toBe(themes[id].colors.background);
       expect(card.borderWidth).toBe(themes[id].borderWidth.thick);
+    },
+  );
+
+  // #749: the "+ ADD" pill is a control, so it stops at the button cap
+  // (combined with the previewed theme's own scale), not the 1.3x chrome cap.
+  it.each([
+    { id: "light-default", cap: CONTROL_CAP },
+    { id: "light-lowVision", cap: 1 },
+  ] as const)("caps the CTA at the control size for $id", ({ id, cap }) => {
+    renderWithProviders(<ThemeSampleCard themeId={id} />);
+    expect(
+      screen.getByTestId("theme-sample-card-cta").props.maxFontSizeMultiplier,
+    ).toBeCloseTo(cap);
+  });
+
+  // #749: at AX sizes the CTA beside the text squeezed the title until words
+  // broke mid-word. Stacked, the text column takes the full card width.
+  it.each([
+    { fontScale: 1, direction: "row", textFlex: 1 },
+    { fontScale: 2, direction: "column", textFlex: 0 },
+  ])(
+    "lays the card out as $direction at fontScale $fontScale",
+    ({ fontScale, direction, textFlex }) => {
+      renderWithProviders(<ThemeSampleCard themeId="light-default" />);
+      mockFontScale(fontScale);
+      const card = StyleSheet.flatten(
+        screen.getByTestId("theme-sample-card").props.style,
+      );
+      const text = StyleSheet.flatten(
+        screen.getByTestId("theme-sample-card-text").props.style,
+      );
+      expect(card.flexDirection).toBe(direction);
+      expect(text.flex).toBe(textFlex);
     },
   );
 
