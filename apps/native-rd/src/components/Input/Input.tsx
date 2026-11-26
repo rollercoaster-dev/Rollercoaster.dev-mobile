@@ -1,12 +1,11 @@
 import React, { useState } from "react";
-import { View, TextInput, type TextInputProps } from "react-native";
+import { View, type TextInput, type TextInputProps } from "react-native";
 import { useUnistyles } from "react-native-unistyles";
 import { useTranslation } from "react-i18next";
 import { styles } from "./Input.styles";
 import { Text } from "../Text";
 import { FieldError } from "../FieldError";
-import { useThemeScale } from "../../hooks/useTypeScale";
-import { capFor } from "../../utils/typeScale";
+import { TextField } from "../TextField";
 
 export interface InputProps extends Omit<TextInputProps, "style"> {
   label?: string;
@@ -30,7 +29,6 @@ export function Input({
   ...rest
 }: InputProps) {
   const { theme } = useUnistyles();
-  const themeScale = useThemeScale();
   const [focused, setFocused] = useState(false);
   const { t } = useTranslation(["common"]);
   const name = accessibilityLabel ?? label ?? placeholder;
@@ -42,7 +40,7 @@ export function Input({
           {label}
         </Text>
       )}
-      <TextInput
+      <TextField
         ref={ref}
         style={[
           styles.input,
@@ -51,9 +49,7 @@ export function Input({
         ]}
         placeholder={placeholder}
         placeholderTextColor={theme.colors.textMuted}
-        maxFontSizeMultiplier={
-          maxFontSizeMultiplier ?? capFor("body", false, themeScale)
-        }
+        maxFontSizeMultiplier={maxFontSizeMultiplier}
         value={value}
         onChangeText={onChangeText}
         onFocus={() => setFocused(true)}
