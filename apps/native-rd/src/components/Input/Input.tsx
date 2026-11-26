@@ -23,7 +23,6 @@ export function Input({
   onChangeText,
   error,
   testID,
-  maxFontSizeMultiplier,
   accessibilityLabel,
   ref,
   ...rest
@@ -49,7 +48,6 @@ export function Input({
         ]}
         placeholder={placeholder}
         placeholderTextColor={theme.colors.textMuted}
-        maxFontSizeMultiplier={maxFontSizeMultiplier}
         value={value}
         onChangeText={onChangeText}
         onFocus={() => setFocused(true)}

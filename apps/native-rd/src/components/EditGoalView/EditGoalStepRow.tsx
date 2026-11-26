@@ -28,7 +28,6 @@ import {
   ScrollView,
   type GestureResponderEvent,
 } from "react-native";
-import { TextField } from "../TextField";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { XCircle } from "phosphor-react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -40,6 +39,7 @@ import Animated, {
   withTiming,
   runOnJS,
 } from "react-native-reanimated";
+import { TextField } from "../TextField";
 import type { AnimationPref } from "../../hooks/useAnimationPref";
 import { getTimingConfig } from "../../utils/animation";
 import { useTypeScale } from "../../hooks/useTypeScale";

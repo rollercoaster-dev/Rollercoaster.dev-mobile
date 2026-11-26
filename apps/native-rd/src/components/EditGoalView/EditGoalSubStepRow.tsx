@@ -9,7 +9,6 @@
  */
 import React from "react";
 import { View, Pressable, type GestureResponderEvent } from "react-native";
-import { TextField } from "../TextField";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { XCircle } from "phosphor-react-native";
 import { useUnistyles } from "react-native-unistyles";
@@ -20,6 +19,7 @@ import Animated, {
   withTiming,
   runOnJS,
 } from "react-native-reanimated";
+import { TextField } from "../TextField";
 import type { AnimationPref } from "../../hooks/useAnimationPref";
 import { getTimingConfig } from "../../utils/animation";
 import { useTypeScale } from "../../hooks/useTypeScale";

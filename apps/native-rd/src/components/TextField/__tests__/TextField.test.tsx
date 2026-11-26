@@ -1,6 +1,7 @@
 import React from "react";
-import { renderWithProviders, screen } from "../../../__tests__/test-utils";
+import { StyleSheet } from "react-native";
 import { TextField } from "../TextField";
+import { renderWithProviders, screen } from "../../../__tests__/test-utils";
 import { composeTheme } from "../../../themes/compose";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -45,5 +46,14 @@ describe("TextField", () => {
       <TextField placeholder="Title" value="Beta goal" testID="title-input" />,
     );
     expect(screen.getByTestId("title-input").props.value).toBe("Beta goal");
+  });
+
+  it("applies the caller's style to the input", () => {
+    renderWithProviders(
+      <TextField testID="note" style={{ minHeight: 200, flex: 0 }} />,
+    );
+    const style = StyleSheet.flatten(screen.getByTestId("note").props.style);
+    expect(style.minHeight).toBe(200);
+    expect(style.flex).toBe(0);
   });
 });

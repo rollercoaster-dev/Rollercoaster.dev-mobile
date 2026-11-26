@@ -23,8 +23,8 @@
  */
 import React, { useEffect, useRef } from "react";
 import { AccessibilityInfo, Pressable, View } from "react-native";
-import { TextField } from "../TextField";
 import { useUnistyles } from "react-native-unistyles";
+import { TextField } from "../TextField";
 import { Text } from "../Text";
 import { focusAccessibilityRef } from "../../utils/accessibilityFocus";
 import { Button } from "../Button";

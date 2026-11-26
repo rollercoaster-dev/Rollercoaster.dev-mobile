@@ -30,9 +30,9 @@ import {
   Keyboard,
   type GestureResponderEvent,
 } from "react-native";
-import { TextField } from "../TextField";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useUnistyles } from "react-native-unistyles";
+import { TextField } from "../TextField";
 import { useAnimationPref } from "../../hooks/useAnimationPref";
 import { Text } from "../Text";
 import type { DragScrollController } from "../StepList/dragAutoScroll";

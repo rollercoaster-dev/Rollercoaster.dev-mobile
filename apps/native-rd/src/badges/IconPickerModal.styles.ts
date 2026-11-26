@@ -76,7 +76,9 @@ export const styles = StyleSheet.create((theme) => ({
   },
   searchInput: {
     flex: 1,
-    height: 44,
+    // minHeight, not height: the capped (2.0x) query must grow the box (#750).
+    minHeight: 44,
+    paddingVertical: theme.space[2],
     borderWidth: theme.borderWidth.thick,
     borderColor: theme.colors.border,
     borderRadius: 0,

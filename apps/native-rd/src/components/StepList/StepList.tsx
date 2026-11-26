@@ -5,11 +5,11 @@ import {
   AccessibilityInfo,
   type TextInput,
 } from "react-native";
-import { TextField } from "../TextField";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useSharedValue } from "react-native-reanimated";
 import { useTranslation } from "react-i18next";
 import { useUnistyles } from "react-native-unistyles";
+import { TextField } from "../TextField";
 import { useAnimationPref } from "../../hooks/useAnimationPref";
 import { triggerDragStart, triggerDragDrop } from "../../utils/haptics";
 import { IconButton } from "../IconButton";

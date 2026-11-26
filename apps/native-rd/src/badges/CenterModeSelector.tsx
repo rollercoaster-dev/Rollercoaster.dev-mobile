@@ -1,9 +1,9 @@
 import React, { useCallback } from "react";
 import { Pressable, View } from "react-native";
-import { TextField } from "../components/TextField";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { useTranslation } from "react-i18next";
 
+import { TextField } from "../components/TextField";
 import { Text } from "../components/Text";
 import { selectorStyles } from "./selectorStyles";
 import { BadgeCenterMode } from "./types";
