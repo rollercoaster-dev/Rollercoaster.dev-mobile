@@ -21,9 +21,7 @@ interface SettingsDensityRowsProps {
  * are backed but have no UI (and which are dead), see the "Backed-but-unsurfaced
  * settings" findings in docs/plans/dev-plans/issue-415-settings-theme-density-rows.md.
  * Short version for anyone extending the Settings screen:
- *   • Reduce Motion (`animationPref`) — fully honored by 10+ components via
- *     useAnimationPref; `setAnimationPref` has no caller. This same radiogroup
- *     pattern (Full / Reduced / None) drops straight in. Best next real row.
+ *   • Reduce Motion (`animationPref`) — surfaced by SettingsMotionRows (#692).
  *   • Replay welcome (`hasSeenWelcome`) — needs a reset mutation (only a
  *     mark-seen path exists today).
  *   • fontScale — persisted + write-validated but NOTHING reads it; do not build

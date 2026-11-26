@@ -45,7 +45,12 @@ import {
   SheetBackground,
   useSheetTrigger,
 } from "../AnimatedSheet";
-import { EditGoalStepList, type EditGoalStep } from "../EditGoalView";
+import {
+  EditGoalStepList,
+  type EditGoalStep,
+  type EditGoalStepRowCopy,
+  type EditGoalSubStepRowCopy,
+} from "../EditGoalView";
 import type { DragScrollController } from "../StepList/dragAutoScroll";
 import { EvidenceType } from "../../db";
 import { EVIDENCE_OPTIONS, type EvidenceTypeValue } from "../../types/evidence";
@@ -224,6 +229,9 @@ export interface NewGoalWizardProps {
   unNestA11yLabel?: string;
   announcePromote?: (stepTitle: string) => string;
   announceNestedUnder?: (stepTitle: string, parentTitle: string) => string;
+  /** Step / sub-step row screen-reader copy (#548), forwarded to EditGoalStepList. */
+  stepRowCopy?: EditGoalStepRowCopy;
+  subStepRowCopy?: EditGoalSubStepRowCopy;
   /** Footer CTA on the build step — distinct copy from nextLabel (D7). */
   buildReadyLabel?: string;
   readyHeadline?: string;
@@ -345,6 +353,8 @@ export function NewGoalWizard({
   unNestA11yLabel,
   announcePromote,
   announceNestedUnder,
+  stepRowCopy,
+  subStepRowCopy,
   buildReadyLabel = "I'm ready →",
   readyHeadline = "You're set.",
   stepCountSummary = defaultStepCountSummary,
@@ -746,6 +756,8 @@ export function NewGoalWizard({
                     unNestA11yLabel={unNestA11yLabel}
                     announcePromote={announcePromote}
                     announceNestedUnder={announceNestedUnder}
+                    stepRowCopy={stepRowCopy}
+                    subStepRowCopy={subStepRowCopy}
                   />
                 </ScrollView>
               </View>

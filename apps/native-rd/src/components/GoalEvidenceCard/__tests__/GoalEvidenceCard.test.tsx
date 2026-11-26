@@ -218,6 +218,15 @@ describe("GoalEvidenceCard", () => {
     ).toBeOnTheScreen();
   });
 
+  it("uses the singular evidence badge label for 1 item (#80)", () => {
+    renderWithProviders(
+      <GoalEvidenceCard {...defaultProps} evidenceCount={1} />,
+    );
+    expect(
+      screen.getByLabelText("1 goal evidence item, tap to view"),
+    ).toBeOnTheScreen();
+  });
+
   describe("Mark Complete affordance", () => {
     it("does not render the check or Ready badge when onMarkComplete is omitted", () => {
       renderWithProviders(<GoalEvidenceCard {...defaultProps} />);

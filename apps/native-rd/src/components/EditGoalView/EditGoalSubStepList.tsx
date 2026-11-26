@@ -15,7 +15,10 @@ import React from "react";
 import { View, type GestureResponderEvent } from "react-native";
 import type { AnimationPref } from "../../hooks/useAnimationPref";
 import type { SharedValue } from "react-native-reanimated";
-import { EditGoalSubStepRow } from "./EditGoalSubStepRow";
+import {
+  EditGoalSubStepRow,
+  type EditGoalSubStepRowCopy,
+} from "./EditGoalSubStepRow";
 import type { EditGoalSubStep, EditGoalTimingHost } from "./EditGoalView";
 import { bindRowTiming } from "./EditGoalRowTiming";
 import type { EditGoalRowDescriptionBinding } from "./EditGoalRowDescription";
@@ -52,6 +55,8 @@ export interface EditGoalSubStepListProps {
   /** Whether the un-nest control should show (reparent enabled + onReparentStep). */
   canUnNest?: boolean;
   unNestA11yLabel?: string;
+  /** Each sub-row's screen-reader copy (#548). Omitted → English defaults. */
+  rowCopy?: EditGoalSubStepRowCopy;
   /**
    * Opens timing authoring for a sub-step (#575). Omitted → each sub-row's
    * timing line renders inert (D7).
@@ -91,6 +96,7 @@ export function EditGoalSubStepList({
   onUnNest,
   canUnNest = false,
   unNestA11yLabel,
+  rowCopy,
   onEditTiming,
   whenPromptLabel,
   editTimingUnsetA11yLabel,
@@ -103,6 +109,7 @@ export function EditGoalSubStepList({
       {subSteps.map((sub, index) => (
         <View key={sub.id}>
           <EditGoalSubStepRow
+            {...rowCopy}
             subStep={sub}
             isBeingDragged={draggedRowId === sub.id}
             isEditing={editingId === sub.id}

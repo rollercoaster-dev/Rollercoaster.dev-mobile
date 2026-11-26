@@ -1,13 +1,25 @@
 import React from "react";
-import { render, fireEvent, screen } from "@testing-library/react-native";
+import { render, fireEvent, screen, act } from "@testing-library/react-native";
 import { ErrorBoundary } from "../ErrorBoundary";
-import { Text } from "react-native";
-import { reportError } from "../../../services/sentry-report";
+import { AccessibilityInfo, Text } from "react-native";
+import { reportRenderError } from "../../../services/sentry-report";
 import { i18n } from "../../../i18n";
 
 jest.mock("../../../services/sentry-report", () => ({
-  reportError: jest.fn(),
+  reportRenderError: jest.fn(),
 }));
+
+// findNodeHandle is a lazy getter on react-native's index, so jest.spyOn can't
+// reach it; the test renderer has no native tags, so hand back a fixed one.
+const TITLE_TAG = 222;
+jest.mock("react-native", () => {
+  const RN = jest.requireActual("react-native");
+  Object.defineProperty(RN, "findNodeHandle", {
+    configurable: true,
+    value: jest.fn(() => 222),
+  });
+  return RN;
+});
 
 function ThrowingChild({
   shouldThrow,
@@ -36,7 +48,7 @@ afterAll(() => {
 
 describe("ErrorBoundary", () => {
   beforeEach(() => {
-    (reportError as jest.Mock).mockClear();
+    (reportRenderError as jest.Mock).mockClear();
   });
 
   it("renders children when no error", () => {
@@ -94,6 +106,90 @@ describe("ErrorBoundary", () => {
     expect(
       screen.getByLabelText(i18n.t("common:errorBoundary.a11yAlert")),
     ).toBeTruthy();
+  });
+
+  describe("screen-reader focus", () => {
+    let setFocus: jest.SpyInstance;
+
+    beforeEach(() => {
+      jest.useFakeTimers();
+      setFocus = jest
+        .spyOn(AccessibilityInfo, "setAccessibilityFocus")
+        .mockImplementation(() => undefined);
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+      setFocus.mockRestore();
+    });
+
+    it.each(["screen", "root", "compact"] as const)(
+      "moves focus to the %s fallback once it appears",
+      (variant) => {
+        const { rerender } = render(
+          <ErrorBoundary variant={variant}>
+            <ThrowingChild shouldThrow={false} />
+          </ErrorBoundary>,
+        );
+        act(() => {
+          jest.runOnlyPendingTimers();
+        });
+        expect(setFocus).not.toHaveBeenCalled();
+
+        rerender(
+          <ErrorBoundary variant={variant}>
+            <ThrowingChild shouldThrow={true} />
+          </ErrorBoundary>,
+        );
+        act(() => {
+          jest.runOnlyPendingTimers();
+        });
+
+        expect(
+          screen.getByTestId(`error-boundary-title-${variant}`),
+        ).toBeTruthy();
+        expect(setFocus).toHaveBeenCalledTimes(1);
+        expect(setFocus).toHaveBeenCalledWith(TITLE_TAG);
+      },
+    );
+
+    it("drops the pending focus when Try Again recovers first", () => {
+      const { rerender } = render(
+        <ErrorBoundary>
+          <ThrowingChild shouldThrow={true} />
+        </ErrorBoundary>,
+      );
+      rerender(
+        <ErrorBoundary>
+          <ThrowingChild shouldThrow={false} />
+        </ErrorBoundary>,
+      );
+      fireEvent.press(
+        screen.getByRole("button", {
+          name: i18n.t("common:errorBoundary.retry"),
+        }),
+      );
+      act(() => {
+        jest.runOnlyPendingTimers();
+      });
+
+      expect(screen.getByText("Child content")).toBeTruthy();
+      expect(setFocus).not.toHaveBeenCalled();
+    });
+
+    it("leaves focus to a custom fallback", () => {
+      render(
+        <ErrorBoundary fallback={() => <Text>Custom</Text>}>
+          <ThrowingChild shouldThrow={true} />
+        </ErrorBoundary>,
+      );
+      act(() => {
+        jest.runOnlyPendingTimers();
+      });
+
+      expect(screen.getByText("Custom")).toBeTruthy();
+      expect(setFocus).not.toHaveBeenCalled();
+    });
   });
 
   it("resets error state on Try Again press", () => {
@@ -216,22 +312,26 @@ describe("ErrorBoundary", () => {
       );
 
       expect(screen.getByTestId("error-boundary-fallback-screen")).toBeTruthy();
-      expect(reportError).toHaveBeenCalledTimes(1);
+      expect(reportRenderError).toHaveBeenCalledTimes(1);
     });
   });
 
-  it("reports rendered errors via reportError with area=render", () => {
+  it("reports rendered errors with React's component stack", () => {
     render(
       <ErrorBoundary>
         <ThrowingChild shouldThrow={true} />
       </ErrorBoundary>,
     );
 
-    expect(reportError).toHaveBeenCalledTimes(1);
-    const [err, ctx] = (reportError as jest.Mock).mock.calls[0];
+    expect(reportRenderError).toHaveBeenCalledTimes(1);
+    const [err, componentStack] = (reportRenderError as jest.Mock).mock
+      .calls[0];
     expect(err).toBeInstanceOf(Error);
     expect((err as Error).message).toBe("Test error");
-    expect(ctx).toEqual({ area: "render" });
+    // React's tree path to the crash, which runs up through the boundary.
+    // (Jest's source maps rename the throwing child's frame, so pin the
+    // boundary frame.)
+    expect(componentStack).toEqual(expect.stringContaining("at ErrorBoundary"));
   });
 
   it("uses custom fallback when provided", () => {

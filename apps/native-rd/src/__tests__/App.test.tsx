@@ -10,11 +10,12 @@
 import React from "react";
 import { render, screen } from "@testing-library/react-native";
 import { i18n } from "../i18n";
-import { reportError } from "../services/sentry-report";
+import { reportRenderError } from "../services/sentry-report";
 import { App } from "../../App";
 
 jest.mock("../services/sentry-report", () => ({
   reportError: jest.fn(),
+  reportRenderError: jest.fn(),
 }));
 
 jest.mock("expo", () => ({ reloadAppAsync: jest.fn() }));
@@ -88,7 +89,7 @@ afterAll(() => {
 });
 
 beforeEach(() => {
-  (reportError as jest.Mock).mockClear();
+  (reportRenderError as jest.Mock).mockClear();
   mockFailAt.layer = null;
   mockStartup.isFirstLaunch = null;
   mockStartup.isThemeRestored = false;
@@ -104,9 +105,10 @@ describe("App root error boundary", () => {
       expect(
         screen.getByText(i18n.t("common:errorBoundary.title")),
       ).toBeTruthy();
-      expect(reportError).toHaveBeenCalledWith(expect.any(Error), {
-        area: "render",
-      });
+      expect(reportRenderError).toHaveBeenCalledWith(
+        expect.any(Error),
+        expect.any(String),
+      );
     },
   );
 });

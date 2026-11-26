@@ -703,6 +703,37 @@ describe("EditModeScreen", () => {
     });
   });
 
+  describe("row screen-reader copy (#548)", () => {
+    // German literals, not i18n.t(): the regression is the rows falling back
+    // to their built-in English defaults because the copy never reached them.
+    it("announces step and sub-step rows in the active language", async () => {
+      setupQueries(GOAL, STEPS_TREE);
+      await act(() => i18n.changeLanguage("de"));
+      try {
+        renderWithProviders(<EditModeScreen {...makeRouteProps()} />);
+
+        expect(
+          screen.getByTestId("edit-goal-step-delete-p1").props
+            .accessibilityLabel,
+        ).toBe('"Parent one" löschen');
+        expect(
+          screen.getByTestId("edit-goal-step-evidence-p1").props
+            .accessibilityLabel,
+        ).toBe("Geplante Evidenz bearbeiten");
+        expect(
+          screen.getByTestId("edit-goal-substep-delete-p1c1").props
+            .accessibilityLabel,
+        ).toBe('Unterschritt "P1 child" löschen');
+        expect(
+          screen.getByTestId("edit-goal-substep-title-p1c1").props
+            .accessibilityHint,
+        ).toBe("Zum Bearbeiten des Unterschritt-Titels tippen");
+      } finally {
+        await act(() => i18n.changeLanguage("en"));
+      }
+    });
+  });
+
   describe("step deletion", () => {
     it("calls deleteStep only after the confirm modal is confirmed", () => {
       setupQueries();

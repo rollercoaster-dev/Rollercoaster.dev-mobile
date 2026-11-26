@@ -20,6 +20,27 @@
       }
     }
   },
+  "motion": {
+    "title": "Bewegung",
+    "options": {
+      "full": {
+        "label": "Voll",
+        "description": "Alle Animationen"
+      },
+      "reduced": {
+        "label": "Reduziert",
+        "description": "Weniger Bewegung, nichts wiederholt sich"
+      },
+      "none": {
+        "label": "Aus",
+        "description": "Keine Animationen"
+      }
+    },
+    "override": {
+      "theme": "{{theme}} lässt Bewegung aus. Deine Wahl hier gilt in den anderen Themes.",
+      "os": "„Bewegung reduzieren“ auf deinem Gerät lässt Bewegung aus. Deine Wahl hier gilt, sobald das aus ist."
+    }
+  },
   "onboarding": {
     "title": "Einstieg",
     "replayWelcome": "Begrüßung nochmal ansehen",
@@ -32,7 +53,8 @@
   "errors": {
     "densitySaveFailed": "Dichte konnte nicht gespeichert werden. Versuch es nochmal.",
     "themeSaveFailed": "Theme konnte nicht gespeichert werden. Versuch es nochmal.",
-    "tutorialStartFailed": "Tutorial-Ziel konnte nicht angelegt werden. Versuch es nochmal."
+    "tutorialStartFailed": "Tutorial-Ziel konnte nicht angelegt werden. Versuch es nochmal.",
+    "motionSaveFailed": "Bewegung konnte nicht gespeichert werden. Versuch es nochmal."
   },
   "about": {
     "title": "Über",

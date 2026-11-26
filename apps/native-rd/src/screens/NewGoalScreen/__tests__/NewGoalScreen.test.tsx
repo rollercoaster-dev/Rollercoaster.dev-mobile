@@ -444,6 +444,22 @@ describe("NewGoalScreen", () => {
         [FIRST_STEP, 1],
       ]);
     });
+
+    it("announces build-list rows in the active language (#548)", async () => {
+      await act(() => i18n.changeLanguage("de"));
+      try {
+        renderWithProviders(<NewGoalScreen />);
+        advanceToBuild();
+
+        // German literal: the regression is the row's English default.
+        expect(
+          screen.getByTestId(`edit-goal-step-delete-${ROW_1}`).props
+            .accessibilityLabel,
+        ).toBe(`"${FIRST_STEP}" löschen`);
+      } finally {
+        await act(() => i18n.changeLanguage("en"));
+      }
+    });
   });
 
   describe("start working", () => {

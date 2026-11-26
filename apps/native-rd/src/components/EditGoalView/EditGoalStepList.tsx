@@ -37,7 +37,8 @@ import { useAnimationPref } from "../../hooks/useAnimationPref";
 import { Text } from "../Text";
 import type { DragScrollController } from "../StepList/dragAutoScroll";
 import { ConfirmDeleteModal } from "../ConfirmDeleteModal";
-import { EditGoalStepRow } from "./EditGoalStepRow";
+import { EditGoalStepRow, type EditGoalStepRowCopy } from "./EditGoalStepRow";
+import type { EditGoalSubStepRowCopy } from "./EditGoalSubStepRow";
 import { EditGoalSubStepList } from "./EditGoalSubStepList";
 import { useEditGoalHierarchyDrag } from "./useEditGoalHierarchyDrag";
 import { styles } from "./EditGoalView.styles";
@@ -156,6 +157,11 @@ export interface EditGoalStepListProps {
   unNestA11yLabel?: string;
   announcePromote?: (stepTitle: string) => string;
   announceNestedUnder?: (stepTitle: string, parentTitle: string) => string;
+  // --- Row screen-reader copy (#548) ---
+  /** Each step row's own a11y labels and hint. Omitted → English defaults. */
+  stepRowCopy?: EditGoalStepRowCopy;
+  /** Each sub-step row's own a11y labels and hint. Omitted → English defaults. */
+  subStepRowCopy?: EditGoalSubStepRowCopy;
   // --- Timing line (#575) ---
   /**
    * Opens timing authoring for a step or sub-step (#575). Ids are unique across
@@ -240,6 +246,8 @@ export function EditGoalStepList({
   unNestA11yLabel = "Promote this step to top level",
   announcePromote,
   announceNestedUnder,
+  stepRowCopy,
+  subStepRowCopy,
   onEditTiming,
   whenPromptLabel,
   editTimingUnsetA11yLabel,
@@ -527,6 +535,7 @@ export function EditGoalStepList({
               : undefined
           }
           unNestA11yLabel={unNestA11yLabel}
+          rowCopy={subStepRowCopy}
           onEditTiming={onEditTiming}
           whenPromptLabel={whenPromptLabel}
           editTimingUnsetA11yLabel={editTimingUnsetA11yLabel}
@@ -600,6 +609,7 @@ export function EditGoalStepList({
           return (
             <View key={step.id}>
               <EditGoalStepRow
+                {...stepRowCopy}
                 step={step}
                 stepNumber={index + 1}
                 isBeingDragged={drag.draggedRowId === step.id}

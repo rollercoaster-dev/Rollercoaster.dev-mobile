@@ -13,15 +13,19 @@
  * Design notes:
  * - `setTag` writes to `event.tags`, which is keyed and value-typed (string).
  *   The closed enums below mean both key and value are pre-vetted.
- * - We do NOT write to `event.contexts` or `event.extra`. Even though
- *   `sentry-filters.ts` now strips non-allowlisted contexts and extras as a
- *   backstop, the API itself should not expose paths that need scrubbing.
+ * - `reportError` does NOT write to `event.contexts` or `event.extra`. Even
+ *   though `sentry-filters.ts` strips non-allowlisted contexts and extras as
+ *   a backstop, the API itself should not expose paths that need scrubbing.
+ * - The one exception is `reportRenderError`: it carries React's
+ *   `componentStack` (component names + bundle locations, never user
+ *   content) as the `react` context, scrubbed here and again in `beforeSend`.
  *
  * See `apps/native-rd/docs/launch/sentry-usage-concept.md` §3.1.
  */
 import * as Sentry from "@sentry/react-native";
 
 import type { EvidenceTypeValue } from "../types/evidence";
+import { scrubComponentStack } from "./sentry-filters";
 
 /**
  * Closed enum of (area, kind) pairs that may report to Sentry.
@@ -76,6 +80,7 @@ export type ReportContext =
   // Startup never produced the user-settings row within StartupGate's bound.
   | { area: "db.startup"; kind: "timeout" }
   | { area: "settings.density" }
+  | { area: "settings.motion" }
   | { area: "settings.theme" }
   // The cockpit pin is a userSettings write, not a goal write — it belongs with
   // the other settings.* areas rather than under goal.mutate's closed kinds.
@@ -89,6 +94,28 @@ export function reportError(error: unknown, ctx: ReportContext): void {
     scope.setTag("area", ctx.area);
     if ("kind" in ctx && ctx.kind) {
       scope.setTag("kind", ctx.kind);
+    }
+    Sentry.captureException(error);
+  });
+}
+
+/**
+ * Render errors caught by an error boundary, with React's component stack —
+ * the tree path to the crash (which screen / subtree), which a minified JS
+ * stack can't show. `componentStack` is the only free-text input this module
+ * accepts: it is scrubbed, then written as the `react` context, which
+ * `scrubEvent` allowlists and re-scrubs.
+ */
+export function reportRenderError(
+  error: unknown,
+  componentStack?: string | null,
+): void {
+  Sentry.withScope((scope) => {
+    scope.setTag("area", "render");
+    if (componentStack) {
+      scope.setContext("react", {
+        componentStack: scrubComponentStack(componentStack),
+      });
     }
     Sentry.captureException(error);
   });

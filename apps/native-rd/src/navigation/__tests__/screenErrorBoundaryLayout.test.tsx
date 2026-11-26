@@ -9,7 +9,7 @@ import { render, screen } from "@testing-library/react-native";
 import { screenErrorBoundaryLayout } from "../screenErrorBoundary";
 
 jest.mock("../../services/sentry-report", () => ({
-  reportError: jest.fn(),
+  reportRenderError: jest.fn(),
 }));
 
 function Screen({ broken }: { broken: boolean }) {

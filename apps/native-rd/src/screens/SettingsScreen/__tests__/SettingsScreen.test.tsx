@@ -139,6 +139,16 @@ jest.mock("../../../hooks/useTheme", () => {
   };
 });
 
+const mockSetAnimationPref = jest.fn();
+jest.mock("../../../hooks/useAnimationPref", () => ({
+  ...jest.requireActual("../../../hooks/useAnimationPref"),
+  useAnimationPref: () => ({
+    userPref: "full",
+    override: null,
+    setAnimationPref: mockSetAnimationPref,
+  }),
+}));
+
 jest.mock("../../../hooks/useDensity", () => ({
   useDensity: () => ({
     densityLevel: "default",
@@ -156,6 +166,7 @@ beforeEach(() => {
   // press doesn't spuriously trip the failure toast.
   mockSetTheme.mockReturnValue(true);
   mockSetDensity.mockReturnValue(true);
+  mockSetAnimationPref.mockReturnValue(true);
   Object.defineProperty(Platform, "OS", {
     configurable: true,
     value: originalPlatform,
@@ -187,10 +198,29 @@ describe("SettingsScreen", () => {
     }
   });
 
-  it("renders theme and density options as radios", () => {
+  it("renders theme, density and motion options as radios", () => {
     renderWithProviders(<SettingsScreen />);
-    // 7 theme swatches + 3 density rows.
-    expect(screen.getAllByRole("radio")).toHaveLength(THEME_IDS.length + 3);
+    // 7 theme swatches + 3 density rows + 3 motion rows.
+    expect(screen.getAllByRole("radio")).toHaveLength(THEME_IDS.length + 6);
+  });
+
+  it("saves the pressed motion choice", () => {
+    renderWithProviders(<SettingsScreen />);
+    fireEvent.press(
+      screen.getByText(i18n.t("settings:motion.options.reduced.label")),
+    );
+    expect(mockSetAnimationPref).toHaveBeenCalledWith("reduced");
+  });
+
+  it("shows a toast when the motion choice fails to save", () => {
+    mockSetAnimationPref.mockReturnValue(false);
+    renderWithProviders(<SettingsScreen />);
+    fireEvent.press(
+      screen.getByText(i18n.t("settings:motion.options.none.label")),
+    );
+    expect(
+      screen.getByText(i18n.t("settings:errors.motionSaveFailed")),
+    ).toBeOnTheScreen();
   });
 
   it("calls setTheme when a theme swatch is pressed", () => {
