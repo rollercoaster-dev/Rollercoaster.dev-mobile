@@ -23,12 +23,12 @@
 import React, { useState } from "react";
 import {
   View,
-  TextInput,
   Pressable,
   Modal,
   ScrollView,
   type GestureResponderEvent,
 } from "react-native";
+import { TextField } from "../TextField";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { XCircle } from "phosphor-react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -299,7 +299,7 @@ export function EditGoalStepRow({
       >
         {"≡"}
       </Text>
-      <TextInput
+      <TextField
         style={styles.editInput}
         value={editText}
         onChangeText={onEditTextChange}

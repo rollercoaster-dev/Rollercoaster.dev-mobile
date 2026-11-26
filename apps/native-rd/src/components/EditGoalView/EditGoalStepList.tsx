@@ -25,12 +25,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
   View,
-  TextInput,
   Pressable,
   AccessibilityInfo,
   Keyboard,
   type GestureResponderEvent,
 } from "react-native";
+import { TextField } from "../TextField";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useUnistyles } from "react-native-unistyles";
 import { useAnimationPref } from "../../hooks/useAnimationPref";
@@ -708,7 +708,7 @@ export function EditGoalStepList({
 
       <View style={styles.addRow}>
         <View style={styles.addInputCard}>
-          <TextInput
+          <TextField
             style={styles.addInput}
             value={newStepTitle}
             onChangeText={setNewStepTitle}

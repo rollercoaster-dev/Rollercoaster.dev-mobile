@@ -6,13 +6,19 @@ const ruleTester = new RuleTester({
 });
 
 const error = { messageId: "noNativeText" };
+const inputError = { messageId: "noNativeTextInput" };
 
 ruleTester.run("no-native-text-import", rule, {
   valid: [
     // Other react-native imports are fine
     {
-      code: 'import { View, TextInput } from "react-native";',
+      code: 'import { View, Pressable } from "react-native";',
       filename: "/app/src/components/Card/Card.tsx",
+    },
+    // Exempt: the shared TextField wraps RN TextInput (#750)
+    {
+      code: 'import { TextInput as RNTextInput } from "react-native";',
+      filename: "/app/src/components/TextField/TextField.tsx",
     },
     // The shared Text component
     {
@@ -57,6 +63,23 @@ ruleTester.run("no-native-text-import", rule, {
       code: 'import { Text } from "react-native";',
       filename: "/app/src/components/TextBlock/TextBlock.tsx",
       errors: [error],
+    },
+    // Raw TextInput skips the body cap (#750)
+    {
+      code: 'import { View, TextInput } from "react-native";',
+      filename: "/app/src/screens/CaptureTextNote/CaptureTextNote.tsx",
+      errors: [{ ...inputError, column: 16 }],
+    },
+    // Each wrapper's exemption covers only its own import
+    {
+      code: 'import { Text } from "react-native";',
+      filename: "/app/src/components/TextField/TextField.tsx",
+      errors: [error],
+    },
+    {
+      code: 'import { TextInput } from "react-native";',
+      filename: "/app/src/components/Text/Text.tsx",
+      errors: [inputError],
     },
     // Re-exporting RN Text is the same bypass
     {
@@ -106,6 +129,16 @@ describe("no-native-text-import in eslint.config.js", () => {
     "src/components/Text/Text.tsx",
   ])("exempts %s", async (relPath) => {
     expect(await ruleHits(RN_TEXT, relPath)).toHaveLength(0);
+  });
+
+  it("flags a raw TextInput but allows a type-only one for refs", async () => {
+    const raw =
+      'import { TextInput } from "react-native";\nexport const x = TextInput;\n';
+    const typeOnly =
+      'import { View, type TextInput } from "react-native";\nexport type R = TextInput;\nexport const v = View;\n';
+    const file = "src/screens/CaptureTextNote/CaptureTextNote.tsx";
+    expect(await ruleHits(raw, file)).toHaveLength(1);
+    expect(await ruleHits(typeOnly, file)).toHaveLength(0);
   });
 
   it("allows type-only imports", async () => {

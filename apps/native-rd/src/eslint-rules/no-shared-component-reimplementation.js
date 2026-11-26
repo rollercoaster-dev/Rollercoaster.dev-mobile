@@ -44,7 +44,7 @@ module.exports = {
       },
       {
         name: "Input",
-        element: /^TextInput$/,
+        element: /^(?:TextInput|TextField)$/,
         requiredProps: ["onChangeText", "value", "accessibilityLabel", "style"],
         minProps: 4,
       },

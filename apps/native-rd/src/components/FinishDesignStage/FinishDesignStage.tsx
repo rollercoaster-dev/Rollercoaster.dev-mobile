@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { ScrollView, TextInput, View } from "react-native";
+import { ScrollView, View } from "react-native";
+import { TextField } from "../TextField";
 import { KeyboardAvoidingFrame } from "../KeyboardAvoidingFrame";
 import { useTypeScale } from "../../hooks/useTypeScale";
 import { useUnistyles } from "react-native-unistyles";
@@ -479,7 +480,7 @@ export function FinishDesignStage({
             testID="finish-design-inscriptions"
           >
             <View style={styles.centerStack}>
-              <TextInput
+              <TextField
                 style={styles.bottomLabelInput}
                 value={design.bottomLabel ?? ""}
                 onChangeText={handleBottomLabelChange}

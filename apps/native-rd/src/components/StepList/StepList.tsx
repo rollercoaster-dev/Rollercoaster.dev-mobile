@@ -1,5 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { View, TextInput, Pressable, AccessibilityInfo } from "react-native";
+import {
+  View,
+  Pressable,
+  AccessibilityInfo,
+  type TextInput,
+} from "react-native";
+import { TextField } from "../TextField";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useSharedValue } from "react-native-reanimated";
 import { useTranslation } from "react-i18next";
@@ -740,7 +746,7 @@ export function StepList({
                   >
                     ≡
                   </Text>
-                  <TextInput
+                  <TextField
                     style={styles.editInput}
                     value={editText}
                     onChangeText={setEditText}
@@ -941,7 +947,7 @@ export function StepList({
                   <View>
                     <View style={styles.addSubStepInputRow}>
                       <View style={styles.addSubStepInputCard}>
-                        <TextInput
+                        <TextField
                           style={styles.addSubStepInput}
                           placeholder={t("editGoal:stepList.addSubStepLabel")}
                           placeholderTextColor={theme.colors.textMuted}
@@ -1060,7 +1066,7 @@ export function StepList({
         <View style={styles.addStepSection}>
           <View style={styles.addStepRow}>
             <View style={styles.addStepInputCard}>
-              <TextInput
+              <TextField
                 ref={newStepInputRef}
                 style={styles.addStepInput}
                 placeholder={t("editGoal:stepList.addPlaceholder")}

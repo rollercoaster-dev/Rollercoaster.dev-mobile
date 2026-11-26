@@ -1,11 +1,12 @@
 import React, { useState, useRef } from "react";
 import {
   View,
-  TextInput,
   AccessibilityInfo,
   Alert,
   Platform,
+  type TextInput,
 } from "react-native";
+import { TextField } from "../../components/TextField";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useReanimatedKeyboardAnimation } from "react-native-keyboard-controller";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
@@ -147,7 +148,7 @@ export function CaptureTextNote({ route }: CaptureTextNoteScreenProps) {
           automaticallyAdjustKeyboardInsets
         >
           {/* eslint-disable-next-line local/no-shared-component-reimplementation */}
-          <TextInput
+          <TextField
             ref={textInputRef}
             testID="capture-text-body"
             style={[

@@ -39,13 +39,13 @@
 import React, { useState, useCallback } from "react";
 import {
   View,
-  TextInput,
   ScrollView,
   type GestureResponderEvent,
   type LayoutChangeEvent,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
 } from "react-native";
+import { TextField } from "../TextField";
 import { KeyboardAvoidingFrame } from "../KeyboardAvoidingFrame";
 import { DotsThree, Pencil } from "phosphor-react-native";
 import { useUnistyles } from "react-native-unistyles";
@@ -684,7 +684,7 @@ export function EditGoalView({
             no "add a description" affordance when absent. */}
             {description !== undefined ? (
               <View style={styles.descriptionBlock}>
-                <TextInput
+                <TextField
                   style={styles.descriptionInput}
                   value={description}
                   onChangeText={onDescriptionChange}
@@ -704,7 +704,7 @@ export function EditGoalView({
               {goalSectionLabel}
             </Text>
             <View style={styles.titleCard}>
-              <TextInput
+              <TextField
                 style={styles.titleInput}
                 value={goalTitle}
                 onChangeText={onGoalTitleChange}

@@ -11,10 +11,10 @@ import {
   FlatList,
   Modal,
   Pressable,
-  TextInput,
   View,
   type ListRenderItemInfo,
 } from "react-native";
+import { TextField } from "../components/TextField";
 import {
   SafeAreaProvider,
   useSafeAreaInsets,
@@ -314,7 +314,7 @@ function IconPickerModalContent({
 
         {/* Search */}
         <View style={styles.searchContainer}>
-          <TextInput
+          <TextField
             testID={`${testID}-search`}
             accessibilityRole="search"
             accessibilityLabel="Search icons"

@@ -26,11 +26,11 @@
 import React, { useRef, useState } from "react";
 import {
   View,
-  TextInput,
   Pressable,
   ScrollView,
   type GestureResponderEvent,
 } from "react-native";
+import { TextField } from "../TextField";
 import { KeyboardAvoidingFrame } from "../KeyboardAvoidingFrame";
 import { ScrollAtLargeType } from "../ScrollAtLargeType";
 import { Text } from "../Text";
@@ -558,7 +558,7 @@ export function NewGoalWizard({
                 >
                   {nameTitle}
                 </Text>
-                <TextInput
+                <TextField
                   style={styles.titleInput}
                   value={goalTitle}
                   onChangeText={onGoalTitleChange}
@@ -629,7 +629,7 @@ export function NewGoalWizard({
                 >
                   {stepHeadline}
                 </Text>
-                <TextInput
+                <TextField
                   style={styles.titleInput}
                   value={firstStepTitle}
                   onChangeText={onFirstStepTitleChange}

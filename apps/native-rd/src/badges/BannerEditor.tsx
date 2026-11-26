@@ -1,5 +1,6 @@
 import React, { useCallback } from "react";
-import { Pressable, TextInput, View } from "react-native";
+import { Pressable, View } from "react-native";
+import { TextField } from "../components/TextField";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { useTranslation } from "react-i18next";
 
@@ -86,7 +87,7 @@ export function BannerEditor({
 
       {enabled && (
         <>
-          <TextInput
+          <TextField
             accessibilityLabel={t("banner.textA11y")}
             value={text}
             onChangeText={onChangeText}
