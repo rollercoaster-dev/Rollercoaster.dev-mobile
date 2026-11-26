@@ -182,6 +182,11 @@ describe("NewGoalWizard", () => {
       expect(
         screen.getByTestId("new-goal-title-input").props.returnKeyType,
       ).toBe("done");
+      // #750: the field wraps (multiline) at large text, so Enter must still
+      // blur instead of inserting a newline.
+      const field = screen.getByTestId("new-goal-title-input");
+      expect(field.props.multiline).toBe(true);
+      expect(field.props.submitBehavior).toBe("blurAndSubmit");
     });
 
     it("fires distinct callbacks for Next and quick add", () => {
@@ -337,6 +342,11 @@ describe("NewGoalWizard", () => {
       expect(
         screen.getByTestId("new-goal-first-step-input").props.returnKeyType,
       ).toBe("done");
+      // #750: the field wraps (multiline) at large text, so Enter must still
+      // blur instead of inserting a newline.
+      const field = screen.getByTestId("new-goal-first-step-input");
+      expect(field.props.multiline).toBe(true);
+      expect(field.props.submitBehavior).toBe("blurAndSubmit");
     });
 
     it.each(["", "   ", "\n\t"])(

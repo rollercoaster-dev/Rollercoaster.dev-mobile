@@ -227,6 +227,11 @@ describe("EditGoalView", () => {
     expect(
       screen.getByTestId("edit-goal-title-input").props.returnKeyType,
     ).toBe("done");
+    // #750: the field wraps (multiline) at large text, so Enter must still
+    // blur instead of inserting a newline.
+    const field = screen.getByTestId("edit-goal-title-input");
+    expect(field.props.multiline).toBe(true);
+    expect(field.props.submitBehavior).toBe("blurAndSubmit");
   });
 
   describe("row anatomy", () => {

@@ -709,8 +709,11 @@ export function EditGoalView({
                 value={goalTitle}
                 onChangeText={onGoalTitleChange}
                 onEndEditing={onGoalTitleEndEditing}
-                // Single-line rename; "done" blurs on submit so the keyboard
-                // never strands the Done button below it (#502).
+                // One-line rename that wraps instead of scrolling sideways at
+                // large text (#750); "done" still blurs on submit so the
+                // keyboard never strands the Done button below it (#502).
+                multiline
+                submitBehavior="blurAndSubmit"
                 returnKeyType="done"
                 maxLength={goalTitleMaxLength}
                 testID="edit-goal-title-input"
