@@ -36,7 +36,7 @@
   "shape": {
     "a11y": "Badge-Form",
     "optionA11y": "{{label}} Form",
-    "previewA11y": "Abzeichen „{{title}}“, Form {{shape}}",
+    "previewA11y": "Badge „{{title}}“, {{shape}} Form",
     "options": {
       "circle": "Kreis",
       "shield": "Schild",

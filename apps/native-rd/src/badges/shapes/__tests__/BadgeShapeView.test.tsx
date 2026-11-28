@@ -20,5 +20,8 @@ describe("BadgeShapeView", () => {
       />,
     );
     expect(screen.queryByLabelText("Rounded Rect shape")).toBeNull();
+    expect(
+      screen.UNSAFE_getByProps({ accessibilityElementsHidden: true }).props,
+    ).toMatchObject({ importantForAccessibility: "no-hide-descendants" });
   });
 });

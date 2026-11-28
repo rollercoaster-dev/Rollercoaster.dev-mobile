@@ -109,19 +109,24 @@ describe("BadgeRenderer", () => {
     );
   });
 
-  it("announces roundedRect by its display name, not the raw id (#872)", () => {
-    renderWithProviders(
-      <BadgeRenderer
-        design={createDesign({
-          title: "Juggle",
-          shape: BadgeShape.roundedRect,
-        })}
-      />,
-    );
-    expect(screen.getByTestId("badge-renderer").props.accessibilityLabel).toBe(
-      "Juggle badge, Rounded Rect shape",
-    );
-  });
+  it.each([
+    [BadgeShape.circle, "Circle"],
+    [BadgeShape.shield, "Shield"],
+    [BadgeShape.hexagon, "Hexagon"],
+    [BadgeShape.roundedRect, "Rounded Rect"],
+    [BadgeShape.star, "Star"],
+    [BadgeShape.diamond, "Diamond"],
+  ])(
+    "announces %s by its display name, not the raw id (#872)",
+    (shape, name) => {
+      renderWithProviders(
+        <BadgeRenderer design={createDesign({ title: "Juggle", shape })} />,
+      );
+      expect(
+        screen.getByTestId("badge-renderer").props.accessibilityLabel,
+      ).toBe(`Juggle badge, ${name} shape`);
+    },
+  );
 
   it("has image accessibility role", () => {
     renderWithProviders(<BadgeRenderer design={createDesign()} />);
