@@ -14,7 +14,7 @@ pins in `.github/workflows/`.
 | ------------------------------- | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ci-native-rd`                  | `.github/workflows/ci-native-rd.yml`           | Changes under `apps/native-rd/**` (excluding `docs/`, `research/`, `prototypes/` subdirs), `packages/design-tokens/**`, `packages/openbadges-core/**`, or root inputs that affect the gate (`bun.lock`, `bunfig.toml`, `turbo.json`, `package.json`, `patches/**`, `scripts/**`) / the workflow file. A blanket `**/*.md` exclusion is deliberately NOT applied — see "Why no blanket `**/*.md` exclusion" below. |
 | `ci-packages`                   | `.github/workflows/ci-packages.yml`            | Changes under `packages/**` (excluding `**/*.md` and `**/docs/**`), or root inputs that affect the gate (`bun.lock`, `bunfig.toml`, `turbo.json`, `package.json`, `tsconfig.json`, `eslint.config.mjs`, `patches/**`, `scripts/**`) / the workflow file.                                                                                                                                                          |
-| `ci-format`                     | `.github/workflows/ci-format.yml`              | Any `**/*.{ts,tsx,js,jsx,json,md}` change (listed as separate globs — Actions path filters have no brace expansion), plus `.prettierignore`, `bun.lock` (a Prettier bump changes the outcome) / the workflow file. Sole owner of `format:check` for PRs; see "ci-format validation steps".                                                                                                                        |
+| `ci-format`                     | `.github/workflows/ci-format.yml`              | Every PR (no paths filter: `Format Check` is a required check, so it must always report) and pushes to `main`. Sole owner of `format:check` for PRs; see "ci-format validation steps".                                                                                                                                                                                                                            |
 | `codeql`                        | `.github/workflows/codeql.yml`                 | CodeQL security scanning (JS/TS), weekly + on push/PR + manual dispatch. Ignores `apps/native-rd/prototypes/**`. This committed workflow is the only scanning path: GitHub code-scanning default setup is **not** configured for this repo, so disabling the workflow means zero scanning.                                                                                                                        |
 | `dco`                           | `.github/workflows/dco.yml`                    | Verifies `Signed-off-by:` on commits touching app/package paths, `.github/workflows/**`, or `LICENSING.md`.                                                                                                                                                                                                                                                                                                       |
 | `claude` / `claude-code-review` | `.github/workflows/claude*.yml`                | Claude Code Review integration. Manual / comment-triggered.                                                                                                                                                                                                                                                                                                                                                       |
@@ -72,9 +72,10 @@ this list in the same PR.
 | ------------ | ---------------------- |
 | Format check | `bun run format:check` |
 
-`ci-format` is a thin workflow that triggers on any change to a file the
-root Prettier glob covers (`**/*.{ts,tsx,js,jsx,json,md}`, plus
-`.prettierignore` and the workflow file itself). It is the **only** PR
+`ci-format` is a thin workflow that runs on every PR. It has no paths
+filter because `Format Check` is a required status check: a filtered run
+left PRs touching only uncovered files (e.g. a `.yaml`-only change, #877)
+blocked forever on a check that never started. It is the **only** PR
 workflow that runs `format:check`. `ci-native-rd` and `ci-packages` used
 to run it too, so a typical PR paid for the same workspace-wide Prettier
 pass three times (#256); those steps were removed in #609. `ci-format`
@@ -118,8 +119,7 @@ What this means in practice:
 - For `ci-packages`, `**/*.md` and `**/docs/**` ARE excluded under
   `packages/**`, because no package code-path consumes those.
 - Pure-docs PRs that miss every other workflow are still caught by
-  `ci-format`, which runs `format:check` on any change to a
-  Prettier-covered extension (markdown included).
+  `ci-format`, which runs `format:check` on every PR (markdown included).
 
 The tradeoff is intentional: correctness on mixed PRs over efficiency
 on pure-docs PRs.

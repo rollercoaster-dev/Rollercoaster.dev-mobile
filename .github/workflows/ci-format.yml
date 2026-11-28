@@ -4,19 +4,12 @@ name: ci-format
 # Sole owner of `bun run format:check` on the PR path. ci-native-rd and
 # ci-packages deliberately do NOT run it (#256) — the Prettier glob is
 # workspace-wide, so one run per PR is enough. (_release-validate.yml re-runs
-# it at release time as a standalone preflight.) Path filters mirror the glob.
+# it at release time as a standalone preflight.)
+# No paths filter: "Format Check" is a required check, so it must report on
+# every PR or GitHub blocks the merge waiting for it (a .yaml-only PR, #877,
+# sat BLOCKED behind a check that never started).
 on:
   pull_request:
-    paths:
-      - "**/*.ts"
-      - "**/*.tsx"
-      - "**/*.js"
-      - "**/*.jsx"
-      - "**/*.json"
-      - "**/*.md"
-      - ".prettierignore"
-      - "bun.lock"
-      - ".github/workflows/ci-format.yml"
   push:
     branches: [main]
 
