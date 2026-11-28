@@ -93,28 +93,39 @@ export function useNewGoalSteps(): {
   }
 
   /**
+   * Rows whose evidence the build screen's multi-select has set. Until then a
+   * row's list is only the chip's seed (#870), so a step-2 re-pick replaces it.
+   */
+  const buildEvidenceStepIds = useRef(new Set<string>());
+
+  /**
    * Step 2's chip is single-select but row 1's evidence is a list the build
-   * screen can multi-select into, so the pick moves to the front instead of
-   * replacing the list — coming back to step 2 and re-picking must not silently
-   * drop the other types. Front position is what makes it the chip's value
-   * (see `plannedEvidenceType` below).
+   * screen can multi-select into. Once the build screen has touched row 1, the
+   * pick moves to the front instead of replacing the list — coming back to
+   * step 2 and re-picking must not silently drop the other types. Before that,
+   * the list is just the chip's own earlier value (the seeded Note default
+   * included), so the pick replaces it: Note → Photo means Photo, not both.
+   * Front position is what makes it the chip's value (see `plannedEvidenceType`
+   * below).
    */
   function handlePlannedEvidenceTypeChange(type: EvidenceTypeValue) {
     setPendingEvidenceType(type);
     setSteps((prev) =>
-      prev.map((step, index) =>
-        index === 0
-          ? {
-              ...step,
-              plannedEvidenceTypes: [
-                type,
-                ...step.plannedEvidenceTypes.filter(
-                  (existing) => existing !== type,
-                ),
-              ],
-            }
-          : step,
-      ),
+      prev.map((step, index) => {
+        if (index !== 0) return step;
+        if (!buildEvidenceStepIds.current.has(step.id)) {
+          return { ...step, plannedEvidenceTypes: [type] };
+        }
+        return {
+          ...step,
+          plannedEvidenceTypes: [
+            type,
+            ...step.plannedEvidenceTypes.filter(
+              (existing) => existing !== type,
+            ),
+          ],
+        };
+      }),
     );
   }
 
@@ -165,14 +176,16 @@ export function useNewGoalSteps(): {
         setSteps((prev) =>
           prev.map((step) => (step.id === stepId ? { ...step, title } : step)),
         ),
-      onStepEvidenceChange: (stepId, types) =>
+      onStepEvidenceChange: (stepId, types) => {
+        buildEvidenceStepIds.current.add(stepId);
         setSteps((prev) =>
           prev.map((step) =>
             step.id === stepId
               ? { ...step, plannedEvidenceTypes: types }
               : step,
           ),
-        ),
+        );
+      },
       onAddSubStep: (parentStepId, title) =>
         setSteps((prev) =>
           prev.map((step) =>
