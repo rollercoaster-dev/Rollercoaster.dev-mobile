@@ -1,11 +1,12 @@
 import React from "react";
-import { AccessibilityInfo, Alert, Dimensions } from "react-native";
+import { AccessibilityInfo, Alert, Dimensions, Platform } from "react-native";
 import {
   renderWithProviders,
   screen,
   fireEvent,
   act,
   within,
+  waitFor,
 } from "../../../__tests__/test-utils";
 import { i18n } from "../../../i18n";
 import { TopInsetColorProvider } from "../../../navigation/TopInsetColor";
@@ -585,6 +586,93 @@ describe("BadgeDetailScreen", () => {
       fireEvent.press(screen.getByTestId(row));
 
       expect(fn()).toHaveBeenCalledWith(...args);
+    });
+
+    // #873: an Android SAF save shows no system UI afterwards, so the screen
+    // closes the sheet and confirms with a toast naming the file and folder.
+    describe("verifiable save confirmation", () => {
+      const realRow = () =>
+        makeRow({
+          imageUri: "file:///badges/badge.png",
+          credential: '{"type":"VC"}',
+        });
+
+      it("closes the sheet and toasts the saved file and folder", async () => {
+        mockExportVerifiableBadge.mockResolvedValueOnce({
+          filename: "Learn-TypeScript.png",
+          folder: "Documents",
+        });
+        mockUseQuery.mockReturnValue([realRow()]);
+        renderWithProviders(
+          <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+        );
+        openSheet();
+        fireEvent.press(screen.getByTestId("share-row-verifiable"));
+
+        expect(
+          await screen.findByText("Saved Learn-TypeScript.png to Documents"),
+        ).toBeOnTheScreen();
+        await waitFor(() =>
+          expect(screen.queryByTestId("share-row-verifiable")).toBeNull(),
+        );
+      });
+
+      it("names only the file when the folder can't be read", async () => {
+        mockExportVerifiableBadge.mockResolvedValueOnce({
+          filename: "Learn-TypeScript.png",
+          folder: null,
+        });
+        mockUseQuery.mockReturnValue([realRow()]);
+        renderWithProviders(
+          <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+        );
+        openSheet();
+        fireEvent.press(screen.getByTestId("share-row-verifiable"));
+
+        expect(
+          await screen.findByText("Saved Learn-TypeScript.png"),
+        ).toBeOnTheScreen();
+      });
+
+      it("keeps the sheet open and stays silent when nothing was saved", async () => {
+        mockExportVerifiableBadge.mockResolvedValueOnce(null);
+        mockUseQuery.mockReturnValue([realRow()]);
+        renderWithProviders(
+          <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+        );
+        openSheet();
+        await act(async () => {
+          fireEvent.press(screen.getByTestId("share-row-verifiable"));
+        });
+
+        expect(screen.getByTestId("share-row-verifiable")).toBeOnTheScreen();
+        expect(screen.queryByRole("alert")).toBeNull();
+      });
+
+      it("labels the row as saving on Android", () => {
+        const original = Platform.OS;
+        Object.defineProperty(Platform, "OS", {
+          configurable: true,
+          get: () => "android",
+        });
+        try {
+          mockUseQuery.mockReturnValue([realRow()]);
+          renderWithProviders(
+            <BadgeDetailScreen route={mockRoute} navigation={{} as never} />,
+          );
+          openSheet();
+          expect(
+            within(screen.getByTestId("share-row-verifiable")).getByText(
+              "Save verifiable badge",
+            ),
+          ).toBeOnTheScreen();
+        } finally {
+          Object.defineProperty(Platform, "OS", {
+            configurable: true,
+            get: () => original,
+          });
+        }
+      });
     });
 
     it("hands export the stored image resolved against the current Documents dir", () => {

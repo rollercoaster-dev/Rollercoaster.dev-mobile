@@ -17,6 +17,32 @@ function isShareCancellation(error: unknown): boolean {
   return /cancel/i.test(msg) || /did not share/i.test(msg);
 }
 
+/** Where an Android SAF save landed, for the confirmation toast (#873). */
+export interface SavedBadgeFile {
+  filename: string;
+  /** Last segment of the picked folder ("Documents"), or null if unreadable. */
+  folder: string | null;
+}
+
+/**
+ * The picked folder's display name from a SAF tree URI, e.g.
+ * `content://…/tree/primary%3ADocuments%2FBadges` → "Badges". Null for the
+ * storage root or an unexpected shape: the toast then names only the file.
+ */
+export function folderNameFromTreeUri(directoryUri: string): string | null {
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(directoryUri);
+  } catch {
+    return null;
+  }
+  const treePath = decoded.split("/tree/")[1];
+  if (!treePath) return null;
+  const path = treePath.slice(treePath.indexOf(":") + 1);
+  const name = path.split("/").filter(Boolean).pop();
+  return name ?? null;
+}
+
 export function useBadgeExport() {
   const { t } = useTranslation(["badgeDetail"]);
   const [isExportingImage, setIsExportingImage] = useState(false);
@@ -34,15 +60,21 @@ export function useBadgeExport() {
    *   Framework. The user picks a destination folder; the file lands
    *   byte-for-byte. This avoids the dominant Android failure mode where
    *   messengers re-encode "photo" attachments and strip ancillary chunks.
+   *
+   * Resolves to the saved file on an Android SAF save, so the caller can
+   * confirm it; null otherwise (iOS share sheet, cancel, failure).
    */
   const exportVerifiableBadge = useCallback(
-    async (imageUri: string | null, badgeName?: string) => {
+    async (
+      imageUri: string | null,
+      badgeName?: string,
+    ): Promise<SavedBadgeFile | null> => {
       if (!imageUri || imageUri === PLACEHOLDER_IMAGE_URI) {
         Alert.alert(
           t("badgeDetail:export.noImage.title"),
           t("badgeDetail:export.noImage.message"),
         );
-        return;
+        return null;
       }
 
       setIsExportingImage(true);
@@ -52,7 +84,7 @@ export function useBadgeExport() {
             await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
           if (!perm.granted) {
             // User cancelled the folder picker — not an error.
-            return;
+            return null;
           }
           const base64 = await FileSystem.readAsStringAsync(imageUri, {
             encoding: FileSystem.EncodingType.Base64,
@@ -69,7 +101,10 @@ export function useBadgeExport() {
           await FileSystem.writeAsStringAsync(destUri, base64, {
             encoding: FileSystem.EncodingType.Base64,
           });
-          return;
+          return {
+            filename,
+            folder: folderNameFromTreeUri(perm.directoryUri),
+          };
         }
 
         if (Platform.OS === "ios") {
@@ -79,14 +114,14 @@ export function useBadgeExport() {
               t("badgeDetail:export.sharingUnavailable.title"),
               t("badgeDetail:export.sharingUnavailable.message"),
             );
-            return;
+            return null;
           }
           await Sharing.shareAsync(imageUri, {
             UTI: "public.png",
             mimeType: "image/png",
             dialogTitle: t("badgeDetail:export.dialogTitle.verifiableBadge"),
           });
-          return;
+          return null;
         }
 
         // Web / macOS / windows / unknown — fall through to a clear alert
@@ -98,8 +133,9 @@ export function useBadgeExport() {
           t("badgeDetail:export.unsupportedPlatform.title"),
           t("badgeDetail:export.unsupportedPlatform.message"),
         );
+        return null;
       } catch (error) {
-        if (isShareCancellation(error)) return;
+        if (isShareCancellation(error)) return null;
         console.error("[useBadgeExport] Failed to export verifiable badge", {
           imageUri,
           error,
@@ -108,6 +144,7 @@ export function useBadgeExport() {
           t("badgeDetail:export.failed.title"),
           t("badgeDetail:export.failed.verifiableBadgeMessage"),
         );
+        return null;
       } finally {
         setIsExportingImage(false);
       }

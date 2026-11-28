@@ -44,7 +44,11 @@
     "recommended": "RECOMMENDED",
     "verifiable": {
       "label": "Share verifiable badge",
-      "detail": "A PNG carrying the OB 3.0 credential — provable forever."
+      "detail": "A PNG carrying the OB 3.0 credential — provable forever.",
+      "labelAndroid": "Save verifiable badge",
+      "detailAndroid": "Saves a PNG to a folder you pick. The file keeps its OB 3.0 credential.",
+      "savedToFolder": "Saved {{filename}} to {{folder}}",
+      "saved": "Saved {{filename}}"
     },
     "saveImage": {
       "label": "Save as image",
