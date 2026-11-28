@@ -105,7 +105,21 @@ describe("BadgeRenderer", () => {
     const badge = screen.getByTestId("badge-renderer");
     expect(badge).toBeOnTheScreen();
     expect(badge.props.accessibilityLabel).toBe(
-      "My Badge badge, hexagon shape",
+      "My Badge badge, Hexagon shape",
+    );
+  });
+
+  it("announces roundedRect by its display name, not the raw id (#872)", () => {
+    renderWithProviders(
+      <BadgeRenderer
+        design={createDesign({
+          title: "Juggle",
+          shape: BadgeShape.roundedRect,
+        })}
+      />,
+    );
+    expect(screen.getByTestId("badge-renderer").props.accessibilityLabel).toBe(
+      "Juggle badge, Rounded Rect shape",
     );
   });
 
