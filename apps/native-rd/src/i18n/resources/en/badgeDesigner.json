@@ -36,6 +36,7 @@
   "shape": {
     "a11y": "Badge shape",
     "optionA11y": "{{label}} shape",
+    "previewA11y": "{{title}} badge, {{shape}} shape",
     "options": {
       "circle": "Circle",
       "shield": "Shield",

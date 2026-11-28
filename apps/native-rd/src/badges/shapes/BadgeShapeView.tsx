@@ -15,6 +15,7 @@
 import React from "react";
 import Svg, { Path } from "react-native-svg";
 import { useUnistyles } from "react-native-unistyles";
+import { useTranslation } from "react-i18next";
 import { type BadgeShape } from "../types";
 import { generateShapePath } from "./paths";
 
@@ -29,6 +30,11 @@ export interface BadgeShapeViewProps {
   strokeWidth?: number;
   /** Override shadow visibility (default: derived from theme) */
   showShadow?: boolean;
+  /**
+   * Hide from screen readers. Set when a labelled parent already names the
+   * shape (the ShapeSelector radio), so it isn't announced twice.
+   */
+  decorative?: boolean;
 }
 
 /**
@@ -42,8 +48,10 @@ export function BadgeShapeView({
   size = 256,
   strokeWidth: strokeWidthProp,
   showShadow: showShadowProp,
+  decorative = false,
 }: BadgeShapeViewProps) {
   const { theme } = useUnistyles();
+  const { t } = useTranslation("badgeDesigner");
 
   // Derive shadow visibility from theme when not explicitly set
   const hasShadow = showShadowProp ?? theme.shadows.opacity > 0;
@@ -66,8 +74,18 @@ export function BadgeShapeView({
       width={totalSize}
       height={totalSize}
       viewBox={`0 0 ${totalSize} ${totalSize}`}
-      accessibilityRole="image"
-      accessibilityLabel={`${shape} badge shape`}
+      {...(decorative
+        ? {
+            accessible: false,
+            accessibilityElementsHidden: true,
+            importantForAccessibility: "no-hide-descendants" as const,
+          }
+        : {
+            accessibilityRole: "image" as const,
+            accessibilityLabel: t("shape.optionA11y", {
+              label: t(`shape.options.${shape}`),
+            }),
+          })}
     >
       {/* Shadow layer: solid black duplicate offset down-right */}
       {hasShadow && (
