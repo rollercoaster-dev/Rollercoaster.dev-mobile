@@ -44,7 +44,11 @@
     "recommended": "EMPFOHLEN",
     "verifiable": {
       "label": "Verifizierbares Badge teilen",
-      "detail": "Ein PNG mit dem OB-3.0-Credential — für immer nachweisbar."
+      "detail": "Ein PNG mit dem OB-3.0-Credential — für immer nachweisbar.",
+      "labelAndroid": "Verifizierbares Badge speichern",
+      "detailAndroid": "Speichert ein PNG in einem Ordner deiner Wahl. Die Datei behält ihr OB-3.0-Credential.",
+      "savedToFolder": "{{filename}} in {{folder}} gespeichert",
+      "saved": "{{filename}} gespeichert"
     },
     "saveImage": {
       "label": "Als Bild speichern",
