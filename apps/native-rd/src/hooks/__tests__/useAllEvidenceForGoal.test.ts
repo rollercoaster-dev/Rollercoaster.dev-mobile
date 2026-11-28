@@ -164,23 +164,33 @@ describe("useAllEvidenceForGoal", () => {
     });
   });
 
-  it("falls back to type when description is missing", () => {
-    setupQueries({
-      stepEvidence: [
-        {
-          id: "ev-1",
-          stepId: "step-a",
-          stepOrdinal: 0,
-          stepTitle: "A",
-          type: "photo",
-          description: null,
-        },
-      ],
-      goalEvidence: [],
-    });
-    const { result } = renderHook(() => useAllEvidenceForGoal(goalId));
-    expect(result.current[0]?.title).toBe("photo");
-  });
+  it.each([
+    ["text", "Note"],
+    ["voice_memo", "Audio"],
+    ["photo", "Photo"],
+    ["video", "Video"],
+    ["link", "Link"],
+    ["file", "File"],
+  ])(
+    "titles a caption-less %s with its translated type name, %s",
+    (type, expected) => {
+      setupQueries({
+        stepEvidence: [
+          {
+            id: "ev-step",
+            stepId: "step-a",
+            stepOrdinal: 0,
+            stepTitle: "A",
+            type,
+            description: null,
+          },
+        ],
+        goalEvidence: [{ id: "ev-goal", type, description: null }],
+      });
+      const { result } = renderHook(() => useAllEvidenceForGoal(goalId));
+      expect(result.current.map((e) => e.title)).toEqual([expected, expected]);
+    },
+  );
 
   it("resolves stored file URIs against the current Documents dir", () => {
     // Global expo-file-system mock: documentDirectory = file:///documents/
