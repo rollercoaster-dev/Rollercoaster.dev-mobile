@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useQuery } from "@evolu/react";
+import { useTranslation } from "react-i18next";
 import {
   evidenceByGoalQuery,
   stepEvidenceByGoalQuery,
@@ -11,6 +12,7 @@ import {
   type EvidenceTypeValue,
 } from "../types/evidence";
 import type { Evidence } from "../components/EvidenceThumbnail";
+import { evidenceLabel } from "../i18n/labels";
 import { Logger } from "../shims/rd-logger";
 import { resolveStoredFileUri } from "../utils/storedFileUri";
 
@@ -37,44 +39,51 @@ export type ViewerEvidence = Evidence &
 export function useAllEvidenceForGoal(goalId: GoalId): ViewerEvidence[] {
   const stepEvidenceRows = useQuery(stepEvidenceByGoalQuery(goalId));
   const goalEvidenceRows = useQuery(evidenceByGoalQuery(goalId));
+  const { t } = useTranslation();
 
   return useMemo(() => {
     const stepItems = stepEvidenceRows
       .filter(
         (row): row is typeof row & { stepId: string } => row.stepId != null,
       )
-      .map((row, idx) => ({
-        item: {
-          id: row.id,
-          title: row.description ?? row.type ?? "Evidence",
-          type: normalizeEvidenceType(row.type, row.id),
-          uri: resolveRowUri(row.uri),
-          metadata: row.metadata ?? undefined,
-          source: "step",
-          stepId: row.stepId,
-          stepTitle: (row.stepTitle as string | null) ?? null,
-        } satisfies ViewerEvidence,
-        ordinal: parseStepOrdinal(row.stepOrdinal, row.id),
-        idx,
-      }));
+      .map((row, idx) => {
+        const type = normalizeEvidenceType(row.type, row.id);
+        return {
+          item: {
+            id: row.id,
+            title: row.description ?? evidenceLabel(t, type),
+            type,
+            uri: resolveRowUri(row.uri),
+            metadata: row.metadata ?? undefined,
+            source: "step",
+            stepId: row.stepId,
+            stepTitle: (row.stepTitle as string | null) ?? null,
+          } satisfies ViewerEvidence,
+          ordinal: parseStepOrdinal(row.stepOrdinal, row.id),
+          idx,
+        };
+      });
 
     // Stable sort by ordinal; idx tiebreak keeps the createdAt-desc order
     // already enforced by stepEvidenceByGoalQuery, regardless of engine.
     stepItems.sort((a, b) => a.ordinal - b.ordinal || a.idx - b.idx);
 
-    const goalItems: ViewerEvidence[] = goalEvidenceRows.map((row) => ({
-      id: row.id,
-      title: row.description ?? row.type ?? "Evidence",
-      type: normalizeEvidenceType(row.type, row.id),
-      uri: resolveRowUri(row.uri),
-      metadata: row.metadata ?? undefined,
-      source: "goal",
-      stepId: null,
-      stepTitle: null,
-    }));
+    const goalItems: ViewerEvidence[] = goalEvidenceRows.map((row) => {
+      const type = normalizeEvidenceType(row.type, row.id);
+      return {
+        id: row.id,
+        title: row.description ?? evidenceLabel(t, type),
+        type,
+        uri: resolveRowUri(row.uri),
+        metadata: row.metadata ?? undefined,
+        source: "goal",
+        stepId: null,
+        stepTitle: null,
+      };
+    });
 
     return [...stepItems.map((s) => s.item), ...goalItems];
-  }, [stepEvidenceRows, goalEvidenceRows]);
+  }, [stepEvidenceRows, goalEvidenceRows, t]);
 }
 
 /**

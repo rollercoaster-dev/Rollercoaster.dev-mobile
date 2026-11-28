@@ -645,6 +645,36 @@ describe("TimelineJourneyScreen", () => {
     });
   });
 
+  describe("caption-less evidence takes its translated type name (#871)", () => {
+    const TYPES = [
+      ["text", "Note"],
+      ["voice_memo", "Audio"],
+      ["photo", "Photo"],
+      ["video", "Video"],
+      ["link", "Link"],
+      ["file", "File"],
+    ] as const;
+
+    it.each(TYPES)("step evidence: %s → %s", (type, expected) => {
+      setupQueries({
+        stepEvidence: [
+          { ...STEP_EVIDENCE[0], type, description: null, uri: null },
+        ],
+      });
+      renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
+      fireEvent.press(screen.getByLabelText("Read docs, Done"));
+      expect(screen.getByText(expected)).toBeOnTheScreen();
+    });
+
+    it.each(TYPES)("goal evidence: %s → %s", (type, expected) => {
+      setupQueries({
+        goalEvidence: [{ ...GOAL_EVIDENCE[0], type, description: null }],
+      });
+      renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
+      expect(screen.getByText(expected)).toBeOnTheScreen();
+    });
+  });
+
   it("shows step evidence when expanded", () => {
     setupQueries({ stepEvidence: STEP_EVIDENCE });
     renderWithProviders(<TimelineJourneyScreen {...routeProps} />);

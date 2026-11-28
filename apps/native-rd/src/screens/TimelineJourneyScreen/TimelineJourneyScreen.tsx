@@ -14,6 +14,7 @@ import { TimelineStep } from "../../components/TimelineStep";
 import type { TimelineStepChild } from "../../components/TimelineStep";
 import { FinishLine } from "../../components/FinishLine";
 import { useTypeScale } from "../../hooks/useTypeScale";
+import { evidenceLabel } from "../../i18n/labels";
 import {
   goalsQuery,
   stepsByGoalQuery,
@@ -81,8 +82,6 @@ function TimelineContent({ goalId }: { goalId: string }) {
   const badgeRows = useQuery(badgeByGoalQuery(goalId as GoalId));
   const badgeRow = badgeRows[0] ?? null;
 
-  const evidenceFallbackLabel = t("timelineJourney:evidenceFallbackLabel");
-
   // Group the flat rows into a one-level parent → children tree and resolve the
   // current leaf — the journey's single in-progress accent (#293). The resolver
   // reads the flat `(ordinal, createdAt)`-ordered rows, not the tree.
@@ -90,10 +89,7 @@ function TimelineContent({ goalId }: { goalId: string }) {
   const currentLeafId = useMemo(() => findCurrentLeafId(stepRows), [stepRows]);
 
   // Evidence keyed by step id — looked up for roots and children alike.
-  const evidenceByStepId = useStepEvidence(
-    goalId as GoalId,
-    evidenceFallbackLabel,
-  );
+  const evidenceByStepId = useStepEvidence(goalId as GoalId);
 
   // A node (root or child) is in-progress iff it is the current leaf; otherwise
   // completed/paused/pending from its own DB status. currentLeafId never points
@@ -158,12 +154,14 @@ function TimelineContent({ goalId }: { goalId: string }) {
   const sealed = isGoalSealed(goal, badgeRow);
 
   // Goal evidence for FinishLine
-  const goalEvidence: EvidenceItemData[] = goalEvidenceRows.map((row) => ({
-    id: row.id,
-    type: validateEvidenceType(row.type ?? "file"),
-    label:
-      row.description ?? row.type ?? t("timelineJourney:evidenceFallbackLabel"),
-  }));
+  const goalEvidence: EvidenceItemData[] = goalEvidenceRows.map((row) => {
+    const type = validateEvidenceType(row.type ?? "file");
+    return {
+      id: row.id,
+      type,
+      label: row.description ?? evidenceLabel(t, type),
+    };
+  });
 
   // Every-unit honest breakdown (#451): stepRows already counts parents +
   // children, matching #292's goal-card rule (the journey counts each step,
@@ -284,25 +282,24 @@ function TimelineContent({ goalId }: { goalId: string }) {
  * grouping into a `Map<stepId, EvidenceItemData[]>` so both roots and children
  * can look up their evidence by id (#293).
  */
-function useStepEvidence(
-  goalId: GoalId,
-  fallbackLabel: string,
-): Map<string, EvidenceItemData[]> {
+function useStepEvidence(goalId: GoalId): Map<string, EvidenceItemData[]> {
   const allStepEvidence = useQuery(stepEvidenceByGoalQuery(goalId));
+  const { t } = useTranslation();
   return useMemo(() => {
     const grouped = new Map<string, EvidenceItemData[]>();
     for (const ev of allStepEvidence) {
       if (!ev.stepId) continue;
       const list = grouped.get(ev.stepId) ?? [];
+      const type = validateEvidenceType((ev.type ?? "file") as string);
       list.push({
         id: ev.id as string,
-        type: validateEvidenceType((ev.type ?? "file") as string),
-        label: (ev.description ?? ev.type ?? fallbackLabel) as string,
+        type,
+        label: (ev.description ?? evidenceLabel(t, type)) as string,
       });
       grouped.set(ev.stepId, list);
     }
     return grouped;
-  }, [allStepEvidence, fallbackLabel]);
+  }, [allStepEvidence, t]);
 }
 
 export function TimelineJourneyScreen({ route }: TimelineJourneyScreenProps) {
