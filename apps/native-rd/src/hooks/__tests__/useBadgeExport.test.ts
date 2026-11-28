@@ -534,6 +534,23 @@ describe("useBadgeExport", () => {
       ],
       ["content://com.android.externalstorage.documents/tree/primary%3A", null],
       ["content:///picked", null],
+      // Android 11+ Downloads / MediaStore trees carry numeric ids.
+      [
+        "content://com.android.providers.downloads.documents/tree/msf%3A1234",
+        null,
+      ],
+      [
+        "content://com.android.providers.downloads.documents/tree/downloads",
+        null,
+      ],
+      [
+        "content://com.android.providers.downloads.documents/tree/raw%3A%2Fstorage%2Femulated%2F0%2FDownload",
+        "Download",
+      ],
+      [
+        "content://com.android.externalstorage.documents/tree/primary%3ADocuments/document/primary%3ADocuments%2Fx.png",
+        "Documents",
+      ],
       ["content://x/tree/%E0%A4%A", null],
     ])("%s → %s", (uri, expected) => {
       expect(folderNameFromTreeUri(uri)).toBe(expected);

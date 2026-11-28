@@ -36,10 +36,18 @@ export function folderNameFromTreeUri(directoryUri: string): string | null {
   } catch {
     return null;
   }
-  const treePath = decoded.split("/tree/")[1];
-  if (!treePath) return null;
-  const path = treePath.slice(treePath.indexOf(":") + 1);
-  const name = path.split("/").filter(Boolean).pop();
+  const treeId = decoded.split("/tree/")[1]?.split("/document/")[0];
+  const colon = treeId?.indexOf(":") ?? -1;
+  if (!treeId || colon < 0) return null;
+  // MediaStore-backed trees (Downloads on Android 11+: `msf:1234`, `ms:…`)
+  // carry a numeric id, not a folder name.
+  const root = treeId.slice(0, colon);
+  if (root === "msf" || root === "ms") return null;
+  const name = treeId
+    .slice(colon + 1)
+    .split("/")
+    .filter(Boolean)
+    .pop();
   return name ?? null;
 }
 
