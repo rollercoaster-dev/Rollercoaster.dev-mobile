@@ -83,6 +83,16 @@ env:
 # visible, but asserting it keeps the id meaningful and documents the state.
 - assertNotVisible:
     id: "app-loading"
+# Since #849 the theme list is vertical, one row per theme with a description,
+# so on a Pixel 8 the lower swatches (Still Water included) sit below the fold
+# behind the pinned Get Started footer. Scroll them into view first;
+# `centerElement` lifts the row clear of the footer so the tap lands on it
+# rather than on the CTA (#869).
+- scrollUntilVisible:
+    element:
+      id: "theme-swatch-${THEME_SWATCH}"
+    direction: DOWN
+    centerElement: true
 - tapOn:
     id: "theme-swatch-${THEME_SWATCH}"
 - tapOn:
