@@ -645,25 +645,34 @@ describe("TimelineJourneyScreen", () => {
     });
   });
 
-  it("labels caption-less step evidence with its translated type name (#871)", () => {
-    setupQueries({
-      stepEvidence: [
-        { ...STEP_EVIDENCE[0], type: "text", description: null, uri: null },
-      ],
-    });
-    renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
-    fireEvent.press(screen.getByLabelText("Read docs, Done"));
-    expect(screen.getByText("Note")).toBeOnTheScreen();
-  });
+  describe("caption-less evidence takes its translated type name (#871)", () => {
+    const TYPES = [
+      ["text", "Note"],
+      ["voice_memo", "Audio"],
+      ["photo", "Photo"],
+      ["video", "Video"],
+      ["link", "Link"],
+      ["file", "File"],
+    ] as const;
 
-  it("labels caption-less goal evidence with its translated type name (#871)", () => {
-    setupQueries({
-      goalEvidence: [
-        { ...GOAL_EVIDENCE[0], type: "voice_memo", description: null },
-      ],
+    it.each(TYPES)("step evidence: %s → %s", (type, expected) => {
+      setupQueries({
+        stepEvidence: [
+          { ...STEP_EVIDENCE[0], type, description: null, uri: null },
+        ],
+      });
+      renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
+      fireEvent.press(screen.getByLabelText("Read docs, Done"));
+      expect(screen.getByText(expected)).toBeOnTheScreen();
     });
-    renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
-    expect(screen.getByText("Audio")).toBeOnTheScreen();
+
+    it.each(TYPES)("goal evidence: %s → %s", (type, expected) => {
+      setupQueries({
+        goalEvidence: [{ ...GOAL_EVIDENCE[0], type, description: null }],
+      });
+      renderWithProviders(<TimelineJourneyScreen {...routeProps} />);
+      expect(screen.getByText(expected)).toBeOnTheScreen();
+    });
   });
 
   it("shows step evidence when expanded", () => {
