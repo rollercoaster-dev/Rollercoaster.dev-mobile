@@ -49,6 +49,8 @@ export const styles = StyleSheet.create((theme) => ({
   },
   footnote: {
     textAlign: "center",
+    // A sentence, not an overline: caption's tracking spread it at large text.
+    letterSpacing: theme.letterSpacing.normal,
     color: theme.colors.accentPurpleFg,
   },
 }));

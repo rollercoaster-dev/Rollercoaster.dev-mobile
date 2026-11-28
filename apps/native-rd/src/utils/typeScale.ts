@@ -78,3 +78,35 @@ export function capFor(
   if (chrome) return capForRole("chrome", themeScale);
   return capForRole(variant, themeScale);
 }
+
+/**
+ * Android works around a React Native bug: Fabric scales `lineHeight` and
+ * `letterSpacing` by the full OS font scale and ignores
+ * `maxFontSizeMultiplier`, so capped text keeps its size while the gaps
+ * between lines and letters keep growing (huge line gaps under 2.0x
+ * headings, "N o t e" chips). iOS applies the cap to both already.
+ *
+ * Returns the override to append after the caller's style, pre-shrunk so
+ * RN's uncapped scaling lands at the capped size, or `undefined` when the
+ * cap isn't biting or neither property is set.
+ */
+export function cappedSpacing(
+  style: { lineHeight?: unknown; letterSpacing?: unknown } | undefined,
+  osFontScale: number,
+  cap: number,
+  platform: string,
+): { lineHeight?: number; letterSpacing?: number } | undefined {
+  if (platform !== "android" || !style) return undefined;
+  if (!(osFontScale > cap) || !(cap >= 1)) return undefined;
+  const factor = cap / osFontScale;
+  const out: { lineHeight?: number; letterSpacing?: number } = {};
+  if (typeof style.lineHeight === "number" && style.lineHeight > 0) {
+    out.lineHeight = style.lineHeight * factor;
+  }
+  if (typeof style.letterSpacing === "number" && style.letterSpacing !== 0) {
+    out.letterSpacing = style.letterSpacing * factor;
+  }
+  return out.lineHeight === undefined && out.letterSpacing === undefined
+    ? undefined
+    : out;
+}

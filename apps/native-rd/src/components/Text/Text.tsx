@@ -1,8 +1,13 @@
 import React from "react";
-import { Text as RNText, type TextProps as RNTextProps } from "react-native";
+import {
+  Platform,
+  StyleSheet,
+  Text as RNText,
+  type TextProps as RNTextProps,
+} from "react-native";
 import { textStylesheet } from "./Text.styles";
-import { useThemeScale } from "../../hooks/useTypeScale";
-import { capFor } from "../../utils/typeScale";
+import { useTypeScale } from "../../hooks/useTypeScale";
+import { capFor, cappedSpacing } from "../../utils/typeScale";
 
 export type TextVariant =
   | "screenTitle"
@@ -34,14 +39,26 @@ export function Text({
   ...rest
 }: TextProps) {
   textStylesheet.useVariants({ variant });
-  const themeScale = useThemeScale();
+  const { fontScale, themeScale } = useTypeScale();
+  const cap = maxFontSizeMultiplier ?? capFor(variant, chrome, themeScale);
+  // Android only: keep line and letter gaps at the capped size (see cappedSpacing).
+  const spacing = cappedSpacing(
+    Platform.OS === "android"
+      ? StyleSheet.flatten([textStylesheet.text, style])
+      : undefined,
+    fontScale,
+    cap,
+    Platform.OS,
+  );
 
   return (
     <RNText
-      style={[textStylesheet.text, style]}
-      maxFontSizeMultiplier={
-        maxFontSizeMultiplier ?? capFor(variant, chrome, themeScale)
+      style={
+        spacing
+          ? [textStylesheet.text, style, spacing]
+          : [textStylesheet.text, style]
       }
+      maxFontSizeMultiplier={cap}
       {...rest}
     >
       {children}

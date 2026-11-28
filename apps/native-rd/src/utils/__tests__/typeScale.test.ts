@@ -1,4 +1,10 @@
-import { CHROME_CAP, capFor, capForRole, themeScaleOf } from "../typeScale";
+import {
+  CHROME_CAP,
+  capFor,
+  capForRole,
+  cappedSpacing,
+  themeScaleOf,
+} from "../typeScale";
 import { size, sizeL } from "../../themes/tokens";
 
 describe("themeScaleOf", () => {
@@ -63,5 +69,36 @@ describe("capForRole", () => {
     ["body", 1.25, 1.6],
   ] as const)("%s at theme scale %s → %s", (role, themeScale, expected) => {
     expect(capForRole(role, themeScale)).toBeCloseTo(expected);
+  });
+});
+
+describe("cappedSpacing", () => {
+  const style = { lineHeight: 40, letterSpacing: 2 };
+
+  it("shrinks line and letter gaps on Android when the cap bites", () => {
+    // Heading capped at 1.0 under a 2.0 OS scale: RN would double the gaps.
+    expect(cappedSpacing(style, 2, 1, "android")).toEqual({
+      lineHeight: 20,
+      letterSpacing: 1,
+    });
+    // Chrome cap 1.3 under 2.0.
+    expect(cappedSpacing(style, 2, 1.3, "android")?.lineHeight).toBeCloseTo(26);
+  });
+
+  it("leaves text alone below the cap", () => {
+    expect(cappedSpacing(style, 1.2, 1.3, "android")).toBeUndefined();
+  });
+
+  it("leaves iOS alone: it already caps both", () => {
+    expect(cappedSpacing(style, 3, 1, "ios")).toBeUndefined();
+  });
+
+  it("only touches the properties that are set", () => {
+    expect(cappedSpacing({ lineHeight: 30 }, 2, 1, "android")).toEqual({
+      lineHeight: 15,
+    });
+    expect(
+      cappedSpacing({ fontSize: 16 } as object, 2, 1, "android"),
+    ).toBeUndefined();
   });
 });
