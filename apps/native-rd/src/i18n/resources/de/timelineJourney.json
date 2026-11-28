@@ -6,7 +6,6 @@
   "errors": {
     "goalNotFound": "Ziel nicht gefunden."
   },
-  "evidenceFallbackLabel": "Belege",
   "step": {
     "a11yGoTo": "Zu Schritt {{number}}: {{title}}",
     "a11yChildExpand": "Unterschritt {{ordinal}}: {{title}}",

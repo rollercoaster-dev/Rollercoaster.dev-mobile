@@ -4,7 +4,7 @@ import { i18n } from "../../i18n";
 
 import * as Sharing from "expo-sharing";
 import * as FileSystem from "expo-file-system/legacy";
-import { useBadgeExport } from "../useBadgeExport";
+import { folderNameFromTreeUri, useBadgeExport } from "../useBadgeExport";
 
 jest.mock("../useCreateBadge", () => ({
   PLACEHOLDER_IMAGE_URI: "pending:baked-image",
@@ -125,6 +125,52 @@ describe("useBadgeExport", () => {
       // We must NOT fall back to the share sheet on Android — that's the
       // whole reason this branch exists.
       expect(Sharing.shareAsync).not.toHaveBeenCalled();
+    });
+
+    // #873: the screen confirms an Android save from this result.
+    it("[Android] resolves to the saved filename and picked folder", async () => {
+      setPlatform("android");
+      (
+        FileSystem.StorageAccessFramework
+          .requestDirectoryPermissionsAsync as jest.Mock
+      ).mockResolvedValueOnce({
+        granted: true,
+        directoryUri:
+          "content://com.android.externalstorage.documents/tree/primary%3ADocuments",
+      });
+      const { result } = renderHook(() => useBadgeExport());
+
+      let saved: unknown;
+      await act(async () => {
+        saved = await result.current.exportVerifiableBadge(
+          "file:///badges/badge.png",
+          "Learn TypeScript",
+        );
+      });
+
+      expect(saved).toEqual({
+        filename: "Learn-TypeScript.png",
+        folder: "Documents",
+      });
+    });
+
+    it("[Android] resolves to null when the write fails", async () => {
+      setPlatform("android");
+      (FileSystem.writeAsStringAsync as jest.Mock).mockRejectedValueOnce(
+        new Error("disk full"),
+      );
+      jest.spyOn(console, "error").mockImplementationOnce(() => {});
+      const { result } = renderHook(() => useBadgeExport());
+
+      let saved: unknown = "unset";
+      await act(async () => {
+        saved = await result.current.exportVerifiableBadge(
+          "file:///badges/badge.png",
+        );
+      });
+
+      expect(saved).toBeNull();
+      expect(Alert.alert).toHaveBeenCalled();
     });
 
     it("[Android] returns quietly when the user cancels the folder picker", async () => {
@@ -473,6 +519,41 @@ describe("useBadgeExport", () => {
         i18n.t("badgeDetail:export.dialogTitle.credential"),
       ]);
       expect(titles.every((title: string) => title.startsWith("["))).toBe(true);
+    });
+  });
+
+  describe("folderNameFromTreeUri", () => {
+    it.each([
+      [
+        "content://com.android.externalstorage.documents/tree/primary%3ADocuments",
+        "Documents",
+      ],
+      [
+        "content://com.android.externalstorage.documents/tree/primary%3ADocuments%2FBadges",
+        "Badges",
+      ],
+      ["content://com.android.externalstorage.documents/tree/primary%3A", null],
+      ["content:///picked", null],
+      // Android 11+ Downloads / MediaStore trees carry numeric ids.
+      [
+        "content://com.android.providers.downloads.documents/tree/msf%3A1234",
+        null,
+      ],
+      [
+        "content://com.android.providers.downloads.documents/tree/downloads",
+        null,
+      ],
+      [
+        "content://com.android.providers.downloads.documents/tree/raw%3A%2Fstorage%2Femulated%2F0%2FDownload",
+        "Download",
+      ],
+      [
+        "content://com.android.externalstorage.documents/tree/primary%3ADocuments/document/primary%3ADocuments%2Fx.png",
+        "Documents",
+      ],
+      ["content://x/tree/%E0%A4%A", null],
+    ])("%s → %s", (uri, expected) => {
+      expect(folderNameFromTreeUri(uri)).toBe(expected);
     });
   });
 });

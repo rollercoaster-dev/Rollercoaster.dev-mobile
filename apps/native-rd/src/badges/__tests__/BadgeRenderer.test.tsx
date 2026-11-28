@@ -105,9 +105,28 @@ describe("BadgeRenderer", () => {
     const badge = screen.getByTestId("badge-renderer");
     expect(badge).toBeOnTheScreen();
     expect(badge.props.accessibilityLabel).toBe(
-      "My Badge badge, hexagon shape",
+      "My Badge badge, Hexagon shape",
     );
   });
+
+  it.each([
+    [BadgeShape.circle, "Circle"],
+    [BadgeShape.shield, "Shield"],
+    [BadgeShape.hexagon, "Hexagon"],
+    [BadgeShape.roundedRect, "Rounded Rect"],
+    [BadgeShape.star, "Star"],
+    [BadgeShape.diamond, "Diamond"],
+  ])(
+    "announces %s by its display name, not the raw id (#872)",
+    (shape, name) => {
+      renderWithProviders(
+        <BadgeRenderer design={createDesign({ title: "Juggle", shape })} />,
+      );
+      expect(
+        screen.getByTestId("badge-renderer").props.accessibilityLabel,
+      ).toBe(`Juggle badge, ${name} shape`);
+    },
+  );
 
   it("has image accessibility role", () => {
     renderWithProviders(<BadgeRenderer design={createDesign()} />);

@@ -6,6 +6,7 @@ import {
   Pressable,
   ActivityIndicator,
   Alert,
+  Platform,
   useWindowDimensions,
 } from "react-native";
 import { useNavigation, type NavigationProp } from "@react-navigation/native";
@@ -35,6 +36,7 @@ import { resolveStoredFileUri } from "../../utils/storedFileUri";
 // openbadges-core, which is ESM and unloadable in this screen's Jest runtime.
 import { parseStoredCredential } from "../../badges/vcJwt";
 import { useBadgeExport } from "../../hooks/useBadgeExport";
+import { useToast } from "../../components/Toast";
 import { useAnimationPref } from "../../hooks/useAnimationPref";
 import { parseBadgeDesign } from "../../badges/types";
 import { ProofSpine } from "../../components/ProofSpine";
@@ -237,6 +239,7 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
     isExportingImage,
     isExportingJSON,
   } = useBadgeExport();
+  const { showToast } = useToast();
 
   // The journey/timeline screen lives in the Goals stack (it's the same
   // view a user sees while still working toward the goal). Hop tabs via the
@@ -311,6 +314,25 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
   const goalId = badge.goalId as string | null;
   const goalTitle =
     (badge.goalTitle as string) ?? t("badgeDetail:fallback.untitled");
+
+  // Android saves through a folder picker, not a share sheet, so nothing on
+  // screen would say it worked: close the sheet and confirm with a toast
+  // (role alert + live region, so it's announced too). #873
+  const handleShareVerifiable = async () => {
+    const saved = await exportVerifiableBadge(imageUri, goalTitle);
+    if (!saved) return;
+    setIsShareSheetOpen(false);
+    showToast({
+      message: saved.folder
+        ? t("badgeDetail:share.verifiable.savedToFolder", {
+            filename: saved.filename,
+            folder: saved.folder,
+          })
+        : t("badgeDetail:share.verifiable.saved", {
+            filename: saved.filename,
+          }),
+    });
+  };
   const goalDescription = badge.goalDescription as string | null;
   const earnedDate = formatDate(
     (badge.completedAt ?? badge.createdAt) as string | null,
@@ -509,7 +531,7 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
         }}
         restoreFocusRef={shareTrigger.restoreFocusRef}
         onCloseSheet={() => setIsShareSheetOpen(false)}
-        onShareVerifiable={() => exportVerifiableBadge(imageUri, goalTitle)}
+        onShareVerifiable={handleShareVerifiable}
         onSaveImage={() => exportImage(imageUri)}
         onExportCredential={() =>
           exportJSON(badge.credential as string | null, goalTitle)
@@ -530,8 +552,16 @@ function BadgeDetailContent({ badgeId }: { badgeId: string }) {
         sheetSubtitle={t("badgeDetail:share.sheetSubtitle")}
         closeLabel={t("common:actions.close")}
         recommendedLabel={t("badgeDetail:share.recommended")}
-        verifiableLabel={t("badgeDetail:share.verifiable.label")}
-        verifiableDetail={t("badgeDetail:share.verifiable.detail")}
+        verifiableLabel={
+          Platform.OS === "android"
+            ? t("badgeDetail:share.verifiable.labelAndroid")
+            : t("badgeDetail:share.verifiable.label")
+        }
+        verifiableDetail={
+          Platform.OS === "android"
+            ? t("badgeDetail:share.verifiable.detailAndroid")
+            : t("badgeDetail:share.verifiable.detail")
+        }
         saveImageLabel={t("badgeDetail:share.saveImage.label")}
         saveImageDetail={t("badgeDetail:share.saveImage.detail")}
         exportCredentialLabel={t("badgeDetail:share.exportCredential.label")}

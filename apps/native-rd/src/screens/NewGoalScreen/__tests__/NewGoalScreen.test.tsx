@@ -315,6 +315,31 @@ describe("NewGoalScreen", () => {
       ).toBeNull();
     });
 
+    // #870: typing first seeds row 1 with the default Note; picking Photo after
+    // that must replace the seed, not keep it alongside Photo.
+    it("replaces the seeded default when the chip is picked after typing the step", () => {
+      renderWithProviders(<NewGoalScreen />);
+      typeTitleAndAdvance();
+      fireEvent.changeText(
+        screen.getByTestId("new-goal-first-step-input"),
+        FIRST_STEP,
+      );
+      fireEvent.press(screen.getByTestId("new-goal-evidence-chip"));
+      fireEvent.press(
+        screen.getByRole("radio", {
+          name: t("common:evidenceTypes.photo.label"),
+        }),
+      );
+
+      fireEvent.press(screen.getByTestId("new-goal-next-button"));
+      fireEvent.press(screen.getByTestId("new-goal-build-ready-button"));
+      fireEvent.press(screen.getByTestId("new-goal-start-working-button"));
+
+      expect(mockCreateStep).toHaveBeenCalledWith("goal-1", FIRST_STEP, 0, [
+        "photo",
+      ]);
+    });
+
     it("drops the row again when the first-step field is cleared back to blank", () => {
       renderWithProviders(<NewGoalScreen />);
       typeTitleAndAdvance();

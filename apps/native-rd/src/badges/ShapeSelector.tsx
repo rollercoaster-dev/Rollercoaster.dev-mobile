@@ -76,6 +76,7 @@ export function ShapeSelector({
               ]}
             >
               <BadgeShapeView
+                decorative
                 shape={shape}
                 fillColor={theme.colors.accentPrimary}
                 size={THUMBNAIL_SIZE}

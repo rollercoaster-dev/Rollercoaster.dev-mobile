@@ -28,6 +28,7 @@ import React, {
 import { Buffer } from "buffer";
 import Svg, { G, Path } from "react-native-svg";
 import { useUnistyles } from "react-native-unistyles";
+import { useTranslation } from "react-i18next";
 import type { IconWeight } from "phosphor-react-native";
 
 import { BADGE_COLOR_THEME_SENTINEL, type BadgeDesign } from "./types";
@@ -127,6 +128,7 @@ export const BadgeRenderer = forwardRef<
   ref,
 ) {
   const { theme } = useUnistyles();
+  const { t } = useTranslation("badgeDesigner");
   const pathTextId = useId();
   const svgRef = useRef<Svg>(null);
 
@@ -287,7 +289,10 @@ export const BadgeRenderer = forwardRef<
       height={viewBox.h}
       viewBox={`${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`}
       accessibilityRole="image"
-      accessibilityLabel={`${design.title} badge, ${design.shape} shape`}
+      accessibilityLabel={t("shape.previewA11y", {
+        title: design.title,
+        shape: t(`shape.options.${design.shape}`),
+      })}
       testID={testID}
     >
       {/* Layer 1: Shadow — solid black duplicate offset down-right */}

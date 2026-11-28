@@ -6,7 +6,6 @@
   "errors": {
     "goalNotFound": "[Ğøàĺ ñøţ ƒøüñđ.······]"
   },
-  "evidenceFallbackLabel": "[Êṽïđêñçê···]",
   "step": {
     "a11yGoTo": "[Ğø ţø šţêþ {{number}}: {{title}}·············]",
     "a11yChildExpand": "[Šüƀ-šţêþ {{ordinal}}: {{title}}············]",
